@@ -115,4 +115,29 @@ class User extends Authenticatable
 		return $query->where('is_active', true);
 	}
 
+	public function isAdmin()
+	{
+		return $this->hasRole('Admin');
+	}
+
+	public function isCS()
+	{
+		return $this->hasRole('CS');
+	}
+
+	public function isTeacher()
+	{
+		return $this->hasRole('Teacher');
+	}
+
+	public function isStudent()
+	{
+		return $this->hasRole('Student');
+	}
+
+	public function isActive()
+	{
+		return $this->is_active === true;
+	}
+
 }
