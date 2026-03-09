@@ -78,12 +78,12 @@ class TimeSlot extends Model
 
 	public function isAfternoon()
 	{
-		return $this->slot_type === 'Afternoon';
+		return $this->slot_type === 'Midday';
 	}
 
 	public function isEvening()
 	{
-		return $this->slot_type === 'Evening';
+		return $this->slot_type === 'Night';
 	}
 
 	public function scopeActive($query)

@@ -224,35 +224,35 @@ class Enrollment extends Model
 
 	public function isPrivate()
 	{
-		return $this->enrollment_type === 'private';
+		return $this->enrollment_type === 'Private';
 	}
 
 	public function isGroup()
 	{
-		return $this->enrollment_type === 'group';
+		return $this->enrollment_type === 'Group';
 	}
 
 	public function isCompleted()
 	{
-		return $this->status === 'completed';
+		return $this->status === 'Completed';
 	}
 
 	public function isCancelled()
 	{
-		return $this->status === 'cancelled';
+		return $this->status === 'Cancelled';
 	}
 
 	public function totalPaid()
 	{
 		return $this->financialTransactions()
-			->where('transaction_type', 'payment')
+			->where('transaction_type', 'Payment')
 			->sum('amount');
 	}
 
 	public function totalRefunded()
 	{
 		return $this->financialTransactions()
-			->where('transaction_type', 'refund')
+			->where('transaction_type', 'Refund')
 			->sum('amount');
 	}
 
@@ -265,7 +265,7 @@ class Enrollment extends Model
 	{
 		if ($this->courseInstance && $this->courseInstance->totalSessions() > 0) {
 			$totalSessions = $this->courseInstance->totalSessions();
-			$attendedSessions = $this->attendances()->where('status', 'attended')->count();
+			$attendedSessions = $this->attendances()->where('status', 'Attended')->count();
 			return max(0, $totalSessions - $attendedSessions);
 		}
 		return null;

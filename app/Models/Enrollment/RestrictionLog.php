@@ -76,7 +76,7 @@ class RestrictionLog extends Model
 
 	public function triggeredByEmployee()
 	{
-		return $this->triggered_by === 'CS';
+		return $this->triggered_by === 'Customer_Service';
 	}
 
 	public function triggeredByAdmin()

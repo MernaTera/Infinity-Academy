@@ -165,22 +165,22 @@ class CourseInstance extends Model
 
 	public function isPrivate()
 	{
-		return $this->type === 'private';
+		return $this->type === 'Private';
 	}
 
 	public function isActive()
 	{
-		return $this->status === 'active';
+		return $this->status === 'Active';
 	}
 
 	public function isCompleted()
 	{
-		return $this->status === 'completed';
+		return $this->status === 'Completed';
 	}
 
 	public function isCancelled()
 	{
-		return $this->status === 'cancelled';
+		return $this->status === 'Cancelled';
 	}
 
 	public function isFull()
@@ -198,7 +198,7 @@ class CourseInstance extends Model
 
 	public function scopeActive($query)
 	{
-		return $query->where('status', 'active');
+		return $query->where('status', 'Active');
 	}
 
 }

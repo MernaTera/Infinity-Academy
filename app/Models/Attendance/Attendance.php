@@ -64,11 +64,11 @@ class Attendance extends Model
 	
 	public function isPresent()
 	{
-		return $this->status === 'present';
+		return $this->status === 'Present';
 	}
 
 	public function isAbsent()
 	{
-		return $this->status === 'absent';
+		return $this->status === 'Absent';
 	}
 }

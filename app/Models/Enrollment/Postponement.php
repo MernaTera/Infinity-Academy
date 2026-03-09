@@ -63,12 +63,12 @@ class Postponement extends Model
 
 	public function isActive()
 	{
-		return $this->status === 'active';
+		return $this->status === 'Active';
 	}
 
 	public function markAsReturned($actualReturnDate = null)
 	{
-		$this->status = 'returned';
+		$this->status = 'Returned';
 		$this->actual_return_date = $actualReturnDate ?? Carbon::now();
 		$this->save();
 	}
@@ -78,11 +78,6 @@ class Postponement extends Model
 		return $this->status === 'Expired';
 	}
 
-	public function isOngoing()
-	{
-		return $this->status === 'Ongoing';
-	}
-	
 	public function isReturned()
 	{
 		return $this->status === 'Returned';

@@ -67,7 +67,7 @@ class Patch extends Model
 		'created_by_admin_id'
 	];
 
-	public function createdByAdmin()
+	public function createdBy()
 	{
 		return $this->belongsTo(Employee::class, 'created_by_admin_id');
 	}
@@ -114,21 +114,21 @@ class Patch extends Model
 
 	public function isActive()
 	{
-		return $this->status === 'active';
+		return $this->status === 'Active';
 	}
 
 	public function isUpcoming()
 	{
-		return $this->status === 'upcoming';
+		return $this->status === 'Upcoming';
 	}
 
 	public function isClosed()
 	{
-		return $this->status === 'closed';
+		return $this->status === 'Closed';
 	}
 
 	public function scopeActive($query)
 	{
-		return $query->where('status', 'active');
+		return $query->where('status', 'Active');
 	}
 }

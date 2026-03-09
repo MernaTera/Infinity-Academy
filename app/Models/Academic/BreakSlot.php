@@ -47,7 +47,7 @@ class BreakSlot extends Model
 		'created_by_admin_id'
 	];
 
-	public function createdByAdmin()
+	public function createdBy()
 	{
 		return $this->belongsTo(Employee::class, 'created_by_admin_id');
 	}

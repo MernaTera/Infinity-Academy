@@ -69,37 +69,37 @@ class WaitingList extends Model
 
 	public function isActive()
 	{
-		return $this->status === 'active';
+		return $this->status === 'Active';
 	}
 
 	public function isMoved()
 	{
-		return $this->status === 'moved';
+		return $this->status === 'Moved';
 	}
 
 	public function isCancelled()
 	{
-		return $this->status === 'cancelled';
+		return $this->status === 'Cancelled';
 	}
 
 	public function wantsNextPatch()
 	{
-		return $this->preferred_type === 'next_patch';
+		return $this->preferred_type === 'Next_Patch';
 	}
 	
 	public function wantsSpecificdate()
 	{
-		return $this->preferred_type === 'specific_date';
+		return $this->preferred_type === 'Specific_Date';
 	}
 
 	public function wantsOnline()
 	{
-		return $this->preferred_delivery_mood === 'online';
+		return $this->preferred_delivery_mood === 'Online';
 	}
 
 	public function wantsOffline()
 	{
-		return $this->preferred_delivery_mood === 'offline';
+		return $this->preferred_delivery_mood === 'Offline';
 	}
 
 }
