@@ -4,6 +4,8 @@
 namespace App\Models\Auth;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Auth\Role;
+use App\Models\Auth\Permission;
 
 /**
  * Class RolePermission
@@ -24,13 +26,13 @@ class RolePermission extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'role_id' => 'int',
-		'permission_id' => 'int'
+		'role_id' => 'integer',
+		'permission_id' => 'integer'
 	];
 
 	protected $fillable = [
-		'role_id' => 'int',
-		'permission_id' => 'int'
+		'role_id' => 'integer',
+		'permission_id' => 'integer'
 	];
 
 	public function role()

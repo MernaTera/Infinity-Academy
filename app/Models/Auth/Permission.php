@@ -6,6 +6,8 @@ namespace App\Models\Auth;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Auth\Module;
+use App\Models\Auth\Role;
 
 /**
  * Class Permission
@@ -28,7 +30,7 @@ class Permission extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'module_id' => 'int',
+		'module_id' => 'integer',
 		'created_at' => 'datetime'
 	];
 
