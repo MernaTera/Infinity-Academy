@@ -6,6 +6,12 @@ namespace App\Models\Core;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Course\CourseInstance;
+use App\Models\HR\Employee;
+use App\Models\Financial\FinancialTransaction;
+use App\Models\Academic\Patch;
+use App\Models\Finance\RevenueSplit;
+use App\Models\Academic\Room;
 
 /**
  * Class Branch
@@ -34,7 +40,7 @@ class Branch extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'is_active' => 'bool'
+		'is_active' => 'boolean'
 	];
 
 	protected $fillable = [
@@ -45,7 +51,7 @@ class Branch extends Model
 		'is_active'
 	];
 
-	public function course_instances()
+	public function courseInstances()
 	{
 		return $this->hasMany(CourseInstance::class, 'branch_id');
 	}
@@ -55,7 +61,7 @@ class Branch extends Model
 		return $this->hasMany(Employee::class, 'branch_id');
 	}
 
-	public function financial_transactions()
+	public function financialTransactions()
 	{
 		return $this->hasMany(FinancialTransaction::class, 'branch_id');
 	}
@@ -65,7 +71,7 @@ class Branch extends Model
 		return $this->hasMany(Patch::class, 'branch_id');
 	}
 
-	public function revenue_splits()
+	public function revenueSplits()
 	{
 		return $this->hasMany(RevenueSplit::class, 'branch_id');
 	}
