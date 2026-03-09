@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\HR\Employee;
 use App\Models\Academic\EnglishLevel;
-use App\Models\Academic\TeacherAvailability;
+use App\Models\HR\TeacherAvailability;
 use App\Models\Academic\CourseInstance;
 use App\Models\Academic\ContractType;
-use App\Models\Academic\Report;
+use App\Models\Reports\Report;
 
 /**
  * Class Teacher
@@ -54,17 +54,17 @@ class Teacher extends Model
 		return $this->belongsTo(Employee::class, 'employee_id');
 	}
 
-	public function english_level()
+	public function englishLevel()
 	{
 		return $this->belongsTo(EnglishLevel::class, 'english_level_id');
 	}
 
-	public function contract_types()
+	public function contractTypes()
 	{
 		return $this->hasMany(ContractType::class, 'teacher_id');
 	}
 
-	public function course_instances()
+	public function courseInstances()
 	{
 		return $this->hasMany(CourseInstance::class, 'teacher_id');
 	}
@@ -74,7 +74,7 @@ class Teacher extends Model
 		return $this->hasMany(Report::class, 'teacher_id');
 	}
 
-	public function teacher_availabilities()
+	public function teacherAvailabilities()
 	{
 		return $this->hasMany(TeacherAvailability::class, 'teacher_id');
 	}

@@ -6,6 +6,13 @@ namespace App\Models\HR;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Auth\User;
+use App\Models\Core\Branch;
+use App\Models\Lead\Lead;
+use App\Models\Enrollment\CsTarget;
+use App\Models\Finance\RevenueSplit;
+use App\Models\Audit\AuditLog;
+use App\Models\HR\Teacher;
 
 /**
  * Class Employee
@@ -34,9 +41,9 @@ class Employee extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'user_id' => 'int',
-		'branch_id' => 'int',
-		'salary' => 'float',
+		'user_id' => 'integer',
+		'branch_id' => 'integer',
+		'salary' => 'decimal:2',
 		'hired_at' => 'datetime',	
 		'created_at' => 'datetime'
 	];

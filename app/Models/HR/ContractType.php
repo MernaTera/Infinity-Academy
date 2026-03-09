@@ -1,12 +1,12 @@
 <?php
 
 
-namespace App\Models;
+namespace App\Models\HR;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
-use App\Models\HR\Patch;
+use App\Models\Academic\Patch;
 use App\Models\HR\Teacher;
 
 /**
