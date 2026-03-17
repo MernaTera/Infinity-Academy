@@ -29,7 +29,7 @@ class CsTarget extends Model
 {
 	protected $table = 'cs_target';
 	protected $primaryKey = 'target_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'employee_id' => 'integer',
