@@ -29,7 +29,7 @@ class BreakSlot extends Model
 {
 	protected $table = 'break_slot';
 	protected $primaryKey = 'break_slot_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'start_time' => 'string',

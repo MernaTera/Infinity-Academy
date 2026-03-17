@@ -32,7 +32,7 @@ class TimeSlot extends Model
 {
 	protected $table = 'time_slot';
 	protected $primaryKey = 'time_slot_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'start_time' => 'string',

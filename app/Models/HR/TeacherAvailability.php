@@ -27,7 +27,7 @@ class TeacherAvailability extends Model
 {
 	protected $table = 'teacher_availability';
 	protected $primaryKey = 'availability_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'teacher_id' => 'integer',
