@@ -27,7 +27,7 @@ class Role extends Model
 {
 	protected $table = 'role';
 	protected $primaryKey = 'role_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'is_active' => 'boolean',
