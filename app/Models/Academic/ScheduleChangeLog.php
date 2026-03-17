@@ -28,7 +28,7 @@ class ScheduleChangeLog extends Model
 {
 	protected $table = 'schedule_change_log';
 	protected $primaryKey = 'change_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'course_instance_id' => 'integer',
