@@ -44,7 +44,7 @@ class FinancialTransaction extends Model
 {
 	protected $table = 'financial_transaction';
 	protected $primaryKey = 'transaction_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
@@ -52,7 +52,8 @@ class FinancialTransaction extends Model
 		'branch_id' => 'integer',
 		'amount' => 'decimal:2',
 		'created_by_employee_id' => 'integer',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+		'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
@@ -103,44 +104,55 @@ class FinancialTransaction extends Model
 		return $this->hasMany(RevenueSplit::class, 'transaction_id');
 	}
 
-    public function isIncome()
-    {
-        return $this->transaction_type === 'Income';
-    }
 
-    public function isExpense()
-    {
-        return $this->transaction_type === 'Expense';
-    }
+	public function isPayment()
+	{
+		return $this->transaction_type === 'Payment';
+	}
 
-    public function isRefund()
-    {
-        return $this->transaction_category === 'Refund';
-    }
+	public function isInstallment()
+	{
+		return $this->transaction_type === 'Installment';
+	}
 
-    public function isCoursePayment()
-    {
-        return $this->transaction_category === 'Course_Payment';
-    }
+	public function isRefund()
+	{
+		return $this->transaction_type === 'Refund';
+	}
 
-    public function isInstallment()
-    {
-        return $this->transaction_category === 'Installment';
-    }
+	public function isCourse()
+	{
+		return $this->transaction_category === 'Course';
+	}
 
-    public function isCash()
-    {
-        return $this->payment_method === 'Cash';
-    }
+	public function isMaterial()
+	{
+		return $this->transaction_category === 'Material';
+	}
 
-    public function isCard()
-    {
-        return $this->payment_method === 'Card';
-    }
+	public function isTest()
+	{
+		return $this->transaction_category === 'Test';
+	}
 
-    public function isTransfer()
-    {
-        return $this->payment_method === 'Bank_Transfer';
-    }
+	public function isCash()
+	{
+		return $this->payment_method === 'Cash';
+	}
+
+	public function isCard()
+	{
+		return $this->payment_method === 'Card';
+	}
+
+	public function isTransfer()
+	{
+		return $this->payment_method === 'Transfer';
+	}
+
+	public function isOnline()
+	{
+		return $this->payment_method === 'Online';
+	}
 
 }
