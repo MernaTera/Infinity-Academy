@@ -78,7 +78,7 @@ class Enrollment extends Model
 {
 	protected $table = 'enrollment';
 	protected $primaryKey = 'enrollment_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'student_id' => 'integer',
