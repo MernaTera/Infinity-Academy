@@ -1,10 +1,7 @@
 <?php
 
-/**
- * Created by Reliese Model.
- */
 
-namespace App\Models;
+namespace App\Models\Leads;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;

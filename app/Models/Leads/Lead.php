@@ -12,6 +12,7 @@ use App\Models\HR\Employee;
 use App\Models\Academic\Sublevel;
 use App\Models\Leads\LeadCallLog;
 use App\Models\Leads\LeadHistory;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class Lead
@@ -101,12 +102,12 @@ class Lead extends Model
 
 	public function leadCallLogs()
 	{
-		return $this->hasMany(LeadCallLog::class);
+		return $this->hasMany(LeadCallLog::class, 'lead_id');
 	}
 
 	public function leadHistories()
 	{
-		return $this->hasMany(LeadHistory::class);
+		return $this->hasMany(LeadHistory::class, 'lead_id');
 	}
 
     public function isWaiting()
@@ -212,7 +213,8 @@ class Lead extends Model
     public function scopeDueCalls(Builder $query)
     {
         return $query->whereNotNull('next_call_at')
-                     ->where('next_call_at', '<=', now());
+                     ->where('next_call_at', '<=', now())
+                     ->where('status', 'Scheduled_Call');
     }
 
     public function scopeOwnedBy(Builder $query, $employeeId)
@@ -236,7 +238,7 @@ class Lead extends Model
 
     public function lastCall()
     {
-        return $this->callLogs()
+        return $this->leadCallLogs()
             ->latest('created_at')
             ->first();
     }

@@ -38,4 +38,9 @@ class Module extends Model
 	{
     	return $query->with('permissions');
 	}
+
+	public function scopeActive($query)
+	{
+		return $query->where('is_active', true);
+	}
 }

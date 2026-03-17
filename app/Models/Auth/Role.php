@@ -57,9 +57,8 @@ class Role extends Model
 
 	public function hasPermission($permissionKey)
 	{
-		return $this->permissions()
-			->where('permission_key', $permissionKey)
-			->exists();
+		return $this->permissions
+			->contains('permission_key', $permissionKey);
 	}
 
 	public function can($module, $action)

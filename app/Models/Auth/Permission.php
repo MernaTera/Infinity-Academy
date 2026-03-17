@@ -54,4 +54,9 @@ class Permission extends Model
 	{
 		return $this->module->module_name . '.' . $this->action_type;
 	}
+
+	public function getFullKeyAttribute()
+	{
+		return $this->module->module_name . '.' . strtolower($this->action_type);
+	}
 }

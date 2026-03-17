@@ -74,12 +74,12 @@ class User extends Authenticatable
 
 	public function employees()
 	{
-		return $this->hasMany(Employee::class, 'user_id');
+		return $this->hasOne(Employee::class, 'user_id');
 	}
 
 	public function students()
 	{
-		return $this->hasMany(Student::class, 'user_id');
+		return $this->hasOne(Student::class, 'user_id');
 	}
 
 	public function hasRole($roleName)
@@ -89,25 +89,32 @@ class User extends Authenticatable
 
 	public function canDo($permissionKey)
 	{
-		return $this->role
-			? $this->role->hasPermission($permissionKey)
-			: false;
+		if (!$this->role) {
+			return false;
+		}
+
+		if (!$this->relationLoaded('role')) {
+			$this->load('role.permissions');
+		}
+
+		return $this->role->permissions
+			->contains('permission_key', $permissionKey);
 	}
 
 	public function isLocked()
 	{
-		return $this->locked_until && now()->lessThan($this->locked_until);
+		return $this->locked_until && $this->locked_until->isFuture();
 	}
 
 	public function recordFailedLogin()
 	{
-		$this->increment('failed_attempts');
+		$this->failed_attempts++;
 
 		if ($this->failed_attempts >= 5) {
-			$this->update([
-				'locked_until' => now()->addMinutes(15)
-			]);
+			$this->locked_until = now()->addMinutes(15);
 		}
+
+		$this->save();
 	}
 
 	public function scopeActive($query)
