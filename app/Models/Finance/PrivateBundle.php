@@ -28,7 +28,7 @@ class PrivateBundle extends Model
 {
 	protected $table = 'private_bundle';
 	protected $primaryKey = 'bundle_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'hours' => 'decimal:2',

@@ -10,7 +10,6 @@ use App\Models\HR\Employee;
 use App\Models\Academic\Level;
 use App\Models\Student\Student;
 use App\Models\Enrollment\Enrollment;
-use App\Models\Enrollment\FinancialTransaction;
 
 /**
  * Class PlacementTest
@@ -37,7 +36,7 @@ class PlacementTest extends Model
 {
 	protected $table = 'placement_test';
 	protected $primaryKey = 'test_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'student_id' => 'integer',
