@@ -31,7 +31,7 @@ class Offer extends Model
 {
 	protected $table = 'offer';
 	protected $primaryKey = 'offer_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'discount_value' => 'decimal:2',
@@ -39,7 +39,8 @@ class Offer extends Model
 		'end_date' => 'date',
 		'is_active' => 'boolean',
 		'created_by_admin_id' => 'integer',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+        'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
