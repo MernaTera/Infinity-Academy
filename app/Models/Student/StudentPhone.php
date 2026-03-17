@@ -24,7 +24,7 @@ class StudentPhone extends Model
 {
 	protected $table = 'student_phone';
 	protected $primaryKey = 'phone_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'student_id' => 'integer',
