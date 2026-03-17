@@ -5,9 +5,11 @@ namespace App\Models\Notifications;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use App\Models\HR\Employee;
 use App\Models\Lead\Lead;
+use App\Models\Academic\Enrollment;
+
 
 /**
  * Class NotificationLog
@@ -31,7 +33,7 @@ class NotificationLog extends Model
 {
 	protected $table = 'notification_log';
 	protected $primaryKey = 'notification_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'entity_id' => 'integer',
@@ -39,7 +41,9 @@ class NotificationLog extends Model
 		'retry_count' => 'integer',
 		'created_at' => 'datetime',
 		'payload' => 'array',
-		'response_payload' => 'array'
+		'response_payload' => 'array',
+        'updated_at' => 'datetime',
+        'created_at' => 'datetime'
 	];
 
 	protected $fillable = [
