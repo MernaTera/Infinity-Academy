@@ -27,7 +27,7 @@ class Permission extends Model
 {
 	protected $table = 'permission';
 	protected $primaryKey = 'permission_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'module_id' => 'integer',
