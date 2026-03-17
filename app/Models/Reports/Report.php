@@ -9,6 +9,7 @@ use App\Models\HR\Employee;
 use App\Models\Academic\Enrollment;
 use App\Models\HR\Teacher;
 use App\Models\Reports\ReportScore;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class Report
@@ -38,6 +39,7 @@ class Report extends Model
 {
 	protected $table = 'report';
 	protected $primaryKey = 'report_id';
+    public $timestamps = true;
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
@@ -188,7 +190,7 @@ class Report extends Model
 
     public function calculateTotalScore()
     {
-        $total = $this->scores()->sum('score');
+        $total = $this->reportScores()->sum('score');
 
         $this->update([
             'total_score' => $total
@@ -199,6 +201,6 @@ class Report extends Model
 
     public function isComplete()
     {
-        return $this->scores()->count() > 0;
+        return $this->reportScores()->count() > 0;
     }
 }
