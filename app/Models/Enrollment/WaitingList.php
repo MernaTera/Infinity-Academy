@@ -32,14 +32,15 @@ class WaitingList extends Model
 {
 	protected $table = 'waiting_list';
 	protected $primaryKey = 'waiting_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
 		'requested_patch_id' => 'integer',
 		'preferred_start_date' => 'datetime',
 		'created_by_cs_id' => 'integer',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+		'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
