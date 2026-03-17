@@ -27,13 +27,14 @@ class ReportScore extends Model
 {
 	protected $table = 'report_score';
 	protected $primaryKey = 'score_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'report_id' => 'integer',
 		'max_score' => 'float',
 		'student_score' => 'float',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+        'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
