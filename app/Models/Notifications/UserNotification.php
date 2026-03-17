@@ -29,13 +29,14 @@ class UserNotification extends Model
 {
 	protected $table = 'user_notification';
 	protected $primaryKey = 'user_notification_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'employee_id' => 'integer',
 		'related_entity_id' => 'integer',
 		'is_read' => 'boolean',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+        'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
