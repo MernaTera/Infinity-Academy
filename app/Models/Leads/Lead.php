@@ -49,6 +49,7 @@ class Lead extends Model
 {
 	protected $table = 'lead';
 	protected $primaryKey = 'lead_id';
+    public $timestamps = true;
 
 	protected $casts = [
 		'birthdate' => 'datetime',

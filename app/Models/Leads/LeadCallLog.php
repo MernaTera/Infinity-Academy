@@ -27,7 +27,7 @@ class LeadCallLog extends Model
 {
 	protected $table = 'lead_call_log';
 	protected $primaryKey = 'call_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'lead_id' => 'integer',
