@@ -37,7 +37,7 @@ class RevenueSplit extends Model
 {
 	protected $table = 'revenue_split';
 	protected $primaryKey = 'revenue_split_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'original_split_id' => 'integer',
@@ -46,7 +46,8 @@ class RevenueSplit extends Model
 		'branch_id' => 'integer',
 		'patch_id' => 'integer',
 		'amount_allocated' => 'decimal:2',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+		'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
@@ -84,9 +85,9 @@ class RevenueSplit extends Model
 		return $this->belongsTo(FinancialTransaction::class, 'transaction_id');
 	}
 
-	public function originalSplit()
+	public function parentSplit()
 	{
-		return $this->hasMany(RevenueSplit::class, 'original_split_id');
+		return $this->belongsTo(RevenueSplit::class, 'original_split_id');
 	}
 
 	public function childSplits()
