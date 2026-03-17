@@ -32,7 +32,7 @@ class InstallmentApprovalLog extends Model
 {
 	protected $table = 'installment_approval_log';
 	protected $primaryKey = 'approval_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
@@ -40,7 +40,8 @@ class InstallmentApprovalLog extends Model
 		'request_by_cs_id' => 'integer',
 		'approved_by_admin_id' => 'integer',
 		'approved_at' => 'datetime',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+        'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
@@ -63,7 +64,7 @@ class InstallmentApprovalLog extends Model
 		return $this->belongsTo(Enrollment::class, 'enrollment_id');
 	}
 
-	public function payment_plan()
+	public function paymentPlan()
 	{
 		return $this->belongsTo(PaymentPlan::class, 'payment_plan_id');
 	}
