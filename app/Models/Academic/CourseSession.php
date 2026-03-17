@@ -8,11 +8,11 @@ use App\Models\Academic\Room;
 
 class CourseSession extends Model
 {
-    protected $table = 'session';
+    protected $table = 'course_session';
 
-    protected $primaryKey = 'session_id';
+    protected $primaryKey = 'course_session_id';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     protected $casts = [
         'course_instance_id' => 'integer',
@@ -56,7 +56,7 @@ class CourseSession extends Model
 
     public function attendances()
     {
-        return $this->hasMany(Attendance::class, 'session_id');
+        return $this->hasMany(Attendance::class, 'course_session_id');
     }
 
     /*

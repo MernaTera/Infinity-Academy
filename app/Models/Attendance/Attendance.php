@@ -15,7 +15,7 @@ use App\Models\Academic\CourseSession;
  * 
  * @property int $attendance_id
  * @property int $enrollment_id
- * @property int $session_id
+ * @property int $course_session_id
  * @property string $status
  * @property int $recorded_by
  * @property Carbon|null $recorded_at
@@ -34,14 +34,14 @@ class Attendance extends Model
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
-		'session_id' => 'integer',
+		'course_session_id' => 'integer',
 		'recorded_by' => 'integer',
 		'recorded_at' => 'datetime'
 	];
 
 	protected $fillable = [
 		'enrollment_id',
-		'session_id',
+		'course_session_id',
 		'status',
 		'recorded_by',
 		'recorded_at'
@@ -59,7 +59,7 @@ class Attendance extends Model
 
 	public function session()
 	{
-		return $this->belongsTo(Session::class, 'session_id');
+		return $this->belongsTo(Session::class, 'course_session_id');
 	}
 	
 	public function isPresent()

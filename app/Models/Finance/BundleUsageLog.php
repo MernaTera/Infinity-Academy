@@ -14,7 +14,7 @@ use App\Models\Academic\CourseSession;
  * 
  * @property int $usage_id
  * @property int $enrollment_id
- * @property int $session_id
+ * @property int $course_session_id
  * @property float $hours_deducted
  * @property string|null $reason
  * @property int|null $created_by_cs_id
@@ -34,7 +34,7 @@ class BundleUsageLog extends Model
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
-		'session_id' => 'integer',
+		'course_session_id' => 'integer',
 		'hours_deducted' => 'decimal:2',
 		'created_by_cs_id' => 'integer',
 		'created_at' => 'datetime'
@@ -42,7 +42,7 @@ class BundleUsageLog extends Model
 
 	protected $fillable = [
 		'enrollment_id',
-		'session_id',
+		'course_session_id',
 		'hours_deducted',
 		'reason',
 		'created_by_cs_id'
@@ -60,7 +60,7 @@ class BundleUsageLog extends Model
 
 	public function session()
 	{
-		return $this->belongsTo(Session::class, 'session_id');
+		return $this->belongsTo(Session::class, 'course_session_id');
 	}
 
 	public function isAttendanceDeduction()
