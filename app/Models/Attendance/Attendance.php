@@ -59,7 +59,7 @@ class Attendance extends Model
 
 	public function session()
 	{
-		return $this->belongsTo(Session::class, 'course_session_id');
+		return $this->belongsTo(CourseSession::class, 'course_session_id');
 	}
 	
 	public function isPresent()
