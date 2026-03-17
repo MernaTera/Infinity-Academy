@@ -35,7 +35,7 @@ class Teacher extends Model
 {
 	protected $table = 'teacher';
 	protected $primaryKey = 'teacher_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'employee_id' => 'integer',

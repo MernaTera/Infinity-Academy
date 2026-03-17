@@ -25,7 +25,7 @@ class EnglishLevel extends Model
 {
 	protected $table = 'english_level';
 	protected $primaryKey = 'english_level_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'level_name' => 'string',
