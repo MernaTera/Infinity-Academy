@@ -60,7 +60,7 @@ class CourseInstance extends Model
 {
 	protected $table = 'course_instance';
 	protected $primaryKey = 'course_instance_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'course_template_id' => 'integer',

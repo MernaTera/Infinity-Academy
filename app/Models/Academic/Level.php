@@ -46,7 +46,7 @@ class Level extends Model
 {
 	protected $table = 'level';
 	protected $primaryKey = 'level_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'course_template_id' => 'integer',

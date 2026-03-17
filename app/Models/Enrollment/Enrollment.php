@@ -40,7 +40,7 @@ use App\Models\Enrollment\WaitingList;
  * @property int $patch_id
  * @property int|null $branch_id
  * @property string|null $enrollment_type
- * @property string|null $delivery_mode
+ * @property string|null $delivery_mood
  * @property Carbon|null $preference_start_date
  * @property Carbon|null $actual_start_date
  * @property float|null $hours_remaining
@@ -109,7 +109,7 @@ class Enrollment extends Model
 		'patch_id',
 		'branch_id',
 		'enrollment_type',
-		'delivery_mode',
+		'delivery_mood',
 		'preference_start_date',
 		'actual_start_date',
 		'hours_remaining',
