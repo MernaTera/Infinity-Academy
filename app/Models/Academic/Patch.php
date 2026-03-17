@@ -44,7 +44,7 @@ class Patch extends Model
 {
 	protected $table = 'patch';
 	protected $primaryKey = 'patch_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'branch_id' => 'integer',

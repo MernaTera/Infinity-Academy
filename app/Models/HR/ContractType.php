@@ -31,7 +31,7 @@ class ContractType extends Model
 {
 	protected $table = 'contract_type';
 	protected $primaryKey = 'contract_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'teacher_id' => 'integer',
