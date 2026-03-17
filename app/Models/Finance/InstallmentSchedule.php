@@ -33,7 +33,7 @@ class InstallmentSchedule extends Model
 {
 	protected $table = 'installment_schedule';
 	protected $primaryKey = 'installment_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
@@ -43,7 +43,8 @@ class InstallmentSchedule extends Model
 		'due_session_number' => 'integer',
 		'amount' => 'decimal:2',
 		'paid_at' => 'datetime',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+        'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
