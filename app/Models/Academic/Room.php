@@ -35,7 +35,7 @@ class Room extends Model
 {
 	protected $table = 'room';
 	protected $primaryKey = 'room_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'branch_id' => 'integer',
@@ -76,12 +76,12 @@ class Room extends Model
 
 	public function isOnline()
 	{
-		return $this->room_type === 'online';
+		return $this->room_type === 'Online';
 	}
 
 	public function isOffline()
 	{
-		return $this->room_type === 'offline';
+		return $this->room_type === 'Offline';
 	}
 
 	public function isActive()
