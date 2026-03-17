@@ -37,7 +37,7 @@ class Branch extends Model
 {
 	protected $table = 'branch';
 	protected $primaryKey = 'branch_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'is_active' => 'boolean'
