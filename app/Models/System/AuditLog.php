@@ -28,12 +28,14 @@ class AuditLog extends Model
 {
 	protected $table = 'audit_log';
 	protected $primaryKey = 'audit_log_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'record_id' => 'integer',
 		'changed_by' => 'integer',
 		'changed_at' => 'datetime',
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
