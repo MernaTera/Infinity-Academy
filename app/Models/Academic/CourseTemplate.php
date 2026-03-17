@@ -36,7 +36,7 @@ class CourseTemplate extends Model
 {
 	protected $table = 'course_template';
 	protected $primaryKey = 'course_template_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'private_allowed' => 'boolean',
