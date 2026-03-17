@@ -42,7 +42,7 @@ class Sublevel extends Model
 {
 	protected $table = 'sublevel';
 	protected $primaryKey = 'sublevel_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'level_id' => 'integer',
