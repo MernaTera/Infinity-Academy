@@ -30,7 +30,7 @@ class Postponement extends Model
 {
 	protected $table = 'postponement';
 	protected $primaryKey = 'postponement_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
@@ -38,7 +38,8 @@ class Postponement extends Model
 		'expected_return_date' => 'date',
 		'actual_return_date' => 'date',
 		'created_by_cs_id' => 'integer',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+		'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
