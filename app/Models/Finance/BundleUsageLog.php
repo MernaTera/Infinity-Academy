@@ -30,14 +30,15 @@ class BundleUsageLog extends Model
 {
 	protected $table = 'bundle_usage_log';
 	protected $primaryKey = 'usage_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
 		'course_session_id' => 'integer',
 		'hours_deducted' => 'decimal:2',
 		'created_by_cs_id' => 'integer',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+		'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
@@ -60,7 +61,7 @@ class BundleUsageLog extends Model
 
 	public function session()
 	{
-		return $this->belongsTo(Session::class, 'course_session_id');
+		return $this->belongsTo(CourseSession::class, 'course_session_id');
 	}
 
 	public function isAttendanceDeduction()
@@ -76,12 +77,6 @@ class BundleUsageLog extends Model
 	public function isOtherReason()
 	{
 		return $this->reason !== 'ATTENDANCE' && $this->reason !== 'MANUAL_ADJUSTMENT';
-	}
-
-	public function remainingBundleHours()
-	{
-		$used = $this->bundleUsageLogs()->sum('hours_deducted');
-		return $this->hours_remaining - $used;
 	}
 
 }
