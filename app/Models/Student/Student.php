@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 
 
-use App\Model\Auth\User;
+use App\Models\Auth\User;
 use App\Models\Enrollment\Enrollment;
 use App\Models\Enrollment\PlacementTest;
 use App\Models\Student\StudentPhone;
@@ -41,6 +41,7 @@ class Student extends Model
 {
 	protected $table = 'student';
 	protected $primaryKey = 'student_id';
+	public $timestamps = true;
 
 	protected $casts = [
 		'user_id' => 'integer',
@@ -152,7 +153,7 @@ class Student extends Model
 
     public function primaryPhone()
     {
-        return $this->phones()->first();
+        return $this->student_phones()->first();
     }
 
     public function activeEnrollment()
