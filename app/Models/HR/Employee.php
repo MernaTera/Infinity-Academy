@@ -38,7 +38,7 @@ class Employee extends Model
 {
 	protected $table = 'employee';
 	protected $primaryKey = 'employee_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'user_id' => 'integer',
