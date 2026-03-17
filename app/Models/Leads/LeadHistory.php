@@ -7,7 +7,8 @@ namespace App\Models\Leads;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
-use App\Models\Lead\Lead;
+use App\Models\Leads\Lead;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class LeadHistory
