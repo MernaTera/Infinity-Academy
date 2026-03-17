@@ -23,7 +23,7 @@ class Module extends Model
 {
 	protected $table = 'module';
 	protected $primaryKey = 'module_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $fillable = [
 		'module_name'
