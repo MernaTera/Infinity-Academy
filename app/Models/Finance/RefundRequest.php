@@ -34,7 +34,7 @@ class RefundRequest extends Model
 {
 	protected $table = 'refund_request';
 	protected $primaryKey = 'request_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
@@ -43,7 +43,8 @@ class RefundRequest extends Model
 		'approved_by_admin_id' => 'integer',
 		'approved_at' => 'datetime',
 		'processed_transaction_id' => 'integer',
-		'created_at' => 'datetime'
+		'created_at' => 'datetime',
+        'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [
