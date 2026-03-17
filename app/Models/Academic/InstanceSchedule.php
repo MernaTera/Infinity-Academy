@@ -29,7 +29,7 @@ class InstanceSchedule extends Model
 {
 	protected $table = 'instance_schedule';
 	protected $primaryKey = 'instance_schedule_id';
-	public $timestamps = false;
+	public $timestamps = true;
 
 	protected $casts = [
 		'course_instance_id' => 'integer',
@@ -65,9 +65,9 @@ class InstanceSchedule extends Model
 		return in_array($this->day_of_week,['Friday','Saturday']);
 	}
 
-	public function ScopeForDay($query, $day)
+	public function scopeForDay($query, $day)
 	{
 		return $query->where('day_of_week', $day);
 	}
-
+	
 }
