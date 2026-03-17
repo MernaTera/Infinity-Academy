@@ -6,7 +6,8 @@ namespace App\Models\Leads;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
-use App\Models\Lead\Lead;
+use App\Models\Leads\Lead;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class LeadCallLog
@@ -27,7 +28,7 @@ class LeadCallLog extends Model
 {
 	protected $table = 'lead_call_log';
 	protected $primaryKey = 'call_id';
-	public $timestamps = true;
+	public $timestamps = false;
 
 	protected $casts = [
 		'lead_id' => 'integer',
