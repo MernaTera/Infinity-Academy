@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Infinity System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
@@ -275,60 +276,60 @@
         }
 
 
-        /* ─── MOBILE RESPONSIVE ─── */
-        @media (max-width: 768px) {
+    /* ─── MOBILE RESPONSIVE ─── */
+    @media (max-width: 768px) {
 
-            .scene {
-                padding: 20px;
-            }
-
-            .glass-card {
-                padding: 28px 20px;
-                max-width: 100%;
-            }
-
-            .logo-wrap img {
-                width: 220px; /* كان 400 */
-            }
-
-            .brand-name {
-                font-size: clamp(28px, 6vw, 42px);
-                letter-spacing: 6px;
-            }
-
-            .top-label {
-                font-size: 11px;
-                letter-spacing: 3px;
-                margin-bottom: 24px;
-                text-align: center;
-            }
-
-            .divider-line {
-                margin-bottom: 30px;
-            }
-
-            .btn-enter {
-                padding: 12px 28px;
-                font-size: 13px;
-                letter-spacing: 3px;
-            }
-
-            .bottom-bar {
-                flex-direction: column;
-                gap: 4px;
-                text-align: center;
-            }
-
-            .status-text {
-                font-size: 9px;
-                letter-spacing: 2px;
-            }
-
-            /* corners hide عشان الزحمة */
-            .corner {
-                display: none;
-            }
+        .scene {
+            padding: 20px;
         }
+
+        .glass-card {
+            padding: 28px 20px;
+            max-width: 100%;
+        }
+
+        .logo-wrap img {
+            width: 220px; /* كان 400 */
+        }
+
+        .brand-name {
+            font-size: clamp(28px, 6vw, 42px);
+            letter-spacing: 6px;
+        }
+
+        .top-label {
+            font-size: 11px;
+            letter-spacing: 3px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .divider-line {
+            margin-bottom: 30px;
+        }
+
+        .btn-enter {
+            padding: 12px 28px;
+            font-size: 13px;
+            letter-spacing: 3px;
+        }
+
+        .bottom-bar {
+            flex-direction: column;
+            gap: 4px;
+            text-align: center;
+        }
+
+        .status-text {
+            font-size: 9px;
+            letter-spacing: 2px;
+        }
+
+        /* corners hide عشان الزحمة */
+        .corner {
+            display: none;
+        }
+    }
     </style>
 </head>
 <body>

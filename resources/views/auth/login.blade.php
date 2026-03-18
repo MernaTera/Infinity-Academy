@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Infinity System — Sign In</title>
+    <title>Infinity Academy — Sign In</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --gold: #C9A84C;
-            --gold-light: #E8C97A;
-            --gold-dim: rgba(201, 168, 76, 0.15);
-            --bg: #080808;
-            --surface: #0F0F0F;
-            --surface2: #161616;
-            --text: #F0EDE6;
-            --muted: #6B6560;
-            --border: rgba(201, 168, 76, 0.2);
+            --orange:      #F5911E;
+            --orange-light:#FFAB4A;
+            --orange-dim:  rgba(245,145,30,0.1);
+            --blue:        #1B4FA8;
+            --blue-light:  #2D6FDB;
+            --blue-dim:    rgba(27,79,168,0.08);
+            --bg:          #F8F6F2;
+            --text:        #1A2A4A;
+            --muted:       #7A8A9A;
+            --border:      rgba(27,79,168,0.15);
+            --surface:     rgba(255,255,255,0.6);
+            --input-bg:    rgba(255,255,255,0.8);
         }
 
         html, body {
@@ -30,108 +34,108 @@
             overflow: hidden;
         }
 
-        /* ── BACKGROUND ── */
-        .scene {
+        /* ── CANVAS ── */
+        canvas {
             position: fixed; inset: 0;
-            display: grid;
-            place-items: center;
+            width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
         }
 
-        .bg-grid {
-            position: absolute; inset: 0;
+        /* ── GRID ── */
+        .grid-overlay {
+            position: fixed; inset: 0;
             background-image:
-                linear-gradient(rgba(201,168,76,0.04) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(201,168,76,0.04) 1px, transparent 1px);
-            background-size: 60px 60px;
-            animation: gridDrift 20s linear infinite;
+                linear-gradient(rgba(27,79,168,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(27,79,168,0.06) 1px, transparent 1px);
+            background-size: 70px 70px;
+            z-index: 1;
+            animation: gridMove 25s linear infinite;
         }
-
-        @keyframes gridDrift {
+        @keyframes gridMove {
             from { background-position: 0 0; }
-            to   { background-position: 60px 60px; }
+            to   { background-position: 70px 70px; }
         }
 
-        .bg-radial {
-            position: absolute;
-            width: 700px; height: 700px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 65%);
-            animation: pulse 8s ease-in-out infinite;
-            pointer-events: none;
+        /* ── SCENE ── */
+        .scene {
+            position: relative; z-index: 2;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px;
         }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.8; }
-            50%       { transform: scale(1.1); opacity: 1; }
-        }
-
-        .bg-corner {
-            position: absolute;
-            border: 1px solid var(--border);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        .bg-corner:nth-child(1) { width: 500px; height: 500px; top: -150px; left: -150px; opacity: 0.3; }
-        .bg-corner:nth-child(2) { width: 300px; height: 300px; bottom: -80px; right: -80px; opacity: 0.2; }
 
         /* ── CARD ── */
         .card {
-            position: relative;
-            width: 460px;
+            width: 100%;
+            max-width: 460px;
             background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 4px;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.75);
+            border-radius: 8px;
             overflow: hidden;
+            box-shadow:
+                0 8px 40px rgba(27,79,168,0.1),
+                0 2px 8px rgba(27,79,168,0.05),
+                inset 0 1px 0 rgba(255,255,255,0.9);
             animation: cardIn 0.9s cubic-bezier(0.16,1,0.3,1) both;
         }
 
         @keyframes cardIn {
-            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            from { opacity: 0; transform: translateY(28px) scale(0.97); }
             to   { opacity: 1; transform: none; }
         }
 
-        /* top gold line */
+        /* top accent line */
         .card::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 2px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            background: linear-gradient(90deg, transparent, var(--orange), var(--blue-light), transparent);
         }
+        .card { position: relative; }
 
         /* ── HEADER ── */
         .card-header {
-            padding: 48px 48px 32px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding: 10px 15px 10px;
+            border-bottom: 1px solid rgba(27,79,168,0.06);
             display: flex;
-            align-items: flex-start;
-            gap: 20px;
+            align-items: center;
+            gap: 16px;
+            overflow: hidden;
         }
 
-        .logo-mark {
-            width: 48px; height: 48px;
+        .logo-img {
+            width: 160px;  /* بدل 110px */
+            height: auto;
+            mix-blend-mode: multiply;
             flex-shrink: 0;
-            position: relative;
         }
 
-        .logo-mark svg {
-            width: 100%; height: 100%;
+        .header-divider {
+            width: 1px;
+            height: 40px;
+            background: linear-gradient(to bottom, transparent, rgba(27,79,168,0.2), transparent);
+            flex-shrink: 0;
         }
 
         .header-text {}
 
         .system-label {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             letter-spacing: 4px;
-            color: var(--gold);
+            color: var(--orange);
             text-transform: uppercase;
             margin-bottom: 4px;
         }
 
         .card-title {
             font-family: 'Cormorant Garamond', serif;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 300;
             color: var(--text);
             line-height: 1.1;
@@ -139,44 +143,52 @@
 
         .card-title em {
             font-style: italic;
-            color: var(--gold-light);
+            color: var(--blue);
         }
 
         /* ── BODY ── */
-        .card-body {
-            padding: 36px 48px 48px;
+        .card-body { padding: 32px 40px 36px; }
+
+        /* error */
+        .alert-error {
+            padding: 11px 14px;
+            background: rgba(239,68,68,0.06);
+            border: 1px solid rgba(239,68,68,0.2);
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 12px;
+            color: #DC2626;
+            letter-spacing: 0.3px;
         }
 
+        /* ── FIELD ── */
         .field {
-            margin-bottom: 22px;
+            margin-bottom: 20px;
             animation: fieldIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
         }
-
         .field:nth-child(1) { animation-delay: 0.2s; }
         .field:nth-child(2) { animation-delay: 0.3s; }
 
         @keyframes fieldIn {
-            from { opacity: 0; transform: translateX(-12px); }
+            from { opacity: 0; transform: translateX(-10px); }
             to   { opacity: 1; transform: none; }
         }
 
         .field label {
             display: block;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 500;
             letter-spacing: 3px;
             text-transform: uppercase;
             color: var(--muted);
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
-        .input-wrap {
-            position: relative;
-        }
+        .input-wrap { position: relative; }
 
         .input-wrap .icon {
             position: absolute;
-            left: 16px; top: 50%;
+            left: 14px; top: 50%;
             transform: translateY(-50%);
             color: var(--muted);
             transition: color 0.3s;
@@ -185,10 +197,10 @@
 
         .input-wrap input {
             width: 100%;
-            padding: 14px 16px 14px 46px;
-            background: var(--surface2);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 2px;
+            padding: 13px 14px 13px 42px;
+            background: var(--input-bg);
+            border: 1px solid rgba(27,79,168,0.12);
+            border-radius: 4px;
             color: var(--text);
             font-family: 'DM Sans', sans-serif;
             font-size: 14px;
@@ -197,48 +209,45 @@
             transition: border-color 0.3s, box-shadow 0.3s;
         }
 
-        .input-wrap input::placeholder { color: var(--muted); }
+        .input-wrap input::placeholder { color: #B0BCCC; }
 
         .input-wrap input:focus {
-            border-color: var(--gold);
-            box-shadow: 0 0 0 3px var(--gold-dim);
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px var(--blue-dim);
         }
 
-        .input-wrap input:focus ~ .icon,
-        .input-wrap:focus-within .icon {
-            color: var(--gold);
-        }
+        .input-wrap:focus-within .icon { color: var(--blue); }
 
         .field-meta {
             display: flex;
             justify-content: flex-end;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         .field-meta a {
             font-size: 11px;
             color: var(--muted);
             text-decoration: none;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
             transition: color 0.2s;
         }
 
-        .field-meta a:hover { color: var(--gold); }
+        .field-meta a:hover { color: var(--blue); }
 
-        /* remember row */
+        /* ── REMEMBER ── */
         .remember-row {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
             animation: fieldIn 0.6s 0.4s cubic-bezier(0.16,1,0.3,1) both;
         }
 
         .custom-check {
             width: 16px; height: 16px;
-            background: var(--surface2);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 2px;
+            background: var(--input-bg);
+            border: 1px solid rgba(27,79,168,0.2);
+            border-radius: 3px;
             cursor: pointer;
             position: relative;
             flex-shrink: 0;
@@ -246,16 +255,16 @@
         }
 
         .custom-check.checked {
-            background: var(--gold-dim);
-            border-color: var(--gold);
+            background: var(--blue-dim);
+            border-color: var(--blue);
         }
 
         .custom-check.checked::after {
             content: '';
             position: absolute;
-            top: 3px; left: 5px;
-            width: 4px; height: 7px;
-            border: 1.5px solid var(--gold);
+            top: 2px; left: 4px;
+            width: 5px; height: 8px;
+            border: 1.5px solid var(--blue);
             border-top: none; border-left: none;
             transform: rotate(45deg);
         }
@@ -267,252 +276,260 @@
             user-select: none;
         }
 
-        /* btn */
+        /* ── SUBMIT ── */
         .btn-submit {
             width: 100%;
-            padding: 15px;
+            padding: 14px;
             background: transparent;
-            border: 1px solid var(--gold);
-            border-radius: 2px;
-            color: var(--gold);
+            border: 1.5px solid var(--blue);
+            border-radius: 4px;
+            color: var(--blue);
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 15px;
+            font-size: 14px;
             letter-spacing: 4px;
             cursor: pointer;
             position: relative;
             overflow: hidden;
-            transition: color 0.4s;
+            transition: color 0.4s, border-color 0.4s;
             animation: fieldIn 0.6s 0.5s cubic-bezier(0.16,1,0.3,1) both;
         }
 
         .btn-submit::before {
             content: '';
-            position: absolute;
-            inset: 0;
-            background: var(--gold);
-            transform: scaleX(0);
-            transform-origin: left;
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, var(--blue), var(--blue-light));
+            transform: scaleX(0); transform-origin: left;
             transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
         }
 
         .btn-submit:hover::before { transform: scaleX(1); }
-        .btn-submit:hover { color: var(--bg); }
-
+        .btn-submit:hover { color: #fff; border-color: var(--blue-light); }
         .btn-submit span { position: relative; z-index: 1; }
-
-        /* divider */
-        .divider {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin: 28px 0;
-            animation: fieldIn 0.6s 0.6s cubic-bezier(0.16,1,0.3,1) both;
-        }
-
-        .divider::before, .divider::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255,255,255,0.05);
-        }
-
-        .divider span {
-            font-size: 10px;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-            color: var(--muted);
-        }
-
-        /* register link */
-        .register-prompt {
-            text-align: center;
-            font-size: 12px;
-            color: var(--muted);
-            animation: fieldIn 0.6s 0.7s cubic-bezier(0.16,1,0.3,1) both;
-        }
-
-        .register-prompt a {
-            color: var(--gold);
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
-        }
-
-        .register-prompt a:hover { color: var(--gold-light); }
 
         /* ── FOOTER ── */
         .card-footer {
-            padding: 16px 48px;
-            border-top: 1px solid rgba(255,255,255,0.04);
+            padding: 14px 40px;
+            border-top: 1px solid rgba(27,79,168,0.06);
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .version-badge {
-            font-size: 10px;
+            font-size: 9px;
             letter-spacing: 2px;
             text-transform: uppercase;
-            color: rgba(255,255,255,0.15);
+            color: rgba(27,79,168,0.25);
         }
 
         .status-dot {
             display: flex;
             align-items: center;
             gap: 6px;
-            font-size: 10px;
+            font-size: 9px;
             letter-spacing: 1px;
-            color: rgba(255,255,255,0.2);
+            color: var(--muted);
         }
 
         .status-dot::before {
             content: '';
             width: 5px; height: 5px;
             border-radius: 50%;
-            background: #4ADE80;
-            box-shadow: 0 0 6px #4ADE80;
+            background: #22C55E;
+            box-shadow: 0 0 6px #22C55E;
             animation: blink 2s ease-in-out infinite;
+            flex-shrink: 0;
         }
 
         @keyframes blink {
             0%, 100% { opacity: 1; }
-            50%       { opacity: 0.4; }
+            50%       { opacity: 0.3; }
         }
 
-        /* error */
-        .alert-error {
-            padding: 12px 16px;
-            background: rgba(239,68,68,0.07);
-            border: 1px solid rgba(239,68,68,0.2);
-            border-radius: 2px;
-            margin-bottom: 24px;
-            font-size: 12px;
-            color: #FCA5A5;
-            letter-spacing: 0.3px;
+        /* ── CORNERS ── */
+        .corner {
+            position: fixed; width: 56px; height: 56px;
+            pointer-events: none; z-index: 2;
+            opacity: 0; animation: fadeIn 1.2s 1s ease forwards;
+        }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        .corner--tl { top: 28px; left: 28px;   border-top: 1px solid var(--border); border-left:  1px solid var(--border); }
+        .corner--tr { top: 28px; right: 28px;   border-top: 1px solid var(--border); border-right: 1px solid var(--border); }
+        .corner--bl { bottom: 28px; left: 28px;  border-bottom: 1px solid var(--border); border-left:  1px solid var(--border); }
+        .corner--br { bottom: 28px; right: 28px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+
+        /* ── MOBILE ── */
+        @media (max-width: 500px) {
+            .card { border-radius: 6px; }
+            .card-header, .card-body { padding-left: 24px; padding-right: 24px; }
+            .card-footer { padding-left: 24px; padding-right: 24px; }
+            .logo-img { width: 80px; }
+            .corner { display: none; }
         }
     </style>
 </head>
 <body>
 
-<div class="scene">
-    <div class="bg-grid"></div>
-    <div class="bg-radial"></div>
-    <div class="bg-corner"></div>
-    <div class="bg-corner"></div>
+<canvas id="c"></canvas>
+<div class="grid-overlay"></div>
 
+<div class="corner corner--tl"></div>
+<div class="corner corner--tr"></div>
+<div class="corner corner--bl"></div>
+<div class="corner corner--br"></div>
+
+<div class="scene">
     <div class="card">
 
+        <!-- HEADER -->
         <div class="card-header">
-            <!-- Logo Mark -->
-            <div class="logo-mark">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <polygon points="24,4 44,14 44,34 24,44 4,34 4,14" stroke="#C9A84C" stroke-width="1" fill="rgba(201,168,76,0.05)"/>
-                    <polygon points="24,10 38,18 38,30 24,38 10,30 10,18" stroke="#C9A84C" stroke-width="0.5" fill="none" opacity="0.5"/>
-                    <line x1="24" y1="4" x2="24" y2="44" stroke="#C9A84C" stroke-width="0.5" opacity="0.3"/>
-                    <line x1="4" y1="14" x2="44" y2="34" stroke="#C9A84C" stroke-width="0.5" opacity="0.3"/>
-                    <line x1="44" y1="14" x2="4" y2="34" stroke="#C9A84C" stroke-width="0.5" opacity="0.3"/>
-                    <circle cx="24" cy="24" r="4" fill="#C9A84C" opacity="0.9"/>
-                    <circle cx="24" cy="24" r="7" stroke="#C9A84C" stroke-width="0.5" fill="none" opacity="0.4"/>
-                </svg>
-            </div>
-
+            <img src="{{ asset('images/logo.png') }}" alt="Infinity Logo" class="logo-img">
+            <div class="header-divider"></div>
             <div class="header-text">
-                <div class="system-label">Infinity System</div>
+                <div class="system-label">Infinity Academy</div>
                 <h1 class="card-title">Welcome <em>back</em></h1>
             </div>
         </div>
 
+        <!-- BODY -->
         <div class="card-body">
 
-            {{-- @if ($errors->any())
-            <div class="alert-error">
-                {{ $errors->first() }}
-            </div>
-            @endif --}}
+            @if (session('status'))
+                <div class="alert-error" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.2);color:#15803D;">
+                    {{ session('status') }}
+                </div>
+            @endif
+\
 
             <form method="POST" action="{{ route('login') }}">
                 @csrf
 
+                <!-- Email -->
                 <div class="field">
                     <label for="email">Email Address</label>
                     <div class="input-wrap">
-                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <rect x="2" y="4" width="20" height="16" rx="2"/>
                             <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
                         </svg>
                         <input
-                            id="email"
-                            type="email"
-                            name="email"
+                            id="email" type="email" name="email"
+                            placeholder="name@infinity.com"
                             value="{{ old('email') }}"
                             autocomplete="email"
-                            placeholder="name@company.com"
-                            value="{{ old('email') }}"
-                            required
-                            autofocus
-                        >
+                            required autofocus>
                     </div>
                 </div>
 
+                <!-- Password -->
                 <div class="field">
                     <label for="password">Password</label>
                     <div class="input-wrap">
-                        <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <svg class="icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                             <rect x="3" y="11" width="18" height="11" rx="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                         </svg>
                         <input
-                            id="password"
-                            type="password"
-                            name="password"
-                            autocomplete="current-password"
+                            id="password" type="password" name="password"
                             placeholder="••••••••••"
-                            required
-                        >
+                            autocomplete="current-password"
+                            required>
                     </div>
+                    @if (Route::has('password.request'))
                     <div class="field-meta">
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}">Forgot password?</a>
-                        @endif
+                        <a href="{{ route('password.request') }}">Forgot password?</a>
                     </div>
+                    @endif
                 </div>
 
-                <div class="remember-row" id="rememberRow">
+                <!-- Remember -->
+                <div class="remember-row">
                     <div class="custom-check" id="checkBox"></div>
                     <input type="checkbox" name="remember" id="remember" hidden>
                     <span onclick="toggleCheck()">Keep me signed in</span>
                 </div>
 
+                <!-- Submit -->
                 <button type="submit" class="btn-submit">
                     <span>Access System</span>
                 </button>
 
-                <!-- @if (Route::has('register'))
-                <div class="divider"><span>or</span></div>
-                <p class="register-prompt">
-                    Don't have an account?
-                    <a href="{{ route('register') }}">Create one →</a>
-                </p>
-                @endif -->
-
             </form>
         </div>
 
+        <!-- FOOTER -->
         <div class="card-footer">
-            <span class="version-badge">v1.0.0</span>
-            <span class="status-dot">All systems operational Developed by Merna Tera</span>
+            <span class="version-badge">v1.0.0 · Developed by Merna Tera</span>
+            <span class="status-dot">All systems operational</span>
         </div>
+
     </div>
 </div>
 
 <script>
+    // checkbox
     function toggleCheck() {
-        const box = document.getElementById('checkBox');
+        const box   = document.getElementById('checkBox');
         const input = document.getElementById('remember');
         box.classList.toggle('checked');
         input.checked = box.classList.contains('checked');
     }
     document.getElementById('checkBox').addEventListener('click', toggleCheck);
+
+    // particles — نفس الـ welcome page
+    const canvas = document.getElementById('c');
+    const ctx    = canvas.getContext('2d');
+    let W, H, particles = [];
+
+    function resize() { W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+
+    function Particle() {
+        this.x        = Math.random() * W;
+        this.y        = Math.random() * H;
+        this.vx       = (Math.random() - 0.5) * 0.35;
+        this.vy       = (Math.random() - 0.5) * 0.35;
+        this.r        = Math.random() * 1.8 + 0.5;
+        this.isOrange = Math.random() > 0.5;
+        this.a        = Math.random() * 0.45 + 0.15;
+    }
+
+    function init() { resize(); particles = Array.from({length: 110}, () => new Particle()); }
+
+    function draw() {
+        ctx.clearRect(0, 0, W, H);
+        for (let i = 0; i < particles.length; i++) {
+            const p = particles[i];
+            p.x += p.vx; p.y += p.vy;
+            if (p.x < 0) p.x = W; if (p.x > W) p.x = 0;
+            if (p.y < 0) p.y = H; if (p.y > H) p.y = 0;
+
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+            ctx.fillStyle = p.isOrange
+                ? `rgba(245,145,30,${p.a})`
+                : `rgba(27,79,168,${p.a})`;
+            ctx.fill();
+
+            for (let j = i + 1; j < particles.length; j++) {
+                const q  = particles[j];
+                const dx = p.x - q.x, dy = p.y - q.y;
+                const d  = Math.sqrt(dx*dx + dy*dy);
+                if (d < 120) {
+                    ctx.beginPath();
+                    ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+                    ctx.strokeStyle = p.isOrange
+                        ? `rgba(245,145,30,${0.12*(1-d/120)})`
+                        : `rgba(27,79,168,${0.12*(1-d/120)})`;
+                    ctx.stroke();
+                }
+            }
+        }
+        requestAnimationFrame(draw);
+    }
+
+    window.addEventListener('resize', resize);
+    init(); draw();
 </script>
 
 </body>
