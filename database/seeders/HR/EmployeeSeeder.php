@@ -4,7 +4,7 @@ namespace Database\Seeders\HR;
 
 use Illuminate\Database\Seeder;
 use App\Models\HR\Employee;
-use App\Models\User;
+use App\Models\Auth\User;
 use App\Models\Core\Branch;
 
 class EmployeeSeeder extends Seeder

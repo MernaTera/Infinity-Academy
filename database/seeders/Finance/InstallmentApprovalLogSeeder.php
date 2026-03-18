@@ -20,6 +20,10 @@ class InstallmentApprovalLogSeeder extends Seeder
         $plan = PaymentPlan::first();
         $employee = Employee::first();
 
+        if (!$enrollment || !$plan || !$employee) {
+            return; 
+        }
+
         InstallmentApprovalLog::create([
             'enrollment_id' => $enrollment->enrollment_id,
             'payment_plan_id' => $plan->payment_plan_id,

@@ -20,6 +20,10 @@ class BundleUsageLogSeeder extends Seeder
         $session = CourseSession::first();
         $employee = Employee::first();
 
+        if (!$enrollment || !$session || !$employee) {
+            return; 
+        }
+
         BundleUsageLog::create([
             'enrollment_id' => $enrollment->enrollment_id,
             'course_session_id' => $session->session_id,

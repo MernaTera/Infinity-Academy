@@ -5,6 +5,8 @@ namespace Database\Seeders\Enrollment;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Enrollment\RestrictionLog;
+use App\Models\Enrollment\Enrollment;
+use App\Models\HR\Employee;
 
 class RestrictionLogSeeder extends Seeder
 {
@@ -13,13 +15,19 @@ class RestrictionLogSeeder extends Seeder
      */
     public function run(): void
     {
-        RestrictionLog::insert([
-            [
-                'enrollment_id' => 1,
-                'triggered_by' => 'Customer_Service',
-                'reason' => 'absence_limit_exceeded',
-                'notes' => 'Too many absences',
-            ]
+        $enrollment = Enrollment::first();
+        $employee = Employee::first();
+
+        if (!$enrollment) {
+            return;
+        }
+
+        RestrictionLog::create([
+            'enrollment_id' => $enrollment->enrollment_id,
+            'triggered_by' => 'Customer_Service',
+            'reason' => 'absence_limit_exceeded',
+            'notes' => 'Too many absences',
+            'released_by' => null,
         ]);
     }
 }

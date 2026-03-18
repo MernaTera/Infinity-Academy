@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\User;
+use App\Models\Auth\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Database\Seeders\Auth\RoleSeeder;
@@ -64,69 +64,81 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        //  AUTH
         $this->call([
-            \Database\Seeders\Auth\RoleSeeder::class,
-            \Database\Seeders\Auth\ModuleSeeder::class,
-            \Database\Seeders\Auth\PermissionSeeder::class,
-            \Database\Seeders\Auth\RolePermissionSeeder::class,
-            \Database\Seeders\Auth\AdminUserSeeder::class,
-            \Database\Seeders\Auth\UserSeeder::class
+            RoleSeeder::class,
+            ModuleSeeder::class,
+            PermissionSeeder::class,
+            RolePermissionSeeder::class,
+            AdminUserSeeder::class,
+            UserSeeder::class,
         ]);
 
+        //  CORE
         $this->call([
-            \Database\Seeders\Core\BranchSeeder::class,
+            BranchSeeder::class,
         ]);
 
+        // HR 
         $this->call([
-            \Database\Seeders\Academic\EnglishLevelSeeder::class,
-            \Database\Seeders\Academic\CourseTemplateSeeder::class,
-            \Database\Seeders\Academic\CourseSessionSeeder::class,
-            \Database\Seeders\Academic\BreakSlotSeeder::class,
-            \Database\Seeders\Academic\TimeSlotSeeder::class,
-            \Database\Seeders\Academic\CourseInstanceSeeder::class,
-            \Database\Seeders\Academic\InstanceScheduleSeeder::class,
-            \Database\Seeders\Academic\PatchSeeder::class,
-            \Database\Seeders\Academic\SublevelSeeder::class,
-            \Database\Seeders\Academic\LevelSeeder::class,
-            \Database\Seeders\Academic\RoomSeeder::class,
+            EmployeeSeeder::class,
+            EnglishLevelSeeder::class,
+            TeacherSeeder::class,
         ]);
 
+        //  ACADEMIC 
         $this->call([
-            \Database\Seeders\Attendance\AttendanceSeeder::class,
+            CourseTemplateSeeder::class,
+            LevelSeeder::class,
+            SublevelSeeder::class,
+            PatchSeeder::class,
+            RoomSeeder::class,
+            TimeSlotSeeder::class,
+            BreakSlotSeeder::class,
+            CourseInstanceSeeder::class,
+            InstanceScheduleSeeder::class,
+            CourseSessionSeeder::class,
         ]);
 
+        //  ENROLLMENT
         $this->call([
-            \Database\Seeders\Enrollment\CsTargetSeeder::class,
-            \Database\Seeders\Enrollment\PlacementTestSeeder::class,
-            \Database\Seeders\Enrollment\EnrollmentSeeder::class,
-            \Database\Seeders\Enrollment\PostponementSeeder::class,
-            \Database\Seeders\Enrollment\RestrictionLogSeeder::class,
-            \Database\Seeders\Enrollment\WaitingListSeeder::class,
+            PlacementTestSeeder::class,
+            EnrollmentSeeder::class,
+            CsTargetSeeder::class,
+            PostponementSeeder::class,
+            RestrictionLogSeeder::class,
+            WaitingListSeeder::class,
         ]);
 
+        //  FINANCE
         $this->call([
-            \Database\Seeders\Finance\PaymentPlanSeeder::class,
-            \Database\Seeders\Finance\PrivateBundleSeeder::class,
-            \Database\Seeders\Finance\OfferSeeder::class,
-            \Database\Seeders\Finance\FinancialTransactionSeeder::class,
-            \Database\Seeders\Finance\InstallmentScheduleSeeder::class,
-            \Database\Seeders\Finance\InstallmentApprovalLogSeeder::class,
-            \Database\Seeders\Finance\RefundRequestSeeder::class,
-            \Database\Seeders\Finance\RevenueSplitSeeder::class,
-            \Database\Seeders\Finance\BundleUsageLogSeeder::class,
+            PaymentPlanSeeder::class,
+            PrivateBundleSeeder::class,
+            OfferSeeder::class,
+            FinancialTransactionSeeder::class,
+            InstallmentScheduleSeeder::class,
+            InstallmentApprovalLogSeeder::class,
+            RefundRequestSeeder::class,
+            RevenueSplitSeeder::class,
+            BundleUsageLogSeeder::class,
         ]);
 
+        //  ATTENDANCE
         $this->call([
-            \Database\Seeders\HR\EmployeeSeeder::class,
-            \Database\Seeders\HR\TeacherSeeder::class,
-            \Database\Seeders\HR\TeacherAvailabilitySeeder::class,
-            \Database\Seeders\HR\ContractTypeSeeder::class,
+            AttendanceSeeder::class,
         ]);
 
+        //  HR EXTENSIONS 
         $this->call([
-            \Database\Seeders\Leads\LeadSeeder::class,
-            \Database\Seeders\Leads\LeadCallLogSeeder::class,
-            \Database\Seeders\Leads\LeadHistorySeeder::class,
+            TeacherAvailabilitySeeder::class,
+            ContractTypeSeeder::class,
+        ]);
+
+        //  LEADS 
+        $this->call([
+            LeadSeeder::class,
+            LeadCallLogSeeder::class,
+            LeadHistorySeeder::class,
         ]);
     }
 }

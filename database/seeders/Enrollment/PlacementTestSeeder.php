@@ -4,7 +4,7 @@ namespace Database\Seeders\Enrollment;
 
 use Illuminate\Database\Seeder;
 use App\Models\Enrollment\PlacementTest;
-use App\Models\Student;
+use App\Models\Student\Student;
 use App\Models\Academic\Level;
 use App\Models\HR\Employee;
 

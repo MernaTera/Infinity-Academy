@@ -29,10 +29,10 @@ class TimeSlotSeeder extends Seeder
                 'created_by_admin_id' => 1
             ],
             [
-                'name' => 'Evening Slot',
+                'name' => 'Night Slot',
                 'start_time' => '18:00:00',
                 'end_time' => '20:00:00',
-                'slot_type' => 'Evening',
+                'slot_type' => 'Night',
                 'created_by_admin_id' => 1
             ]
         ]);
