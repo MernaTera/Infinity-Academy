@@ -11,6 +11,7 @@ use Database\Seeders\Auth\PermissionSeeder;
 use Database\Seeders\Auth\RolePermissionSeeder;
 use Database\Seeders\Auth\AdminUserSeeder;
 use Database\Seeders\Auth\UserSeeder;
+use Database\Seeders\Core\BranchSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -28,6 +29,10 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\Auth\RolePermissionSeeder::class,
             \Database\Seeders\Auth\AdminUserSeeder::class,
             \Database\Seeders\Auth\UserSeeder::class
+        ]);
+
+        $this->call([
+            \Database\Seeders\Core\BranchSeeder::class,
         ]);
     }
 }
