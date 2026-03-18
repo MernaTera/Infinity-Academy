@@ -10,13 +10,14 @@
         *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
         :root {
-            --gold: #C9A84C;
-            --gold-light: #E8C97A;
-            --gold-dim: rgba(201,168,76,0.12);
-            --bg: #060606;
-            --text: #F0EDE6;
-            --muted: #5A5550;
-            --border: rgba(201,168,76,0.18);
+            --orange:      #F5911E;
+            --orange-light: #FFAB4A;
+            --blue:        #1B4FA8;
+            --blue-light:  #2D6FDB;
+            --bg:          #F8F6F2;
+            --text:        #1A2A4A;
+            --muted:       #7A8A9A;
+            --border:      rgba(27,79,168,0.18);
         }
 
         html, body {
@@ -40,8 +41,8 @@
         .grid-overlay {
             position: fixed; inset: 0;
             background-image:
-                linear-gradient(rgba(201,168,76,0.035) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(201,168,76,0.035) 1px, transparent 1px);
+                linear-gradient(rgba(27,79,168,0.06) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(27,79,168,0.06) 1px, transparent 1px);
             background-size: 70px 70px;
             z-index: 1;
             animation: gridMove 25s linear infinite;
@@ -49,6 +50,30 @@
         @keyframes gridMove {
             from { background-position: 0 0; }
             to   { background-position: 70px 70px; }
+        }
+
+        /* ─── GLASS CARD ─── */
+        .glass-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 48px 60px 40px;
+
+            background: rgba(255,255,255,0.18); 
+
+            backdrop-filter: blur(25px); 
+            -webkit-backdrop-filter: blur(25px);
+
+            border: 1px solid rgba(255,255,255,0.4); 
+
+            border-radius: 8px;
+
+            box-shadow:
+                0 8px 40px rgba(27,79,168,0.06),
+                inset 0 1px 0 rgba(255,255,255,0.6);
+
+            max-width: 900px;
+            width: 100%;
         }
 
         /* ─── MAIN LAYOUT ─── */
@@ -67,9 +92,9 @@
         /* ─── TOP LABEL ─── */
         .top-label {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 11px;
+            font-size: 15px;
             letter-spacing: 6px;
-            color: var(--muted);
+            color: #2b5ba8;
             text-transform: uppercase;
             margin-bottom: 48px;
             opacity: 0;
@@ -89,27 +114,18 @@
             animation: scaleIn 1s 0.4s cubic-bezier(0.16,1,0.3,1) forwards;
         }
 
+        .logo-wrap img {
+            width: 400px;
+            height: auto;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 25px rgba(27,79,168,0.25));
+        }
+
+
+
         @keyframes scaleIn {
             from { opacity: 0; transform: scale(0.7) rotate(-10deg); }
             to   { opacity: 1; transform: scale(1) rotate(0deg); }
-        }
-
-        .logo-wrap svg {
-            width: 110px;
-            height: 110px;
-            filter: drop-shadow(0 0 30px rgba(201,168,76,0.35));
-        }
-
-        .logo-ring {
-            animation: spin 20s linear infinite;
-            transform-origin: center;
-            transform-box: fill-box;
-        }
-
-        .logo-ring-2 {
-            animation: spin 14s linear infinite reverse;
-            transform-origin: center;
-            transform-box: fill-box;
         }
 
         @keyframes spin {
@@ -120,12 +136,12 @@
         /* ─── TITLE ─── */
         .brand-name {
             font-family: 'Bebas Neue', sans-serif;
-            font-size: clamp(52px, 8vw, 96px);
+            font-size: clamp(36px, 5vw, 64px);
             letter-spacing: 12px;
             text-transform: uppercase;
             line-height: 1;
             text-align: center;
-            background: linear-gradient(135deg, #C9A84C 0%, #E8C97A 40%, #C9A84C 70%, #A07830 100%);
+            background: linear-gradient(135deg, #2b5ba8 0%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -138,6 +154,7 @@
             font-family: 'Cormorant Garamond', serif;
             font-size: 40px;
             font-style: italic;
+            font-weight: 300;
             color: var(--muted);
             letter-spacing: 3px;
             text-align: center;
@@ -155,8 +172,7 @@
         .divider-line {
             width: 120px;
             height: 1px;
-            background: linear-gradient(90deg, transparent, var(--gold), transparent);
-            margin-bottom: 56px;
+            background: linear-gradient(90deg, transparent, var(--orange), var(--blue-light), transparent);            margin-bottom: 56px;
             opacity: 0;
             animation: fadeUp 0.9s 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
         }
@@ -164,21 +180,17 @@
         /* ─── ENTER BUTTON ─── */
         .btn-enter {
             position: relative;
-            display: inline-flex;
-            align-items: center;
-            gap: 14px;
-            padding: 18px 48px;
+            display: inline-flex; align-items: center; gap: 12px;
+            padding: 14px 44px;
             background: transparent;
-            border: 1px solid var(--gold);
+            border: 1.5px solid var(--blue);
             border-radius: 2px;
-            color: var(--gold);
+            color: var(--blue);
             font-family: 'Bebas Neue', sans-serif;
-            font-size: 16px;
-            letter-spacing: 5px;
-            text-decoration: none;
-            cursor: pointer;
+            font-size: 15px; letter-spacing: 5px;
+            text-decoration: none; cursor: pointer;
             overflow: hidden;
-            transition: color 0.45s;
+            transition: color 0.45s, border-color 0.45s;
             opacity: 0;
             animation: fadeUp 0.9s 1.1s cubic-bezier(0.16,1,0.3,1) forwards;
         }
@@ -187,14 +199,14 @@
             content: '';
             position: absolute;
             inset: 0;
-            background: var(--gold);
+            background: linear-gradient(90deg, var(--blue), var(--blue-light));
             transform: scaleX(0);
             transform-origin: left;
             transition: transform 0.45s cubic-bezier(0.16,1,0.3,1);
         }
 
         .btn-enter:hover::before { transform: scaleX(1); }
-        .btn-enter:hover { color: #060606; }
+        .btn-enter:hover { color: #ffffff; }
 
         .btn-enter span,
         .btn-enter svg {
@@ -261,6 +273,62 @@
             text-transform: uppercase;
             color: var(--muted);
         }
+
+
+        /* ─── MOBILE RESPONSIVE ─── */
+        @media (max-width: 768px) {
+
+            .scene {
+                padding: 20px;
+            }
+
+            .glass-card {
+                padding: 28px 20px;
+                max-width: 100%;
+            }
+
+            .logo-wrap img {
+                width: 220px; /* كان 400 */
+            }
+
+            .brand-name {
+                font-size: clamp(28px, 6vw, 42px);
+                letter-spacing: 6px;
+            }
+
+            .top-label {
+                font-size: 11px;
+                letter-spacing: 3px;
+                margin-bottom: 24px;
+                text-align: center;
+            }
+
+            .divider-line {
+                margin-bottom: 30px;
+            }
+
+            .btn-enter {
+                padding: 12px 28px;
+                font-size: 13px;
+                letter-spacing: 3px;
+            }
+
+            .bottom-bar {
+                flex-direction: column;
+                gap: 4px;
+                text-align: center;
+            }
+
+            .status-text {
+                font-size: 9px;
+                letter-spacing: 2px;
+            }
+
+            /* corners hide عشان الزحمة */
+            .corner {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -275,54 +343,28 @@
 <div class="corner corner--br"></div>
 
 <div class="scene">
-    <div class="top-label">Infinity Academy Management System Platfrom</div>
+    <div class="glass-card">
+        <div class="top-label">Infinity Academy Management System Platfrom</div>
 
-    <!-- Animated Logo -->
-    <div class="logo-wrap">
-        <svg viewBox="0 0 110 110" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- outer hex -->
-            <polygon points="55,6 100,30 100,80 55,104 10,80 10,30"
-                     stroke="#C9A84C" stroke-width="1" fill="rgba(201,168,76,0.04)"/>
-            <!-- rotating ring 1 -->
-            <g class="logo-ring">
-                <polygon points="55,16 90,35 90,75 55,94 20,75 20,35"
-                         stroke="#C9A84C" stroke-width="0.6" fill="none" opacity="0.4"
-                         stroke-dasharray="4 6"/>
-            </g>
-            <!-- rotating ring 2 -->
-            <g class="logo-ring-2">
-                <circle cx="55" cy="55" r="24" stroke="#C9A84C" stroke-width="0.6"
-                        fill="none" opacity="0.3" stroke-dasharray="3 5"/>
-            </g>
-            <!-- axis lines -->
-            <line x1="55" y1="6"  x2="55" y2="104" stroke="#C9A84C" stroke-width="0.4" opacity="0.2"/>
-            <line x1="10" y1="30" x2="100" y2="80" stroke="#C9A84C" stroke-width="0.4" opacity="0.2"/>
-            <line x1="100" y1="30" x2="10" y2="80" stroke="#C9A84C" stroke-width="0.4" opacity="0.2"/>
-            <!-- center -->
-            <circle cx="55" cy="55" r="7" fill="#C9A84C" opacity="0.9"/>
-            <circle cx="55" cy="55" r="3" fill="#060606"/>
-            <!-- nodes -->
-            <circle cx="55" cy="6"   r="2" fill="#C9A84C" opacity="0.6"/>
-            <circle cx="100" cy="30" r="2" fill="#C9A84C" opacity="0.6"/>
-            <circle cx="100" cy="80" r="2" fill="#C9A84C" opacity="0.6"/>
-            <circle cx="55" cy="104" r="2" fill="#C9A84C" opacity="0.6"/>
-            <circle cx="10" cy="80"  r="2" fill="#C9A84C" opacity="0.6"/>
-            <circle cx="10" cy="30"  r="2" fill="#C9A84C" opacity="0.6"/>
-        </svg>
+        <!-- Animated Logo -->
+        <div class="logo-wrap">
+            <img src="{{ asset('images/logo.png') }}" alt="Infinity Logo">
+        </div>
+
+        <h1 class="brand-name">Academy System</h1>
+        <!-- <p class="brand-sub">System</p> -->
+
+        <div class="divider-line"></div>
+
+        <a href="{{ route('login') }}" class="btn-enter">
+            <span>Enter System</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+        </a>
     </div>
-
-    <h1 class="brand-name">Infinity Academy</h1>
-    <p class="brand-sub">System</p>
-
-    <div class="divider-line"></div>
-
-    <a href="{{ route('login') }}" class="btn-enter">
-        <span>Enter System</span>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M5 12h14M13 6l6 6-6 6"/>
-        </svg>
-    </a>
 </div>
+
 
 <!-- Status bar -->
 <div class="bottom-bar">
@@ -356,6 +398,16 @@
         particles = Array.from({ length: 80 }, () => new Particle());
     }
 
+    function Particle() {
+        this.x        = Math.random() * W;
+        this.y        = Math.random() * H;
+        this.vx       = (Math.random() - 0.5) * 0.35;
+        this.vy       = (Math.random() - 0.5) * 0.35;
+        this.r        = Math.random() * 1.8 + 0.5;
+        this.isOrange = Math.random() > 0.5;   // ← اتحدد هنا مرة واحدة
+        this.a        = Math.random() * 0.45 + 0.15;
+    }
+
     function draw() {
         ctx.clearRect(0, 0, W, H);
         for (let i = 0; i < particles.length; i++) {
@@ -366,19 +418,21 @@
 
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(201,168,76,${p.a})`;
+            ctx.fillStyle = p.isOrange              // ← بيجيب القيمة اللي اتحسبت قبل
+                ? `rgba(245,145,30,${p.a})`
+                : `rgba(27,79,168,${p.a})`;
             ctx.fill();
 
-            // connect nearby
             for (let j = i + 1; j < particles.length; j++) {
-                const q = particles[j];
+                const q  = particles[j];
                 const dx = p.x - q.x, dy = p.y - q.y;
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < 120) {
+                const d  = Math.sqrt(dx*dx + dy*dy);
+                if (d < 120) {
                     ctx.beginPath();
-                    ctx.moveTo(p.x, p.y);
-                    ctx.lineTo(q.x, q.y);
-                    ctx.strokeStyle = `rgba(201,168,76,${0.06 * (1 - dist/120)})`;
+                    ctx.moveTo(p.x, p.y); ctx.lineTo(q.x, q.y);
+                    ctx.strokeStyle = p.isOrange    // ← نفس لون الـ particle مش random جديد
+                        ? `rgba(245,145,30,${0.12*(1-d/120)})`
+                        : `rgba(27,79,168,${0.12*(1-d/120)})`;
                     ctx.stroke();
                 }
             }
