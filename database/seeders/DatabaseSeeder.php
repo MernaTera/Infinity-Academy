@@ -5,11 +5,12 @@ namespace Database\Seeders;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Database\Seeders\RoleSeeder;
-use Database\Seeders\ModuleSeeder;
-use Database\Seeders\PermissionSeeder;
-use Database\Seeders\RolePermissionSeeder;
-use Database\Seeders\AdminUserSeeder;
+use Database\Seeders\Auth\RoleSeeder;
+use Database\Seeders\Auth\ModuleSeeder;
+use Database\Seeders\Auth\PermissionSeeder;
+use Database\Seeders\Auth\RolePermissionSeeder;
+use Database\Seeders\Auth\AdminUserSeeder;
+use Database\Seeders\Auth\UserSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -21,11 +22,12 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RoleSeeder::class,
-            ModuleSeeder::class,
-            PermissionSeeder::class,
-            RolePermissionSeeder::class,
-            AdminUserSeeder::class
+            \Database\Seeders\Auth\RoleSeeder::class,
+            \Database\Seeders\Auth\ModuleSeeder::class,
+            \Database\Seeders\Auth\PermissionSeeder::class,
+            \Database\Seeders\Auth\RolePermissionSeeder::class,
+            \Database\Seeders\Auth\AdminUserSeeder::class,
+            \Database\Seeders\Auth\UserSeeder::class
         ]);
     }
 }
