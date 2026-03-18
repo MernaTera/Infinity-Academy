@@ -95,7 +95,7 @@
 
     </style>
 
-    <div class="max-w-7xl mx-auto px-6 lg:px-8">
+    <div class="mx-auto px-6 lg:px-8 mx-4">
         <div class="flex items-center justify-between h-[62px]">
 
             {{-- ── LOGO ── --}}

@@ -29,6 +29,8 @@ class StoreLeadRequest extends FormRequest
             'location' => 'nullable|string|max:255',
             'source' => 'required',
             'degree' => 'required',
+            'start_preference_type'          => 'nullable|in:Current Patch,Next Patch,Specific Date', // ← موجود؟
+            'next_call_at'                   => 'nullable|date',   
             'interested_course_template_id' => 'nullable|exists:course_template,course_template_id',
             'interested_level_id' => 'nullable|exists:level,level_id',
             'interested_sublevel_id' => 'nullable|exists:sublevel,sublevel_id',

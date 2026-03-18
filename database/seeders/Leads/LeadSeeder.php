@@ -45,6 +45,8 @@ class LeadSeeder extends Seeder
                 'next_call_at' => now()->addDays(rand(1,5)),
                 'owner_cs_id' => $cs->employee_id,
                 'notes' => fake()->sentence(),
+                'created_at' => now(),
+                'updated_at' => now(),
             ];
         }
 

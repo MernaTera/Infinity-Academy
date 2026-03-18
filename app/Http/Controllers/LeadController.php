@@ -137,9 +137,28 @@ class LeadController extends Controller
     |--------------------------------------------------------------------------
     */
 
-    public function update(StoreLeadRequest $request, $id)
+    public function update(Request $request, $id)
     {
-        $this->leadRepository->update($id,$request->validated());
+        if ($request->expectsJson()) {
+
+            $data = [];
+
+            if ($request->has('status')) {
+                $data['status'] = $request->status;
+            }
+
+            if ($request->has('next_call_at')) {
+                $data['next_call_at'] = $request->next_call_at;
+            }
+
+            $this->leadRepository->update($id, $data);
+
+            return response()->json(['success' => true]);
+        }
+
+        $validated = app(StoreLeadRequest::class)->validated();
+
+        $this->leadRepository->update($id, $validated);
 
         return redirect()
             ->route('leads.index')
