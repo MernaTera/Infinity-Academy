@@ -43,7 +43,10 @@ use Database\Seeders\Finance\RefundRequestSeeder;
 use Database\Seeders\Finance\RevenueSplitSeeder;
 use Database\Seeders\Finance\BundleUsageLogSeeder;
 
-
+use Database\Seeders\HR\EmployeeSeeder;
+use Database\Seeders\HR\TeacherSeeder;
+use Database\Seeders\HR\TeacherAvailabilitySeeder;
+use Database\Seeders\HR\ContractTypeSeeder;
 
 use Database\Seeders\Attendance\AttendanceStatusSeeder;
 
@@ -106,6 +109,13 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\Finance\RefundRequestSeeder::class,
             \Database\Seeders\Finance\RevenueSplitSeeder::class,
             \Database\Seeders\Finance\BundleUsageLogSeeder::class,
+        ]);
+
+        $this->call([
+            \Database\Seeders\HR\EmployeeSeeder::class,
+            \Database\Seeders\HR\TeacherSeeder::class,
+            \Database\Seeders\HR\TeacherAvailabilitySeeder::class,
+            \Database\Seeders\HR\ContractTypeSeeder::class,
         ]);
     }
 }
