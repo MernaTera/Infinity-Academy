@@ -48,7 +48,12 @@ use Database\Seeders\HR\TeacherSeeder;
 use Database\Seeders\HR\TeacherAvailabilitySeeder;
 use Database\Seeders\HR\ContractTypeSeeder;
 
-use Database\Seeders\Attendance\AttendanceStatusSeeder;
+use Database\Seeders\Attendance\AttendanceSeeder;
+
+use Database\Seeders\Leads\LeadSeeder;
+use Database\Seeders\Leads\LeadCallLogSeeder;
+use Database\Seeders\Leads\LeadHistorySeeder;
+
 
 class DatabaseSeeder extends Seeder
 {
@@ -87,7 +92,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $this->call([
-            \Database\Seeders\Attendance\AttendanceStatusSeeder::class,
+            \Database\Seeders\Attendance\AttendanceSeeder::class,
         ]);
 
         $this->call([
@@ -116,6 +121,12 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\HR\TeacherSeeder::class,
             \Database\Seeders\HR\TeacherAvailabilitySeeder::class,
             \Database\Seeders\HR\ContractTypeSeeder::class,
+        ]);
+
+        $this->call([
+            \Database\Seeders\Leads\LeadSeeder::class,
+            \Database\Seeders\Leads\LeadCallLogSeeder::class,
+            \Database\Seeders\Leads\LeadHistorySeeder::class,
         ]);
     }
 }
