@@ -26,6 +26,8 @@ use Database\Seeders\Academic\SublevelSeeder;
 use Database\Seeders\Academic\LevelSeeder;
 use Database\Seeders\Academic\RoomSeeder;
 
+use Database\Seeders\Attendance\AttendanceStatusSeeder;
+
 class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
@@ -60,6 +62,10 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\Academic\SublevelSeeder::class,
             \Database\Seeders\Academic\LevelSeeder::class,
             \Database\Seeders\Academic\RoomSeeder::class,
+        ]);
+
+        $this->call([
+            \Database\Seeders\Attendance\AttendanceStatusSeeder::class,
         ]);
     }
 }
