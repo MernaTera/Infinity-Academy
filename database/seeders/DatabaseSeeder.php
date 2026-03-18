@@ -26,6 +26,15 @@ use Database\Seeders\Academic\SublevelSeeder;
 use Database\Seeders\Academic\LevelSeeder;
 use Database\Seeders\Academic\RoomSeeder;
 
+use Database\Seeders\Enrollment\CsTargetSeeder;
+use Database\Seeders\Enrollment\PlacementTestSeeder;
+use Database\Seeders\Enrollment\EnrollmentSeeder;
+use Database\Seeders\Enrollment\PostponementSeeder;
+use Database\Seeders\Enrollment\RestrictionLogSeeder;
+use Database\Seeders\Enrollment\WaitingListSeeder;
+
+
+
 use Database\Seeders\Attendance\AttendanceStatusSeeder;
 
 class DatabaseSeeder extends Seeder
@@ -66,6 +75,15 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             \Database\Seeders\Attendance\AttendanceStatusSeeder::class,
+        ]);
+
+        $this->call([
+            \Database\Seeders\Enrollment\CsTargetSeeder::class,
+            \Database\Seeders\Enrollment\PlacementTestSeeder::class,
+            \Database\Seeders\Enrollment\EnrollmentSeeder::class,
+            \Database\Seeders\Enrollment\PostponementSeeder::class,
+            \Database\Seeders\Enrollment\RestrictionLogSeeder::class,
+            \Database\Seeders\Enrollment\WaitingListSeeder::class,
         ]);
     }
 }
