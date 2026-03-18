@@ -11,7 +11,20 @@ use Database\Seeders\Auth\PermissionSeeder;
 use Database\Seeders\Auth\RolePermissionSeeder;
 use Database\Seeders\Auth\AdminUserSeeder;
 use Database\Seeders\Auth\UserSeeder;
+
 use Database\Seeders\Core\BranchSeeder;
+
+use Database\Seeders\Academic\EnglishLevelSeeder;
+use Database\Seeders\Academic\CourseTemplateSeeder;
+use Database\Seeders\Academic\CourseSessionSeeder;
+use Database\Seeders\Academic\BreakSlotSeeder;
+use Database\Seeders\Academic\TimeSlotSeeder;
+use Database\Seeders\Academic\CourseInstanceSeeder;
+use Database\Seeders\Academic\InstanceScheduleSeeder;
+use Database\Seeders\Academic\PatchSeeder;
+use Database\Seeders\Academic\SublevelSeeder;
+use Database\Seeders\Academic\LevelSeeder;
+use Database\Seeders\Academic\RoomSeeder;
 
 class DatabaseSeeder extends Seeder
 {
@@ -33,6 +46,20 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             \Database\Seeders\Core\BranchSeeder::class,
+        ]);
+
+        $this->call([
+            \Database\Seeders\Academic\EnglishLevelSeeder::class,
+            \Database\Seeders\Academic\CourseTemplateSeeder::class,
+            \Database\Seeders\Academic\CourseSessionSeeder::class,
+            \Database\Seeders\Academic\BreakSlotSeeder::class,
+            \Database\Seeders\Academic\TimeSlotSeeder::class,
+            \Database\Seeders\Academic\CourseInstanceSeeder::class,
+            \Database\Seeders\Academic\InstanceScheduleSeeder::class,
+            \Database\Seeders\Academic\PatchSeeder::class,
+            \Database\Seeders\Academic\SublevelSeeder::class,
+            \Database\Seeders\Academic\LevelSeeder::class,
+            \Database\Seeders\Academic\RoomSeeder::class,
         ]);
     }
 }
