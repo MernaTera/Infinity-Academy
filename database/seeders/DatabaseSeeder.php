@@ -33,6 +33,16 @@ use Database\Seeders\Enrollment\PostponementSeeder;
 use Database\Seeders\Enrollment\RestrictionLogSeeder;
 use Database\Seeders\Enrollment\WaitingListSeeder;
 
+use Database\Seeders\Finance\PaymentPlanSeeder;
+use Database\Seeders\Finance\PrivateBundleSeeder;
+use Database\Seeders\Finance\OfferSeeder;
+use Database\Seeders\Finance\FinancialTransactionSeeder;
+use Database\Seeders\Finance\InstallmentScheduleSeeder;
+use Database\Seeders\Finance\InstallmentApprovalLogSeeder;
+use Database\Seeders\Finance\RefundRequestSeeder;
+use Database\Seeders\Finance\RevenueSplitSeeder;
+use Database\Seeders\Finance\BundleUsageLogSeeder;
+
 
 
 use Database\Seeders\Attendance\AttendanceStatusSeeder;
@@ -84,6 +94,18 @@ class DatabaseSeeder extends Seeder
             \Database\Seeders\Enrollment\PostponementSeeder::class,
             \Database\Seeders\Enrollment\RestrictionLogSeeder::class,
             \Database\Seeders\Enrollment\WaitingListSeeder::class,
+        ]);
+
+        $this->call([
+            \Database\Seeders\Finance\PaymentPlanSeeder::class,
+            \Database\Seeders\Finance\PrivateBundleSeeder::class,
+            \Database\Seeders\Finance\OfferSeeder::class,
+            \Database\Seeders\Finance\FinancialTransactionSeeder::class,
+            \Database\Seeders\Finance\InstallmentScheduleSeeder::class,
+            \Database\Seeders\Finance\InstallmentApprovalLogSeeder::class,
+            \Database\Seeders\Finance\RefundRequestSeeder::class,
+            \Database\Seeders\Finance\RevenueSplitSeeder::class,
+            \Database\Seeders\Finance\BundleUsageLogSeeder::class,
         ]);
     }
 }
