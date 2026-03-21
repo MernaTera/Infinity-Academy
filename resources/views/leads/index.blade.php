@@ -546,6 +546,7 @@ function confirmCall() {
                         <th>Course & Level</th>
                         <th>Status</th>
                         <th>Start Pref.</th>
+                        <th>Start Pref. date</th>
                         <th>Next Call</th>
                         <th>Lead Age</th>
                         <th>Notes</th>
@@ -595,7 +596,6 @@ function confirmCall() {
                                     onchange="updateStatus(this, {{ $lead->lead_id }})">
                                 @foreach(['Waiting','Call_Again','Registered','Not_Interested','Archived'] as $status)
                                     <option value="{{ $status }}" {{ $lead->status == $status ? 'selected' : '' }}>
-                                    <option value="{{ $status }}" {{ $lead->status == $status ? 'selected' : '' }}>
                                         {{ str_replace('_',' ',$status) }}
                                     </option>
                                 @endforeach
@@ -605,6 +605,30 @@ function confirmCall() {
                         {{-- Start Preference --}}
                         <td>
                             <span class="pref-text">{{ $lead->start_preference_type ?? '—' }}</span>
+                        </td>
+                        <td>
+                            @if($lead->start_preference_type === 'Specific Date' && $lead->start_preference_date)
+                                <div class="call-date" style="color:#F5911E;">
+                                    {{ $lead->start_preference_date->format('d M Y') }}
+                                </div>
+                                <div class="call-time">
+                                    {{ $lead->start_preference_date->format('H:i') }}
+                                </div>
+                            @else
+                                <span style="color:#AAB8C8;">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            @if($lead->start_preference_type === 'Specific Date' && $lead->start_preference_date)
+                                <div class="call-date" style="color:#F5911E;">
+                                    {{ $lead->start_preference_date->format('d M Y') }}
+                                </div>
+                                <div class="call-time">
+                                    {{ $lead->start_preference_date->format('H:i') }}
+                                </div>
+                            @else
+                                <span style="color:#AAB8C8;">—</span>
+                            @endif
                         </td>
 
                         {{-- Next Call --}}

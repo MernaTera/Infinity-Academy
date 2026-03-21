@@ -42,6 +42,7 @@ class LeadSeeder extends Seeder
                 'start_preference_type' => fake()->randomElement([
                     'Current Patch','Next Patch','Specific Date'
                 ]),
+                'start_preference_date' => fake()->optional()->dateTimeBetween('+1 days', '+1 month'),
                 'next_call_at' => now()->addDays(rand(1,5)),
                 'owner_cs_id' => $cs->employee_id,
                 'notes' => fake()->sentence(),

@@ -23,6 +23,13 @@ Route::middleware('auth')->group(function () {
     Route::resource('leads', LeadController::class);
     Route::post('/leads/{lead}/assign', [LeadController::class, 'assign'])
         ->name('leads.assign');
+    Route::get('/levels/{courseId}', function ($courseId) {
+        return \App\Models\Academic\Level::where('course_template_id', $courseId)->get();
+    });
+
+    Route::get('/sublevels/{levelId}', function ($levelId) {
+        return \App\Models\Academic\Sublevel::where('level_id', $levelId)->get();
+    });
 });
 
 

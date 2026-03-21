@@ -408,6 +408,12 @@
                         @error('start_preference_type')<span class="form-error">{{ $message }}</span>@enderror
                     </div>
 
+                    <div class="form-field" id="specific_date_field" style="display:none;">
+                        <label class="form-label">Specific Date</label>
+                        <input type="datetime-local" name="start_preference_date" class="form-control-inf"
+                            value="{{ old('start_preference_date', $lead->start_preference_date ? $lead->start_preference_date->format('Y-m-d\TH:i') : '') }}">
+                    </div>
+
                 </div>
 
                 <div class="form-divider"></div>
@@ -463,5 +469,21 @@
     </div>
 
 </div>
+
+<script>
+    const prefSelect = document.querySelector('[name="start_preference_type"]');
+    const dateField = document.getElementById('specific_date_field');
+
+    function toggleDateField() {
+        if (prefSelect.value === 'Specific Date') {
+            dateField.style.display = 'block';
+        } else {
+            dateField.style.display = 'none';
+        }
+    }
+
+    toggleDateField();
+    prefSelect.addEventListener('change', toggleDateField);
+</script>
 
 @endsection

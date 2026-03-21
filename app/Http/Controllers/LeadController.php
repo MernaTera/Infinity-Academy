@@ -83,15 +83,10 @@ class LeadController extends Controller
 
     public function create()
     {
-        $courses = CourseTemplate::all();
-        $levels = Level::all();
-        $sublevels = Sublevel::all();
-
-        return view('leads.create',compact(
-            'courses',
-            'levels',
-            'sublevels'
-        ));
+        $courses = CourseTemplate::where('is_active', true)->get();
+            $levels    = Level::all();
+            $sublevels = Sublevel::all();
+        return view('leads.create', compact('courses','levels','sublevels'));
     }
 
     /*
@@ -118,17 +113,11 @@ class LeadController extends Controller
     public function edit($id)
     {
         $lead = $this->leadRepository->find($id);
-
-        $courses = CourseTemplate::all();
-        $levels = Level::all();
+        $courses   = CourseTemplate::where('is_active', true)->get();
+        $levels    = Level::all();
         $sublevels = Sublevel::all();
 
-        return view('leads.edit', compact(
-            'lead',
-            'courses',
-            'levels',
-            'sublevels'
-        ));
+        return view('leads.edit', compact( 'lead','courses','levels','sublevels'));
     }
 
     /*

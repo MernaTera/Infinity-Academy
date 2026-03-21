@@ -146,7 +146,7 @@
 
     <div class="page-header">
         <div>
-            <div class="page-eyebrow">CRM Module</div>
+            <div class="page-eyebrow">Leads</div>
             <h1 class="page-title">Add New Lead</h1>
         </div>
         <a href="{{ route('leads.index') }}" class="btn-back">

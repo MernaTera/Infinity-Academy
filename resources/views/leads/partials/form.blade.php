@@ -1,3 +1,4 @@
+
 <form method="POST"
       action="{{ isset($lead) ? route('leads.update', $lead->lead_id) : route('leads.store') }}">
     @csrf
@@ -89,7 +90,7 @@
 
         <div class="form-field">
             <label class="form-label">Course</label>
-            <select name="interested_course_template_id" class="form-control-inf">
+            <select name="interested_course_template_id" class="form-control-inf" id="course_select">
                 <option value="">— Select Course —</option>
                 @foreach($courses ?? [] as $course)
                     <option value="{{ $course->course_template_id }}"
@@ -103,7 +104,7 @@
 
         <div class="form-field">
             <label class="form-label">Level</label>
-            <select name="interested_level_id" class="form-control-inf">
+            <select name="interested_level_id" class="form-control-inf" id="level_select">
                 <option value="">— Select Level —</option>
                 @foreach($levels ?? [] as $level)
                     <option value="{{ $level->level_id }}"
@@ -117,7 +118,7 @@
 
         <div class="form-field">
             <label class="form-label">Sublevel</label>
-            <select name="interested_sublevel_id" class="form-control-inf">
+            <select name="interested_sublevel_id" class="form-control-inf" id="sublevel_select">
                 <option value="">— Select Sublevel —</option>
                 @foreach($sublevels ?? [] as $sublevel)
                     <option value="{{ $sublevel->sublevel_id }}"
@@ -176,6 +177,12 @@
             @error('start_preference_type')<span class="form-error">{{ $message }}</span>@enderror
         </div>
 
+        <div class="form-field" id="specific_date_field" style="display:none;">
+            <label class="form-label">Specific Date</label>
+            <input type="datetime-local" name="start_preference_date" class="form-control-inf"
+                value="{{ old('start_preference_date', isset($lead->start_preference_date) ? $lead->start_preference_date->format('Y-m-d\TH:i') : '') }}">
+        </div>
+
     </div>
 
     <div class="form-divider"></div>
@@ -206,3 +213,59 @@
     </div>
 
 </form>
+
+
+<script>
+    document.getElementById('course_select').addEventListener('change', function() {
+        const courseId = this.value;
+        const levelSelect = document.getElementById('level_select');
+        const sublevelSelect = document.getElementById('sublevel_select');
+        
+        levelSelect.innerHTML = '<option value="">— Select Level —</option>';
+        sublevelSelect.innerHTML = '<option value="">— Select Sublevel —</option>';
+        
+        if (!courseId) return;
+        
+        fetch(`/levels/${courseId}`)
+            .then(r => r.json())
+            .then(levels => {
+                levels.forEach(l => {
+                    levelSelect.innerHTML += 
+                        `<option value="${l.level_id}">${l.name}</option>`;
+                });
+            });
+    });
+
+    document.getElementById('level_select').addEventListener('change', function() {
+        const levelId = this.value;
+        const sublevelSelect = document.getElementById('sublevel_select');
+        
+        sublevelSelect.innerHTML = '<option value="">— Select Sublevel —</option>';
+        
+        if (!levelId) return;
+        
+        fetch(`/sublevels/${levelId}`)
+            .then(r => r.json())
+            .then(sublevels => {
+                if (sublevels.length === 0) return; 
+                sublevels.forEach(s => {
+                    sublevelSelect.innerHTML += 
+                        `<option value="${s.sublevel_id}">${s.name}</option>`;
+                });
+            });
+    });
+
+    const prefSelect = document.querySelector('[name="start_preference_type"]');
+    const dateField = document.getElementById('specific_date_field');
+
+    function toggleDateField() {
+        if (prefSelect.value === 'Specific Date') {
+            dateField.style.display = 'block';
+        } else {
+            dateField.style.display = 'none';
+        }
+    }
+
+    toggleDateField();
+    prefSelect.addEventListener('change', toggleDateField);
+</script>
