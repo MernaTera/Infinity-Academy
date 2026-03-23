@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.leads')
 
 @section('title', 'Edit Lead')
 

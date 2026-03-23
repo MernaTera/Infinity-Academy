@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.leads')
 
 @section('title', 'My Leads')
 
@@ -11,7 +11,8 @@
 @endonce
 
 <style>
-    body, .leads-page * { font-family: 'DM Sans', sans-serif; min-width: fit-content;}
+    
+    body, .leads-page * { font-family: 'DM Sans', sans-serif;}
 
     .leads-page {
         background: #F8F6F2;
@@ -135,7 +136,6 @@
         -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(27,79,168,0.1);
         border-radius: 6px;
-        overflow: visible;
         box-shadow: 0 4px 24px rgba(27,79,168,0.06);
     }
 
@@ -176,6 +176,7 @@
         color: #4A5A7A;
         vertical-align: middle;
     }
+    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
     .lead-name   { font-weight: 500; color: #1A2A4A; font-size: 13px; }
     .lead-phone  { font-size: 11px; color: #7A8A9A; font-family: monospace; letter-spacing: 0.5px; margin-top: 2px; }
@@ -569,12 +570,6 @@
         <div class="stat-value">{{ $waiting }}</div>
     </div>
 
-    <div class="stat-card" style="--accent:#DC2626;cursor:pointer;"
-        onclick="filterByStatus('Not_Interested')"
-        data-filter="Not_Interested">
-        <div class="stat-label">Not Interested</div>
-        <div class="stat-value">{{ $notInterested }}</div>
-    </div>
 
     <div class="stat-card" style="--accent:#9A8A7A;cursor:pointer;"
         onclick="filterByStatus('Archived')"
@@ -686,7 +681,7 @@
                                     </svg>
                                 </div>
                                 <div class="status-dropdown">
-                                    @foreach(['Waiting','Call_Again','Registered','Not_Interested','Archived'] as $s)
+                                    @foreach(['Waiting','Call_Again','Registered'] as $s)
                                         <div class="status-dropdown-item"
                                             data-status="{{ $s }}"
                                             onclick="updateStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')">

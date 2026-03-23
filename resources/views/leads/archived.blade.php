@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.leads')
  
 @section('title', 'Archived Leads')
  
@@ -11,7 +11,7 @@
 @endonce
  
 <style>
-    body, .leads-page * { font-family: 'DM Sans', sans-serif; min-width: fit-content; }
+    body, .leads-page * { font-family: 'DM Sans', sans-serif; }
  
     .leads-page {
         background: #F8F6F2;
