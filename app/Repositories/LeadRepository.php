@@ -75,6 +75,15 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             ->paginate(20);
     }
 
+    public function archivedLeads()
+    {
+        return $this->model
+            ->where('status', 'Archived')
+            ->where('is_active', false)
+            ->latest()
+            ->paginate(20);
+    }
+
     public function dueCalls()
     {
         return $this->model

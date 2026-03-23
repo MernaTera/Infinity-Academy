@@ -217,15 +217,24 @@ class LeadService
 
     public function archiveOldLeads()
     {
-        $leads = Lead::where('created_at','<=',now()->subDays(30))
+        $leads = Lead::where('updated_at','<=',now()->subDays(30))
             ->whereNotIn('status',['Registered','Archived'])
             ->get();
 
         foreach ($leads as $lead) {
 
-            $lead->archive();
+            $lead->update([
+                'status' => 'Archived',
+                'is_active' => false,
+                'owner_cs_id' => null 
+            ]);
 
-            $this->logHistory($lead,"Lead auto archived (30 days rule)");
+            $this->logHistory(
+                $lead,
+                $lead->status,
+                'Archived',
+                'Lead auto archived (30 days rule)'
+            );
         }
 
         return $leads;

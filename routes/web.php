@@ -19,9 +19,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+
+////////////    LEADS       ////////////////    
 Route::middleware('auth')->group(function () {
     Route::get('/leads/public', [LeadController::class, 'publicLeads'])
         ->name('leads.public');
+    Route::get('/leads/archived', [LeadController::class, 'archived'])
+        ->name('leads.archived');
     Route::resource('leads', LeadController::class);
     Route::post('/leads/{id}/assign', [LeadController::class, 'assign'])
         ->name('leads.assign');

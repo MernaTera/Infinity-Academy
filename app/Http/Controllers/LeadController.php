@@ -67,10 +67,7 @@ class LeadController extends Controller
 
     public function archived()
     {
-        $leads = $this->leadRepository
-            ->query()
-            ->where('status','Archived')
-            ->paginate(20);
+        $leads = $this->leadRepository->archivedLeads();
 
         return view('leads.archived', compact('leads'));
     }
@@ -290,8 +287,25 @@ class LeadController extends Controller
 
     public function assign($id)
     {
-        $this->leadService->assignLead($id);
+        $employeeId = auth()->user()->employees->first()->employee_id;
 
+        $lead = Lead::findOrFail($id);
+        $old  = $lead->status;
+
+        $lead->update([
+            'owner_cs_id' => $employeeId,
+            'status'      => 'Waiting',
+            'is_active'   => true,
+        ]);
+
+        $source = request()->input('source', 'public');
+
+        $this->leadService->logHistory(
+            $lead,
+            $old,
+            'Waiting',
+            'Taken from ' . $source . ' leads'
+        );
         return response()->json(['success' => true]);
     }
 

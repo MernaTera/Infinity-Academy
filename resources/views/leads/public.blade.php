@@ -389,14 +389,27 @@ function takeLead(id) {
     fetch(`/leads/${id}/assign`, {
         method: 'POST',
         headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ source: 'public' })
+    })
+    .then(res => {
+        if (res.ok) {
+            const row = document.getElementById('lead-' + id);
+            row.style.transition = 'opacity 0.4s, transform 0.4s';
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(20px)';
+            setTimeout(() => row.remove(), 400);
+        } else {
+            btn.innerHTML = '<span>Failed</span>';
+            btn.style.color = '#DC2626';
         }
     })
-    .then(() => {
-        document.getElementById('lead-' + id).remove();
-    })
     .catch(() => {
-        alert('Something went wrong');
+        btn.innerHTML = '<span>Failed</span>';
+        btn.style.color = '#DC2626';
     });
 }
 </script>
