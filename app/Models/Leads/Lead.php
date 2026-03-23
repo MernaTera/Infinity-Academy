@@ -151,7 +151,8 @@ class Lead extends Model
     public function assignTo($employeeId)
     {
         $this->update([
-            'owner_cs_id' => $employeeId
+            'owner_cs_id' => $employeeId,
+            'updated_at' => now()
         ]);
     }
 
@@ -223,6 +224,26 @@ class Lead extends Model
     public function scopeOwnedBy(Builder $query, $employeeId)
     {
         return $query->where('owner_cs_id', $employeeId);
+    }
+
+    public function scopePublic($query)
+    {
+        return $query->whereNull('owner_cs_id')
+                    ->where('updated_at', '<=', now()->subDays(4))
+                    ->whereNotIn('status', ['Archived','Registered']);
+    }
+
+    public function scopeExpired($query)
+    {
+        return $query->whereNotNull('owner_cs_id')
+                    ->where('updated_at', '<=', now()->subDays(4));
+    }
+
+    public function releaseExpiredLeads()
+    {
+        Lead::expired()->update([
+            'owner_cs_id' => null
+        ]);
     }
 
     public function age()

@@ -18,5 +18,5 @@ interface LeadRepositoryInterface
     public function myLeads(int $employeeId);
     public function publicLeads();
     public function dueCalls();
-    public function expiredPrivateLeads();
+    public function releaseExpiredLeads();
 }

@@ -143,6 +143,10 @@ class LeadController extends Controller
                 $data['next_call_at'] = $request->next_call_at;
             }
 
+            if (!$lead->owner_cs_id) {
+                $data['owner_cs_id'] = auth()->user()->employees->employee_id;
+            }
+
             $this->leadRepository->update($id, $data);
 
             $lead->refresh();
@@ -286,13 +290,9 @@ class LeadController extends Controller
 
     public function assign($id)
     {
-        $user = auth()->user();
+        $this->leadService->assignLead($id);
 
-        $employee = $user->employees()->first();
-
-        $this->leadService->assignLead($id,$employee->employee_id);
-
-        return back()->with('success','Lead assigned successfully');
+        return response()->json(['success' => true]);
     }
 
     public function history($id)

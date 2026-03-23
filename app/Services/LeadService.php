@@ -45,15 +45,22 @@ class LeadService
     |--------------------------------------------------------------------------
     */
 
-    public function assignLead(int $leadId, int $employeeId)
+    public function assignLead(int $leadId)
     {
         $lead = $this->leadRepository->find($leadId);
 
-        $this->authorizeLead($lead);
+        $employeeId = auth()->user()->employees->first()->employee_id;
+
+        $old = $lead->status;
 
         $lead->assignTo($employeeId);
 
-        $this->logHistory($lead, "Assigned to CS #{$employeeId}");
+        $this->logHistory(
+            $lead,
+            $old,           
+            $lead->status, 
+            "Assigned to CS #{$employeeId}"  
+        );
 
         return $lead;
     }
@@ -184,12 +191,11 @@ class LeadService
     |--------------------------------------------------------------------------
     */
 
-    public function releaseExpiredPrivateLeads()
+    public function releaseExpiredLeads()
     {
         $leads = Lead::whereNotNull('owner_cs_id')
             ->where('created_at','<=',now()->subDays(4))
-            ->where('status','Waiting')
-            ->get();
+            ->where('status','Waiting');
 
         foreach ($leads as $lead) {
 

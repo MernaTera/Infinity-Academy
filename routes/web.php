@@ -20,8 +20,10 @@ Route::middleware('auth')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    Route::get('/leads/public', [LeadController::class, 'publicLeads'])
+        ->name('leads.public');
     Route::resource('leads', LeadController::class);
-    Route::post('/leads/{lead}/assign', [LeadController::class, 'assign'])
+    Route::post('/leads/{id}/assign', [LeadController::class, 'assign'])
         ->name('leads.assign');
     Route::get('/levels/{courseId}', function ($courseId) {
         return \App\Models\Academic\Level::where('course_template_id', $courseId)->get();

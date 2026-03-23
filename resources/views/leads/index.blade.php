@@ -11,7 +11,7 @@
 @endonce
 
 <style>
-    body, .leads-page * { font-family: 'DM Sans', sans-serif; }
+    body, .leads-page * { font-family: 'DM Sans', sans-serif; min-width: fit-content;}
 
     .leads-page {
         background: #F8F6F2;
@@ -129,7 +129,7 @@
 
     /* ── TABLE CARD ── */
     .table-card {
-        min-height:400px
+        min-height:400px;
         background: rgba(255,255,255,0.75);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
@@ -735,13 +735,13 @@
 
                         {{-- Age --}}
                         @php
-                            $totalHours = abs($lead->created_at->diffInHours(now()));
+                            $totalHours = abs($lead->updated_at->diffInHours(now()));
                             $days  = intval($totalHours / 24);
                             $hours = $totalHours % 24;
                         @endphp
 
                         <td>
-                            <div class="days-num">{{ $days }} days</div>
+                            <div class="days-num {{ $days >= 3 ? 'danger' : '' }}">{{ $days }} days</div>
                             <div class="days-lbl">{{ $hours }} h</div>
                         </td>
 

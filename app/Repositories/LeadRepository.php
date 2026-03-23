@@ -70,8 +70,8 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
     {
         return $this->model
             ->whereNull('owner_cs_id')
-            ->active()
-            ->latest()
+            ->where('updated_at', '<=', now()->subDays(4))
+            ->where('is_active', true)
             ->paginate(20);
     }
 
@@ -84,13 +84,12 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             ->paginate(20);
     }
 
-    public function expiredPrivateLeads()
+    public function releaseExpiredLeads()
     {
         return $this->model
             ->whereNotNull('owner_cs_id')
-            ->where('created_at','<=',now()->subDays(4))
-            ->active()
-            ->get();
+            ->where('updated_at','<=',now()->subDays(4))
+            ->update(['owner_cs_id' => null ]);
     }
 
 }
