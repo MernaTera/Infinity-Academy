@@ -129,19 +129,16 @@
 
     /* ── TABLE CARD ── */
     .table-card {
+        min-height:400px
         background: rgba(255,255,255,0.75);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         border: 1px solid rgba(27,79,168,0.1);
         border-radius: 6px;
-        overflow: hidden;
+        overflow: visible;
         box-shadow: 0 4px 24px rgba(27,79,168,0.06);
     }
 
-    .table-scroll {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
 
     .table-card table {
         width: 100%;
@@ -414,9 +411,87 @@
     cursor: pointer;
     transition: opacity 0.2s;
 }
+.status-select {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid rgba(27,79,168,0.2);
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 500;
+    background: rgba(255,255,255,0.8);
+    color: #1A2A4A;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    padding-right: 24px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.status-select:hover {
+    border-color: rgba(27,79,168,0.4);
+}
+
+.status-select:focus {
+    outline: none;
+    border-color: #1B4FA8;
+    box-shadow: 0 0 0 3px rgba(27,79,168,0.08);
+}
 
 .btn-save:hover { opacity: 0.9; }
 
+/* ── STATUS DROPDOWN ── */
+.status-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    z-index: 100;
+    background: white;
+    border: 1px solid rgba(27,79,168,0.12);
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(27,79,168,0.12);
+    min-width: 150px;
+    padding: 4px 0;
+    overflow: hidden;
+}
+
+.status-dropdown-item {
+    padding: 9px 14px;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #4A5A7A;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-dropdown-item::before {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-dropdown-item:hover { background: rgba(27,79,168,0.04); color: #1B4FA8; }
+
+.status-dropdown-item[data-status="Waiting"]::before       { background: #7A8A9A; }
+.status-dropdown-item[data-status="Call_Again"]::before    { background: #C47010; }
+.status-dropdown-item[data-status="Registered"]::before    { background: #15803D; }
+.status-dropdown-item[data-status="Not_Interested"]::before{ background: #DC2626; }
+.status-dropdown-item[data-status="Archived"]::before      { background: #9A8A7A; }
+
+.stat-card { transition: all 0.25s; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(27,79,168,0.1); }
+.stat-card.active-filter {
+    box-shadow: 0 0 0 2px var(--accent);
+    transform: translateY(-2px);
+}
 @keyframes fadeIn {
     from { opacity:0; transform:translateY(10px); }
     to { opacity:1; transform:translateY(0); }
@@ -436,67 +511,7 @@
         .stats-row   { grid-template-columns: 1fr 1fr; }
     }
 </style>
-<script>
-let currentLeadId = null;
-let currentSelect = null;
-
-function updateStatus(select, leadId) {
-
-    if (select.value === 'Call_Again') {
-        currentLeadId = leadId;
-        currentSelect = select;
-
-        document.getElementById('callModal').style.display = 'flex';
-        return;
-    }
-
-    sendUpdate(select, leadId, { status: select.value });
-}
-function sendUpdate(select, leadId, data) {
-
-    fetch(`/leads/${leadId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': '{{ csrf_token() }}'
-        },
-        body: JSON.stringify({
-            _method: 'PUT',
-            ...data
-        })
-    })
-    .then(res => res.json())
-    .then(() => {
-        select.style.borderColor = "#22C55E";
-
-        setTimeout(() => location.reload(), 500);
-    })
-    .catch(err => console.error(err));
-}
-function closeModal() {
-    document.getElementById('callModal').style.display = 'none';
-}
-
-function confirmCall() {
-    let input = document.getElementById('callDate').value;
-
-    if (!input) {
-        alert("Please select date & time");
-        return;
-    }
-
-    let formatted = input;
-
-    sendUpdate(currentSelect, currentLeadId, {
-        status: 'Call_Again',
-        next_call_at: formatted
-    });
-
-    closeModal();
-}
-</script>
-
+<script src="{{ asset('js/leads/history-modal.js') }}"></script>
 <div class="leads-page">
 
     {{-- ── HEADER ── --}}
@@ -526,12 +541,70 @@ function confirmCall() {
             $archived      = $leads->getcollection()->where('status','Archived')->count();
         @endphp
 
-        <div class="stat-card" style="--accent:#1B4FA8"><div class="stat-label">Total</div><div class="stat-value">{{ $total }}</div></div>
-        <div class="stat-card" style="--accent:#15803D"><div class="stat-label">Registered</div><div class="stat-value">{{ $registered }}</div></div>
-        <div class="stat-card" style="--accent:#C47010"><div class="stat-label">Call Again</div><div class="stat-value">{{ $callAgain }}</div></div>
-        <div class="stat-card" style="--accent:#7A8A9A"><div class="stat-label">Waiting</div><div class="stat-value">{{ $waiting }}</div></div>
-        <div class="stat-card" style="--accent:#DC2626"><div class="stat-label">Not Interested</div><div class="stat-value">{{ $notInterested }}</div></div>
-        <div class="stat-card" style="--accent:#9A8A7A"><div class="stat-label">Archived</div><div class="stat-value">{{ $archived }}</div></div>
+    <div class="stat-card" style="--accent:#1B4FA8;cursor:pointer;"
+        onclick="filterByStatus('all')"
+        data-filter="all">
+        <div class="stat-label">Total</div>
+        <div class="stat-value">{{ $total }}</div>
+    </div>
+
+    <div class="stat-card" style="--accent:#15803D;cursor:pointer;"
+        onclick="filterByStatus('Registered')"
+        data-filter="Registered">
+        <div class="stat-label">Registered</div>
+        <div class="stat-value">{{ $registered }}</div>
+    </div>
+
+    <div class="stat-card" style="--accent:#C47010;cursor:pointer;"
+        onclick="filterByStatus('Call_Again')"
+        data-filter="Call_Again">
+        <div class="stat-label">Call Again</div>
+        <div class="stat-value">{{ $callAgain }}</div>
+    </div>
+
+    <div class="stat-card" style="--accent:#7A8A9A;cursor:pointer;"
+        onclick="filterByStatus('Waiting')"
+        data-filter="Waiting">
+        <div class="stat-label">Waiting</div>
+        <div class="stat-value">{{ $waiting }}</div>
+    </div>
+
+    <div class="stat-card" style="--accent:#DC2626;cursor:pointer;"
+        onclick="filterByStatus('Not_Interested')"
+        data-filter="Not_Interested">
+        <div class="stat-label">Not Interested</div>
+        <div class="stat-value">{{ $notInterested }}</div>
+    </div>
+
+    <div class="stat-card" style="--accent:#9A8A7A;cursor:pointer;"
+        onclick="filterByStatus('Archived')"
+        data-filter="Archived">
+        <div class="stat-label">Archived</div>
+        <div class="stat-value">{{ $archived }}</div>
+    </div>
+    </div>
+
+    {{-- ── SEARCH ── --}}
+    <div style="margin-bottom:16px;position:relative;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="2"
+            style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="leadSearch"
+            placeholder="Search by name or phone..."
+            oninput="searchLeads(this.value)"
+            style="width:100%;max-width:360px;
+                    padding:10px 14px 10px 40px;
+                    background:rgba(255,255,255,0.8);
+                    border:1px solid rgba(27,79,168,0.12);
+                    border-radius:6px;
+                    font-family:'DM Sans',sans-serif;
+                    font-size:13px;color:#1A2A4A;
+                    outline:none;
+                    transition:border-color 0.3s,box-shadow 0.3s;"
+            onfocus="this.style.borderColor='#1B4FA8';this.style.boxShadow='0 0 0 3px rgba(27,79,168,0.08)'"
+            onblur="this.style.borderColor='rgba(27,79,168,0.12)';this.style.boxShadow=''">
     </div>
 
     {{-- ── TABLE ── --}}
@@ -555,7 +628,7 @@ function confirmCall() {
                 </thead>
                 <tbody>
                     @forelse($leads as $lead)
-                    <tr>
+                    <tr  data-status="{{ $lead->status }}">
                         {{-- Name & Contact --}}
                         <td>
                             <div class="lead-name">{{ $lead->full_name }}</div>
@@ -592,7 +665,38 @@ function confirmCall() {
 
                         {{-- Status --}}
                         <td>
-                            <select class="status-select"
+                            @php
+                                $statusClass = match($lead->status) {
+                                    'Waiting'        => 'status-waiting',
+                                    'Call_Again'     => 'status-call_again',
+                                    'Scheduled_Call' => 'status-scheduled',
+                                    'Registered'     => 'status-registered',
+                                    'Not_Interested' => 'status-not_interest',
+                                    'Archived'       => 'status-archived',
+                                    default          => 'status-default',
+                                };
+                            @endphp
+                            <div style="position:relative;display:inline-block;">
+                                <div class="status-badge {{ $statusClass }}"
+                                    style="cursor:pointer;user-select:none;"
+                                    onclick="toggleDropdown(this)">
+                                    {{ str_replace('_',' ',$lead->status) }}
+                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+                                        <path d="M7 10l5 5 5-5z"/>
+                                    </svg>
+                                </div>
+                                <div class="status-dropdown">
+                                    @foreach(['Waiting','Call_Again','Registered','Not_Interested','Archived'] as $s)
+                                        <div class="status-dropdown-item"
+                                            data-status="{{ $s }}"
+                                            onclick="updateStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')">
+                                            {{ str_replace('_',' ',$s) }}
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            {{-- hidden select للـ function --}}
+                            <select class="status-select" data-id="{{ $lead->lead_id }}" style="display:none;"
                                     onchange="updateStatus(this, {{ $lead->lead_id }})">
                                 @foreach(['Waiting','Call_Again','Registered','Not_Interested','Archived'] as $status)
                                     <option value="{{ $status }}" {{ $lead->status == $status ? 'selected' : '' }}>
@@ -605,18 +709,6 @@ function confirmCall() {
                         {{-- Start Preference --}}
                         <td>
                             <span class="pref-text">{{ $lead->start_preference_type ?? '—' }}</span>
-                        </td>
-                        <td>
-                            @if($lead->start_preference_type === 'Specific Date' && $lead->start_preference_date)
-                                <div class="call-date" style="color:#F5911E;">
-                                    {{ $lead->start_preference_date->format('d M Y') }}
-                                </div>
-                                <div class="call-time">
-                                    {{ $lead->start_preference_date->format('H:i') }}
-                                </div>
-                            @else
-                                <span style="color:#AAB8C8;">—</span>
-                            @endif
                         </td>
                         <td>
                             @if($lead->start_preference_type === 'Specific Date' && $lead->start_preference_date)
@@ -688,6 +780,20 @@ function confirmCall() {
                                         Delete
                                     </button>
                                 </form>
+
+                                <button class="btn-action"
+                                        onclick="openHistoryModal({{ $lead->lead_id }})"
+                                        style="color:#7A8A9A;border-color:rgba(122,138,154,0.25);"
+                                        onmouseover="this.style.background='rgba(122,138,154,0.07)';this.style.borderColor='#4e5e6e'"
+                                        onmouseout="this.style.background='';this.style.borderColor='rgba(122,138,154,0.25)'">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                    </svg>
+                                    Log
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -730,6 +836,46 @@ function confirmCall() {
                 <button onclick="confirmCall()" class="btn-save">Confirm</button>
             </div>
         </div>
+    </div>
+</div>
+
+<div id="historyModal" class="call-modal">
+    <div class="call-box" style="width:540px;max-height:85vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
+
+        {{-- Header --}}
+        <div style="padding:24px 28px 20px;border-bottom:1px solid rgba(27,79,168,0.08);flex-shrink:0;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div>
+                    <div class="call-header" style="margin-bottom:2px;">Lead History</div>
+                    <div class="call-subtext" style="margin-bottom:0;">All changes & activities</div>
+                </div>
+                <button onclick="closeHistoryModal()"
+                        style="background:none;border:none;cursor:pointer;
+                               color:#AAB8C8;padding:4px;border-radius:4px;
+                               transition:color 0.2s;"
+                        onmouseover="this.style.color='#DC2626'"
+                        onmouseout="this.style.color='#AAB8C8'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        {{-- Content --}}
+        <div id="historyContent"
+             style="flex:1;overflow-y:auto;padding:16px 28px;">
+            <div style="text-align:center;padding:32px 0;color:#AAB8C8;font-size:12px;letter-spacing:1px;">
+                Loading...
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div style="padding:16px 28px;border-top:1px solid rgba(27,79,168,0.06);flex-shrink:0;display:flex;justify-content:flex-end;">
+            <button onclick="closeHistoryModal()" class="btn-cancel">Close</button>
+        </div>
+
     </div>
 </div>
 

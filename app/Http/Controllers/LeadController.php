@@ -130,6 +130,9 @@ class LeadController extends Controller
     {
         if ($request->expectsJson()) {
 
+            $lead = $this->leadRepository->find($id);
+            $old  = $lead->status;
+
             $data = [];
 
             if ($request->has('status')) {
@@ -142,16 +145,38 @@ class LeadController extends Controller
 
             $this->leadRepository->update($id, $data);
 
+            $lead->refresh();
+
+            $this->leadService->logHistory(
+                $lead,
+                $old,
+                $lead->status,
+                'Updated from status'
+            );
+
             return response()->json(['success' => true]);
         }
+
+        // ── Form update (edit page) ──
+        $lead = $this->leadRepository->find($id);
+        $old  = $lead->status;
 
         $validated = app(StoreLeadRequest::class)->validated();
 
         $this->leadRepository->update($id, $validated);
 
+        $lead->refresh();
+
+        $this->leadService->logHistory(
+            $lead,
+            $old,
+            $lead->status,
+            'Updated from edit form'
+        );
+
         return redirect()
             ->route('leads.index')
-            ->with('success','Lead updated successfully');
+            ->with('success', 'Lead updated successfully');
     }
 
     /*
@@ -268,6 +293,15 @@ class LeadController extends Controller
         $this->leadService->assignLead($id,$employee->employee_id);
 
         return back()->with('success','Lead assigned successfully');
+    }
+
+    public function history($id)
+    {
+        $history = \App\Models\Leads\LeadHistory::where('lead_id', $id)
+            ->orderBy('changed_at', 'desc')
+            ->get();
+
+        return response()->json($history);
     }
 
 }

@@ -110,7 +110,7 @@ class Lead extends Model
 
 	public function leadHistories()
 	{
-		return $this->hasMany(LeadHistory::class, 'lead_id');
+		return $this->hasMany(LeadHistory::class, 'lead_id', 'lead_id');
 	}
 
     public function isWaiting()

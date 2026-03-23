@@ -26,10 +26,15 @@ class LeadService
     public function createLead(array $data): Lead
     {
         $data['owner_cs_id'] = Auth::user()->employees->first()->employee_id ?? null;
-
+        
         $lead = $this->leadRepository->create($data);
 
-        $this->logHistory($lead, 'Lead Created');
+        $this->logHistory(
+            $lead,
+            null,
+            $lead->status,
+            'Lead Created'
+        );
 
         return $lead;
     }
@@ -43,6 +48,8 @@ class LeadService
     public function assignLead(int $leadId, int $employeeId)
     {
         $lead = $this->leadRepository->find($leadId);
+
+        $this->authorizeLead($lead);
 
         $lead->assignTo($employeeId);
 
@@ -61,11 +68,15 @@ class LeadService
     {
         $lead = $this->leadRepository->find($leadId);
 
+        $this->authorizeLead($lead);
+
         $lead->scheduleCall($datetime);
 
         LeadCallLog::create([
             'lead_id' => $lead->lead_id,
-            'call_date' => now(),
+            'cs_id' => auth()->user()->employees->first()->employee_id,
+            'call_datetime' => now(),
+            'outcome' => 'Follow_Up_Scheduled',
             'notes' => 'Call scheduled'
         ]);
 
@@ -84,12 +95,16 @@ class LeadService
     {
         $lead = $this->leadRepository->find($leadId);
 
+        $this->authorizeLead($lead);
+
         $lead->markCallAgain($datetime);
 
         LeadCallLog::create([
             'lead_id' => $lead->lead_id,
-            'call_date' => now(),
-            'notes' => 'Marked as call again'
+            'cs_id' => auth()->user()->employees->first()->employee_id,
+            'call_datetime' => now(),
+            'outcome' => 'Follow_Up_Scheduled',
+            'notes' => 'Call scheduled'
         ]);
 
         $this->logHistory($lead, "Call again scheduled for {$datetime}");
@@ -106,6 +121,8 @@ class LeadService
     public function markRegistered(int $leadId)
     {
         $lead = $this->leadRepository->find($leadId);
+
+        $this->authorizeLead($lead);
 
         $lead->update([
             'status' => 'Registered'
@@ -126,6 +143,8 @@ class LeadService
     {
         $lead = $this->leadRepository->find($leadId);
 
+        $this->authorizeLead($lead);
+
         $lead->update([
             'status' => 'Not_Interested'
         ]);
@@ -145,9 +164,16 @@ class LeadService
     {
         $lead = $this->leadRepository->find($leadId);
 
+        $this->authorizeLead($lead);
+
         $lead->archive();
 
-        $this->logHistory($lead, "Lead archived");
+        $this->logHistory(
+            $lead,
+            $lead->status,
+            'Archived',
+            'Lead archived'
+        );
 
         return $lead;
     }
@@ -205,15 +231,25 @@ class LeadService
     |--------------------------------------------------------------------------
     */
 
-    protected function logHistory(Lead $lead, string $action)
+    public function logHistory($lead, $old = null, $new = null, $note = null)
     {
         LeadHistory::create([
             'lead_id' => $lead->lead_id,
-            'action' => $action,
-            'owner_cs_id' => Auth::id(),
-            'changed_by' => Auth::id()
+            'old_status' => $old,
+            'new_status' => $new,
+            'notes' => $note,
+            'changed_by' => auth()->user()->employees->first()->employee_id,
+            'changed_at' => now()
         ]);
-    }
+    }   
 
+    private function authorizeLead($lead)
+    {
+        $employeeId = auth()->user()->employees->first()->employee_id;
+
+        if ($lead->owner_cs_id && $lead->owner_cs_id != $employeeId) {
+            abort(403, 'Unauthorized');
+        }
+    }
 
 }
