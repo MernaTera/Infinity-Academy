@@ -14,6 +14,8 @@
         .sl-div { height:1px;background:rgba(27,79,168,0.06);margin:12px 20px; }
     </style>
 
+    
+    @cando('leads.view')
     <span class="sl-label">Overview</span>
     <a href="{{ route('dashboard') }}" class="sl-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -23,9 +25,9 @@
         General Dashboard
     </a>
 
-    @cando('leads.view')
     <div class="sl-div"></div>
     <span class="sl-label">Leads</span>
+    
     <a href="{{ route('leads.dashboard') }}" class="sl-link {{ request()->routeIs('leads.dashboard') ? 'active' : '' }}">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>

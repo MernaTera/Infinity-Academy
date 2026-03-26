@@ -4,6 +4,8 @@
 
 @once
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @endonce
 
 <style>

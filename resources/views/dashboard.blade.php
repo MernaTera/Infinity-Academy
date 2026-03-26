@@ -1,9 +1,11 @@
-@extends('layouts.app')
+@extends('layouts.leads')
 @section('title', 'Leads Dashboard')
 @section('content')
 
 @once
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 @endonce
 
 <style>
@@ -208,69 +210,3 @@
         .stats-grid { grid-template-columns: 1fr 1fr; }
     }
 </style>
-
-<div class="dash-wrap">
-
-    {{-- ── SIDEBAR ── --}}
-    <aside class="sidebar">
-
-        <div class="sidebar-section-label">Overview</div>
-        <a href="{{ route('dashboard') }}"
-           class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
-                <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-            </svg>
-            Dashboard
-        </a>
-
-        <div class="sidebar-divider"></div>
-
-        <div class="sidebar-section-label">Leads</div>
-
-        <a href="{{ route('leads.index') }}"
-           class="sidebar-link {{ request()->routeIs('leads.index') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            My Leads
-        </a>
-
-        <a href="{{ route('leads.public') }}"
-           class="sidebar-link {{ request()->routeIs('leads.public') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            Public Leads
-        </a>
-
-        <a href="{{ route('leads.archived') }}"
-           class="sidebar-link {{ request()->routeIs('leads.archived') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="21 8 21 21 3 21 3 8"/>
-                <rect x="1" y="3" width="22" height="5"/>
-                <line x1="10" y1="12" x2="14" y2="12"/>
-            </svg>
-            Archived
-        </a>
-
-        <div class="sidebar-divider"></div>
-        <a href="{{ route('leads.create') }}"
-           class="sidebar-link {{ request()->routeIs('leads.create') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="16"/>
-                <line x1="8" y1="12" x2="16" y2="12"/>
-            </svg>
-            Add Lead
-        </a>
-
-    </aside>
-
-
-</div>
-
-@endsection
