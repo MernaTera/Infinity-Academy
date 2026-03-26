@@ -87,6 +87,16 @@ class User extends Authenticatable
 		return $this->role && $this->role->role_name === $roleName;
 	}
 
+	public function hasPermission(string $key): bool
+	{
+		return $this->employees()
+			->first()
+			?->role
+			?->permissions()
+			->where('permission_key', $key)
+			->exists() ?? false;
+	}
+
 	public function canDo($permissionKey)
 	{
 		if (!$this->role) {

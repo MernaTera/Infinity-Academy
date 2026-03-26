@@ -141,7 +141,7 @@ class LeadController extends Controller
             }
 
             if (!$lead->owner_cs_id) {
-                $data['owner_cs_id'] = auth()->user()->employees->employee_id;
+                $data['owner_cs_id'] = auth()->user()->employees->first()->employee_id;
             }
 
             $this->leadRepository->update($id, $data);

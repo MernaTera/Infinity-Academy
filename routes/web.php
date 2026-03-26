@@ -4,7 +4,9 @@ use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\LeadDashboardController;
 use App\Http\Controllers\LeadController;
+
 
 
 Route::get('/', function () {
@@ -24,6 +26,9 @@ Route::middleware('auth')->group(function () {
 
 ////////////    LEADS       ////////////////    
 Route::middleware('auth')->group(function () {
+    Route::get('/leads/dashboard', [LeadDashboardController::class, 'index'])
+        ->middleware(['auth', 'verified'])
+        ->name('leads.dashboard');
     Route::get('/leads/public', [LeadController::class, 'publicLeads'])
         ->name('leads.public');
     Route::get('/leads/archived', [LeadController::class, 'archived'])

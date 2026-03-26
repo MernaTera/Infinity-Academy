@@ -8,7 +8,7 @@ use App\Models\Academic\CourseTemplate;
 use App\Models\HR\Employee;
 use Illuminate\Support\Facades\DB;
 
-class DashboardController extends Controller
+class LeadDashboardController extends Controller
 {
     public function index()
     {
@@ -75,13 +75,12 @@ class DashboardController extends Controller
         $recentLeads = Lead::latest()->limit(10)->get();
 
         
-        if (!auth()->user()->can('leads.view')) {
-            return view('dashboard', compact(
+            return view('leads.dashboard', compact(
                         'stats', 'today', 'week', 'month',
                         'bySource', 'byCourse', 'byCs',
                         'recentLeads'
                     ));
-            }
         
     }
 }
+

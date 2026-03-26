@@ -60,6 +60,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
     public function myLeads(int $employeeId)
     {
         return $this->model
+            ->whereNotNull('owner_cs_id')
             ->ownedBy($employeeId)
             ->active()
             ->latest()
@@ -70,8 +71,8 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
     {
         return $this->model
             ->whereNull('owner_cs_id')
-            ->where('updated_at', '<=', now()->subDays(4))
             ->where('is_active', true)
+            ->latest()
             ->paginate(20);
     }
 

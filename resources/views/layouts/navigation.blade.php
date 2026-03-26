@@ -96,11 +96,12 @@
                    class="nav-link-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     Dashboard
                 </a>
-
+                @cando('leads.view')
                 <a href="{{ route('leads.index') }}"
                    class="nav-link-item {{ request()->routeIs('leads.*') ? 'active' : '' }}">
                     <span>Leads</span>
                 </a>
+                @endcando
             </div>
 
             {{-- RIGHT SIDE --}}

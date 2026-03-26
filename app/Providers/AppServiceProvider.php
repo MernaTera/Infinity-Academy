@@ -7,6 +7,8 @@ use Illuminate\Support\ServiceProvider;
 use App\Interfaces\LeadRepositoryInterface;
 use App\Repositories\LeadRepository;
 
+
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -25,6 +27,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        \Illuminate\Support\Facades\Blade::if('cando', function (string $permission) {
+            return auth()->check() && auth()->user()->canDo($permission);
+        });
     }
 }

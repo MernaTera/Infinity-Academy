@@ -1,0 +1,321 @@
+@extends('layouts.leads')
+@section('title', 'Leads Dashboard')
+@section('content')
+
+@once
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
+@endonce
+
+<style>
+    * { box-sizing: border-box; }
+    body { background: #F8F6F2; }
+
+
+    /* ── MAIN ── */
+    .dash-main {
+        flex: 1;
+        padding: 36px 32px;
+        overflow-x: hidden;
+    }
+
+    .page-eyebrow { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #F5911E; margin-bottom: 4px; }
+    .page-title   { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 4px; color: #1B4FA8; line-height: 1; margin-bottom: 4px; }
+    .page-subtitle { font-size: 12px; color: #7A8A9A; }
+
+    /* ── STAT CARDS ── */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 12px;
+        margin-bottom: 28px;
+    }
+
+    .stat-card {
+        background: rgba(255,255,255,0.8);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(27,79,168,0.08);
+        border-radius: 6px;
+        padding: 16px 18px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(27,79,168,0.04);
+    }
+    .stat-card::before {
+        content: '';
+        position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent, #1B4FA8), transparent);
+    }
+    .stat-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A8A9A; margin-bottom: 8px; }
+    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 2px; color: var(--accent, #1B4FA8); line-height: 1; }
+    .stat-sub   { font-size: 10px; color: #AAB8C8; margin-top: 4px; }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+        font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+        color: #F5911E; margin-bottom: 14px; padding-bottom: 8px;
+        border-bottom: 1px solid rgba(245,145,30,0.15);
+    }
+
+    /* ── PERIOD CARDS ── */
+    .period-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+        margin-bottom: 28px;
+    }
+
+    .period-card {
+        background: rgba(255,255,255,0.8);
+        border: 1px solid rgba(27,79,168,0.08);
+        border-radius: 6px;
+        padding: 18px 20px;
+        box-shadow: 0 2px 10px rgba(27,79,168,0.03);
+    }
+    .period-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #AAB8C8; margin-bottom: 12px; }
+    .period-row   { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid rgba(27,79,168,0.04); }
+    .period-row:last-child { border-bottom: none; }
+    .period-name  { font-size: 10px; letter-spacing: 1px; text-transform: uppercase; color: #7A8A9A; }
+    .period-num   { font-family: 'Bebas Neue', sans-serif; font-size: 18px; color: #1B4FA8; letter-spacing: 1px; }
+
+    /* ── BAR CHART ── */
+    .bar-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-bottom: 28px;
+    }
+
+    .bar-card {
+        background: rgba(255,255,255,0.8);
+        border: 1px solid rgba(27,79,168,0.08);
+        border-radius: 6px;
+        padding: 20px 22px;
+        box-shadow: 0 2px 10px rgba(27,79,168,0.03);
+    }
+
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+    .bar-row:last-child { margin-bottom: 0; }
+    .bar-name { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #7A8A9A; width: 90px; flex-shrink: 0; }
+    .bar-track { flex: 1; height: 6px; background: rgba(27,79,168,0.06); border-radius: 3px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.16,1,0.3,1); }
+    .bar-num   { font-family: 'Bebas Neue', sans-serif; font-size: 14px; color: #1B4FA8; letter-spacing: 1px; width: 28px; text-align: right; flex-shrink: 0; }
+
+    /* ── RECENT TABLE ── */
+    .recent-card {
+        background: rgba(255,255,255,0.8);
+        border: 1px solid rgba(27,79,168,0.08);
+        border-radius: 6px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(27,79,168,0.03);
+        margin-bottom: 28px;
+    }
+    .recent-card table { width: 100%; border-collapse: collapse; }
+    .recent-card thead th {
+        padding: 10px 14px; font-size: 9px; letter-spacing: 2px;
+        text-transform: uppercase; color: #7A8A9A; font-weight: 500;
+        background: rgba(27,79,168,0.02); text-align: left;
+    }
+    .recent-card tbody tr { border-top: 1px solid rgba(27,79,168,0.04); transition: background 0.2s; }
+    .recent-card tbody tr:hover { background: rgba(27,79,168,0.02); }
+    .recent-card tbody td { padding: 10px 14px; font-size: 12px; color: #4A5A7A; }
+
+    .tag-sm {
+        display: inline-block; font-size: 8px; letter-spacing: 1px;
+        padding: 2px 7px; border-radius: 3px; text-transform: uppercase; font-weight: 500;
+    }
+    .tag-waiting      { color: #7A8A9A; background: rgba(122,138,154,0.08); border: 1px solid rgba(122,138,154,0.2); }
+    .tag-call_again   { color: #C47010; background: rgba(245,145,30,0.08); border: 1px solid rgba(245,145,30,0.25); }
+    .tag-registered   { color: #15803D; background: rgba(21,128,61,0.08); border: 1px solid rgba(21,128,61,0.2); }
+    .tag-not_interested { color: #DC2626; background: rgba(220,38,38,0.06); border: 1px solid rgba(220,38,38,0.2); }
+    .tag-archived     { color: #9A8A7A; background: rgba(154,138,122,0.08); border: 1px solid rgba(154,138,122,0.2); }
+    .tag-scheduled    { color: #1B6FA8; background: rgba(27,111,168,0.08); border: 1px solid rgba(27,111,168,0.2); }
+
+    @media (max-width: 900px) {
+        .period-grid { grid-template-columns: 1fr; }
+        .bar-section { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+        .dash-main { padding: 20px 16px; }
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+    }
+</style>
+
+
+    {{-- ── MAIN CONTENT ── --}}
+    <main class="dash-main">
+
+        {{-- Header --}}
+        <div style="margin-bottom:28px;">
+            <div class="page-eyebrow">Leads</div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">{{ now()->format('l, d M Y') }}</p>
+        </div>
+
+        {{-- ── TOTAL STATS ── --}}
+        <div class="section-title">Overview</div>
+        <div class="stats-grid">
+            <div class="stat-card" style="--accent:#1B4FA8;">
+                <div class="stat-label">Total Leads</div>
+                <div class="stat-value">{{ $stats['total'] }}</div>
+            </div>
+            <div class="stat-card" style="--accent:#15803D;">
+                <div class="stat-label">Registered</div>
+                <div class="stat-value">{{ $stats['registered'] }}</div>
+            </div>
+            <div class="stat-card" style="--accent:#C47010;">
+                <div class="stat-label">Call Again</div>
+                <div class="stat-value">{{ $stats['call_again'] }}</div>
+            </div>
+            <div class="stat-card" style="--accent:#7A8A9A;">
+                <div class="stat-label">Waiting</div>
+                <div class="stat-value">{{ $stats['waiting'] }}</div>
+            </div>
+            <div class="stat-card" style="--accent:#9A8A7A;">
+                <div class="stat-label">Archived</div>
+                <div class="stat-value">{{ $stats['archived'] }}</div>
+            </div>
+            <div class="stat-card" style="--accent:#2D6FDB;">
+                <div class="stat-label">Public</div>
+                <div class="stat-value">{{ $stats['public'] }}</div>
+                <div class="stat-sub">unassigned</div>
+            </div>
+        </div>
+
+        {{-- ── PERIOD STATS ── --}}
+        <div class="section-title">New Leads by Period</div>
+        <div class="period-grid">
+
+            <div class="period-card">
+                <div class="period-label">Today</div>
+                @foreach(['Waiting','Call_Again','Registered','Archived'] as $s)
+                <div class="period-row">
+                    <span class="period-name">{{ str_replace('_',' ',$s) }}</span>
+                    <span class="period-num">{{ $today[$s] ?? 0 }}</span>
+                </div>
+                @endforeach
+            </div>
+
+            <div class="period-card">
+                <div class="period-label">This Week</div>
+                @foreach(['Waiting','Call_Again','Registered','Archived'] as $s)
+                <div class="period-row">
+                    <span class="period-name">{{ str_replace('_',' ',$s) }}</span>
+                    <span class="period-num">{{ $week[$s] ?? 0 }}</span>
+                </div>
+                @endforeach
+            </div>
+
+            <div class="period-card">
+                <div class="period-label">This Month</div>
+                @foreach(['Waiting','Call_Again','Registered','Archived'] as $s)
+                <div class="period-row">
+                    <span class="period-name">{{ str_replace('_',' ',$s) }}</span>
+                    <span class="period-num">{{ $month[$s] ?? 0 }}</span>
+                </div>
+                @endforeach
+            </div>
+
+        </div>
+
+        {{-- ── BAR CHARTS ── --}}
+        <div class="section-title">Distribution</div>
+        <div class="bar-section">
+
+            {{-- Per Source --}}
+            <div class="bar-card">
+                <div class="period-label" style="margin-bottom:16px;">By Source</div>
+                @php $maxSource = max(array_values($bySource) ?: [1]); @endphp
+                @foreach($bySource as $source => $count)
+                <div class="bar-row">
+                    <span class="bar-name">{{ str_replace('_',' ',$source) }}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width:{{ $maxSource > 0 ? round(($count/$maxSource)*100) : 0 }}%;background:linear-gradient(90deg,#1B4FA8,#2D6FDB);"></div>
+                    </div>
+                    <span class="bar-num">{{ $count }}</span>
+                </div>
+                @endforeach
+            </div>
+
+            {{-- Per Course --}}
+            <div class="bar-card">
+                <div class="period-label" style="margin-bottom:16px;">By Course</div>
+                @php $maxCourse = max(array_values($byCourse) ?: [1]); @endphp
+                @foreach($byCourse as $course => $count)
+                <div class="bar-row">
+                    <span class="bar-name">{{ \Illuminate\Support\Str::limit($course, 12) }}</span>
+                    <div class="bar-track">
+                        <div class="bar-fill" style="width:{{ $maxCourse > 0 ? round(($count/$maxCourse)*100) : 0 }}%;background:linear-gradient(90deg,#F5911E,#FFAB4A);"></div>
+                    </div>
+                    <span class="bar-num" style="color:#C47010;">{{ $count }}</span>
+                </div>
+                @endforeach
+            </div>
+
+        </div>
+
+        {{-- Per CS Employee --}}
+        <div class="section-title">By CS Employee</div>
+        <div class="bar-card" style="margin-bottom:28px;">
+            @php $maxCs = max(array_values($byCs) ?: [1]); @endphp
+            @forelse($byCs as $name => $count)
+            <div class="bar-row">
+                <span class="bar-name">{{ \Illuminate\Support\Str::limit($name, 12) }}</span>
+                <div class="bar-track">
+                    <div class="bar-fill" style="width:{{ $maxCs > 0 ? round(($count/$maxCs)*100) : 0 }}%;background:linear-gradient(90deg,#15803D,#22C55E);"></div>
+                </div>
+                <span class="bar-num" style="color:#15803D;">{{ $count }}</span>
+            </div>
+            @empty
+            <div style="font-size:11px;color:#AAB8C8;padding:8px 0;">No data</div>
+            @endforelse
+        </div>
+
+        {{-- ── RECENT LEADS ── --}}
+        <div class="section-title">Recent Leads</div>
+        <div class="recent-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Created</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($recentLeads as $lead)
+                    <tr>
+                        <td style="font-weight:500;color:#1A2A4A;">{{ $lead->full_name }}</td>
+                        <td style="font-family:monospace;font-size:11px;">{{ $lead->phone }}</td>
+                        <td>
+                            <span class="tag-sm" style="background:rgba(245,145,30,0.05);border:1px solid rgba(245,145,30,0.15);color:#C47010;">
+                                {{ str_replace('_',' ',$lead->source) }}
+                            </span>
+                        </td>
+                        <td>
+                            @php
+                                $tc = match($lead->status) {
+                                    'Waiting'        => 'tag-waiting',
+                                    'Call_Again'     => 'tag-call_again',
+                                    'Registered'     => 'tag-registered',
+                                    'Not_Interested' => 'tag-not_interested',
+                                    'Archived'       => 'tag-archived',
+                                    'Scheduled_Call' => 'tag-scheduled',
+                                    default          => 'tag-waiting',
+                                };
+                            @endphp
+                            <span class="tag-sm {{ $tc }}">{{ str_replace('_',' ',$lead->status) }}</span>
+                        </td>
+                        <td style="font-size:11px;color:#AAB8C8;">{{ $lead->created_at->diffForHumans() }}</td>
+                    </tr>
+                    @empty
+                    <tr><td colspan="5" style="text-align:center;padding:24px;color:#AAB8C8;font-size:12px;">No leads yet</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+    </main>
+
+@endsection

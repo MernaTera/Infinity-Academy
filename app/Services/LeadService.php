@@ -194,8 +194,8 @@ class LeadService
     public function releaseExpiredLeads()
     {
         $leads = Lead::whereNotNull('owner_cs_id')
-            ->where('created_at','<=',now()->subDays(4))
-            ->where('status','Waiting');
+            ->where('updated_at','<=',now()->subDays(4))
+            ->get();
 
         foreach ($leads as $lead) {
 
@@ -203,7 +203,12 @@ class LeadService
                 'owner_cs_id' => null
             ]);
 
-            $this->logHistory($lead,"Lead became public (4 days rule)");
+            $this->logHistory(
+                $lead,
+                $lead->status,
+                'Waiting',
+                'Lead set public (passed 4 days since last update)'
+            );
         }
 
         return $leads;

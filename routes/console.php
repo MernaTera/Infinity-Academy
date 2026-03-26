@@ -11,5 +11,10 @@ Artisan::command('inspire', function () {
 
 
 Schedule::call(function () {
+    app(LeadService::class)->releaseExpiredLeads();
+})->everyMinute();
+
+
+Schedule::call(function () {
     app(LeadService::class)->archiveOldLeads();
 })->everyMinute();

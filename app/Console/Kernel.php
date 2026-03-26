@@ -12,7 +12,13 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('leads:release-expired')->everyMinute();
+        $schedule->call(function () {
+            app(LeadService::class)->releaseExpiredLeads();
+        })->everyMinute();
+
+        $schedule->call(function () {
+            app(LeadService::class)->archiveOldLeads();
+        })->everyMinute();
     }
 
     /**
