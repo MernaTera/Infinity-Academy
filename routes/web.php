@@ -6,6 +6,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadDashboardController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\RegistrationController;
+use App\Models\Academic\CourseTemplate;
 
 
 
@@ -39,13 +41,26 @@ Route::middleware('auth')->group(function () {
     Route::get('/levels/{courseId}', function ($courseId) {
         return \App\Models\Academic\Level::where('course_template_id', $courseId)->get();
     });
-
     Route::get('/sublevels/{levelId}', function ($levelId) {
         return \App\Models\Academic\Sublevel::where('level_id', $levelId)->get();
     });
-
     Route::get('/leads/{leadId}/history', [LeadController::class, 'history']);
 });
 
 
+////////////   REGISTER      ////////////////    
+Route::middleware('auth')->group(function () {
+    Route::get('/lead/register', [RegistrationController::class, 'create']);
+    Route::post('/lead/register', [RegistrationController::class, 'store']);
+
+    Route::post('/calculate-price', function (Request $request) {
+        return app(\App\Services\PricingService::class)
+            ->calculatePrice($request->all());
+    });
+
+    Route::get('/patch-options/{levelId}', function ($levelId) {
+        return app(\App\Services\PatchService::class)
+            ->getAvailableOptions(['level_id' => $levelId]);
+    });
+});
 require __DIR__.'/auth.php';
