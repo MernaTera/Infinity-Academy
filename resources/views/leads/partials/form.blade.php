@@ -1,6 +1,5 @@
-
 <form method="POST"
-      action="{{ isset($lead) ? route('leads.update', $lead->lead_id) : route('leads.store') }}">
+      action="{{ isset($isRegistration) ? route('registration.store') : (isset($lead) ? route('leads.update', $lead->lead_id) : route('leads.store')) }}">
     @csrf
     @if(isset($lead)) @method('PUT') @endif
 

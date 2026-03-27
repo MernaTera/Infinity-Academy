@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadDashboardController;
 use App\Http\Controllers\LeadController;
+use App\Http\Controllers\RegistrationController;
 
 
 
@@ -53,6 +54,8 @@ Route::middleware('auth')->group(function () {
 Route::middleware('auth')->group(function () {
     Route::get('/registration/from-lead/{lead_id}', [RegistrationController::class, 'createFromLead'])
         ->name('registration.from.lead');
+    Route::post('/registration/store', [RegistrationController::class, 'store'])
+        ->name('registration.store');
     Route::put('/leads/{id}', [LeadController::class, 'update']);
 });
 
