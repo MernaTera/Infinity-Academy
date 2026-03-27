@@ -318,4 +318,33 @@ class LeadController extends Controller
         return response()->json($history);
     }
 
+    public function updateStatus(Request $request)
+    {
+        $request->validate([
+            'lead_id' => 'required|exists:leads,lead_id',
+            'status' => 'required|string'
+        ]);
+
+        $lead = $this->leadRepository->find($request->lead_id);
+
+        $oldStatus = $lead->status;
+
+        $this->leadRepository->update($lead->lead_id, [
+            'status' => $request->status
+        ]);
+
+        $lead->refresh();
+
+        $this->leadService->logHistory(
+            $lead,
+            $oldStatus,
+            $lead->status,
+            'Status updated from dropdown'
+        );
+
+        return response()->json([
+            'success' => true
+        ]);
+    }
+
 }

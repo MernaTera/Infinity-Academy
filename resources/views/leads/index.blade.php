@@ -513,6 +513,7 @@
     }
 </style>
 <script src="{{ asset('js/leads/history-modal.js') }}"></script>
+<script src="{{ asset('js/leads/register-modal.js') }}"></script>
 <div class="leads-page">
 
     {{-- ── HEADER ── --}}

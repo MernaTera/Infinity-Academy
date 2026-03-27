@@ -45,7 +45,15 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/leads/{leadId}/history', [LeadController::class, 'history']);
+    Route::post('/leads/update-status', [LeadController::class, 'updateStatus'])
+        ->name('leads.update.status');
 });
 
+////// registeration //////
+Route::middleware('auth')->group(function () {
+    Route::get('/registration/from-lead/{lead_id}', [RegistrationController::class, 'createFromLead'])
+        ->name('registration.from.lead');
+    Route::put('/leads/{id}', [LeadController::class, 'update']);
+});
 
 require __DIR__.'/auth.php';
