@@ -8,9 +8,16 @@ use App\Models\Academic\Level;
 use App\Models\Academic\Sublevel;
 use App\Services\RegistrationService;
 use Illuminate\Http\Request;
+use App\Models\Academic\CourseInstance;
+use App\Models\Academic\Patch;
+use App\Models\Finance\PaymentPlan;
+use App\Services\PatchService;
+use App\Services\PricingService;
+use App\Models\Academic\TimeSlot;
 
 class RegistrationController extends Controller
 {
+
     protected $registrationService;
 
     public function __construct(RegistrationService $registrationService)
@@ -23,26 +30,36 @@ class RegistrationController extends Controller
     | Show Form (from lead)
     |------------------------------------------------------------------
     */
+
     public function createFromLead($lead_id)
     {
         $lead = Lead::findOrFail($lead_id);
 
         if ($lead->status === 'Registered' && $lead->student_id) {
-            return redirect()->back()->with('error', 'Already registered');
+            return back()->with('error', 'Already registered');
         }
 
         $courses   = CourseTemplate::where('is_active', true)->get();
         $levels    = Level::all();
         $sublevels = Sublevel::all();
+        $timeSlots = TimeSlot::all();
 
-        return view('registration.create', [
-            'lead' => $lead,
-            'courses' => $courses,
-            'levels' => $levels,
-            'sublevels' => $sublevels,
-            'isRegistration' => true
-        ]);
+        $instances = CourseInstance::all();
+        $patches = Patch::all();
+        $paymentPlans = PaymentPlan::all();
+
+        return view('registration.create', compact(
+            'lead',
+            'courses',
+            'levels',
+            'sublevels',
+            'instances',
+            'patches',
+            'paymentPlans',
+            'timeSlots'
+        ));
     }
+    
 
     /*
     |------------------------------------------------------------------
@@ -52,12 +69,22 @@ class RegistrationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'full_name' => 'required|string',
-            'phone' => 'required',
-            'interested_course_template_id' => 'required',
-            'type' => 'required|in:group,private',
-        ]);
 
+            'lead_id' => 'required|exists:lead,lead_id',
+            'type' => 'required|in:group,private',
+
+            'course_instance_id' => 'required',
+
+            'payment_plan_id' => 'required',
+
+            'patch_option' => 'required|in:current,next,custom',
+
+            'teacher_id' => 'nullable',
+            'day' => 'required_if:type,private',
+            'time_slot_id' => 'required_if:type,private',
+
+            'custom_date' => 'nullable|date'
+        ]);
         try {
 
             $this->registrationService->register($request->all());
@@ -70,5 +97,29 @@ class RegistrationController extends Controller
 
             return back()->with('error', $e->getMessage());
         }
+    }
+
+    public function getPatchOptions($courseId)
+    {
+        $options = app(PatchService::class)->getOptions($courseId);
+
+        return response()->json($options);
+    }
+
+    public function calculatePrice(Request $request)
+    {
+        $price = app(PricingService::class)->calculate($request->all());
+
+        return response()->json([
+            'price' => $price
+        ]);
+    }
+
+    public function getAvailableTeachers(Request $request)
+    {
+        $teachers = app(\App\Services\TeacherAvailabilityService::class)
+            ->getAvailableTeachers($request->all());
+
+        return response()->json($teachers);
     }
 }

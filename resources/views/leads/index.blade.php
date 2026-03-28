@@ -501,8 +501,6 @@
     /* ── MOBILE ── */
     @media (max-width: 768px) {
         .leads-page { padding: 20px 14px; }
-        .page-title { font-size: 26px; letter-spacing: 2px; }
-        .stats-row  { grid-template-columns: 1fr 1fr; gap: 10px; }
         .stat-value { font-size: 22px; }
         .btn-add    { padding: 9px 16px; font-size: 12px; letter-spacing: 3px; }
     }
@@ -513,7 +511,7 @@
     }
 </style>
 <script src="{{ asset('js/leads/history-modal.js') }}"></script>
-<script src="{{ asset('js/leads/register-modal.js') }}"></script>
+<script src="{{ asset('js/register/register-modal.js') }}"></script>
 <div class="leads-page">
 
     {{-- ── HEADER ── --}}

@@ -141,7 +141,7 @@
     .btn-submit:hover { color: #fff; }
     .btn-submit span, .btn-submit svg { position: relative; z-index: 1; }
 </style>
-
+<script src="{{ asset('js/leads/create-modal.js') }}"></script>
 <div class="create-page">
 
     <div class="page-header">

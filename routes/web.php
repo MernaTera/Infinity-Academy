@@ -57,6 +57,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/registration/store', [RegistrationController::class, 'store'])
         ->name('registration.store');
     Route::put('/leads/{id}', [LeadController::class, 'update']);
+    Route::get('/patch-options/{courseId}', [RegistrationController::class, 'getPatchOptions']);
+    Route::post('/calculate-price', [RegistrationController::class, 'calculatePrice']);
+    Route::post('/available-teachers', [RegistrationController::class, 'getAvailableTeachers']);
+
 });
+
+
 
 require __DIR__.'/auth.php';
