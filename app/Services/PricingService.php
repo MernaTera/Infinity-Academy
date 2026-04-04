@@ -28,8 +28,8 @@ class PricingService
         if (!empty($data['sublevel_id'])) {
             $sub = Sublevel::find($data['sublevel_id']);
 
-            if ($sub && $sub->price_override) {
-                return $sub->price_override;
+            if ($sub && $sub->price) {
+                return $sub->price;
             }
         }
 
@@ -39,12 +39,6 @@ class PricingService
             if ($level) {
                 return $level->price;
             }
-        }
-
-        if (!empty($data['course_template_id'])) {
-            $course = CourseTemplate::findOrFail($data['course_template_id']);
-
-            return $course->price ?? 0;
         }
 
         throw new \Exception('Cannot determine price');

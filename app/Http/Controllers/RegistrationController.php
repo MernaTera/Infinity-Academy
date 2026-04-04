@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use App\Models\Academic\CourseInstance;
 use App\Models\Academic\Patch;
 use App\Models\Finance\PaymentPlan;
+use App\Models\Finance\PrivateBundle;
 use App\Services\PatchService;
 use App\Services\PricingService;
 use App\Models\Academic\TimeSlot;
@@ -47,6 +48,7 @@ class RegistrationController extends Controller
         $instances = CourseInstance::all();
         $patches = Patch::all();
         $paymentPlans = PaymentPlan::all();
+        $bundles = PrivateBundle::all();
 
         return view('registration.create', compact(
             'lead',
@@ -56,7 +58,8 @@ class RegistrationController extends Controller
             'instances',
             'patches',
             'paymentPlans',
-            'timeSlots'
+            'timeSlots',
+            'bundles',
         ));
     }
     
@@ -108,11 +111,9 @@ class RegistrationController extends Controller
 
     public function calculatePrice(Request $request)
     {
-        $price = app(PricingService::class)->calculate($request->all());
+        $result = app(PricingService::class)->calculate($request->all());
 
-        return response()->json([
-            'price' => $price
-        ]);
+        return response()->json($result); 
     }
 
     public function getAvailableTeachers(Request $request)
@@ -122,4 +123,5 @@ class RegistrationController extends Controller
 
         return response()->json($teachers);
     }
+    
 }

@@ -7,6 +7,9 @@ use App\Models\Student\Student;
 use App\Models\Enrollment\Enrollment;
 use App\Models\Enrollment\WaitingList;
 use Illuminate\Support\Facades\DB;
+use App\Models\Finance\PaymentPlan;
+use App\Models\Finance\PrivateBundle;
+
 
 class RegistrationService
 {
@@ -211,5 +214,29 @@ class RegistrationService
         if (!empty($data['discount_value']) && $data['discount_value'] < 0) {
             throw new \Exception('Invalid discount');
         }
+    }
+
+    private function storeTest($data)
+    {
+        return \App\Models\PlacementTest::create([
+            'score' => $data['test_score'],
+            'fee' => $data['test_fee'] ?? 0
+        ])->test_id;
+    }
+
+    private function determineStatus($data, $patchData)
+    {
+        if (!empty($data['payment_plan_id'])) {
+
+            $plan = PaymentPlan::find($data['payment_plan_id']);
+
+            if ($plan && $plan->requires_admin_approval) {
+                return 'Pending_Approval';
+            }
+        }
+
+        return $patchData['type'] === 'direct'
+            ? 'Active'
+            : 'Pending_Approval';
     }
 }
