@@ -3,7 +3,6 @@
 @section('title', 'Register Student')
 
 @section('content')
-<script src="{{ asset('js/register/register-modal.js') }}"></script>
 
 <div class="create-page">
 
@@ -110,8 +109,21 @@
                     <div class="form-section-label">Schedule</div>
 
                     <div class="form-grid cols-3">
-                        <select id="day_select" name="day" class="form-control-inf"></select>
-                        <select id="time_slot_select" name="time_slot_id" class="form-control-inf"></select>
+                        <select id="day_select" name="day" class="form-control-inf">
+                            <option value="">Select Day</option>
+                            <option value="Sun">Sunday</option>
+                            <option value="Mon">Monday</option>
+                            <option value="Tue">Tuesday</option>
+                            <option value="Wed">Wednesday</option>
+                            <option value="Thu">Thursday</option>
+                        </select>
+
+                        <select id="time_slot_select" name="time_slot_id" class="form-control-inf">
+                            @foreach($timeSlots as $slot)
+                                <option value="{{ $slot->time_slot_id }}">{{ $slot->name }}</option>
+                            @endforeach
+                        </select>
+
                         <select id="teacher_select" name="teacher_id" class="form-control-inf"></select>
                     </div>
 
@@ -122,9 +134,10 @@
                     <div class="form-section-label mt-3">Bundles</div>
 
                     <select id="bundle_select" name="bundle_id" class="form-control-inf">
+                        <option value="">Select Bundle</option>
                         @foreach($bundles as $b)
                             <option value="{{ $b->bundle_id }}" data-price="{{ $b->price }}">
-                                {{ $b->name }} - {{ $b->price }}
+                                {{ $b->hours }} hrs - {{ $b->price }} LE
                             </option>
                         @endforeach
                     </select>
@@ -159,6 +172,15 @@
 
                 <div class="form-divider"></div>
 
+                {{-- ================= MATERIALS ================= --}}
+                <div class="form-section-label">Materials</div>
+                <div id="materials_container" class="form-grid cols-3"></div>
+
+                <div class="form-divider"></div>
+                {{-- ================= NOTES ================= --}}
+                <div class="form-section-label">Notes</div>
+                <div class="form-divider"></div>
+
                 {{-- ================= PAYMENT ================= --}}
                 <div class="form-section-label">Payment</div>
 
@@ -183,13 +205,8 @@
     </div>
 
 </div>
-<script>
-    window.addEventListener('load', function () {
 
-        document.getElementById('course_select').dispatchEvent(new Event('change'));
-        document.getElementById('level_select').dispatchEvent(new Event('change'));
-
-    });
-</script>
+{{-- JS --}}
+<script src="{{ asset('js/register/register-modal.js') }}"></script>
 
 @endsection

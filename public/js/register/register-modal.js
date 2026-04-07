@@ -144,9 +144,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
+                type: document.querySelector('input[name="type"]:checked').value,
                 course_template_id: course.value,
                 level_id: level.value,
                 sublevel_id: sublevel.value,
+                bundle_id: document.getElementById('bundle_select')?.value,
                 discount_value: document.getElementById('discount').value
             })
         })
@@ -160,7 +162,15 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     document.getElementById('discount').addEventListener('input', calculatePrice);
+    document.getElementById('bundle_select')?.addEventListener('change', calculatePrice);
+    document.querySelectorAll('input[name="type"]').forEach(radio => {
 
+        radio.addEventListener('change', function () {
+
+            calculatePrice();
+        });
+
+    });
     // ================= PRIVATE =================
     function loadTeachers() {
 
@@ -219,3 +229,48 @@ document.addEventListener('DOMContentLoaded', function () {
     );
 
 });
+    window.addEventListener('load', function () {
+
+        document.getElementById('course_select').dispatchEvent(new Event('change'));
+        document.getElementById('level_select').dispatchEvent(new Event('change'));
+
+        setTimeout(() => {
+            if (typeof calculatePrice === 'function') {
+                calculatePrice();
+            }
+        }, 200);
+
+    });
+
+    function loadMaterials() {
+
+    fetch('/materials', {
+        method: 'POST',
+        body: JSON.stringify({
+            course_template_id: course.value,
+            level_id: level.value,
+            sublevel_id: sublevel.value
+        }),
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        let html = '';
+
+        data.forEach(m => {
+            html += `
+                <label>
+                    <input type="checkbox" name="materials[]" value="${m.material_id}" ${m.is_mandatory ? 'checked disabled' : ''}>
+                    ${m.name} (${m.price} LE)
+                </label><br>
+            `;
+        });
+
+        document.getElementById('materials_section').innerHTML = html;
+
+    });
+}

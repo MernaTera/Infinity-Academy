@@ -13,19 +13,24 @@ class CourseTemplateSeeder extends Seeder
      */
     public function run(): void
     {
-        CourseTemplate::insert([
+        CourseTemplate::updateOrCreate(
+            ['name' => 'General English'],
             [
-                'name' => 'General English',
-                'private_allowed' => 1,
-                'private_only' => 0,
-                'created_by_admin_id' => 1
-            ],
-            [
-                'name' => 'Conversation',
+                'price' => 3000,
                 'private_allowed' => 1,
                 'private_only' => 0,
                 'created_by_admin_id' => 1
             ]
-        ]);
+        );
+
+        CourseTemplate::updateOrCreate(
+            ['name' => 'Conversation'],
+            [
+                'price' => 2500,
+                'private_allowed' => 1,
+                'private_only' => 0,
+                'created_by_admin_id' => 1
+            ]
+        );
     }
 }

@@ -9,7 +9,13 @@ use App\Models\Enrollment\WaitingList;
 use Illuminate\Support\Facades\DB;
 use App\Models\Finance\PaymentPlan;
 use App\Models\Finance\PrivateBundle;
-
+use App\Models\Academic\Patch;
+use App\Models\Academic\CourseInstance;
+use App\Models\HR\TeacherAvailability;
+use App\Models\PlacementTest;
+use App\Models\Enrollment\Material;
+use App\Models\Enrollment\MaterialAssignment;
+use App\Models\Enrollment\EnrollmentMaterial;
 
 class RegistrationService
 {
@@ -24,6 +30,7 @@ class RegistrationService
             $this->validateNoConflict($data);
             $this->validatePatch($data);
             $this->validatePricing($data);
+            $this->attachMaterials($enrollment, $data);
 
             $lead = Lead::findOrFail($data['lead_id']);
 
@@ -238,5 +245,26 @@ class RegistrationService
         return $patchData['type'] === 'direct'
             ? 'Active'
             : 'Pending_Approval';
+    }
+
+    private function attachMaterials($enrollment, $data)
+    {
+        $materials = \App\Models\MaterialAssignment::where(function ($q) use ($data) {
+
+            $q->where('course_template_id', $data['course_template_id'])
+            ->orWhere('level_id', $data['level_id'])
+            ->orWhere('sublevel_id', $data['sublevel_id']);
+
+        })->with('material')->get();
+
+        foreach ($materials as $m) {
+
+            \App\Models\EnrollmentMaterial::create([
+                'enrollment_id' => $enrollment->enrollment_id,
+                'material_id' => $m->material_id,
+                'price' => $m->material->price,
+                'status' => 'Pending'
+            ]);
+        }
     }
 }

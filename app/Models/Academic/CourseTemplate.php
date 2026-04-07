@@ -48,6 +48,7 @@ class CourseTemplate extends Model
 
 	protected $fillable = [
 		'name',
+		'price',
 		'private_allowed',
 		'private_only',
 		'is_active',
