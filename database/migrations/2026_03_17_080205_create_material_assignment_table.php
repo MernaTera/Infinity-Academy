@@ -19,14 +19,19 @@ return new class extends Migration
                 ->cascadeOnDelete();
 
             $table->foreignId('course_template_id')
+                ->nullable() // ✅
                 ->constrained('course_template', 'course_template_id')
-                ->cascadeOnDelete();
+                ->nullOnDelete(); // 🔥 مهم
+
             $table->foreignId('level_id')
+                ->nullable() // ✅
                 ->constrained('level', 'level_id')
-                ->cascadeOnDelete();            
+                ->nullOnDelete();
+
             $table->foreignId('sublevel_id')
+                ->nullable() // ✅
                 ->constrained('sublevel', 'sublevel_id')
-                ->cascadeOnDelete();
+                ->nullOnDelete();
 
             $table->boolean('is_mandatory')->default(false);
 

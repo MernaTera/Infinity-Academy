@@ -14,8 +14,7 @@ return new class extends Migration
             $table->unsignedBigInteger('course_instance_id');
 
             $table->enum('day_of_week', [
-                'Saturday','Sunday','Monday',
-                'Tuesday','Wednesday','Thursday','Friday'
+                'sun_wed','sat_tue', 'mon_thu'
             ])->nullable();
 
             $table->unsignedBigInteger('time_slot_id')->nullable();

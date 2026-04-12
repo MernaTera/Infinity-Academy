@@ -44,12 +44,31 @@ class RegistrationService
             ]);
 
             $patchData = $this->handlePatchSelection($data);
-
+            $currentPatch = Patch::where('status', 'Active')->first();
+            $availabilities = TeacherAvailability::where('day_of_week', $data['day'])
+                ->where('time_slot_id', $data['time_slot_id'])
+                ->get();
             $pricing = app(\App\Services\PricingService::class)->calculate($data);
             $data['final_price'] = $pricing['final_price'];
 
             $enrollment = $this->createEnrollment($student, $data, $patchData);
 
+            $availableTeachers = [];
+
+            foreach ($availabilities as $availability) {
+
+                $isBusy = CourseInstance::where('teacher_id', $availability->teacher_id)
+                    ->where('patch_id', $currentPatch->patch_id)
+                    ->whereHas('schedules', function ($q) use ($data) {
+                        $q->where('day_of_week', $data['day'])
+                        ->where('time_slot_id', $data['time_slot_id']);
+                    })
+                    ->exists();
+
+                if (!$isBusy) {
+                    $availableTeachers[] = $availability->teacher;
+                }
+            }
             if ($patchData['type'] === 'waiting') {
 
                 WaitingList::create([
@@ -194,6 +213,7 @@ class RegistrationService
         if (empty($data['teacher_id'])) return;
 
         $conflict = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
+            ->where('patch_id', $data['patch_id'])
             ->whereHas('schedules', function ($q) use ($data) {
                 $q->where('day_of_week', $data['day'])
                 ->where('time_slot_id', $data['time_slot_id']);

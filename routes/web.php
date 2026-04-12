@@ -59,20 +59,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/patch-options/{courseId}', [RegistrationController::class, 'getPatchOptions']);
     Route::post('/calculate-price', [RegistrationController::class, 'calculatePrice']);
     Route::post('/available-teachers', [RegistrationController::class, 'getAvailableTeachers']);
-    Route::post('/materials', function (Request $request) {
-
-        return \App\Models\MaterialAssignment::with('material')
-            ->where('course_template_id', $request->course_template_id)
-            ->orWhere('level_id', $request->level_id)
-            ->orWhere('sublevel_id', $request->sublevel_id)
-            ->get()
-            ->map(fn($m) => [
-                'material_id' => $m->material_id,
-                'name' => $m->material->name,
-                'price' => $m->material->price,
-                'is_mandatory' => $m->is_mandatory
-            ]);
-    });
+    Route::post('/get-material', [RegistrationController::class, 'getMaterial']);
 });
 
 

@@ -16,25 +16,25 @@ class InstanceScheduleSeeder extends Seeder
         InstanceSchedule::insert([
             [
                 'course_instance_id' => 1,
-                'day_of_week' => 'Sunday',
+                'day_of_week' => 'sun_wed',
                 'time_slot_id' => 1,
                 'created_by_employee_id' => 1
             ],
             [
                 'course_instance_id' => 1,
-                'day_of_week' => 'Tuesday',
+                'day_of_week' => 'sat_tue',
                 'time_slot_id' => 1,
                 'created_by_employee_id' => 1
             ],
             [
                 'course_instance_id' => 2,
-                'day_of_week' => 'Monday',
+                'day_of_week' => 'mon_thu',
                 'time_slot_id' => 2,
                 'created_by_employee_id' => 1
             ],
             [
                 'course_instance_id' => 2,
-                'day_of_week' => 'Wednesday',
+                'day_of_week' => 'sun_wed',
                 'time_slot_id' => 2,
                 'created_by_employee_id' => 1
             ]

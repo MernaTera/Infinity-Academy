@@ -15,6 +15,8 @@ use App\Models\Finance\PrivateBundle;
 use App\Services\PatchService;
 use App\Services\PricingService;
 use App\Models\Academic\TimeSlot;
+use Illuminate\Support\Facades\DB;
+
 
 class RegistrationController extends Controller
 {
@@ -122,6 +124,32 @@ class RegistrationController extends Controller
             ->getAvailableTeachers($request->all());
 
         return response()->json($teachers);
+    }
+
+    public function getMaterial(Request $request)
+    {
+        $sublevelId = $request->sublevel_id;
+        $levelId = $request->level_id;
+        $courseId = $request->course_template_id;
+
+
+        $material = DB::table('material_assignment')
+            ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
+            ->where(function ($q) use ($sublevelId, $levelId, $courseId) {
+
+                if ($sublevelId) {
+                    $q->where('material_assignment.sublevel_id', $sublevelId);
+                } elseif ($levelId) {
+                    $q->where('material_assignment.level_id', $levelId);
+                } elseif ($courseId) {
+                    $q->where('material_assignment.course_template_id', $courseId);
+                }
+
+            })
+            ->select('materials.material_id', 'materials.name', 'materials.price')
+            ->first() ?? null;
+
+        return response()->json($material);
     }
     
 }

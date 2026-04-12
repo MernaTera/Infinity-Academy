@@ -6,6 +6,8 @@ use App\Models\Academic\Level;
 use App\Models\Academic\Sublevel;
 use App\Models\Academic\CourseTemplate;
 use App\Models\Finance\PrivateBundle;
+use App\Models\Finance\Offer;
+use App\Models\Finance\OfferCourseTemplate;
 
 class PricingService
 {
@@ -37,9 +39,13 @@ class PricingService
         }
 
         // discount
-        $discount = $data['discount_value'] ?? 0;
+        $discount = $this->getDiscount($data['course_template_id'] ?? null, $price);
 
         $final = $price - $discount;
+
+        if (!empty($data['material_price'])) {
+            $final += $data['material_price'];
+        }
 
         return [
             'base_price' => $price,
@@ -75,6 +81,28 @@ class PricingService
         }
 
         return 0;
+    }
+
+    private function getDiscount($courseId, $price)
+    {
+        if (!$courseId) return 0;
+
+        $offer = \DB::table('offer')
+            ->join('offer_course_template', 'offer.offer_id', '=', 'offer_course_template.offer_id')
+            ->where('offer_course_template.course_template_id', $courseId)
+            ->where('offer.is_active', 1)
+            ->whereDate('offer.start_date', '<=', now())
+            ->whereDate('offer.end_date', '>=', now())
+            ->select('offer.*')
+            ->first();
+
+        if (!$offer) return 0;
+
+        if ($offer->discount_type === 'Percentage') {
+            return $price * ($offer->discount_value / 100);
+        }
+
+        return $offer->discount_value;
     }
 
     

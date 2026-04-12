@@ -1,9 +1,10 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Seeders\Enrollment;
 
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use App\Models\Enrollment\Material;
 
 class MaterialSeeder extends Seeder
 {

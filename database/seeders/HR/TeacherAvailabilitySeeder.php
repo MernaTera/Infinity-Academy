@@ -7,6 +7,7 @@ use App\Models\HR\TeacherAvailability;
 use App\Models\HR\Teacher;
 use App\Models\Academic\TimeSlot;
 
+
 class TeacherAvailabilitySeeder extends Seeder
 {
     public function run(): void
@@ -14,7 +15,7 @@ class TeacherAvailabilitySeeder extends Seeder
         $teachers = Teacher::all();
         $slots = TimeSlot::all();
 
-        $days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'];
+        $days = ['sat_tue', 'sun_wed', 'mon_thu'];
 
         $data = [];
 

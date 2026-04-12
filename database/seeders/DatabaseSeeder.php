@@ -32,6 +32,9 @@ use Database\Seeders\Enrollment\EnrollmentSeeder;
 use Database\Seeders\Enrollment\PostponementSeeder;
 use Database\Seeders\Enrollment\RestrictionLogSeeder;
 use Database\Seeders\Enrollment\WaitingListSeeder;
+use Database\Seeders\Enrollment\MaterialSeeder;
+use Database\Seeders\Enrollment\MaterialAssignmentSeeder;
+
 
 use Database\Seeders\Finance\PaymentPlanSeeder;
 use Database\Seeders\Finance\PrivateBundleSeeder;
@@ -108,6 +111,8 @@ class DatabaseSeeder extends Seeder
             PostponementSeeder::class,
             RestrictionLogSeeder::class,
             WaitingListSeeder::class,
+            MaterialSeeder::class,
+            MaterialAssignmentSeeder::class,
         ]);
 
         //  FINANCE

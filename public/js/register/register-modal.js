@@ -1,15 +1,10 @@
 function updateStatus(el, leadId, newStatus) {
 
-    // 🟢 لو Registered → redirect فقط
     if (newStatus === 'Registered') {
-
         if (confirm("Are you sure you want to register this lead?")) {
-
             window.location.href = `/registration/from-lead/${leadId}`;
-
         }
-
-        return; 
+        return;
     }
 
     fetch(`/leads/${leadId}`, {
@@ -19,15 +14,11 @@ function updateStatus(el, leadId, newStatus) {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
             'Accept': 'application/json'
         },
-        body: JSON.stringify({
-            status: newStatus
-        })
+        body: JSON.stringify({ status: newStatus })
     })
     .then(res => res.json())
     .then(data => {
-        if (data.success) {
-            location.reload(); 
-        }
+        if (data.success) location.reload();
     })
     .catch(err => {
         console.error(err);
@@ -35,21 +26,25 @@ function updateStatus(el, leadId, newStatus) {
     });
 }
 
-
 document.addEventListener('DOMContentLoaded', function () {
 
     const course = document.getElementById('course_select');
     const level = document.getElementById('level_select');
     const sublevel = document.getElementById('sublevel_select');
 
-
     const patch = document.getElementById('patch_select');
     const patchId = document.getElementById('patch_id');
-
     const customDate = document.getElementById('custom_date');
 
     const teacher = document.getElementById('teacher_select');
     const recommended = document.getElementById('recommended_date');
+
+    const bundle = document.getElementById('bundle_select');
+
+    const materialSection = document.getElementById('material_section');
+    const materialCheck = document.getElementById('material_check');
+    const materialPriceBlock = document.getElementById('material_price_block');
+    const materialPriceHidden = document.getElementById('material_price_hidden');
 
     // ================= TYPE =================
     document.querySelectorAll('input[name="type"]').forEach(radio => {
@@ -57,48 +52,60 @@ document.addEventListener('DOMContentLoaded', function () {
 
             let isPrivate = this.value === 'private';
 
-            document.getElementById('private_section').style.display =
+            document.getElementById('private_extra').style.display =
                 isPrivate ? 'block' : 'none';
 
-            document.getElementById('group_section').style.display =
-                isPrivate ? 'none' : 'block';
+            // reset
+            teacher.innerHTML = '';
+            bundle.value = '';
+            calculatePrice();
+            loadTeachers();
         });
     });
 
     // ================= COURSE → LEVEL =================
-    course.addEventListener('change', () => {
+    course.addEventListener('change', async function () {
 
-        fetch(`/levels/${courseId}`)
-        .then(res => res.json())
-        .then(data => {
+        let courseId = this.value;
 
-            level.innerHTML = '<option>Select Level</option>';
+        level.innerHTML = '<option value="">Select Level (optional)</option>';
+        sublevel.innerHTML = '<option value="">Select Sublevel (optional)</option>';
 
-            data.forEach(l => {
-                level.innerHTML += `<option value="${l.level_id}">${l.name}</option>`;
-            });
-        });
+        let res = await fetch(`/levels/${courseId}`);
+        let data = await res.json();
 
-    });
-
-    // ================= LEVEL → SUBLEVEL =================
-    level.addEventListener('change', () => {
-
-        fetch(`/sublevels/${levelId}`)
-        .then(res => res.json())
-        .then(data => {
-
-            sublevel.innerHTML = '';
-
-            data.forEach(s => {
-                sublevel.innerHTML += `<option value="${s.sublevel_id}">${s.name}</option>`;
-            });
-
+        data.forEach(l => {
+            level.innerHTML += `<option value="${l.level_id}">${l.name}</option>`;
         });
 
         loadPatch();
         calculatePrice();
     });
+
+    // ================= LEVEL → SUBLEVEL =================
+    level.addEventListener('change', async function () {
+
+        let levelId = this.value;
+
+        sublevel.innerHTML = '<option value="">Select Sublevel (optional)</option>';
+
+        if (!levelId) {
+            calculatePrice();
+            return;
+        }
+
+        let res = await fetch(`/sublevels/${levelId}`);
+        let data = await res.json();
+
+        data.forEach(s => {
+            sublevel.innerHTML += `<option value="${s.sublevel_id}">${s.name}</option>`;
+        });
+
+        loadPatch();
+        calculatePrice();
+    });
+
+    sublevel.addEventListener('change', calculatePrice);
 
     // ================= PATCH =================
     function loadPatch() {
@@ -112,10 +119,11 @@ document.addEventListener('DOMContentLoaded', function () {
             options.forEach(o => {
                 patch.innerHTML += `<option value="${o.type}" data-id="${o.patch_id || ''}">${o.label}</option>`;
             });
+
         });
     }
 
-    patch.addEventListener('change', () => {
+    patch.addEventListener('change', function () {
 
         let selected = patch.options[patch.selectedIndex];
 
@@ -123,19 +131,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
         customDate.style.display =
             patch.value === 'custom' ? 'block' : 'none';
+
+        loadTeachers(); // 🔥 مهم
     });
 
     // ================= PRICING =================
-
-    course.addEventListener('change', () => {
-        calculatePrice();
-        loadPatch();
-    });
-
-    level.addEventListener('change', calculatePrice);
-    sublevel.addEventListener('change', calculatePrice);
-
     function calculatePrice() {
+
+        const materialCheck = document.getElementById('material_check');
+        const materialPriceHidden = document.getElementById('material_price_hidden');
 
         fetch('/calculate-price', {
             method: 'POST',
@@ -148,31 +152,52 @@ document.addEventListener('DOMContentLoaded', function () {
                 course_template_id: course.value,
                 level_id: level.value,
                 sublevel_id: sublevel.value,
-                bundle_id: document.getElementById('bundle_select')?.value,
-                discount_value: document.getElementById('discount').value
+                bundle_id: bundle?.value,
+                material_price: materialCheck.checked ? materialPriceHidden.value : 0
             })
         })
         .then(res => res.json())
         .then(data => {
-            console.log(data);
-            document.getElementById('base_price').value = data.base_price;
-            document.getElementById('final_price').value = data.final_price;
+            console.log("PRICE:", data);
+            let materialValue = 0;
+
+            if (materialCheck.checked) {
+                materialValue = parseFloat(materialPriceHidden.value || 0);
+            }
+
+            document.getElementById('base_price').value = data.base_price + " LE";
+            document.getElementById('discount').value = data.discount + " LE";
+            document.getElementById('discount_hidden').value = data.discount;
+            document.getElementById('final_price').value = data.final_price + " LE";
 
         });
+        
     }
 
-    document.getElementById('discount').addEventListener('input', calculatePrice);
-    document.getElementById('bundle_select')?.addEventListener('change', calculatePrice);
-    document.querySelectorAll('input[name="type"]').forEach(radio => {
+    bundle?.addEventListener('change', calculatePrice);
+    document.querySelectorAll('input[name="type"]').forEach(r => r.addEventListener('change', calculatePrice));
 
-        radio.addEventListener('change', function () {
-
-            calculatePrice();
-        });
-
-    });
     // ================= PRIVATE =================
     function loadTeachers() {
+
+        let type = document.querySelector('input[name="type"]:checked').value;
+
+        if (type !== 'private') return;
+
+        if (patch.value !== 'current') {
+
+            document.getElementById('teacher_block').style.display = 'none';
+
+            recommended.style.display = 'block';
+
+            let d = new Date();
+            d.setDate(d.getDate() + 7);
+
+            recommended.value = d.toISOString().split('T')[0];
+
+            return;
+        }
+
 
         fetch('/available-teachers', {
             method: 'POST',
@@ -185,7 +210,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 level_id: level.value,
                 sublevel_id: sublevel.value,
                 day: document.getElementById('day_select').value,
-                time_slot_id: document.getElementById('time_slot_select').value
+                time_slot_id: document.getElementById('time_slot_select').value,
+                patch_option: patch.value
             })
         })
         .then(res => res.json())
@@ -204,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             } else {
 
-                teacher.style.display = 'none';
+                document.getElementById('teacher_block').style.display = 'none';
                 recommended.style.display = 'block';
 
                 let d = new Date();
@@ -216,61 +242,80 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    document.getElementById('bundle_select').addEventListener('change', function () {
-
-        let price = this.options[this.selectedIndex].dataset.price;
-
-        document.getElementById('bundle_price').value = price;
-
-    });
-
     ['day_select','time_slot_select'].forEach(id =>
         document.getElementById(id)?.addEventListener('change', loadTeachers)
     );
 
-});
+    course.addEventListener('change', loadTeachers);
+    level.addEventListener('change', loadTeachers);
+
+    // ================= INIT =================
     window.addEventListener('load', function () {
 
-        document.getElementById('course_select').dispatchEvent(new Event('change'));
-        document.getElementById('level_select').dispatchEvent(new Event('change'));
+        course.dispatchEvent(new Event('change'));
 
         setTimeout(() => {
-            if (typeof calculatePrice === 'function') {
-                calculatePrice();
-            }
+            calculatePrice();
+            loadTeachers();
         }, 200);
-
     });
 
-    function loadMaterials() {
+        function loadMaterial() {
 
-    fetch('/materials', {
-        method: 'POST',
-        body: JSON.stringify({
-            course_template_id: course.value,
-            level_id: level.value,
-            sublevel_id: sublevel.value
-        }),
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        fetch('/get-material', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            },
+            body: JSON.stringify({
+                course_template_id: course.value,
+                level_id: level.value,
+                sublevel_id: sublevel.value
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            console.log("MATERIAL:", data); 
+
+        if (!data || !data.material_id) {
+            materialSection.style.display = 'block';
+
+            document.getElementById('material_name').value = "No material available";
+            document.getElementById('material_price').value = " -";
+            materialCheck.style.display = 'none';
+
+            return;
         }
-    })
-    .then(res => res.json())
-    .then(data => {
 
-        let html = '';
+            materialSection.style.display = 'block';
 
-        data.forEach(m => {
-            html += `
-                <label>
-                    <input type="checkbox" name="materials[]" value="${m.material_id}" ${m.is_mandatory ? 'checked disabled' : ''}>
-                    ${m.name} (${m.price} LE)
-                </label><br>
-            `;
+
+            document.getElementById('material_name').value = data.name;
+            document.getElementById('material_price').value = data.price + " LE";
+            materialPriceHidden.value = data.price;
+
         });
+    }
 
-        document.getElementById('materials_section').innerHTML = html;
+    course.addEventListener('change', loadMaterial);
+    level.addEventListener('change', loadMaterial);
+    sublevel.addEventListener('change', loadMaterial);
 
+    materialCheck.addEventListener('change', function () {
+        materialPriceBlock.style.display =
+            this.checked ? 'block' : 'none';
+
+        calculatePrice();
     });
-}
+
+    setTimeout(() => {
+        loadMaterial();
+    }, 300);
+
+});
+
+
+
+

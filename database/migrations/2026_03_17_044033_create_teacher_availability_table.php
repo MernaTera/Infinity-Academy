@@ -15,7 +15,9 @@ return new class extends Migration
             $table->unsignedBigInteger('time_slot_id');
 
             $table->enum('day_of_week', [
-                'Sun','Mon','Tue','Wed','Thu','Fri','Sat'
+                    'sat_tue',
+                    'sun_wed',
+                    'mon_thu'
             ]);
 
             $table->timestamps();
