@@ -410,19 +410,42 @@
                 {{-- PAYMENT --}}
                 <div class="form-section-label">Payment</div>
 
-                <select name="payment_plan_id" class="form-control-inf">
+                <select id="payment_plan_id" name="payment_plan_id">
                     @foreach($paymentPlans as $plan)
-                        <option value="{{ $plan->payment_plan_id }}">
+                        <option 
+                            value="{{ $plan->payment_plan_id }}"
+                            data-deposit="{{ $plan->deposit_percentage }}"
+                            data-installments="{{ $plan->installment_count }}"
+                            data-grace="{{ $plan->grace_period_days }}"
+                        >
                             {{ $plan->name }}
                         </option>
                     @endforeach
                 </select>
+                {{-- PAYMENT SUMMARY--}}
+                <div id="payment_details" style="display:none; margin-top:15px;">
+
+                    <div id="payment_summary"></div>
+
+                    <table class="table mt-2" id="installments_table" style="display:none;">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Amount</th>
+                                <th>Due Date</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+
+                </div>
 
                 <div class="form-divider"></div>
 
                 <div class="form-footer">
                     <button type="submit" class="btn-submit">Register Student</button>
                 </div>
+
 
             </form>
 

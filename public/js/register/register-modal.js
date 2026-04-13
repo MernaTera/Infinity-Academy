@@ -357,3 +357,62 @@ function loadTeachers() {
 
 
 
+const paymentSelect = document.getElementById('payment_plan_id');
+
+paymentSelect.addEventListener('change', loadPaymentDetails);
+
+function loadPaymentDetails() {
+
+    const selected = paymentSelect.options[paymentSelect.selectedIndex];
+
+    const deposit = parseFloat(selected.dataset.deposit || 0);
+    const installments = parseInt(selected.dataset.installments || 0);
+    const grace = parseInt(selected.dataset.grace || 0);
+
+    const finalPrice = parseFloat(
+        document.getElementById('final_price').value.replace(' LE','') || 0
+    );
+
+    if (!finalPrice) return;
+
+    let depositAmount = (finalPrice * deposit) / 100;
+    let remaining = finalPrice - depositAmount;
+
+    // 🧾 Summary
+    document.getElementById('payment_summary').innerHTML = `
+        <div><strong>Deposit:</strong> ${deposit}% (${depositAmount.toFixed(2)} LE)</div>
+        <div><strong>Remaining:</strong> ${remaining.toFixed(2)} LE</div>
+    `;
+
+    // 📅 Installments
+    const table = document.getElementById('installments_table');
+    const tbody = table.querySelector('tbody');
+
+    tbody.innerHTML = '';
+
+    if (installments > 0) {
+
+        table.style.display = 'table';
+
+        let installmentAmount = remaining / installments;
+
+        for (let i = 1; i <= installments; i++) {
+
+            let dueDate = new Date();
+            dueDate.setDate(dueDate.getDate() + (grace * i));
+
+            tbody.innerHTML += `
+                <tr>
+                    <td>${i}</td>
+                    <td>${installmentAmount.toFixed(2)} LE</td>
+                    <td>${dueDate.toISOString().split('T')[0]}</td>
+                </tr>
+            `;
+        }
+
+    } else {
+        table.style.display = 'none';
+    }
+
+    document.getElementById('payment_details').style.display = 'block';
+}

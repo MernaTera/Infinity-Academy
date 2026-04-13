@@ -1,0 +1,105 @@
+[33m447b24f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{0}: reset: moving to origin/main
+[33m7c1a6ef[m HEAD@{1}: commit: Added teacher
+[33m447b24f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{2}: reset: moving to origin/main
+[33m447b24f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m HEAD@{3}: commit: Added material
+[33mcdbfb43[m HEAD@{4}: commit: Added Material model, migration, seeder
+[33m706e0d8[m HEAD@{5}: commit: Added until registeration form
+[33mdfc0f4f[m HEAD@{6}: checkout: moving from registration to main
+[33m9bbafc4[m[33m ([m[1;31morigin/registration[m[33m, [m[1;32mregistration[m[33m)[m HEAD@{7}: checkout: moving from main to registration
+[33mdfc0f4f[m HEAD@{8}: commit: Added registration service
+[33m0a7016a[m HEAD@{9}: checkout: moving from registration to main
+[33m9bbafc4[m[33m ([m[1;31morigin/registration[m[33m, [m[1;32mregistration[m[33m)[m HEAD@{10}: checkout: moving from main to registration
+[33m0a7016a[m HEAD@{11}: commit: Added registration service
+[33m50fefa5[m HEAD@{12}: checkout: moving from registration to main
+[33m9bbafc4[m[33m ([m[1;31morigin/registration[m[33m, [m[1;32mregistration[m[33m)[m HEAD@{13}: checkout: moving from main to registration
+[33m50fefa5[m HEAD@{14}: commit: Pre registeration
+[33m25869de[m HEAD@{15}: checkout: moving from registration to main
+[33m9bbafc4[m[33m ([m[1;31morigin/registration[m[33m, [m[1;32mregistration[m[33m)[m HEAD@{16}: commit: registration
+[33m25869de[m HEAD@{17}: checkout: moving from main to registration
+[33m25869de[m HEAD@{18}: commit: Added sidebar
+[33mea07da9[m HEAD@{19}: commit: Added schedule for leads
+[33m5565a38[m HEAD@{20}: commit: Navbar added
+[33m7aaa6d3[m HEAD@{21}: commit: Archived View added
+[33m1589143[m HEAD@{22}: commit: Public Leads Added
+[33mc6093f0[m HEAD@{23}: commit: My leads folow up DONE
+[33mb1cc853[m HEAD@{24}: commit: added: Lead controller, service, repository, index, edit, create views
+[33m7d44b5e[m HEAD@{25}: commit: Adde: Lead Views, Controller, Services
+[33m7213c7d[m HEAD@{26}: commit: Updated Navigation bar
+[33m6f2ab39[m HEAD@{27}: commit: Added: All Seeders
+[33me42b258[m HEAD@{28}: commit: Added: Leads Seeders
+[33m7d6e19e[m HEAD@{29}: commit: Added: HR Seeders
+[33mef65df0[m HEAD@{30}: commit: Added: Finance Seeders
+[33mcb1d9ad[m HEAD@{31}: commit: Added: Enrollment Seeders
+[33mb005331[m HEAD@{32}: commit: Added: Attendace Seeders
+[33m08165d6[m HEAD@{33}: commit: Added: Academic Seeders
+[33mf423f6f[m HEAD@{34}: commit: Added: Core Seeders
+[33m63154e5[m HEAD@{35}: commit: Added: Auth Seeders
+[33m8b577c0[m HEAD@{36}: commit: Added: Login Blade Layout
+[33m34b5a6b[m HEAD@{37}: commit: Added: Welcome Blade Layout
+[33m47ce46b[m HEAD@{38}: commit: Added MIgration: AuditLog - System
+[33m0f9231c[m HEAD@{39}: commit: Added MIgration: UserNotification - Notification
+[33m2d99379[m HEAD@{40}: commit: Added MIgration: NotificactionLog - Notification
+[33mcac5254[m HEAD@{41}: commit: Added MIgration: ReportScore - Reports
+[33m15f9c9e[m HEAD@{42}: commit: Added MIgration: Report - Reports
+[33mee59d8d[m HEAD@{43}: commit: Added MIgration: Attendance - Attendance
+[33m10be553[m HEAD@{44}: commit: Added MIgration: OfferCourseTemplate - Finance
+[33mccaf9de[m HEAD@{45}: commit: Added MIgration: Offer - Finance
+[33m11abcf4[m HEAD@{46}: commit: Added MIgration: InstallmentApprovalLog - Finance
+[33mb7e066b[m HEAD@{47}: commit: Added MIgration: RefundRequest - Finance
+[33md9807af[m HEAD@{48}: commit: Added MIgration: RevenueSplit - Finance
+[33meedcf34[m HEAD@{49}: commit: Added MIgration: InstallmentSchedule - Finance
+[33m28d48a3[m HEAD@{50}: commit: Added MIgration: PaymentPlan- Finance
+[33mfd48097[m HEAD@{51}: commit: Added MIgration: FinancialTransaction - Finance
+[33md033ae8[m HEAD@{52}: commit: Added MIgration: BundleUsageLog - Finance
+[33m75faac8[m HEAD@{53}: commit: Added MIgration: Postponement - Enrollment
+[33me715f7f[m HEAD@{54}: commit: Added MIgration: RestrictionLog - Enrollment
+[33m618f04c[m HEAD@{55}: commit: Added MIgration: WaitingList- Enrollment
+[33m0f80e1d[m HEAD@{56}: commit: Added MIgration: Enrollment - Enrollment
+[33m01835a0[m HEAD@{57}: commit: Added MIgration: CSTarget - Enrollment
+[33mda20fbc[m HEAD@{58}: commit: Added MIgration: PrivateBundle - Finance
+[33m340307c[m HEAD@{59}: commit: Added MIgration: PlacementTest - Enrollment
+[33m59095b8[m HEAD@{60}: commit: Added MIgration: LeadHistory - Lead
+[33md6813cb[m HEAD@{61}: commit: Added MIgration: LeadHistory - Lead
+[33m64de5f2[m HEAD@{62}: commit: Added MIgration: Lead - Lead
+[33m698c241[m HEAD@{63}: commit: Added MIgration: StudentPhonet - Student
+[33m875cbe1[m HEAD@{64}: commit: Added MIgration: Student - Student
+[33mc84912d[m HEAD@{65}: commit: Added MIgration: ScheduleChangeLog - Academic
+[33mab09a2b[m HEAD@{66}: commit: Added MIgration: CourseSession - Academic
+[33m3008c08[m HEAD@{67}: commit: Added MIgration: InstanceSchedule - Academic
+[33mf9eb8e9[m HEAD@{68}: commit: Added MIgration: CourseInstance- Academic
+[33md073ce1[m HEAD@{69}: commit: Added MIgration: SubLevel - Academic
+[33m9713eb6[m HEAD@{70}: commit: Added MIgration: Level - Academic
+[33mc5544c8[m HEAD@{71}: commit: Added MIgration: Room- Academic
+[33m7e9478e[m HEAD@{72}: commit: Added MIgration: CourseTemplate - Academic
+[33mad6ea60[m HEAD@{73}: commit: Added MIgration: ContractType - HR
+[33mc66f7e3[m HEAD@{74}: commit: Added MIgration:Patch - Academic
+[33mcc62e0b[m HEAD@{75}: commit: Added MIgration: Teacher - HR
+[33m3982b78[m HEAD@{76}: commit: Added MIgration: BreakSlot - Academic
+[33m4c975ef[m HEAD@{77}: commit: Added MIgration: TimeSlot - Academic
+[33m7b320d8[m HEAD@{78}: commit: Added MIgration: Teacher - HR
+[33mc6e4052[m HEAD@{79}: commit: Added MIgration: EnglishLevel - Academic
+[33m0afa93c[m HEAD@{80}: commit: Added MIgration: Employee - HR
+[33m511e227[m HEAD@{81}: commit: Added MIgration: Branch - Core
+[33m83a3c3c[m HEAD@{82}: commit: Added MIgration: Users - Auth
+[33mcff03c2[m HEAD@{83}: commit: Added MIgration: RolePermission - Auth
+[33m594851e[m HEAD@{84}: commit: Added MIgration: Permission - Auth
+[33mf0bf785[m HEAD@{85}: commit: Added MIgration: Module - Auth
+[33mb23c7e0[m HEAD@{86}: commit: Added MIgration: Role - Auth
+[33m80e7fc8[m HEAD@{87}: commit: ALL changes before DB deletetion
+[33mf53e473[m HEAD@{88}: commit: Added: Blade Welcome.blade.php
+[33mb40a870[m HEAD@{89}: commit: Added: app structure
+[33m0ba66ca[m HEAD@{90}: commit: Added: filament package
+[33m6ccdfe9[m HEAD@{91}: commit: Updated The naming of the database attributes
+[33mf2a76fc[m HEAD@{92}: commit: Added: Model System ( AuditLog )
+[33m2ea76da[m HEAD@{93}: commit: Added: Model Student ( Student, StudentPhone )
+[33m9133bd4[m HEAD@{94}: commit: Added: Model Reports ( Report, ReportScore )
+[33m6a6983d[m HEAD@{95}: commit: Added: Model Notification ( NotificationLog, UserNotification )
+[33m11c5618[m HEAD@{96}: commit: Added: Model Leads ( Leads, LeadHistory, LeadCallLog )
+[33ma5a8f0e[m HEAD@{97}: commit: Added: Model HR ( ContractType, Employee, Teacher, TeacherAvaiablity )
+[33mafb832c[m HEAD@{98}: commit: Added: Model Finance (BundleUsageLog, FinancialTransaction, InstallmentApprovalLog, InstallmentSchedule, Offer, OfferCourseTemplate, PaymentPlan, PrivateBundle, RefundRequest, revenueSplit )
+[33m9375579[m HEAD@{99}: commit: Added: Model Enrollment ( CsTarget, Enrollment, PlacementTest, Postponement, RestrictedLog, WaitingList )
+[33m40f6301[m HEAD@{100}: commit: Added: Model Core ( Branch )
+[33m2b9fd38[m HEAD@{101}: commit: Updated: User Model
+[33m2f21d0e[m HEAD@{102}: commit: Added: Model Auth ( Module, Permission, Role, RolePermission, Session, User )
+[33m9ef0c3a[m HEAD@{103}: commit: Added: Model Attendance ( Attendance )
+[33m12c9042[m HEAD@{104}: commit: Models: Added Academic Models ( BreakSlot, CourseInstance, CourseSession, EnglishLevel, InstanceSche
