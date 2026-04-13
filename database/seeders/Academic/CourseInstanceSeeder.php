@@ -18,7 +18,7 @@ class CourseInstanceSeeder extends Seeder
                 'course_template_id' => 1,
                 'level_id' => 1,
                 'sublevel_id' => 1,
-                'patch_id' => 1,
+                'patch_id' => 2,
                 'teacher_id' => 1,
                 'branch_id' => 1,
                 'start_date' => '2026-01-05',
@@ -29,13 +29,14 @@ class CourseInstanceSeeder extends Seeder
                 'session_duration' => 2,
                 'capacity' => 15,
                 'type' => 'Group',
+                'status' => 'Active',
                 'created_by_employee_id' => 1
             ],
             [
                 'course_template_id' => 1,
                 'level_id' => 2,
                 'sublevel_id' => 3,
-                'patch_id' => 1,
+                'patch_id' => 2,
                 'teacher_id' => 2,
                 'branch_id' => 1,
                 'start_date' => '2026-01-06',
@@ -46,6 +47,7 @@ class CourseInstanceSeeder extends Seeder
                 'session_duration' => 2,
                 'capacity' => 15,
                 'type' => 'Group',
+                'status' => 'Active',
                 'created_by_employee_id' => 1
             ]
         ]);

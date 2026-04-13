@@ -60,4 +60,5 @@ class TeacherAvailability extends Model
 	{
 		return $query->where('day_of_week', $day);
 	}
+
 }

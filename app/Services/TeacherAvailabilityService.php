@@ -4,33 +4,36 @@ namespace App\Services;
 
 use App\Models\HR\TeacherAvailability;
 use App\Models\Academic\CourseInstance;
+use App\Models\Academic\Patch;
+use Illuminate\Http\Request;
 
 class TeacherAvailabilityService
 {
     public function getAvailableTeachers($data)
     {
-        $availabilities = TeacherAvailability::with('teacher')
-            ->where('day_of_week', $data['day'])
-            ->where('time_slot_id', $data['time_slot_id'])
+        if (($data['patch_option'] ?? '') !== 'current') {
+            return [];
+        }
+
+        // 🔥 أهم حماية
+        if (empty($data['patch_id'])) {
+            return [];
+        }
+
+        $teachers = \App\Models\HR\Teacher::with('availability')
+            ->where('is_active', 1)
             ->get();
 
         $availableTeachers = [];
 
-        foreach ($availabilities as $availability) {
+        foreach ($teachers as $teacher) {
 
-            $teacher = $availability->teacher;
-
-            // 2. check if teacher teaches this course/level
             if (!$this->isTeacherValid($teacher, $data)) {
                 continue;
             }
 
-            // 3. check conflict
             $hasConflict = CourseInstance::where('teacher_id', $teacher->teacher_id)
-                ->whereHas('schedules', function ($q) use ($data) {
-                    $q->where('day_of_week', $data['day'])
-                      ->where('time_slot_id', $data['time_slot_id']);
-                })
+                ->where('patch_id', $data['patch_id'])
                 ->exists();
 
             if (!$hasConflict) {
@@ -40,6 +43,7 @@ class TeacherAvailabilityService
 
         return $availableTeachers;
     }
+
 
     private function isTeacherValid($teacher, $data)
     {

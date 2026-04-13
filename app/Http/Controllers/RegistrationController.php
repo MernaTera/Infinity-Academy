@@ -151,5 +151,15 @@ class RegistrationController extends Controller
 
         return response()->json($material);
     }
+
+    public function getTeacherSchedule(Request $request)
+    {
+        $teacherId = $request->teacher_id;
+
+        $availability = \App\Models\HR\TeacherAvailability::where('teacher_id', $teacherId)
+            ->get();
+
+        return response()->json($availability);
+    }
     
 }

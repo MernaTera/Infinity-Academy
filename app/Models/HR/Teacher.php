@@ -93,4 +93,8 @@ class Teacher extends Model
 	{
 		return $this->english_level->level_name ?? null;
 	}
+	public function availability()
+	{
+		return $this->hasMany(TeacherAvailability::class, 'teacher_id');
+	}
 }

@@ -155,7 +155,7 @@ class CourseInstance extends Model
 
 	public function sessions()
 	{
-		return $this->hasMany(Session::class, 'course_instance_id');
+		return $this->hasMany(CourseSession::class, 'course_instance_id');
 	}
 
 	public function totalSessions()

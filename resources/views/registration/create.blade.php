@@ -349,10 +349,10 @@
 
                 {{-- PRIVATE --}}
                 <div id="private_extra" style="display:none;">
-
-                    <div class="form-section-label">Teacher</div>
-                    <select id="teacher_select" name="teacher_id" class="form-control-inf"></select>
-
+                    <div id="teacher_block">
+                        <div class="form-section-label">Teacher</div>
+                        <select id="teacher_select" name="teacher_id" class="form-control-inf"></select>
+                    </div>
                     <div class="form-section-label mt-2">Preferred Days</div>
                     <select id="day_select" name="day" class="form-control-inf">
                         <option value="">Select Pair</option>

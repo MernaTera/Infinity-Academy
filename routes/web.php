@@ -43,7 +43,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/sublevels/{levelId}', function ($levelId) {
         return \App\Models\Academic\Sublevel::where('level_id', $levelId)->get();
     });
-
     Route::get('/leads/{leadId}/history', [LeadController::class, 'history']);
     Route::post('/leads/update-status', [LeadController::class, 'updateStatus'])
         ->name('leads.update.status');
@@ -59,6 +58,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/patch-options/{courseId}', [RegistrationController::class, 'getPatchOptions']);
     Route::post('/calculate-price', [RegistrationController::class, 'calculatePrice']);
     Route::post('/available-teachers', [RegistrationController::class, 'getAvailableTeachers']);
+    Route::post('/teacher-schedule', [RegistrationController::class, 'getTeacherSchedule']);
     Route::post('/get-material', [RegistrationController::class, 'getMaterial']);
 });
 

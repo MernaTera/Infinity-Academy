@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Academic\CourseInstance;
 use App\Models\Academic\Patch;
+use App\Models\Academic\CourseSession;
 
 class PatchService
 {
@@ -17,9 +18,9 @@ class PatchService
 
         if ($instance) {
 
-            $completed = $instance->sessions()
+            $completed =$instance->sessions()
                 ->where('status', 'Completed')
-                ->count();
+                ->count(); 
 
             if ($completed < 3) {
                 $patch = Patch::find($instance->patch_id);
@@ -28,7 +29,7 @@ class PatchService
                     $options[] = [
                         'type' => 'current',
                         'label' => 'Current Patch (Start: ' . $patch->start_date . ')',
-                        'patch_id' => $patch->patch_id
+                        'patch_id' => $patch->patch_id,
                     ];
                 }
             }

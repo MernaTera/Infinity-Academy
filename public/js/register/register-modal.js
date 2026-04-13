@@ -38,6 +38,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     const teacher = document.getElementById('teacher_select');
     const recommended = document.getElementById('recommended_date');
+    const daySelect = document.getElementById('day_select');
+    const timeSlot = document.getElementById('time_slot_select');
+    const teacherBlock = document.getElementById('teacher_block');
+    const dayBlock = document.getElementById('day_block');
 
     const bundle = document.getElementById('bundle_select');
 
@@ -111,6 +115,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function loadPatch() {
 
         fetch(`/patch-options/${course.value}`)
+        
         .then(res => res.json())
         .then(options => {
 
@@ -119,22 +124,67 @@ document.addEventListener('DOMContentLoaded', function () {
             options.forEach(o => {
                 patch.innerHTML += `<option value="${o.type}" data-id="${o.patch_id || ''}">${o.label}</option>`;
             });
-
+            patch.dispatchEvent(new Event('change'));
         });
     }
 
-    patch.addEventListener('change', function () {
+patch.addEventListener('change', function () {
 
-        let selected = patch.options[patch.selectedIndex];
+    let value = this.value;
 
-        patchId.value = selected.dataset.id;
+    if (value === 'current') {
 
-        customDate.style.display =
-            patch.value === 'custom' ? 'block' : 'none';
+        if (teacherBlock) teacherBlock.style.display = 'block';
+        if (dayBlock) dayBlock.style.display = 'none';
 
-        loadTeachers(); // 🔥 مهم
+        loadTeachers();
+
+    } else {
+
+        if (teacherBlock) teacherBlock.style.display = 'none';
+        if (dayBlock) dayBlock.style.display = 'block';
+
+        if (teacher) {
+            teacher.innerHTML = '<option value="">Select Teacher</option>';
+        }
+    }
+
+    let selected = patch.options[patch.selectedIndex];
+    patchId.value = selected?.dataset?.id || '';
+
+    let isCustom = value === 'custom';
+
+    if (customDate) {
+        customDate.style.display = isCustom ? 'block' : 'none';
+        customDate.required = isCustom;
+    }
+
+});
+teacher.addEventListener('change', function () {
+
+    fetch('/teacher-schedule', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            teacher_id: this.value
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
+
+        daySelect.innerHTML = '';
+
+        let uniqueDays = [...new Set(data.map(a => a.day_of_week))];
+
+        uniqueDays.forEach(day => {
+            daySelect.innerHTML += `<option value="${day}">${day}</option>`;
+        });
+
     });
-
+});
     // ================= PRICING =================
     function calculatePrice() {
 
@@ -178,73 +228,61 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('input[name="type"]').forEach(r => r.addEventListener('change', calculatePrice));
 
     // ================= PRIVATE =================
-    function loadTeachers() {
+function loadTeachers() {
 
-        let type = document.querySelector('input[name="type"]:checked').value;
+    const daySelect = document.getElementById('day_select');
+    const timeSlot = document.getElementById('time_slot_select');
 
-        if (type !== 'private') return;
+    // 🔥 أهم سطر
+    if (patch.value !== 'current') {
 
-        if (patch.value !== 'current') {
+        teacherBlock.style.display = 'none';
 
-            document.getElementById('teacher_block').style.display = 'none';
+        teacher.innerHTML =
+            '<option disabled selected>No teachers in this patch</option>';
 
-            recommended.style.display = 'block';
+        return;
+    }
+    teacherBlock.style.display = 'block';
 
-            let d = new Date();
-            d.setDate(d.getDate() + 7);
+    fetch('/available-teachers', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: JSON.stringify({
+            course_template_id: course.value,
+            level_id: level.value,
+            sublevel_id: sublevel.value,
+            patch_id: patchId.value,
+            patch_option: 'current'
+        })
+    })
+    .then(res => res.json())
+    .then(data => {
 
-            recommended.value = d.toISOString().split('T')[0];
+        teacher.innerHTML = '<option value="">Select Teacher</option>';
 
+        if (!data.length) {
+            teacher.innerHTML =
+                '<option disabled selected>No teachers available in current patch</option>';
             return;
         }
 
-
-        fetch('/available-teachers', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                course_template_id: course.value,
-                level_id: level.value,
-                sublevel_id: sublevel.value,
-                day: document.getElementById('day_select').value,
-                time_slot_id: document.getElementById('time_slot_select').value,
-                patch_option: patch.value
-            })
-        })
-        .then(res => res.json())
-        .then(data => {
-
-            teacher.innerHTML = '';
-
-            if (data.length) {
-
-                data.forEach(t => {
-                    teacher.innerHTML += `<option value="${t.teacher_id}">${t.name}</option>`;
-                });
-
-                teacher.style.display = 'block';
-                recommended.style.display = 'none';
-
-            } else {
-
-                document.getElementById('teacher_block').style.display = 'none';
-                recommended.style.display = 'block';
-
-                let d = new Date();
-                d.setDate(d.getDate() + 7);
-
-                recommended.value = d.toISOString().split('T')[0];
-            }
-
+        data.forEach(t => {
+            let option = document.createElement('option');
+            option.value = t.teacher_id;
+            option.textContent = `Teacher #${t.teacher_id}`;
+            teacher.appendChild(option);
         });
-    }
 
-    ['day_select','time_slot_select'].forEach(id =>
-        document.getElementById(id)?.addEventListener('change', loadTeachers)
-    );
+    });
+}
+
+    // ['day_select','time_slot_select'].forEach(id =>
+    //     document.getElementById(id)?.addEventListener('change', loadTeachers)
+    // );
 
     course.addEventListener('change', loadTeachers);
     level.addEventListener('change', loadTeachers);
