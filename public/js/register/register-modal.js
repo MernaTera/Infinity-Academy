@@ -208,7 +208,6 @@ teacher.addEventListener('change', function () {
         })
         .then(res => res.json())
         .then(data => {
-            console.log("PRICE:", data);
             let materialValue = 0;
 
             if (materialCheck.checked) {
@@ -315,7 +314,6 @@ function loadTeachers() {
         .then(res => res.json())
         .then(data => {
 
-            console.log("MATERIAL:", data); 
 
         if (!data || !data.material_id) {
             materialSection.style.display = 'block';
@@ -440,3 +438,4 @@ function loadTeachers() {
             <span class="inf-pay-val ${valClass}">${val}</span>
         </div>`;
     }
+    

@@ -300,7 +300,7 @@
     <div class="form-card">
         <div class="form-card-body">
 
-            <form method="POST" action="{{ route('registration.store') }}">
+            <form id="main_form"method="POST" action="{{ route('registration.store') }}">
                 @csrf
                 <input type="hidden" name="lead_id" value="{{ $lead->lead_id }}">
 
@@ -508,6 +508,7 @@
                     <input type="hidden" id="discount_hidden">
                     <input type="hidden" id="material_price_hidden">
                     <input type="hidden" name="final_price" id="final_price_hidden">
+                    <input type="hidden" name="course_instance_id" id="course_instance_id">
                     <button type="button" id="preview_invoice_btn" class="btn-submit">view Invoice</button>
                 </div>
 

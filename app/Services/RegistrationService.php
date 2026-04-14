@@ -45,9 +45,13 @@ class RegistrationService
 
             $patchData = $this->handlePatchSelection($data);
             $currentPatch = Patch::where('status', 'Active')->first();
-            $availabilities = TeacherAvailability::where('day_of_week', $data['day'])
-                ->where('time_slot_id', $data['time_slot_id'])
-                ->get();
+            $availabilities = collect();
+
+            if (!empty($data['day']) && !empty($data['time_slot_id'])) {
+                $availabilities = TeacherAvailability::where('day_of_week', $data['day'])
+                    ->where('time_slot_id', $data['time_slot_id'])
+                    ->get();
+            }
             $pricing = app(\App\Services\PricingService::class)->calculate($data);
             $data['final_price'] = $pricing['final_price'];
 
@@ -93,7 +97,7 @@ class RegistrationService
             if (!$instance) {
                 throw new \Exception('No course instance found');
             }
-
+            
             return $enrollment;
         });
     }

@@ -170,71 +170,72 @@
 {{-- ══════════════════════════════════════════
      INVOICE MODAL
 ══════════════════════════════════════════ --}}
-<div class="inf-modal-backdrop" id="invoiceModal">
-    <div class="inf-modal">
 
-        {{-- Header --}}
-        <div class="inf-modal-header">
-            <div>
-                <div class="inf-modal-eyebrow">Registration</div>
-                <div class="inf-modal-title">Invoice Preview</div>
-            </div>
-            <div class="inf-modal-id" id="inv_ref">INV-PREVIEW</div>
-        </div>
+    <div class="inf-modal-backdrop" id="invoiceModal">
+        <div class="inf-modal">
 
-        {{-- Body --}}
-        <div class="inf-modal-body">
-
-            {{-- 1. Student --}}
-            <div class="inf-section">
-                <div class="inf-section-label">Student Information</div>
-                <div id="inv_student"></div>
-            </div>
-
-            {{-- 2. Course --}}
-            <div class="inf-section">
-                <div class="inf-section-label">Course Details</div>
-                <div id="inv_course"></div>
-            </div>
-
-            {{-- 3. Pricing --}}
-            <div class="inf-section">
-                <div class="inf-section-label">Pricing Breakdown</div>
-                <div id="inv_pricing"></div>
-                <div class="inf-divider"></div>
-                <div class="inf-total-block">
-                    <span class="inf-total-label">Total Due</span>
-                    <span class="inf-total-val" id="inv_total_val">0 LE</span>
+            {{-- Header --}}
+            <div class="inf-modal-header">
+                <div>
+                    <div class="inf-modal-eyebrow">Registration</div>
+                    <div class="inf-modal-title">Invoice Preview</div>
                 </div>
+                <div class="inf-modal-id" id="inv_ref">INV-PREVIEW</div>
             </div>
 
-            {{-- 4. Payment --}}
-            <div class="inf-section">
-                <div class="inf-section-label">Payment Plan</div>
-                <div id="inv_payment"></div>
+            {{-- Body --}}
+            <div class="inf-modal-body">
+
+                {{-- 1. Student --}}
+                <div class="inf-section">
+                    <div class="inf-section-label">Student Information</div>
+                    <div id="inv_student"></div>
+                </div>
+
+                {{-- 2. Course --}}
+                <div class="inf-section">
+                    <div class="inf-section-label">Course Details</div>
+                    <div id="inv_course"></div>
+                </div>
+
+                {{-- 3. Pricing --}}
+                <div class="inf-section">
+                    <div class="inf-section-label">Pricing Breakdown</div>
+                    <div id="inv_pricing"></div>
+                    <div class="inf-divider"></div>
+                    <div class="inf-total-block">
+                        <span class="inf-total-label">Total Due</span>
+                        <span class="inf-total-val" id="inv_total_val">0 LE</span>
+                    </div>
+                </div>
+
+                {{-- 4. Payment --}}
+                <div class="inf-section">
+                    <div class="inf-section-label">Payment Plan</div>
+                    <div id="inv_payment"></div>
+                </div>
+
+                {{-- 5. Schedule --}}
+                <div class="inf-section" id="inv_schedule_section" style="display:none;">
+                    <div class="inf-section-label">Schedule</div>
+                    <div id="inv_schedule"></div>
+                </div>
+
             </div>
 
-            {{-- 5. Schedule --}}
-            <div class="inf-section" id="inv_schedule_section" style="display:none;">
-                <div class="inf-section-label">Schedule</div>
-                <div id="inv_schedule"></div>
+            {{-- Footer --}}
+            <div class="inf-modal-footer">
+                <button type="button" class="btn-inf-cancel" id="inv_close_btn">Cancel</button>
+                <button type="submit" class="btn-inf-confirm" id="confirm_register_btn">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Confirm &amp; Register</span>
+                </button>
             </div>
 
         </div>
-
-        {{-- Footer --}}
-        <div class="inf-modal-footer">
-            <button type="button" class="btn-inf-cancel" id="inv_close_btn">Cancel</button>
-            <button type="button" class="btn-inf-confirm" id="confirm_register_btn">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"/>
-                </svg>
-                <span>Confirm &amp; Register</span>
-            </button>
-        </div>
-
     </div>
-</div>
 
 
 <script>
@@ -261,7 +262,8 @@
 
     /* ── confirm → submit form ── */
     document.getElementById('confirm_register_btn').addEventListener('click', function () {
-        document.querySelector('form').requestSubmit();
+    console.log("submitting...");    
+    document.getElementById('main_form').submit();
     });
 
     /* ── open trigger (same id as before) ── */
@@ -337,15 +339,15 @@
             infRow('Plan',    selected?.text || '—') +
             infRow('Deposit', deposit + '% = ' + depositAmount.toFixed(2) + ' LE', 'accent');
 
-        if (needsApproval) {
-            payHTML += `<div class="inf-badge-warn">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-                </svg>
-                Requires Admin Approval
-            </div>`;
-        }
+        // if (needsApproval) {
+        //     payHTML += `<div class="inf-badge-warn">
+        //         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        //             <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+        //             <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        //         </svg>
+        //         Requires Admin Approval
+        //     </div>`;
+        // }
 
         if (installments > 0) {
             const installmentAmount = remaining / installments;
