@@ -30,7 +30,7 @@ class RegistrationService
             $this->validateNoConflict($data);
             $this->validatePatch($data);
             $this->validatePricing($data);
-            $this->attachMaterials($enrollment, $data);
+
 
             $lead = Lead::findOrFail($data['lead_id']);
 
@@ -52,7 +52,7 @@ class RegistrationService
             $data['final_price'] = $pricing['final_price'];
 
             $enrollment = $this->createEnrollment($student, $data, $patchData);
-
+            $this->attachMaterials($enrollment, $data);
             $availableTeachers = [];
 
             foreach ($availabilities as $availability) {
@@ -82,6 +82,17 @@ class RegistrationService
                 'status' => 'Registered',
                 'student_id' => $student->student_id
             ]);
+
+            $instance = CourseInstance::where([
+                'course_template_id' => $data['course_template_id'],
+                'level_id' => $data['level_id'],
+                'sublevel_id' => $data['sublevel_id'],
+                'patch_id' => $data['patch_id'],
+            ])->first();
+
+            if (!$instance) {
+                throw new \Exception('No course instance found');
+            }
 
             return $enrollment;
         });
@@ -132,6 +143,19 @@ class RegistrationService
     */
     private function createEnrollment($student, $data, $patchData)
     {
+        
+        $status = $this->determineStatus($data, $patchData);
+        $instance = CourseInstance::where([
+            'course_template_id' => $data['course_template_id'],
+            'level_id' => $data['level_id'],
+            'sublevel_id' => $data['sublevel_id'],
+            'patch_id' => $data['patch_id'],
+        ])->first();
+
+        if (!$instance) {
+            throw new \Exception('No course instance found');
+        }
+
         return Enrollment::create([
 
             'student_id' => $student->student_id,

@@ -290,7 +290,7 @@
 
         /* ── 1. Student ── */
         const studentName  = document.getElementById('student_name')?.value || '—';
-        const studentPhone = document.querySelector('[name="phone"]')?.value  || '—';
+        const studentPhone = document.getElementById('student_phone')?.value || '—';
 
         document.getElementById('inv_student').innerHTML =
             infRow('Full Name', studentName) +
@@ -366,7 +366,7 @@
             tableHTML += `</tbody></table>`;
             payHTML   += tableHTML;
         }
-
+        document.getElementById('final_price_hidden').value = total;
         document.getElementById('inv_payment').innerHTML = payHTML;
 
         /* ── 5. Schedule ── */

@@ -444,8 +444,10 @@
 
                 <div class="form-footer">
                     <input type="hidden" id="student_name" value="{{ $lead->full_name }}">
+                    <input type="hidden" id="student_phone" value="{{ $lead->phone }}">
                     <input type="hidden" id="discount_hidden">
                     <input type="hidden" id="material_price_hidden">
+                    <input type="hidden" name="final_price" id="final_price_hidden">
                     <button type="button" id="preview_invoice_btn" class="btn-submit">view Invoice</button>
                 </div>
 
