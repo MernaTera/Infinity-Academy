@@ -163,7 +163,7 @@ class RegistrationService
             'level_id' => $data['interested_level_id'] ?? null,
             'sublevel_id' => $data['interested_sublevel_id'] ?? null,
 
-            'course_instance_id' => $data['course_instance_id'] ?? null,
+            'course_instance_id' => $instance->course_instance_id,
 
             'patch_id' => $patchData['patch_id'],
 
@@ -180,7 +180,7 @@ class RegistrationService
                 ? 'Active'
                 : 'Pending_Approval',
 
-            'created_by_cs_id' => auth()->user()->employees->first()->employee_id
+            'created_by_cs_id' => auth()->user()->employees->first()->employee_id ?? null
         ]);
     }
 

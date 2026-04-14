@@ -229,6 +229,61 @@
     .btn-submit:hover::before { transform: scaleX(1); }
     .btn-submit:hover { color: #fff; }
     .btn-submit span, .btn-submit svg { position: relative; z-index: 1; }
+        /* ══ PAYMENT SUMMARY WIDGET ══ */
+    #payment_details {
+        display: none;
+        margin-top: 16px;
+        font-family: 'DM Sans', sans-serif;
+    }
+ 
+    .inf-pay-summary {
+        background: rgba(27,79,168,0.04);
+        border: 1px solid rgba(27,79,168,0.1);
+        border-radius: 5px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
+    }
+ 
+    .inf-pay-row {
+        display: flex; justify-content: space-between; align-items: baseline;
+        padding: 5px 0; border-bottom: 1px solid rgba(27,79,168,0.06);
+    }
+    .inf-pay-row:last-child { border-bottom: none; }
+ 
+    .inf-pay-key {
+        font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+        color: #7A8A9A; font-weight: 400;
+    }
+    .inf-pay-val {
+        font-size: 12px; color: #1A2A4A; font-weight: 500;
+    }
+    .inf-pay-val.accent  { color: #F5911E; }
+    .inf-pay-val.blue    { color: #1B4FA8; }
+    .inf-pay-val.success { color: #059669; }
+ 
+    /* ── installments table ── */
+    .inf-inst-label {
+        font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+        color: #F5911E; margin: 14px 0 8px; padding-bottom: 7px;
+        border-bottom: 1px solid rgba(245,145,30,0.15);
+    }
+ 
+    #installments_table {
+        width: 100%; border-collapse: collapse;
+        display: none;
+    }
+    #installments_table thead th {
+        font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+        color: #7A8A9A; padding: 6px 8px; text-align: left;
+        border-bottom: 1px solid rgba(27,79,168,0.1);
+        font-weight: 500;
+    }
+    #installments_table tbody td {
+        font-size: 12px; color: #1A2A4A; font-weight: 300;
+        padding: 7px 8px; border-bottom: 1px solid rgba(27,79,168,0.05);
+    }
+    #installments_table tbody td:last-child { text-align: right; color: #F5911E; }
+    #installments_table tbody tr:last-child td { border-bottom: none; }
 </style>
 
 <div class="create-page">
@@ -422,12 +477,17 @@
                         </option>
                     @endforeach
                 </select>
-                {{-- PAYMENT SUMMARY--}}
-                <div id="payment_details" style="display:none; margin-top:15px;">
 
-                    <div id="payment_summary"></div>
-
-                    <table class="table mt-2" id="installments_table" style="display:none;">
+                {{-- ══ PAYMENT SUMMARY ══ --}}
+                <div id="payment_details">
+                
+                    <div class="inf-pay-summary" id="payment_summary"></div>
+                
+                    <div class="inf-inst-label" id="installments_label" style="display:none;">
+                        Installment Schedule
+                    </div>
+                
+                    <table id="installments_table">
                         <thead>
                             <tr>
                                 <th>#</th>
@@ -437,7 +497,7 @@
                         </thead>
                         <tbody></tbody>
                     </table>
-
+                
                 </div>
 
                 <div class="form-divider"></div>
