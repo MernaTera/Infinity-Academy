@@ -443,17 +443,20 @@
                 <div class="form-divider"></div>
 
                 <div class="form-footer">
-                    <button type="submit" class="btn-submit">Register Student</button>
+                    <input type="hidden" id="student_name" value="{{ $lead->full_name }}">
+                    <input type="hidden" id="discount_hidden">
+                    <input type="hidden" id="material_price_hidden">
+                    <button type="button" id="preview_invoice_btn" class="btn-submit">view Invoice</button>
                 </div>
 
-
             </form>
+            @include('registration.invoice')
 
         </div>
     </div>
 
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{{ asset('js/register/register-modal.js') }}"></script>
 
 
