@@ -511,6 +511,7 @@
     }
 </style>
 <script src="{{ asset('js/leads/history-modal.js') }}"></script>
+<script src="{{ asset('js/leads/create-modal.js') }}"></script>
 <script src="{{ asset('js/register/register-modal.js') }}"></script>
 <div class="leads-page">
 
@@ -683,7 +684,7 @@
                                     @foreach(['Waiting','Call_Again','Registered'] as $s)
                                         <div class="status-dropdown-item"
                                             data-status="{{ $s }}"
-                                            onclick="updateStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')">
+                                            onclick="updateLeadStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')">
                                             {{ str_replace('_',' ',$s) }}
                                         </div>
                                     @endforeach
@@ -691,7 +692,7 @@
                             </div>
                             {{-- hidden select للـ function --}}
                             <select class="status-select" data-id="{{ $lead->lead_id }}" style="display:none;"
-                                    onchange="updateStatus(this, {{ $lead->lead_id }})">
+                                    onchange="updateLeadStatus(this, {{ $lead->lead_id }})">
                                 @foreach(['Waiting','Call_Again','Registered','Not_Interested','Archived'] as $status)
                                     <option value="{{ $status }}" {{ $lead->status == $status ? 'selected' : '' }}>
                                         {{ str_replace('_',' ',$status) }}

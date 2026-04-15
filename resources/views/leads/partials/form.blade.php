@@ -1,4 +1,5 @@
 <script src="{{ asset('js/leads/create-modal.js') }}"></script>
+<script src="{{ asset('js/leads/history-modal.js') }}"></script>
 <form method="POST"
       action="{{ isset($isRegistration) ? route('registration.store') : (isset($lead) ? route('leads.update', $lead->lead_id) : route('leads.store')) }}">
     @csrf

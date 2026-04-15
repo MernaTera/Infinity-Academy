@@ -17,9 +17,11 @@ return new class extends Migration {
             $table->unsignedBigInteger('level_id')->nullable();
             $table->unsignedBigInteger('sublevel_id')->nullable();
 
-            $table->unsignedBigInteger('course_instance_id');
-            $table->unsignedBigInteger('patch_id');
+            $table->unsignedBigInteger('course_template_id');
+            $table->unsignedBigInteger('course_instance_id')->nullable();
+            $table->unsignedBigInteger('patch_id')->nullable();
             $table->unsignedBigInteger('branch_id')->nullable();
+            $table->unsignedBigInteger('teacher_id')->nullable();
 
             // Enums
             $table->enum('enrollment_type', ['Group', 'Private'])->nullable();
@@ -43,6 +45,7 @@ return new class extends Migration {
                 'Active',
                 'Restricted',
                 'Completed',
+                'Waiting',
                 'Postponed',
                 'Cancelled',
                 'Expired'
@@ -56,8 +59,8 @@ return new class extends Migration {
 
             $table->index('student_id', 'idx_enrollment_student');
             $table->index('course_instance_id', 'idx_enrollment_instance');
+            $table->index('course_template_id', 'idx_enrollment_template');
 
-            $table->unique(['student_id', 'course_instance_id'], 'unique_student_instance');
 
             $table->foreign('student_id')
                   ->references('student_id')
@@ -68,16 +71,21 @@ return new class extends Migration {
                   ->references('test_id')
                   ->on('placement_test')
                   ->nullOnDelete();
+            
+            $table->foreign('course_template_id')
+                  ->references('course_template_id')
+                  ->on('course_template')
+                  ->cascadeOnDelete();
 
             $table->foreign('course_instance_id')
                   ->references('course_instance_id')
                   ->on('course_instance')
-                  ->cascadeOnDelete();
+                  ->nullOnDelete();
 
             $table->foreign('patch_id')
                   ->references('patch_id')
                   ->on('patch')
-                  ->cascadeOnDelete();
+                  ->nullOnDelete();
 
             $table->foreign('level_id')
                   ->references('level_id')
@@ -87,6 +95,11 @@ return new class extends Migration {
             $table->foreign('sublevel_id')
                   ->references('sublevel_id')
                   ->on('sublevel')
+                  ->nullOnDelete();
+
+            $table->foreign('teacher_id')
+                  ->references('employee_id')
+                  ->on('employee')
                   ->nullOnDelete();
 
             $table->foreign('bundle_id')

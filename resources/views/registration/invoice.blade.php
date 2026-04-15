@@ -261,10 +261,14 @@
     document.getElementById('inv_close_btn').addEventListener('click', infCloseModal);
 
     /* ── confirm → submit form ── */
-    document.getElementById('confirm_register_btn').addEventListener('click', function () {
-    console.log("submitting...");    
-    document.getElementById('main_form').submit();
-    });
+    const confirmBtn = document.getElementById('confirm_register_btn');
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+            console.log("submitting...");
+            document.getElementById('main_form').submit();
+        });
+    }
 
     /* ── open trigger (same id as before) ── */
     document.addEventListener('DOMContentLoaded', function () {

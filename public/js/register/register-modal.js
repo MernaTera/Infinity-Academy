@@ -50,6 +50,13 @@ document.addEventListener('DOMContentLoaded', function () {
     const materialPriceBlock = document.getElementById('material_price_block');
     const materialPriceHidden = document.getElementById('material_price_hidden');
 
+        /* ══ PAYMENT DETAILS LOGIC ══ */
+    const paymentSelect = document.getElementById('payment_plan_id');
+
+    if (paymentSelect) {
+        paymentSelect.addEventListener('change', loadPaymentDetails);
+    }
+
     // ================= TYPE =================
     document.querySelectorAll('input[name="type"]').forEach(radio => {
         radio.addEventListener('change', function () {
@@ -68,48 +75,53 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // ================= COURSE → LEVEL =================
-    course.addEventListener('change', async function () {
+    if (course) {
+        course.addEventListener('change', async function () {
 
-        let courseId = this.value;
+            let courseId = this.value;
 
-        level.innerHTML = '<option value="">Select Level (optional)</option>';
-        sublevel.innerHTML = '<option value="">Select Sublevel (optional)</option>';
+            level.innerHTML = '<option value="">Select Level (optional)</option>';
+            sublevel.innerHTML = '<option value="">Select Sublevel (optional)</option>';
 
-        let res = await fetch(`/levels/${courseId}`);
-        let data = await res.json();
+            let res = await fetch(`/levels/${courseId}`);
+            let data = await res.json();
 
-        data.forEach(l => {
-            level.innerHTML += `<option value="${l.level_id}">${l.name}</option>`;
-        });
+            data.forEach(l => {
+                level.innerHTML += `<option value="${l.level_id}">${l.name}</option>`;
+            });
 
-        loadPatch();
-        calculatePrice();
-    });
-
-    // ================= LEVEL → SUBLEVEL =================
-    level.addEventListener('change', async function () {
-
-        let levelId = this.value;
-
-        sublevel.innerHTML = '<option value="">Select Sublevel (optional)</option>';
-
-        if (!levelId) {
+            loadPatch();
             calculatePrice();
-            return;
-        }
-
-        let res = await fetch(`/sublevels/${levelId}`);
-        let data = await res.json();
-
-        data.forEach(s => {
-            sublevel.innerHTML += `<option value="${s.sublevel_id}">${s.name}</option>`;
         });
+    }
+    
+    // ================= LEVEL → SUBLEVEL =================
+    if (level) {
+        level.addEventListener('change', async function () {
 
-        loadPatch();
-        calculatePrice();
-    });
+            let levelId = this.value;
 
-    sublevel.addEventListener('change', calculatePrice);
+            sublevel.innerHTML = '<option value="">Select Sublevel (optional)</option>';
+
+            if (!levelId) {
+                calculatePrice();
+                return;
+            }
+
+            let res = await fetch(`/sublevels/${levelId}`);
+            let data = await res.json();
+
+            data.forEach(s => {
+                sublevel.innerHTML += `<option value="${s.sublevel_id}">${s.name}</option>`;
+            });
+
+            loadPatch();
+            calculatePrice();
+        });
+    }
+    if (sublevel) {
+        sublevel.addEventListener('change', calculatePrice);
+    }
 
     // ================= PATCH =================
     function loadPatch() {
@@ -127,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
             patch.dispatchEvent(new Event('change'));
         });
     }
-
+if (patch) {
 patch.addEventListener('change', function () {
 
     let value = this.value;
@@ -160,6 +172,8 @@ patch.addEventListener('change', function () {
     }
 
 });
+}
+if(teacher) {
 teacher.addEventListener('change', function () {
 
     fetch('/teacher-schedule', {
@@ -185,12 +199,17 @@ teacher.addEventListener('change', function () {
 
     });
 });
+}
     // ================= PRICING =================
     function calculatePrice() {
 
         const materialCheck = document.getElementById('material_check');
         const materialPriceHidden = document.getElementById('material_price_hidden');
+        const typeInput = document.querySelector('input[name="type"]:checked');
 
+        if (!typeInput || !course || !level || !sublevel) {
+            return; 
+        }
         fetch('/calculate-price', {
             method: 'POST',
             headers: {
@@ -198,7 +217,7 @@ teacher.addEventListener('change', function () {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             },
             body: JSON.stringify({
-                type: document.querySelector('input[name="type"]:checked').value,
+                type: typeInput.value,
                 course_template_id: course.value,
                 level_id: level.value,
                 sublevel_id: sublevel.value,
@@ -232,8 +251,8 @@ function loadTeachers() {
     const daySelect = document.getElementById('day_select');
     const timeSlot = document.getElementById('time_slot_select');
 
-    // 🔥 أهم سطر
-    if (patch.value !== 'current') {
+    if(!patch) return;
+    if (patch?.value !== 'current') {
 
         teacherBlock.style.display = 'none';
 
@@ -283,13 +302,12 @@ function loadTeachers() {
     //     document.getElementById(id)?.addEventListener('change', loadTeachers)
     // );
 
-    course.addEventListener('change', loadTeachers);
-    level.addEventListener('change', loadTeachers);
+    if(course) course.addEventListener('change', loadTeachers);
+    if(level) level.addEventListener('change', loadTeachers);
 
     // ================= INIT =================
     window.addEventListener('load', function () {
-
-        course.dispatchEvent(new Event('change'));
+        if (course) course.dispatchEvent(new Event('change'));
 
         setTimeout(() => {
             calculatePrice();
@@ -298,54 +316,55 @@ function loadTeachers() {
     });
 
         function loadMaterial() {
+            if(!course) return;
 
-        fetch('/get-material', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({
-                course_template_id: course.value,
-                level_id: level.value,
-                sublevel_id: sublevel.value
+            fetch('/get-material', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    course_template_id: course.value,
+                    level_id: level.value,
+                    sublevel_id: sublevel.value
+                })
             })
-        })
-        .then(res => res.json())
-        .then(data => {
+            .then(res => res.json())
+            .then(data => {
 
 
-        if (!data || !data.material_id) {
-            materialSection.style.display = 'block';
+            if (!data || !data.material_id) {
+                materialSection.style.display = 'block';
 
-            document.getElementById('material_name').value = "No material available";
-            document.getElementById('material_price').value = " -";
-            materialCheck.style.display = 'none';
+                document.getElementById('material_name').value = "No material available";
+                document.getElementById('material_price').value = " -";
+                materialCheck.style.display = 'none';
 
-            return;
-        }
+                return;
+            }
 
-            materialSection.style.display = 'block';
+                materialSection.style.display = 'block';
 
 
-            document.getElementById('material_name').value = data.name;
-            document.getElementById('material_price').value = data.price + " LE";
-            materialPriceHidden.value = data.price;
+                document.getElementById('material_name').value = data.name;
+                document.getElementById('material_price').value = data.price + " LE";
+                materialPriceHidden.value = data.price;
 
-        });
+            });
     }
 
-    course.addEventListener('change', loadMaterial);
-    level.addEventListener('change', loadMaterial);
-    sublevel.addEventListener('change', loadMaterial);
-
+    if(course) course.addEventListener('change', loadMaterial);
+    if(level) level.addEventListener('change', loadMaterial);
+    if(sublevel)sublevel.addEventListener('change', loadMaterial);
+    if(materialCheck) {
     materialCheck.addEventListener('change', function () {
         materialPriceBlock.style.display =
             this.checked ? 'block' : 'none';
 
         calculatePrice();
     });
-
+    }
     setTimeout(() => {
         loadMaterial();
     }, 300);
@@ -353,13 +372,12 @@ function loadTeachers() {
 });
 
 
-    /* ══ PAYMENT DETAILS LOGIC ══ */
-    const paymentSelect = document.getElementById('payment_plan_id');
- 
-    paymentSelect.addEventListener('change', loadPaymentDetails);
+
  
     function loadPaymentDetails() {
- 
+        
+        const paymentSelect = document.getElementById('payment_plan_id'); 
+        if (!paymentSelect) return;
         const selected     = paymentSelect.options[paymentSelect.selectedIndex];
         const deposit      = parseFloat(selected.dataset.deposit      || 0);
         const installments = parseInt(selected.dataset.installments   || 0);

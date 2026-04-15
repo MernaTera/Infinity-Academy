@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Core\Branch;
 use App\Models\Academic\CourseInstance;
+use App\Models\Academic\CourseTemplate;
 use App\Models\Academic\Level;
 use App\Models\Academic\Patch;
 use App\Models\Student\Student;
@@ -24,6 +25,7 @@ use App\Models\Finance\RefundRequest;
 use App\Models\Reports\Report;
 use App\Models\Enrollment\RestrictionLog;
 use App\Models\Enrollment\WaitingList;
+
 
 /**
  * Class Enrollment
@@ -82,9 +84,11 @@ class Enrollment extends Model
 		'placement_test_id' => 'integer',
 		'level_id' => 'integer',
 		'sublevel_id' => 'integer',
+		'course_template_id' => 'integer',
 		'course_instance_id' => 'integer',
 		'patch_id' => 'integer',
 		'branch_id' => 'integer',
+		'teacher_id' => 'integer',
 		'preference_start_date' => 'date',
 		'actual_start_date' => 'date',
 		'hours_remaining' => 'decimal:2',
@@ -102,9 +106,11 @@ class Enrollment extends Model
 		'placement_test_id',
 		'level_id',
 		'sublevel_id',
+		'course_template_id',
 		'course_instance_id',
 		'patch_id',
 		'branch_id',
+		'teacher_id',
 		'enrollment_type',
 		'delivery_mood',
 		'preference_start_date',
@@ -129,6 +135,11 @@ class Enrollment extends Model
 		return $this->belongsTo(Employee::class, 'created_by_cs_id');
 	}
 
+	public function courseTemplate()
+	{
+		return $this->belongsTo(\App\Models\Academic\CourseTemplate::class, 'course_template_id');
+	}
+
 	public function courseInstance()
 	{
 		return $this->belongsTo(CourseInstance::class, 'course_instance_id');
@@ -147,6 +158,11 @@ class Enrollment extends Model
 	public function student()
 	{
 		return $this->belongsTo(Student::class, 'student_id');
+	}
+
+	public function teacher()
+	{
+		return $this->belongsTo(Employee::class, 'teacher_id');
 	}
 
 	public function sublevel()

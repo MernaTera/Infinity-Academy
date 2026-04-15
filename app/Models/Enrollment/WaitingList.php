@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Models;
+namespace App\Models\Enrollment;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;

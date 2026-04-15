@@ -1,10 +1,13 @@
 let currentLeadId = null;
 let currentSelect = null;
 
-function updateStatus(select, leadId, newStatus) {
+
+
+function updateLeadStatus(select, leadId, newStatus) {
+    
     document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
 
-    const status = newStatus || (select ? select.value : null);
+    const status = (newStatus || (select ? select.value : null))?.trim();
     if (!status) return;
 
     if (status === 'Call_Again') {

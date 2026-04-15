@@ -78,6 +78,7 @@ class RegistrationService
                 WaitingList::create([
                     'enrollment_id' => $enrollment->enrollment_id,
                     'preferred_date' => $patchData['date'],
+                    'requested_patch_id' => $data['patch_id'],
                     'status' => 'Active'
                 ]);
             }
@@ -87,16 +88,6 @@ class RegistrationService
                 'student_id' => $student->student_id
             ]);
 
-            $instance = CourseInstance::where([
-                'course_template_id' => $data['course_template_id'],
-                'level_id' => $data['level_id'],
-                'sublevel_id' => $data['sublevel_id'],
-                'patch_id' => $data['patch_id'],
-            ])->first();
-
-            if (!$instance) {
-                throw new \Exception('No course instance found');
-            }
             
             return $enrollment;
         });
@@ -149,40 +140,33 @@ class RegistrationService
     {
         
         $status = $this->determineStatus($data, $patchData);
-        $instance = CourseInstance::where([
-            'course_template_id' => $data['course_template_id'],
-            'level_id' => $data['level_id'],
-            'sublevel_id' => $data['sublevel_id'],
-            'patch_id' => $data['patch_id'],
-        ])->first();
 
-        if (!$instance) {
-            throw new \Exception('No course instance found');
-        }
 
         return Enrollment::create([
 
             'student_id' => $student->student_id,
 
-            'level_id' => $data['interested_level_id'] ?? null,
-            'sublevel_id' => $data['interested_sublevel_id'] ?? null,
+            'course_template_id' => $data['course_template_id'],
+            'course_instance_id' => $data['course_instance_id'] ?? null,
 
-            'course_instance_id' => $instance->course_instance_id,
+            'level_id' => $data['level_id'] ?? null,        
+            'sublevel_id' => $data['sublevel_id'] ?? null,  
 
-            'patch_id' => $patchData['patch_id'],
-
+            'patch_id' => $data['patch_id'] ?? null,
             'teacher_id' => $data['teacher_id'] ?? null,
 
             'enrollment_type' => ucfirst($data['type']),
-            'delivery_mood' => $data['mode'] ?? 'Offline',
-
-            'payment_plan_id' => $data['payment_plan_id'],
+            'delivery_mood' => ucfirst($data['mode']),
 
             'final_price' => $data['final_price'],
+            'payment_plan_id' => $data['payment_plan_id'],
+
+            'bundle_id' => $data['bundle_id'] ?? null,
+            'discount_value' => $data['discount_value'] ?? 0,
 
             'status' => $patchData['type'] === 'direct'
                 ? 'Active'
-                : 'Pending_Approval',
+                : 'Waiting',
 
             'created_by_cs_id' => auth()->user()->employees->first()->employee_id ?? null
         ]);
@@ -273,7 +257,7 @@ class RegistrationService
 
     private function storeTest($data)
     {
-        return \App\Models\PlacementTest::create([
+        return \App\Models\Enrollment\PlacementTest::create([
             'score' => $data['test_score'],
             'fee' => $data['test_fee'] ?? 0
         ])->test_id;
@@ -297,7 +281,7 @@ class RegistrationService
 
     private function attachMaterials($enrollment, $data)
     {
-        $materials = \App\Models\MaterialAssignment::where(function ($q) use ($data) {
+        $materials = \App\Models\Enrollment\MaterialAssignment::where(function ($q) use ($data) {
 
             $q->where('course_template_id', $data['course_template_id'])
             ->orWhere('level_id', $data['level_id'])
@@ -307,10 +291,10 @@ class RegistrationService
 
         foreach ($materials as $m) {
 
-            \App\Models\EnrollmentMaterial::create([
+            \App\Models\Enrollment\EnrollmentMaterial::create([
                 'enrollment_id' => $enrollment->enrollment_id,
                 'material_id' => $m->material_id,
-                'price' => $m->material->price,
+                'price' => $m->material->price ?? 0,
                 'status' => 'Pending'
             ]);
         }

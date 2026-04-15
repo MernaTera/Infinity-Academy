@@ -73,13 +73,12 @@ class RegistrationController extends Controller
     */
     public function store(Request $request)
     {
-        dd("storing registration...", $request->all());
+        // dd("storing registration...", $request->all());
         $request->validate([
 
             'lead_id' => 'required|exists:lead,lead_id',
             'type' => 'required|in:group,private',
-
-            'course_instance_id' => 'required',
+            'course_template_id' => 'required|exists:course_template,course_template_id',
 
             'payment_plan_id' => 'required',
 
@@ -92,7 +91,7 @@ class RegistrationController extends Controller
             'custom_date' => 'nullable|date'
         ]);
         try {
-            dd("validated, proceeding to register...",  $request->all());
+            // dd("validated, proceeding to register...",  $request->all());
             $this->registrationService->register($request->all());
 
             return redirect()
@@ -100,7 +99,7 @@ class RegistrationController extends Controller
                 ->with('success', 'Student registered successfully');
 
         } catch (\Exception $e) {
-            dd("error during registration", $e->getMessage());
+            // dd("error during registration", $e->getMessage());
             return back()->with('error', $e->getMessage());
         }
     }
