@@ -152,6 +152,11 @@ class User extends Authenticatable
 		return $this->hasRole('Student');
 	}
 
+	public function isSC()
+	{
+		return $this->hasRole('Student Care');
+	}
+
 	public function isActive()
 	{
 		return $this->is_active === true;

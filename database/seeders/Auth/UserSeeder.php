@@ -15,6 +15,7 @@ class UserSeeder extends Seeder
         $adminRole = Role::where('role_name', 'Admin')->first();
         $csRole = Role::where('role_name', 'Customer Service')->first();
         $teacherRole = Role::where('role_name', 'Teacher')->first();
+        $scRole = Role::where('role_name', 'Student Care')->first();
 
         // Admin
         User::firstOrCreate([
@@ -46,6 +47,17 @@ class UserSeeder extends Seeder
             'username' => 'teacher1',
             'password' => Hash::make('12345678'),
             'role_id' => $teacherRole?->role_id,
+            'is_active' => true
+        ]);
+
+        // Student Care
+        User::firstOrCreate([
+            'email' => 'sc@infinity.com'
+        ], [
+            'name' => 'Student Care User',
+            'username' => 'sc1',
+            'password' => Hash::make('12345678'),
+            'role_id' => $scRole?->role_id,
             'is_active' => true
         ]);
     }

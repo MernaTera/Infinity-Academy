@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LeadDashboardController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\RegistrationController;
+use App\Http\Controllers\StudentCareController;
 
 
 
@@ -27,33 +28,21 @@ Route::middleware('auth')->group(function () {
 
 ////////////    LEADS       ////////////////    
 Route::middleware('auth')->group(function () {
-    Route::get('/leads/dashboard', [LeadDashboardController::class, 'index'])
-        ->middleware(['auth', 'verified'])
-        ->name('leads.dashboard');
-    Route::get('/leads/public', [LeadController::class, 'publicLeads'])
-        ->name('leads.public');
-    Route::get('/leads/archived', [LeadController::class, 'archived'])
-        ->name('leads.archived');
+    Route::get('/leads/dashboard', [LeadDashboardController::class, 'index']) ->middleware(['auth', 'verified']) ->name('leads.dashboard');
+    Route::get('/leads/public', [LeadController::class, 'publicLeads']) ->name('leads.public');
+    Route::get('/leads/archived', [LeadController::class, 'archived']) ->name('leads.archived');
     Route::resource('leads', LeadController::class);
-    Route::post('/leads/{id}/assign', [LeadController::class, 'assign'])
-        ->name('leads.assign');
-    Route::get('/levels/{courseId}', function ($courseId) {
-        return \App\Models\Academic\Level::where('course_template_id', $courseId)->get();
-    });
-    Route::get('/sublevels/{levelId}', function ($levelId) {
-        return \App\Models\Academic\Sublevel::where('level_id', $levelId)->get();
-    });
+    Route::post('/leads/{id}/assign', [LeadController::class, 'assign']) ->name('leads.assign');
+    Route::get('/levels/{courseId}', function ($courseId) { return \App\Models\Academic\Level::where('course_template_id', $courseId)->get(); });
+    Route::get('/sublevels/{levelId}', function ($levelId) { return \App\Models\Academic\Sublevel::where('level_id', $levelId)->get(); });
     Route::get('/leads/{leadId}/history', [LeadController::class, 'history']);
-    Route::post('/leads/update-status', [LeadController::class, 'updateStatus'])
-        ->name('leads.update.status');
+    Route::post('/leads/update-status', [LeadController::class, 'updateStatus']) ->name('leads.update.status');
 });
 
 ////// registeration //////
 Route::middleware('auth')->group(function () {
-    Route::get('/registration/from-lead/{lead_id}', [RegistrationController::class, 'createFromLead'])
-        ->name('registration.from.lead');
-    Route::post('/registration/store', [RegistrationController::class, 'store'])
-        ->name('registration.store');
+    Route::get('/registration/from-lead/{lead_id}', [RegistrationController::class, 'createFromLead']) ->name('registration.from.lead');
+    Route::post('/registration/store', [RegistrationController::class, 'store']) ->name('registration.store');
     Route::put('/leads/{id}', [LeadController::class, 'update']);
     Route::get('/patch-options/{courseId}', [RegistrationController::class, 'getPatchOptions']);
     Route::post('/calculate-price', [RegistrationController::class, 'calculatePrice']);
@@ -62,5 +51,14 @@ Route::middleware('auth')->group(function () {
     Route::post('/get-material', [RegistrationController::class, 'getMaterial']);
 });
 
+////// Student Care //////
+Route::middleware(['auth', 'permission:enrollment.view'])
+    ->prefix('student-care')
+    ->name('student-care.')
+    ->group(function () {
 
+        Route::get('/dashboard', function () { return view('student-care.dashboard'); })->name('dashboard');
+        Route::get('/waiting-list', [StudentCareController::class, 'waitingList'])->name('waiting-list');
+
+    });
 require __DIR__.'/auth.php';

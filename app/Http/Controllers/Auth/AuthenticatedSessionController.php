@@ -71,6 +71,22 @@ class AuthenticatedSessionController extends Controller
             'locked_until' => null,
             'last_login_at' => now()
         ]);
+         switch ($user->role_id) {
+
+        case 1: // Admin
+            return redirect('/admin/dashboard');
+
+        case 2: // CS
+            return redirect('/leads/dashboard');
+
+        case 3: // Student Care 🔥
+            return redirect('/student-care/dashboard');
+
+        case 4: // Teacher
+            return redirect('/teacher/dashboard');
+        default:
+            return redirect()->intended(route('/dashboard'));
+         }
 
         return redirect()->intended(route('dashboard'));
     }
