@@ -369,11 +369,6 @@ function loadTeachers() {
         loadMaterial();
     }, 300);
 
-});
-
-
-
- 
     function loadPaymentDetails() {
         
         const paymentSelect = document.getElementById('payment_plan_id'); 
@@ -456,4 +451,18 @@ function loadTeachers() {
             <span class="inf-pay-val ${valClass}">${val}</span>
         </div>`;
     }
-    
+
+
+    window.Echo.channel('waiting-list')
+    .listen('.WaitingListUpdated', (e) => {
+        console.log('Updated:', e.waiting);
+
+        refreshWaitingList(); 
+    });
+
+});
+
+
+
+ 
+

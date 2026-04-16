@@ -25,6 +25,7 @@
         Dashboard
     </a>
 
+
     <div class="sl-div"></div>
 
     <span class="sl-label">Enrollment</span>
@@ -35,6 +36,19 @@
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
         </svg>
         Waiting List
+    </a>
+
+    <div class="sl-div"></div>
+
+    <span class="sl-label">Courses</span>
+
+    <a href="{{ route('student-care.instances') }}"
+    class="sl-link {{ request()->routeIs('student-care.instances') ? 'active' : '' }}">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+        </svg>
+        Active Courses
     </a>
 
 </aside>

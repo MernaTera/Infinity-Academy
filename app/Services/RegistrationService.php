@@ -16,6 +16,7 @@ use App\Models\PlacementTest;
 use App\Models\Enrollment\Material;
 use App\Models\Enrollment\MaterialAssignment;
 use App\Models\Enrollment\EnrollmentMaterial;
+use App\Events\WaitingListUpdated;
 
 class RegistrationService
 {
@@ -87,7 +88,7 @@ class RegistrationService
                 $requestedPatchId = $patchData['patch_id'] ?? $data['patch_id'] ?? null;
             }
 
-            WaitingList::create([
+            $waiting = WaitingList::create([
                 'enrollment_id' => $enrollment->enrollment_id,
                 'requested_patch_id' => $requestedPatchId,
                 'preferred_type' => $preferredType,
@@ -104,6 +105,7 @@ class RegistrationService
 
                 'created_by_cs_id' => auth()->user()?->employees?->first()?->employee_id,
             ]);
+            event(new WaitingListUpdated($waiting));
 
             $lead->update([
                 'status' => 'Registered',

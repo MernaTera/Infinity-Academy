@@ -8,6 +8,7 @@ use App\Http\Controllers\LeadDashboardController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\StudentCareController;
+use App\Http\Controllers\CourseInstanceController;
 
 
 
@@ -59,6 +60,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
 
         Route::get('/dashboard', function () { return view('student-care.dashboard'); })->name('dashboard');
         Route::get('/waiting-list', [StudentCareController::class, 'waitingList'])->name('waiting-list');
-
+        Route::get('/course-instances', [CourseInstanceController::class, 'index'])->name('instances');
+        Route::post('/course-instances/store', [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
     });
 require __DIR__.'/auth.php';
