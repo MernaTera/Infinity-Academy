@@ -38,6 +38,7 @@ class WaitingList extends Model
 		'enrollment_id' => 'integer',
 		'requested_patch_id' => 'integer',
 		'preferred_start_date' => 'datetime',
+		'notes' => 'string',
 		'created_by_cs_id' => 'integer',
 		'created_at' => 'datetime',
 		'updated_at' => 'datetime'
@@ -46,10 +47,12 @@ class WaitingList extends Model
 	protected $fillable = [
 		'enrollment_id',
 		'requested_patch_id',
+		'preferred_delivery_type',
 		'preferred_type',
 		'preferred_delivery_mood',
 		'preferred_start_date',
 		'status',
+		'notes',
 		'created_by_cs_id'
 	];
 
@@ -68,14 +71,15 @@ class WaitingList extends Model
 		return $this->belongsTo(Patch::class, 'requested_patch_id');
 	}
 
+
 	public function isActive()
 	{
 		return $this->status === 'Active';
 	}
 
-	public function isMoved()
+	public function isAssigned()
 	{
-		return $this->status === 'Moved';
+		return $this->status === 'Assigned';
 	}
 
 	public function isCancelled()

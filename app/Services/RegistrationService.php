@@ -81,20 +81,28 @@ class RegistrationService
             ];
 
             $preferredType = $preferredTypeMap[$data['patch_option']] ?? null;
+            $requestedPatchId = null;
+
+            if ($data['patch_option'] !== 'custom') {
+                $requestedPatchId = $patchData['patch_id'] ?? $data['patch_id'] ?? null;
+            }
+
             WaitingList::create([
                 'enrollment_id' => $enrollment->enrollment_id,
-
-                'requested_patch_id' => $patchData['patch_id'] ?? $data['patch_id'],
-
-                'preferred_type' => $preferredType, 
-
+                'requested_patch_id' => $requestedPatchId,
+                'preferred_type' => $preferredType,
+                'preferred_delivery_type' => $enrollment->enrollment_type,
                 'preferred_delivery_mood' => $enrollment->delivery_mood,
 
-                'preferred_start_date' => $patchData['date'] ?? null,
+                'preferred_start_date' => $preferredType === 'Specific_Date'
+                    ? ($patchData['date'] ?? $data['custom_date'] ?? null)
+                    : null,
 
                 'status' => 'Active',
 
-                'created_by_cs_id' => auth()->user()->employees->first()->employee_id ?? null,
+                'notes' => $data['notes'] ?? null,
+
+                'created_by_cs_id' => auth()->user()?->employees?->first()?->employee_id,
             ]);
 
             $lead->update([

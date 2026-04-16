@@ -11,21 +11,23 @@ return new class extends Migration {
             $table->bigIncrements('waiting_id');
 
             $table->unsignedBigInteger('enrollment_id');
-            $table->unsignedBigInteger('requested_patch_id');
+            $table->unsignedBigInteger('requested_patch_id')->nullable();
 
             $table->enum('preferred_type', ['Current_Patch','Next_Patch', 'Specific_Date']);
             $table->enum('preferred_delivery_mood', ['Online', 'Offline']);
+            $table->enum('preferred_delivery_type' , ['Group', 'Private']);
 
             $table->date('preferred_start_date')->nullable();
 
-            $table->enum('status', ['Active', 'Moved', 'Cancelled'])
+            $table->enum('status', ['Active', 'Assigned', 'Cancelled'])
                   ->default('Active');
-
+            
+            $table->text('notes')->nullable();
             $table->unsignedBigInteger('created_by_cs_id')->nullable();
 
             $table->timestamps();
 
-            $table->unique(['enrollment_id', 'status'], 'unique_active_waiting');
+            $table->unique('enrollment_id');
 
             $table->foreign('enrollment_id')
                   ->references('enrollment_id')
@@ -34,8 +36,7 @@ return new class extends Migration {
 
             $table->foreign('requested_patch_id')
                   ->references('patch_id')
-                  ->on('patch')
-                  ->restrictOnDelete();
+                  ->on('patch');
 
             $table->foreign('created_by_cs_id')
                   ->references('employee_id')
