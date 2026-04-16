@@ -73,15 +73,29 @@ class RegistrationService
                     $availableTeachers[] = $availability->teacher;
                 }
             }
-            if ($patchData['type'] === 'waiting') {
 
-                WaitingList::create([
-                    'enrollment_id' => $enrollment->enrollment_id,
-                    'preferred_date' => $patchData['date'],
-                    'requested_patch_id' => $data['patch_id'],
-                    'status' => 'Active'
-                ]);
-            }
+            $preferredTypeMap = [
+                'current' => 'Current_Patch',
+                'next'    => 'Next_Patch',
+                'custom'  => 'Specific_Date',
+            ];
+
+            $preferredType = $preferredTypeMap[$data['patch_option']] ?? null;
+            WaitingList::create([
+                'enrollment_id' => $enrollment->enrollment_id,
+
+                'requested_patch_id' => $patchData['patch_id'] ?? $data['patch_id'],
+
+                'preferred_type' => $preferredType, 
+
+                'preferred_delivery_mood' => $enrollment->delivery_mood,
+
+                'preferred_start_date' => $patchData['date'] ?? null,
+
+                'status' => 'Active',
+
+                'created_by_cs_id' => auth()->user()->employees->first()->employee_id ?? null,
+            ]);
 
             $lead->update([
                 'status' => 'Registered',

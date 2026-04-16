@@ -4,12 +4,13 @@ let currentSelect = null;
 
 
 function updateLeadStatus(select, leadId, newStatus) {
-    
+
     document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
 
-    const status = (newStatus || (select ? select.value : null))?.trim();
+    const status = (newStatus || select?.value)?.trim();
     if (!status) return;
 
+    // 🔥 CASE 1: Call Again → modal
     if (status === 'Call_Again') {
         currentLeadId = leadId;
         currentSelect = select;
@@ -17,6 +18,15 @@ function updateLeadStatus(select, leadId, newStatus) {
         return;
     }
 
+    // 🔥 CASE 2: Registered → redirect
+    if (status === 'Registered') {
+        if (confirm("Are you sure you want to register this lead?")) {
+            window.location.href = `/registration/from-lead/${leadId}`;
+        }
+        return;
+    }
+
+    // 🔥 CASE 3: normal update
     sendUpdate(select, leadId, { status });
 }
 function sendUpdate(select, leadId, data) {

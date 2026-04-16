@@ -552,7 +552,7 @@
     <div class="stat-card" style="--accent:#15803D;cursor:pointer;"
         onclick="filterByStatus('Registered')"
         data-filter="Registered">
-        <div class="stat-label">Registered</div>
+        <div class="stat-label">Register</div>
         <div class="stat-value">{{ $registered }}</div>
     </div>
 
@@ -670,25 +670,41 @@
                                     'Archived'       => 'status-archived',
                                     default          => 'status-default',
                                 };
+                                
                             @endphp
                             <div style="position:relative;display:inline-block;">
-                                <div class="status-badge {{ $statusClass }}"
-                                    style="cursor:pointer;user-select:none;"
-                                    onclick="toggleDropdown(this)">
-                                    {{ str_replace('_',' ',$lead->status) }}
-                                    <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
-                                        <path d="M7 10l5 5 5-5z"/>
-                                    </svg>
-                                </div>
-                                <div class="status-dropdown">
-                                    @foreach(['Waiting','Call_Again','Registered'] as $s)
-                                        <div class="status-dropdown-item"
-                                            data-status="{{ $s }}"
-                                            onclick="updateLeadStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')">
-                                            {{ str_replace('_',' ',$s) }}
-                                        </div>
-                                    @endforeach
-                                </div>
+<div class="status-badge {{ $statusClass }}"
+    style="cursor:pointer;user-select:none;{{ $lead->status === 'Registered' ? 'pointer-events:none;opacity:0.8;cursor:default;' : '' }}"
+    @if($lead->status !== 'Registered')
+        onclick="toggleDropdown(this)"
+    @endif>
+    {{ str_replace('_',' ',$lead->status) }}
+    @if($lead->status !== 'Registered')
+        <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7 10l5 5 5-5z"/>
+        </svg>
+    @endif
+</div>
+<div class="status-dropdown">
+    @foreach(['Waiting','Call_Again','Registered'] as $s)
+@if($s === 'Registered')
+    <div class="status-dropdown-item"
+        style="{{ $lead->status === 'Registered' ? 'opacity:0.4;cursor:default;pointer-events:none;' : '' }}"
+        @if($lead->status !== 'Registered')
+            data-status="{{ $s }}"
+            onclick="updateLeadStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')"
+        @endif>
+        Registered
+    </div>
+@else
+    <div class="status-dropdown-item"
+        data-status="{{ $s }}"
+        onclick="updateLeadStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')">
+        {{ str_replace('_',' ',$s) }}
+    </div>
+@endif
+    @endforeach
+</div>
                             </div>
                             {{-- hidden select للـ function --}}
                             <select class="status-select" data-id="{{ $lead->lead_id }}" style="display:none;"

@@ -83,6 +83,11 @@ class WaitingList extends Model
 		return $this->status === 'Cancelled';
 	}
 
+	public function isCurrentPatch()
+	{
+		return $this->preferred_type === 'Current_Patch';
+	}
+
 	public function wantsNextPatch()
 	{
 		return $this->preferred_type === 'Next_Patch';

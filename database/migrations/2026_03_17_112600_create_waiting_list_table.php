@@ -13,7 +13,7 @@ return new class extends Migration {
             $table->unsignedBigInteger('enrollment_id');
             $table->unsignedBigInteger('requested_patch_id');
 
-            $table->enum('preferred_type', ['Next_Patch', 'Specific_Date']);
+            $table->enum('preferred_type', ['Current_Patch','Next_Patch', 'Specific_Date']);
             $table->enum('preferred_delivery_mood', ['Online', 'Offline']);
 
             $table->date('preferred_start_date')->nullable();

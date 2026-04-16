@@ -99,7 +99,7 @@ class RegistrationController extends Controller
                 ->with('success', 'Student registered successfully');
 
         } catch (\Exception $e) {
-            // dd("error during registration", $e->getMessage());
+            dd("error during registration", $e->getMessage());
             return back()->with('error', $e->getMessage());
         }
     }
