@@ -4,6 +4,7 @@
 
 @include('student-care.course-instances.partials.create-modal')
 
+
 @section('content')
 
 @once
@@ -181,6 +182,14 @@
         background: transparent !important; border-color: #1B4FA8 !important;
         color: #1B4FA8 !important; font-weight: 600 !important;
     }
+    .btn-action {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 5px 11px; font-size: 9px; letter-spacing: 1.5px;
+        text-transform: uppercase; border-radius: 3px;
+        font-family: 'DM Sans', sans-serif; font-weight: 500;
+        border: 1px solid; background: transparent; cursor: pointer;
+        transition: all 0.25s; white-space: nowrap;
+    }
 
     @media (max-width: 768px) { .ci-page { padding: 20px 14px; } }
     @media (max-width: 480px) { .page-header { flex-direction: column; align-items: flex-start; } }
@@ -308,6 +317,7 @@
                         <th>Schedule</th>
                         <th>Hours</th>
                         <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody id="ciTableBody">
@@ -413,6 +423,21 @@
                         {{-- Status --}}
                         <td>
                             <span class="status-badge {{ $statusClass }}">{{ $instance->status }}</span>
+                        </td>
+
+                        {{-- Actions --}}
+                        <td>
+                            <a href="{{ route('student-care.instances.show', $instance->course_instance_id) }}"
+                            class="btn-action"
+                            style="color:#1B4FA8;border-color:rgba(27,79,168,0.25);text-decoration:none;"
+                            onmouseover="this.style.background='rgba(27,79,168,0.07)';this.style.borderColor='#1B4FA8'"
+                            onmouseout="this.style.background='';this.style.borderColor='rgba(27,79,168,0.25)'">
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle cx="12" cy="12" r="3"/>
+                                </svg>
+                                View
+                            </a>
                         </td>
 
                     </tr>

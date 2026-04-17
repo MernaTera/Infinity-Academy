@@ -62,6 +62,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
         Route::get('/waiting-list', [StudentCareController::class, 'waitingList'])->name('waiting-list');
         Route::post('/assign', [StudentCareController::class, 'assign'])->name('assign');
         Route::get('/course-instances', [CourseInstanceController::class, 'index'])->name('instances');
+        Route::get('/course-instances/{id}', [CourseInstanceController::class, 'show'])->name('instances.show');
         Route::post('/course-instances/store', [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
         Route::get('/teachers/by-course/{courseId}', [CourseInstanceController::class, 'getTeachersByCourse'])->name('teachers.by-course');
         Route::get('/teachers/by-course-level/{levelId}', [CourseInstanceController::class, 'getTeachersByLevel'])->name('teachers.by-level');

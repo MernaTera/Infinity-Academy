@@ -77,7 +77,7 @@ class Student extends Model
 		return $this->hasMany(PlacementTest::class, 'student_id');
 	}
 
-	public function student_phones()
+	public function phones()
 	{
 		return $this->hasMany(StudentPhone::class, 'student_id');
 	}
@@ -153,7 +153,7 @@ class Student extends Model
 
     public function primaryPhone()
     {
-        return $this->student_phones()->first();
+        return $this->student_phones()->where('is_primary', true)->first();
     }
 
     public function activeEnrollment()

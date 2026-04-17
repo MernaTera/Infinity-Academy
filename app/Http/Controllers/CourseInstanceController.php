@@ -27,21 +27,6 @@ class CourseInstanceController extends Controller
             'instances','templates','teachers','patches','branches'
         ));
     }
-    public function instances()
-    {
-        $instances = CourseInstance::with([
-            'courseTemplate','level','sublevel','teacher','patch','enrollments'
-        ])->latest()->paginate(10);
-
-        $templates = CourseTemplate::all();
-        $teachers  = Teacher::all();
-        $patches   = Patch::all();
-        $branches  = Branch::all();
-
-        return view('student-care.instances.index', compact(
-            'instances','templates','teachers','patches','branches'
-        ));
-    }
 
     public function storeInstance(Request $request)
     {
@@ -101,5 +86,20 @@ class CourseInstanceController extends Controller
             ->get();
 
         return response()->json($teachers);
+    }
+
+    public function show($id)
+    {
+        $instance = CourseInstance::with([
+            'courseTemplate',
+            'level',
+            'sublevel',
+            'teacher.employee',
+            'branch',
+            'patch',
+            'enrollments.student.phones'
+        ])->findOrFail($id);
+
+        return view('student-care.course-instances.show', compact('instance'));
     }
 }

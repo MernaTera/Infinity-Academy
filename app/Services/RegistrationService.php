@@ -17,6 +17,9 @@ use App\Models\Enrollment\Material;
 use App\Models\Enrollment\MaterialAssignment;
 use App\Models\Enrollment\EnrollmentMaterial;
 use App\Events\WaitingListUpdated;
+use App\Models\Academic\Level;
+use App\Models\Academic\Sublevel;
+use App\Models\Student\StudentPhone;
 
 class RegistrationService
 {
@@ -37,11 +40,17 @@ class RegistrationService
 
             $student = Student::create([
                 'full_name' => $lead->full_name,
+                'email' => $lead->email,
                 'birthdate' => $lead->birthdate,
                 'degree' => $lead->degree,
                 'location' => $lead->location,
                 'global_status' => 'Active',
                 'is_active' => true
+            ]);
+            StudentPhone::create([
+                'student_id' => $student->student_id,
+                'phone_number' => $lead->phone,
+                'is_primary' => true,
             ]);
 
             $patchData = $this->handlePatchSelection($data);
