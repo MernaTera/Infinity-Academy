@@ -60,6 +60,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
 
         Route::get('/dashboard', function () { return view('student-care.dashboard'); })->name('dashboard');
         Route::get('/waiting-list', [StudentCareController::class, 'waitingList'])->name('waiting-list');
+        Route::post('/assign', [StudentCareController::class, 'assign'])->name('assign');
         Route::get('/course-instances', [CourseInstanceController::class, 'index'])->name('instances');
         Route::post('/course-instances/store', [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
         Route::get('/teachers/by-course/{courseId}', [CourseInstanceController::class, 'getTeachersByCourse'])->name('teachers.by-course');

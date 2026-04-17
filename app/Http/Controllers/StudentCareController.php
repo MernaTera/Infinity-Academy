@@ -26,15 +26,49 @@ class StudentCareController extends Controller
         $waiting = WaitingList::with([
             'enrollment.student',
             'enrollment.courseTemplate',
-            'enrollment.level',
-            'enrollment.sublevel'
+            'enrollment.level'
+        ])->get();
+
+        $instances = CourseInstance::with([
+            'courseTemplate',
+            'teacher',
+            'enrollments'
         ])
-        ->where('status', 'Active')
-        ->latest()
+        ->where('status', 'Upcoming')
         ->get();
 
-        return view('student-care.waiting-list', compact('waiting'));
+        return view('student-care.waiting-list', compact('waiting', 'instances'));
     }
+
+public function assign(Request $request)
+{
+    $request->validate([
+        'waiting_id' => 'required|exists:waiting_list,waiting_id',
+        'course_instance_id' => 'required|exists:course_instance,course_instance_id',
+    ]);
+    $waiting = WaitingList::with('enrollment')->findOrFail($request->waiting_id);
+
+    $instances = CourseInstance::with(['courseTemplate','teacher','enrollments'])
+        ->where('status', 'Upcoming')
+        ->where('course_template_id', $waiting->enrollment->course_template_id)
+        ->get();
+    $instance = CourseInstance::with('enrollments')->findOrFail($request->course_instance_id);
+
+    if ($instance->isFull()) {
+        return back()->with('error', 'Instance is full');
+    }
+
+    $waiting->enrollment->update([
+        'course_instance_id' => $instance->course_instance_id,
+        'status' => 'Active'
+    ]);
+
+    $waiting->update([
+        'status' => 'Assigned'
+    ]);
+
+    return back()->with('success', 'Student assigned successfully');
+}
 
 
 }

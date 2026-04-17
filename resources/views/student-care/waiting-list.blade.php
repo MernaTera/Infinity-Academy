@@ -2,6 +2,8 @@
 
 @section('title', 'Waiting List')
 
+@include('student-care.waiting-list.partials.assign-modal')
+
 @section('content')
 
 @once
@@ -394,14 +396,18 @@
                         {{-- Actions --}}
                         <td>
                             <div class="action-group">
+                                @if($item->status !== 'Assigned')
                                 <button class="btn-action btn-assign"
-                                        onclick="assignStudent({{ $item->waiting_id }})">
+                                        onclick="openAssignModal({{ $item->waiting_id }})">
                                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                         <polyline points="22 4 12 14.01 9 11.01"/>
                                     </svg>
                                     Assign
                                 </button>
+                                @endif
+
+                                @if($item->status !== 'Cancelled')
                                 <button class="btn-action btn-cancel-wl"
                                         onclick="cancelWaiting({{ $item->waiting_id }})">
                                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -410,6 +416,7 @@
                                     </svg>
                                     Cancel
                                 </button>
+                                @endif
                             </div>
                         </td>
                     </tr>
@@ -495,16 +502,24 @@ function filterByDeliveryTypeSelect(val) { activeDtype  = val; applyFilters(); }
 function filterByModeSelect(val)         { activeMode   = val; applyFilters(); }
 function filterByPrefTypeSelect(val)     { activePtype  = val; applyFilters(); }
 
-function assignStudent(id) {
-    if (confirm('Assign this student?')) {
-        fetch(`/student-care/waiting-list/${id}/assign`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
-            }
-        }).then(res => { if (res.ok) location.reload(); });
-    }
+// function assignStudent(id) {
+//     if (confirm('Assign this student?')) {
+//         fetch(`/student-care/waiting-list/${id}/assign`, {
+//             method: 'POST',
+//             headers: {
+//                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+//                 'Accept': 'application/json'
+//             }
+//         }).then(res => { if (res.ok) location.reload(); });
+//     }
+// }
+function openAssignModal(id) {
+    document.getElementById('assign_waiting_id').value = id;
+    document.getElementById('assignModal').style.display = 'flex';
+}
+
+function closeAssignModal() {
+    document.getElementById('assignModal').style.display = 'none';
 }
 
 function cancelWaiting(id) {
