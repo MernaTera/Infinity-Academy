@@ -17,6 +17,7 @@ class CourseTemplateSeeder extends Seeder
             ['name' => 'General English'],
             [
                 'price' => 3000,
+                'english_level_id' => 4,
                 'private_allowed' => 1,
                 'private_only' => 0,
                 'created_by_admin_id' => 1
@@ -27,6 +28,7 @@ class CourseTemplateSeeder extends Seeder
             ['name' => 'Conversation'],
             [
                 'price' => 2500,
+                'english_level_id' => 1,
                 'private_allowed' => 1,
                 'private_only' => 0,
                 'created_by_admin_id' => 1

@@ -12,6 +12,7 @@ use App\Models\Leads\Lead;
 use App\Models\Academic\CourseInstance;
 use App\Models\Academic\Level;
 use App\Models\Finance\Offer;
+use App\Models\Academic\EnglishLevel;
 
 /**
  * Class CourseTemplate
@@ -49,6 +50,7 @@ class CourseTemplate extends Model
 	protected $fillable = [
 		'name',
 		'price',
+		'english_level_id',
 		'private_allowed',
 		'private_only',
 		'is_active',
@@ -63,6 +65,11 @@ class CourseTemplate extends Model
 	public function courseInstances()
 	{
 		return $this->hasMany(CourseInstance::class, 'course_template_id');
+	}
+
+	public function englishLevel()
+	{
+		return $this->belongsTo(EnglishLevel::class, 'english_level_id');
 	}
 
 	public function leads()

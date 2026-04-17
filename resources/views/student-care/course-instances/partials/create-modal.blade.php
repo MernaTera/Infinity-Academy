@@ -138,7 +138,6 @@
     .btn-ci-submit:hover { color: #fff; }
     .btn-ci-submit span, .btn-ci-submit svg { position: relative; z-index: 1; }
 </style>
-
 <div id="createInstanceModal">
     <div class="ci-modal-box">
 
@@ -160,21 +159,41 @@
             <form id="createInstanceForm" method="POST" action="{{ route('student-care.instance.store') }}">
                 @csrf
 
-                {{-- Course --}}
+                {{-- ══ COURSE SETUP ══ --}}
                 <div class="ci-section-label">Course Setup</div>
                 <div class="ci-grid-1">
                     <div class="ci-field">
                         <label class="ci-label">Course <span class="req">*</span></label>
-                        <select name="course_template_id" class="ci-select" required>
+                        <select name="course_template_id" id="ci_course_select" class="ci-select" required>
                             <option value="">— Select Course —</option>
                             @foreach($templates as $t)
-                                <option value="{{ $t->course_template_id }}">{{ $t->name }}</option>
+                                <option value="{{ $t->course_template_id }}"
+                                        data-english-level="{{ $t->english_level_id ?? '' }}">
+                                    {{ $t->name }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
                 </div>
 
-                {{-- Patch & Teacher & Branch --}}
+                <div class="ci-grid">
+                    <div class="ci-field">
+                        <label class="ci-label">Level</label>
+                        <select name="level_id" id="ci_level_select" class="ci-select" disabled>
+                            <option value="">— Select Course First —</option>
+                        </select>
+                    </div>
+                    <div class="ci-field">
+                        <label class="ci-label">Sublevel</label>
+                        <select name="sublevel_id" id="ci_sublevel_select" class="ci-select" disabled>
+                            <option value="">— Select Level First —</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="ci-divider"></div>
+
+                {{-- ══ ASSIGNMENT ══ --}}
                 <div class="ci-section-label">Assignment</div>
                 <div class="ci-grid">
                     <div class="ci-field">
@@ -182,17 +201,16 @@
                         <select name="patch_id" class="ci-select" required>
                             <option value="">— Select Patch —</option>
                             @foreach($patches as $p)
-                                <option value="{{ $p->patch_id }}">{{ $p->name }}</option>
+                                <option value="{{ $p->patch_id }}">
+                                    {{ $p->name }} ({{ $p->status }})
+                                </option>
                             @endforeach
                         </select>
                     </div>
                     <div class="ci-field">
                         <label class="ci-label">Teacher <span class="req">*</span></label>
-                        <select name="teacher_id" class="ci-select" required>
-                            <option value="">— Select Teacher —</option>
-                            @foreach($teachers as $t)
-                                <option value="{{ $t->teacher_id }}">{{ $t->name }}</option>
-                            @endforeach
+                        <select name="teacher_id" id="ci_teacher_select" class="ci-select" required>
+                            <option value="">— Select Course First —</option>
                         </select>
                     </div>
                     <div class="ci-field">
@@ -206,13 +224,14 @@
                     </div>
                     <div class="ci-field">
                         <label class="ci-label">Capacity <span class="req">*</span></label>
-                        <input type="number" name="capacity" class="ci-input" placeholder="e.g. 12" required min="1">
+                        <input type="number" name="capacity" id="ci_capacity"
+                               class="ci-input" placeholder="e.g. 12" required min="1">
                     </div>
                 </div>
 
                 <div class="ci-divider"></div>
 
-                {{-- Schedule --}}
+                {{-- ══ SCHEDULE ══ --}}
                 <div class="ci-section-label">Schedule</div>
                 <div class="ci-grid">
                     <div class="ci-field">
@@ -225,17 +244,19 @@
                     </div>
                     <div class="ci-field">
                         <label class="ci-label">Total Hours <span class="req">*</span></label>
-                        <input type="number" step="0.1" name="total_hours" class="ci-input" placeholder="e.g. 40" required>
+                        <input type="number" step="0.1" name="total_hours" id="ci_total_hours"
+                               class="ci-input" placeholder="e.g. 40" required>
                     </div>
                     <div class="ci-field">
                         <label class="ci-label">Session Duration <span class="req">*</span></label>
-                        <input type="number" step="0.1" name="session_duration" class="ci-input" placeholder="e.g. 1.5" required>
+                        <input type="number" step="0.1" name="session_duration" id="ci_session_duration"
+                               class="ci-input" placeholder="e.g. 1.5" required>
                     </div>
                 </div>
 
                 <div class="ci-divider"></div>
 
-                {{-- Type & Mode --}}
+                {{-- ══ DELIVERY ══ --}}
                 <div class="ci-section-label">Delivery</div>
                 <div class="ci-grid">
                     <div class="ci-field">
@@ -274,11 +295,144 @@
 </div>
 
 <script>
-    function openCreateInstanceModal() {
-        document.getElementById('createInstanceModal').style.display = 'flex';
+function openCreateInstanceModal() {
+    document.getElementById('createInstanceModal').style.display = 'flex';
+}
+
+function closeCreateInstanceModal() {
+    document.getElementById('createInstanceModal').style.display = 'none';
+}
+
+const ciCourse   = document.getElementById('ci_course_select');
+const ciLevel    = document.getElementById('ci_level_select');
+const ciSublevel = document.getElementById('ci_sublevel_select');
+const ciTeacher  = document.getElementById('ci_teacher_select');
+
+function resetSelect(el, placeholder) {
+    el.innerHTML = `<option value="">${placeholder}</option>`;
+    el.disabled  = true;
+}
+
+function setLoading(el) {
+    el.innerHTML = '<option value="">Loading...</option>';
+    el.disabled  = true;
+}
+
+async function loadTeachers(englishLevelId) {
+    setLoading(ciTeacher);
+    try {
+        const res  = await fetch(`/student-care/teachers/by-course-level/${englishLevelId || 0}`);
+        const data = await res.json();
+
+        if (!data.length) {
+            resetSelect(ciTeacher, 'No available teachers');
+            return;
+        }
+
+        ciTeacher.innerHTML = '<option value="">— Select Teacher —</option>';
+        data.forEach(t => {
+            ciTeacher.innerHTML += `
+                <option value="${t.teacher_id}">
+                    ${t.employee?.full_name ?? '—'}
+                    ${t.english_level ? '(' + t.english_level.level_name + ')' : ''}
+                </option>`;
+        });
+        ciTeacher.disabled = false;
+
+    } catch {
+        resetSelect(ciTeacher, 'Error loading teachers');
+    }
+}
+
+ciCourse.addEventListener('change', async function () {
+    const courseId     = this.value;
+    const englishLevel = this.options[this.selectedIndex]?.dataset.englishLevel || '';
+
+    resetSelect(ciLevel,    '— Select Level (optional) —');
+    resetSelect(ciSublevel, '— Select Level First —');
+    resetSelect(ciTeacher,  '— Select Course First —');
+
+    if (!courseId) return;
+
+    try {
+        setLoading(ciLevel);
+        const res  = await fetch(`/levels/${courseId}`);
+        const data = await res.json();
+
+        if (!data.length) {
+            resetSelect(ciLevel, '— No Levels —');
+        } else {
+            ciLevel.innerHTML = '<option value="">— Select Level (optional) —</option>';
+            data.forEach(l => {
+                ciLevel.innerHTML += `
+                    <option value="${l.level_id}"
+                            data-teacher-level="${l.teacher_level ?? ''}"
+                            data-hours="${l.total_hours ?? ''}"
+                            data-session="${l.default_session_duration ?? ''}"
+                            data-capacity="${l.max_capacity ?? ''}">
+                        ${l.name}
+                    </option>`;
+            });
+            ciLevel.disabled = false;
+        }
+    } catch {
+        resetSelect(ciLevel, '— Error loading levels —');
     }
 
-    function closeCreateInstanceModal() {
-        document.getElementById('createInstanceModal').style.display = 'none';
+    if (englishLevel) {
+        await loadTeachers(englishLevel);
+    } else {
+        resetSelect(ciTeacher, '— Select Level for Teachers —');
     }
+});
+
+ciLevel.addEventListener('change', async function () {
+    const levelId      = this.value;
+    const opt          = this.options[this.selectedIndex];
+    const teacherLevel = opt?.dataset.teacherLevel || '';
+
+    resetSelect(ciSublevel, '— Select Sublevel (optional) —');
+
+    if (opt && levelId) {
+        if (opt.dataset.hours)    document.getElementById('ci_total_hours').value      = opt.dataset.hours;
+        if (opt.dataset.session)  document.getElementById('ci_session_duration').value = opt.dataset.session;
+        if (opt.dataset.capacity) document.getElementById('ci_capacity').value         = opt.dataset.capacity;
+    }
+
+    if (!levelId) return;
+
+    try {
+        setLoading(ciSublevel);
+        const res  = await fetch(`/sublevels/${levelId}`);
+        const data = await res.json();
+
+        if (!data.length) {
+            resetSelect(ciSublevel, '— No Sublevels —');
+        } else {
+            ciSublevel.innerHTML = '<option value="">— Select Sublevel (optional) —</option>';
+            data.forEach(s => {
+                ciSublevel.innerHTML += `
+                    <option value="${s.sublevel_id}"
+                            data-hours="${s.total_hours ?? ''}"
+                            data-session="${s.default_session_duration ?? ''}"
+                            data-capacity="${s.max_capacity ?? ''}">
+                        ${s.name}
+                    </option>`;
+            });
+            ciSublevel.disabled = false;
+        }
+    } catch {
+        resetSelect(ciSublevel, '— Error loading sublevels —');
+    }
+
+    if (teacherLevel) await loadTeachers(teacherLevel);
+});
+
+ciSublevel.addEventListener('change', function () {
+    const opt = this.options[this.selectedIndex];
+    if (!opt || !this.value) return;
+    if (opt.dataset.hours)    document.getElementById('ci_total_hours').value      = opt.dataset.hours;
+    if (opt.dataset.session)  document.getElementById('ci_session_duration').value = opt.dataset.session;
+    if (opt.dataset.capacity) document.getElementById('ci_capacity').value         = opt.dataset.capacity;
+});
 </script>

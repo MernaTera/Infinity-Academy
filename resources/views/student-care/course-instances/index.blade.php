@@ -440,7 +440,13 @@
     @if($instances->hasPages())
     <div class="pagination-wrap">{{ $instances->links() }}</div>
     @endif
-
+        @if(request()->query('create') == '1')
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            openCreateInstanceModal();
+        });
+    </script>
+    @endif
 </div>
 
 <script>
