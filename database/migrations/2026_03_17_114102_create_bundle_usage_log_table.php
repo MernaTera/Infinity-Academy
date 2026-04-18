@@ -30,7 +30,7 @@ return new class extends Migration {
                   ->cascadeOnDelete();
 
             $table->foreign('course_session_id')
-                  ->references('session_id')
+                  ->references('course_session_id')
                   ->on('course_session')
                   ->cascadeOnDelete();
 

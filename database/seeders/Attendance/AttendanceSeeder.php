@@ -23,7 +23,7 @@ class AttendanceSeeder extends Seeder
 
                 $data[] = [
                     'enrollment_id' => $enrollment->enrollment_id,
-                    'course_session_id' => $session->session_id,
+                    'course_session_id' => $session->course_session_id,
                     'status' => rand(0, 1) ? 'Present' : 'Absent',
                     'recorded_by' => $employee->employee_id,
                     'recorded_at' => now(),

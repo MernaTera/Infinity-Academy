@@ -26,7 +26,7 @@ class BundleUsageLogSeeder extends Seeder
 
         BundleUsageLog::create([
             'enrollment_id' => $enrollment->enrollment_id,
-            'course_session_id' => $session->session_id,
+            'course_session_id' => $session->course_session_id,
             'hours_deducted' => 2,
             'reason' => 'ATTENDANCE',
             'created_by_cs_id' => $employee->employee_id,

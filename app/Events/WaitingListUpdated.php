@@ -12,8 +12,6 @@ use Illuminate\Queue\SerializesModels;
 
 class WaitingListUpdated implements ShouldBroadcast
 {
-    use Dispatchable, SerializesModels;
-
     public $waiting;
 
     public function __construct($waiting)
@@ -26,5 +24,10 @@ class WaitingListUpdated implements ShouldBroadcast
         return [
             new Channel('waiting-list'),
         ];
+    }
+
+    public function broadcastAs()
+    {
+        return 'WaitingListUpdated';
     }
 }

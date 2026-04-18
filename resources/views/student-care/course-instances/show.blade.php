@@ -78,7 +78,7 @@ box-shadow:0 10px 25px rgba(0,0,0,0.05);">
                     <th style="padding:12px;">Student</th>
                     <th>Phone</th>
                     <th>Status</th>
-                    <th>Hours Left</th>
+                    <th>Hours Taken</th>
                     <th>Start Date</th>
                     <th>Payment</th>
                 </tr>
