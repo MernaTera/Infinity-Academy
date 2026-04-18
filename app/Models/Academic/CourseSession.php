@@ -59,6 +59,11 @@ class CourseSession extends Model
         return $this->hasMany(Attendance::class, 'course_session_id');
     }
 
+    public function enrollments()
+    {
+        return $this->courseInstance->enrollments();
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers

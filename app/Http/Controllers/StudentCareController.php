@@ -39,7 +39,7 @@ class StudentCareController extends Controller
             'teacher',
             'enrollments'
         ])
-        ->where('status', 'Upcoming')
+        ->whereIn('status', ['Upcoming', 'Active'])
         ->get();
 
         return view('student-care.waiting-list', compact('waiting', 'instances'));

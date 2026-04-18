@@ -9,6 +9,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\StudentCareController;
 use App\Http\Controllers\CourseInstanceController;
+use App\Http\Controllers\AttendanceController;
 
 
 
@@ -66,5 +67,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
         Route::post('/course-instances/store', [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
         Route::get('/teachers/by-course/{courseId}', [CourseInstanceController::class, 'getTeachersByCourse'])->name('teachers.by-course');
         Route::get('/teachers/by-course-level/{levelId}', [CourseInstanceController::class, 'getTeachersByLevel'])->name('teachers.by-level');
+        Route::get('/attendance/{session}', [AttendanceController::class, 'show'])->name('attendance.show');
+        Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
     });
 require __DIR__.'/auth.php';

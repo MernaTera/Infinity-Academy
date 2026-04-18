@@ -145,7 +145,22 @@ box-shadow:0 10px 25px rgba(0,0,0,0.05);">
 {{-- ========= ATTENDANCE TAB ========= --}}
 <div id="attendanceTab" style="display:none;">
     <div style="background:#fff; padding:20px; border-radius:12px;">
-        Attendance will be here 👀
+
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            @foreach($instance->sessions as $session)
+            <tr style="border-bottom:1px solid #eee;">
+                <td style="padding:10px;">Session {{ $session->session_number }}</td>
+                <td>{{ $session->session_date }}</td>
+                <td>
+                    <a href="{{ route('student-care.attendance.show', $session->course_session_id) }}"
+                       style="color:#1B4FA8;">
+                        Take Attendance
+                    </a>
+                </td>
+            </tr>
+            @endforeach
+        </table>
+
     </div>
 </div>
 
@@ -168,6 +183,12 @@ function showTab(tab) {
 
     document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
     event.target.classList.add('active');
+}
+
+function openAttendance(sessionId) {
+    document.getElementById('session_id').value = sessionId;
+
+    document.getElementById('attendanceTab').style.display = 'block';
 }
 </script>
 
