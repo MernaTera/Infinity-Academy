@@ -34,6 +34,7 @@ class InstanceSchedule extends Model
 	protected $casts = [
 		'course_instance_id' => 'integer',
 		'time_slot_id' => 'integer',
+		'start_time' => 'datetime:H:i:s',
 		'created_by_employee_id' => 'integer',
 		'created_at' => 'datetime'
 	];
@@ -42,6 +43,7 @@ class InstanceSchedule extends Model
 		'course_instance_id',
 		'day_of_week',
 		'time_slot_id',
+		'start_time',
 		'created_by_employee_id'
 	];
 
@@ -58,6 +60,15 @@ class InstanceSchedule extends Model
 	public function time_slot()
 	{
 		return $this->belongsTo(TimeSlot::class, 'time_slot_id');
+	}
+
+	public function getScheduleInfo()
+	{
+		return [
+			'day_of_week' => $this->day_of_week,
+			'time_slot' => $this->time_slot ? $this->time_slot->name : null,
+			'start_time' => $this->start_time ? $this->start_time->format('H:i:s') : null,
+		];
 	}
 
 	public function isWeekend()

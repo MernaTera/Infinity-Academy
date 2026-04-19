@@ -9,6 +9,9 @@ use App\Models\Academic\CourseTemplate;
 use App\Models\HR\Teacher;
 use App\Models\Academic\Patch;
 use App\Models\Core\Branch;
+use App\Models\Academic\Level;
+use App\Models\Academic\SubLevel;
+use App\Models\Academic\Room;
 
 class CourseInstanceController extends Controller
 {
@@ -22,9 +25,9 @@ class CourseInstanceController extends Controller
         $teachers = Teacher::with('employee')->get();
         $patches = Patch::whereIn('status', ['Active', 'Upcoming'])->get();
         $branches  = \App\Models\Core\Branch::all();
-
+        $rooms = Room::all();
         return view('student-care.course-instances.index', compact(
-            'instances','templates','teachers','patches','branches'
+            'instances','templates','teachers','patches','branches','rooms'
         ));
     }
 
@@ -46,6 +49,7 @@ class CourseInstanceController extends Controller
 
             'delivery_mood' => 'required|in:Online,Offline',
             'type' => 'required|in:Group,Private',
+            'room_id' => 'nullable|exists:room,room_id',
 
             'total_hours' => 'required|numeric',
             'session_duration' => 'required|numeric',

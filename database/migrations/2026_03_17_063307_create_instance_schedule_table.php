@@ -19,6 +19,8 @@ return new class extends Migration
 
             $table->unsignedBigInteger('time_slot_id')->nullable();
 
+            $table->time('start_time')->nullable();
+
             $table->unsignedBigInteger('created_by_employee_id')->nullable();
 
             $table->timestamps();

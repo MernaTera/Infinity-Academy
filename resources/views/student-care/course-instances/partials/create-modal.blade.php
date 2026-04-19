@@ -223,6 +223,17 @@
                         </select>
                     </div>
                     <div class="ci-field">
+                        <label class="ci-label">Room</label>
+                        <select name="room_id" class="ci-select">
+                            <option value="">— Select Room —</option>
+                            @foreach($rooms as $room)
+                                <option value="{{ $room->room_id }}">
+                                    {{ $room->name ?? 'Room ' . $room->room_id }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="ci-field">
                         <label class="ci-label">Capacity <span class="req">*</span></label>
                         <input type="number" name="capacity" id="ci_capacity"
                                class="ci-input" placeholder="e.g. 12" required min="1">
