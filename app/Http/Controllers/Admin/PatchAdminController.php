@@ -9,6 +9,7 @@ use App\Models\Academic\TimeSlot;
 use App\Models\Academic\BreakSlot;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
+use App\Services\AuditService;
 
 class PatchAdminController extends Controller
 {
@@ -91,6 +92,7 @@ class PatchAdminController extends Controller
             'unlock'   => $patch->update(['is_locked' => false]),
         };
 
+        AuditService::updated('patch', $id, 'status', $old, $patch->fresh()->status);
         return back()->with('success', 'Patch updated successfully.');
     }
 

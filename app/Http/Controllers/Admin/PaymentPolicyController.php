@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Finance\PaymentPlan;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
+use App\Services\AuditService;
 
 class PaymentPolicyController extends Controller
 {
@@ -45,7 +46,7 @@ class PaymentPolicyController extends Controller
             'is_active'               => true,
             'created_by_admin_id'     => $adminId,
         ]);
-
+        AuditService::created('payment_plan', $plan->payment_plan_id, 'name', $plan->name);
         return back()->with('success', 'Payment plan created successfully.');
     }
 
@@ -63,12 +64,14 @@ class PaymentPolicyController extends Controller
             'name', 'deposit_percentage', 'grace_period_days', 'requires_admin_approval'
         ]));
 
+        AuditService::updated('payment_plan', $id, 'name', $plan->getOriginal('name'), $plan->name);
         return back()->with('success', 'Plan updated.');
     }
 
     public function togglePlan($id)
     {
         $plan = PaymentPlan::findOrFail($id);
+        AuditService::updated('payment_plan', $id, 'is_active', $plan->is_active, !$plan->is_active);
         $plan->update(['is_active' => !$plan->is_active]);
         return back()->with('success', 'Plan ' . ($plan->is_active ? 'activated' : 'deactivated') . '.');
     }

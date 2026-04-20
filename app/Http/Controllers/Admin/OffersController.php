@@ -8,6 +8,7 @@ use App\Models\Academic\CourseTemplate;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\AuditService;
 
 class OffersController extends Controller
 {
@@ -74,7 +75,7 @@ class OffersController extends Controller
                 'is_active'            => true,
                 'created_by_admin_id'  => $adminId,
             ]);
-
+            AuditService::created('offer', $offer->offer_id, 'offer_name', $offer->offer_name);
             $offer->courseTemplates()->attach($request->course_ids);
         });
 
@@ -106,6 +107,7 @@ class OffersController extends Controller
     public function toggle($id)
     {
         $offer = Offer::findOrFail($id);
+        AuditService::updated('offer', $id, 'is_active', $offer->is_active, !$offer->is_active);
         $offer->update(['is_active' => !$offer->is_active]);
         return back()->with('success', 'Offer ' . ($offer->is_active ? 'enabled' : 'disabled') . '.');
     }

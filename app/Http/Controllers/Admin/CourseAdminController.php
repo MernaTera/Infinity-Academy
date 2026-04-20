@@ -10,6 +10,7 @@ use App\Models\Academic\EnglishLevel;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\AuditService;
 
 class CourseAdminController extends Controller
 {
@@ -61,6 +62,8 @@ class CourseAdminController extends Controller
                 'is_active'        => true,
                 'created_by_admin_id' => $adminEmployeeId,
             ]);
+
+            AuditService::created('course_template', $course->course_template_id, 'name', $course->name);
 
             foreach ($request->levels ?? [] as $i => $lvl) {
                 $level = Level::create([
@@ -130,7 +133,8 @@ class CourseAdminController extends Controller
         }
 
         $course->update(['is_active' => !$course->is_active]);
-
+        
+        AuditService::updated('course_template', $id, 'is_active', $old ? 'Active' : 'Archived', $old ? 'Archived' : 'Active');
         $msg = $course->is_active ? 'Course restored.' : 'Course archived.';
         return back()->with('success', $msg);
     }

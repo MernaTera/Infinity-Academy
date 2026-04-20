@@ -9,6 +9,7 @@ use App\Models\Enrollment\RestrictionLog;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\AuditService;
 
 class OutstandingAdminController extends Controller
 {
@@ -108,6 +109,14 @@ class OutstandingAdminController extends Controller
             }
         });
 
+        AuditService::updated(
+            'enrollment',
+            $id,
+            'status',
+            $enrollment->status,
+            $request->action === 'lift' ? 'Active' : 'Restricted'
+        );
+        
         return back()->with('success', 'Action applied successfully.');
     }
 }

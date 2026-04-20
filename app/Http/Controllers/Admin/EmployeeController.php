@@ -15,6 +15,7 @@ use App\Models\Academic\Patch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use App\Services\AuditService;
 
 class EmployeeController extends Controller
 {
@@ -218,6 +219,8 @@ class EmployeeController extends Controller
         $englishLevels = EnglishLevel::all();
         $patches       = Patch::whereIn('status', ['Active','Upcoming'])->get();
 
+        AuditService::log('employee', $employee->employee_id, 'Edit Employee', 'Accessed edit form for employee');
+
         return view('admin.employees.edit', compact('employee', 'branches', 'englishLevels', 'patches'));
     }
 
@@ -230,6 +233,15 @@ class EmployeeController extends Controller
     {
         $employee = Employee::with('user')->findOrFail($id);
 
+        if($request->salary != $employee->salary){
+            AuditService::updated('employee', $employee->employee_id, 'salary', $employee->salary, $request->salary);
+        }
+        if($request->branch_id != $employee->branch_id){
+            AuditService::updated('employee', $employee->employee_id, 'branch_id', $employee->branch_id, $request->branch_id);
+        }
+        if($request->status != $employee->status){
+            AuditService::updated('employee', $employee->employee_id, 'status', $employee->status, $request->status);
+        }
         $request->validate([
             'salary'    => 'nullable|numeric|min:0',
             'branch_id' => 'required|exists:branch,branch_id',
@@ -261,6 +273,8 @@ class EmployeeController extends Controller
         $employee    = Employee::with('user')->findOrFail($id);
         $newStatus   = $employee->status === 'Active' ? 'Inactive' : 'Active';
 
+        AuditService::updated('employee', $employee->employee_id, 'status', $employee->status, $newStatus);
+        
         $employee->update(['status' => $newStatus]);
         $employee->user->update(['is_active' => $newStatus === 'Active']);
 
