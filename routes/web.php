@@ -13,6 +13,16 @@ use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\OutstandingController;
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\CourseAdminController;
+use App\Http\Controllers\Admin\PatchAdminController;
+use App\Http\Controllers\Admin\PaymentPolicyController;
+use App\Http\Controllers\Admin\InstallmentApprovalController;
+use App\Http\Controllers\Admin\OutstandingAdminController;
+use App\Http\Controllers\Admin\OffersController;
+use App\Http\Controllers\Admin\AuditController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -94,5 +104,63 @@ Route::middleware(['auth', 'permission:enrollment.view'])
         Route::post('/instance/{id}/preview',         [CourseInstanceController::class, 'previewSchedule'])->name('instance.preview');
         Route::post('/instance/{id}/schedule',        [CourseInstanceController::class, 'storeSchedule'])->name('instance.schedule');
         Route::get('/time-slots',                     function() { return \App\Models\Academic\TimeSlot::all();})->name('time-slots');
+    });
+
+
+
+////// Admin //////
+Route::middleware('auth')
+    ->prefix('admin')
+    ->name('admin.')
+    ->group(function () {
+
+        // Dashboard
+        Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+        // Employee Management
+        Route::get('/employees',              [EmployeeController::class, 'index'])->name('employees.index');
+        Route::get('/employees/create',       [EmployeeController::class, 'create'])->name('employees.create');
+        Route::post('/employees',             [EmployeeController::class, 'store'])->name('employees.store');
+        Route::get('/employees/{id}',         [EmployeeController::class, 'show'])->name('employees.show');
+        Route::get('/employees/{id}/edit',    [EmployeeController::class, 'edit'])->name('employees.edit');
+        Route::put('/employees/{id}',         [EmployeeController::class, 'update'])->name('employees.update');
+        Route::patch('/employees/{id}/toggle',[EmployeeController::class, 'toggle'])->name('employees.toggle');
+
+        // Course & Academic Structure
+        Route::get('/courses',                [CourseAdminController::class, 'index'])->name('courses.index');
+        Route::get('/courses/create',         [CourseAdminController::class, 'create'])->name('courses.create');
+        Route::post('/courses',               [CourseAdminController::class, 'store'])->name('courses.store');
+        Route::get('/courses/{id}/edit',      [CourseAdminController::class, 'edit'])->name('courses.edit');
+        Route::put('/courses/{id}',           [CourseAdminController::class, 'update'])->name('courses.update');
+        Route::patch('/courses/{id}/archive', [CourseAdminController::class, 'archive'])->name('courses.archive');
+
+        // Patch & Scheduling Governance
+        Route::get('/patches',                [PatchAdminController::class, 'index'])->name('patches.index');
+        Route::post('/patches',               [PatchAdminController::class, 'store'])->name('patches.store');
+        Route::patch('/patches/{id}/status',  [PatchAdminController::class, 'updateStatus'])->name('patches.status');
+
+        // Payment Policy
+        Route::get('/payment-policy',         [PaymentPolicyController::class, 'index'])->name('payment-policy.index');
+        Route::post('/payment-plans',         [PaymentPolicyController::class, 'storePlan'])->name('payment-plans.store');
+        Route::put('/payment-plans/{id}',     [PaymentPolicyController::class, 'updatePlan'])->name('payment-plans.update');
+        Route::patch('/payment-plans/{id}/toggle', [PaymentPolicyController::class, 'togglePlan'])->name('payment-plans.toggle');
+
+        // Installment Approval
+        Route::get('/installments',           [InstallmentApprovalController::class, 'index'])->name('installments.index');
+        Route::patch('/installments/{id}/approve', [InstallmentApprovalController::class, 'approve'])->name('installments.approve');
+        Route::patch('/installments/{id}/reject',  [InstallmentApprovalController::class, 'reject'])->name('installments.reject');
+
+        // Outstanding Risk
+        Route::get('/outstanding',            [OutstandingAdminController::class, 'index'])->name('outstanding.index');
+        Route::patch('/outstanding/{id}/override', [OutstandingAdminController::class, 'override'])->name('outstanding.override');
+
+        // Offers
+        Route::get('/offers',                 [OffersController::class, 'index'])->name('offers.index');
+        Route::post('/offers',                [OffersController::class, 'store'])->name('offers.store');
+        Route::put('/offers/{id}',            [OffersController::class, 'update'])->name('offers.update');
+        Route::patch('/offers/{id}/toggle',   [OffersController::class, 'toggle'])->name('offers.toggle');
+
+        // Audit Logs
+        Route::get('/audit',                  [AuditController::class, 'index'])->name('audit.index');
     });
 require __DIR__.'/auth.php';

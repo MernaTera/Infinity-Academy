@@ -18,7 +18,7 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $employee     = Employee::where('user_id', auth()->id())->first();
+        $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
         $currentPatch = Patch::active()->latest('start_date')->first();
 
         // ══ LEADS ══════════════════════════════════════════════

@@ -39,7 +39,7 @@ class LeadController extends Controller
 
     public function index()
     {
-        $employeeId = auth()->user()->employees->first()->employee_id;
+        $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->first()->employee_id;
 
         $leads = $this->leadRepository->myLeads($employeeId);
 

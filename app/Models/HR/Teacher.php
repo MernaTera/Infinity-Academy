@@ -10,7 +10,7 @@ use App\Models\HR\Employee;
 use App\Models\Academic\EnglishLevel;
 use App\Models\HR\TeacherAvailability;
 use App\Models\Academic\CourseInstance;
-use App\Models\Academic\ContractType;
+use App\Models\HR\ContractType;
 use App\Models\Reports\Report;
 
 /**
