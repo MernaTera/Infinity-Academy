@@ -101,6 +101,11 @@
                    class="nav-link-item {{ request()->routeIs('leads.*') ? 'active' : '' }}">
                     <span>Leads</span>
                 </a>
+
+                <a href="{{ route('sales.index') }}"
+                class="nav-link-item {{ request()->routeIs('sales.*') ? 'active' : '' }}">
+                    Sales
+                </a>
                 @endcando
             </div>
 
@@ -189,6 +194,12 @@
                       color:{{ request()->routeIs('leads.*') ? '#1B4FA8' : '#7A8A9A' }};
                       padding:12px 0;text-decoration:none;">
                 Leads
+            </a>
+            <a href="{{ route('sales.index') }}"
+            style="font-size:11px;letter-spacing:3px;text-transform:uppercase;
+                    color:{{ request()->routeIs('sales.*') ? '#1B4FA8' : '#7A8A9A' }};
+                    padding:12px 0;text-decoration:none;border-bottom:1px solid rgba(27,79,168,0.05);">
+                Sales
             </a>
         </div>
         <div style="padding:16px 24px;border-top:1px solid rgba(27,79,168,0.07);">

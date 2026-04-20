@@ -10,6 +10,7 @@ use App\Http\Controllers\RegistrationController;
 use App\Http\Controllers\StudentCareController;
 use App\Http\Controllers\CourseInstanceController;
 use App\Http\Controllers\AttendanceController;
+use App\Http\Controllers\SalesController;
 
 
 
@@ -52,6 +53,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/teacher-schedule', [RegistrationController::class, 'getTeacherSchedule']);
     Route::post('/get-material', [RegistrationController::class, 'getMaterial']);
 });
+
+
+////// Sales Table //////
+Route::middleware('auth')
+    ->prefix('sales')
+    ->name('sales.')
+    ->group(function () {
+
+        Route::get('/', [SalesController::class, 'index'])->name('index');
+        Route::get('/daily', [SalesController::class, 'dailyBreakdown'])->name('daily');
+        Route::get('/patch/{patch}', [SalesController::class, 'byPatch'])->name('by-patch');
+    });
 
 ////// Student Care //////
 Route::middleware(['auth', 'permission:enrollment.view'])

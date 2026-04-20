@@ -20,6 +20,9 @@ use App\Events\WaitingListUpdated;
 use App\Models\Academic\Level;
 use App\Models\Academic\Sublevel;
 use App\Models\Student\StudentPhone;
+use App\Models\Finance\FinancialTransaction;
+use App\Models\Finance\RevenueSplit;
+use App\Models\HR\Employee;
 
 class RegistrationService
 {
@@ -28,13 +31,11 @@ class RegistrationService
         return DB::transaction(function () use ($data) {
 
 
-
             $this->validateBusiness($data);
             $this->validateTeacherAvailability($data);
             $this->validateNoConflict($data);
             $this->validatePatch($data);
             $this->validatePricing($data);
-
 
             $lead = Lead::findOrFail($data['lead_id']);
 
@@ -67,6 +68,7 @@ class RegistrationService
 
             $enrollment = $this->createEnrollment($student, $data, $patchData);
             $this->attachMaterials($enrollment, $data);
+            $this->createFinancialRecords($enrollment, $data, $pricing, $currentPatch);
             $availableTeachers = [];
 
             foreach ($availabilities as $availability) {
@@ -331,5 +333,123 @@ class RegistrationService
                 'status' => 'Pending'
             ]);
         }
+    }
+
+    private function createFinancialRecords($enrollment, $data, $pricing, $patch)
+    {
+        $csEmployee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+
+        $branchId = $csEmployee?->branch_id 
+            ?? $patch?->branch_id 
+            ?? \App\Models\Core\Branch::first()?->branch_id;
+
+        if (!$branchId) {
+            throw new \Exception('Branch not found for this employee');
+        }
+        $patchId    = $patch?->patch_id;
+
+        $depositAmount = ($pricing['final_price'] * $this->getDepositPct($data)) / 100;
+
+        $depositTx = FinancialTransaction::create([
+            'enrollment_id'         => $enrollment->enrollment_id,
+            'patch_id'              => $patchId,
+            'branch_id'              => $branchId,
+            'transaction_type'      => 'Payment',
+            'transaction_category'  => 'Course',
+            'amount'                => $depositAmount,
+            'payment_method'        => 'Cash',
+            'created_by_employee_id'=> $csEmployee->employee_id,
+        ]);
+
+        RevenueSplit::create([
+            'transaction_id'    => $depositTx->transaction_id,
+            'employee_id'       => $csEmployee->employee_id,
+            'branch_id'         => $branchId,
+            'patch_id'          => $patchId,
+            'amount_allocated'  => $depositAmount,
+            'allocation_type'   => 'Direct',
+        ]);
+
+        $testFee = floatval($data['test_fee'] ?? 0);
+        if ($testFee > 0) {
+            $testTx = FinancialTransaction::create([
+                'enrollment_id'         => $enrollment->enrollment_id,
+                'patch_id'              => $patchId,
+                'branch_id'              => $branchId,
+                'transaction_type'      => 'Payment',
+                'transaction_category'  => 'Test',
+                'amount'                => $testFee,
+                'payment_method'        => 'Cash',
+                'created_by_employee_id'=> $csEmployee->employee_id,
+            ]);
+
+            RevenueSplit::create([
+                'transaction_id'    => $testTx->transaction_id,
+                'employee_id'       => $csEmployee->employee_id,
+                'branch_id'         => $branchId,
+                'patch_id'          => $patchId,
+                'amount_allocated'  => $testFee,
+                'allocation_type'   => 'Direct',
+            ]);
+        }
+
+        $materialPrice = floatval($data['material_price'] ?? 0);
+        if ($materialPrice > 0) {
+
+            $materialTx = FinancialTransaction::create([
+                'enrollment_id'         => $enrollment->enrollment_id,
+                'patch_id'              => $patchId,
+                'branch_id'              => $branchId, 
+                'transaction_type'      => 'Payment',
+                'transaction_category'  => 'Material',
+                'amount'                => $materialPrice,
+                'payment_method'        => 'Cash',
+                'created_by_employee_id'=> $csEmployee->employee_id,
+            ]);
+
+
+            $isToefl = str_contains(
+                strtolower($enrollment->courseTemplate?->name ?? ''),
+                'toefl'
+            );
+
+            if ($isToefl) {
+                RevenueSplit::create([
+                    'transaction_id'    => $materialTx->transaction_id,
+                    'employee_id'       => $csEmployee->employee_id,
+                    'branch_id'         => $branchId,
+                    'patch_id'          => $patchId,
+                    'amount_allocated'  => $materialPrice,
+                    'allocation_type'   => 'Direct',
+                ]);
+            } else {
+                $allCS = Employee::whereHas('user', fn($q) =>
+                    $q->whereHas('role', fn($q2) =>
+                        $q2->where('role_name', 'Customer Service')
+                    )
+                )->get();
+
+                $share = $allCS->count() > 0
+                    ? round($materialPrice / $allCS->count(), 2)
+                    : $materialPrice;
+
+                foreach ($allCS as $cs) {
+                    RevenueSplit::create([
+                        'transaction_id'    => $materialTx->transaction_id,
+                        'employee_id'       => $cs->employee_id,
+                        'branch_id'         => $branchId,
+                        'patch_id'          => $patchId,
+                        'amount_allocated'  => $share,
+                        'allocation_type'   => 'Shared',
+                    ]);
+                }
+            }
+        }
+    }
+
+    private function getDepositPct($data): float
+    {
+        $plan = \App\Models\Finance\PaymentPlan::find($data['payment_plan_id']);
+        return $plan ? (float) $plan->deposit_percentage : 100.0;
     }
 }
