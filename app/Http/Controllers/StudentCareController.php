@@ -89,6 +89,43 @@ class StudentCareController extends Controller
 
         return view('student-care.course-instances.show', compact('instance'));
     }
+    public function outstanding()
+    {
+        $allEnrollments = \App\Models\Enrollment\Enrollment::with([
+            'student',
+            'courseInstance.courseTemplate',
+            'courseInstance.patch',
+            'paymentPlan',
+            'createdByCs',
+            'installmentSchedules' => fn($q) => $q->orderBy('due_date'),
+            'financialTransactions',
+        ])
+        ->whereIn('status', ['Active', 'Restricted'])
+        ->get();
 
+        $enrollments = $allEnrollments->filter(function ($e) {
+            $paid     = $e->financialTransactions
+                ->whereIn('transaction_type', ['Payment', 'Installment'])
+                ->sum('amount');
+            $refunded = $e->financialTransactions
+                ->where('transaction_type', 'Refund')
+                ->sum('amount');
+            $balance  = $e->final_price - ($paid - $refunded);
+            $e->remaining_balance = $balance;
+            $e->total_paid        = $paid - $refunded;
+            return $balance > 0;
+        });
+
+        $stats = [
+            'total_outstanding' => $enrollments->sum('remaining_balance'),
+            'count'             => $enrollments->count(),
+            'restricted'        => $enrollments->where('status', 'Restricted')->count(),
+            'overdue'           => $enrollments->filter(fn($e) =>
+                $e->installmentSchedules->where('status', 'Overdue')->isNotEmpty()
+            )->count(),
+        ];
+
+        return view('student-care.outstanding', compact('enrollments', 'stats'));
+    }
 
 }
