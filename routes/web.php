@@ -135,9 +135,12 @@ Route::middleware('auth')
         Route::patch('/courses/{id}/archive', [CourseAdminController::class, 'archive'])->name('courses.archive');
 
         // Patch & Scheduling Governance
-        Route::get('/patches',                [PatchAdminController::class, 'index'])->name('patches.index');
-        Route::post('/patches',               [PatchAdminController::class, 'store'])->name('patches.store');
-        Route::patch('/patches/{id}/status',  [PatchAdminController::class, 'updateStatus'])->name('patches.status');
+        Route::get('/patches',                    [PatchAdminController::class, 'index'])->name('patches.index');
+        Route::patch('/patches/{id}/status',       [PatchAdminController::class, 'updateStatus'])->name('patches.status');
+        Route::post('/patches/time-slots',         [PatchAdminController::class, 'storeTimeSlot'])->name('patches.timeslots.store');
+        Route::patch('/patches/time-slots/{id}',   [PatchAdminController::class, 'toggleTimeSlot'])->name('patches.timeslots.toggle');
+        Route::post('/patches/break-slots',        [PatchAdminController::class, 'storeBreakSlot'])->name('patches.breakslots.store');
+        Route::patch('/patches/break-slots/{id}',  [PatchAdminController::class, 'toggleBreakSlot'])->name('patches.breakslots.toggle');
 
         // Payment Policy
         Route::get('/payment-policy',         [PaymentPolicyController::class, 'index'])->name('payment-policy.index');
