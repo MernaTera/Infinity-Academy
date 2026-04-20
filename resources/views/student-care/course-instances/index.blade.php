@@ -2,6 +2,8 @@
 
 @section('title', 'Course Instances')
 
+@include('student-care.course-instances.partials.schedule-modal')
+
 @include('student-care.course-instances.partials.create-modal')
 
 
@@ -438,6 +440,9 @@
                                 </svg>
                                 View
                             </a>
+                            <button onclick="openScheduleModal({{ $instance->course_instance_id }})">
+                                Set Schedule
+                            </button>
                         </td>
 
                     </tr>
@@ -527,6 +532,7 @@ function filterByCiMode(mode) {
 function filterByCiStatusSelect(val) { ciActiveStatus = val; applyCiFilters(); }
 function filterByCiTypeSelect(val)   { ciActiveType   = val; applyCiFilters(); }
 function filterByCiModeSelect(val)   { ciActiveMode   = val; applyCiFilters(); }
+
 </script>
 
 @endsection

@@ -90,5 +90,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
         Route::get('/teachers/by-course-level/{levelId}', [CourseInstanceController::class, 'getTeachersByLevel'])->name('teachers.by-level');
         Route::get('/attendance/{session}', [AttendanceController::class, 'show'])->name('attendance.show');
         Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
+        Route::get('/instance/{id}/schedule-data', [CourseInstanceController::class, 'getScheduleData'])->name('instance.schedule.data');
+        Route::post('/instance/{id}/schedule', [CourseInstanceController::class, 'storeSchedule'])->name('instance.schedule.store');
     });
 require __DIR__.'/auth.php';

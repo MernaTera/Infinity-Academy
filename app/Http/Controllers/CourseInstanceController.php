@@ -12,6 +12,8 @@ use App\Models\Core\Branch;
 use App\Models\Academic\Level;
 use App\Models\Academic\SubLevel;
 use App\Models\Academic\Room;
+use App\Services\SchedulingService;
+use App\Models\Academic\TimeSlot;
 
 class CourseInstanceController extends Controller
 {
@@ -105,5 +107,44 @@ class CourseInstanceController extends Controller
         ])->findOrFail($id);
 
         return view('student-care.course-instances.show', compact('instance'));
+    }
+
+    protected $schedulingService;
+
+    public function __construct(SchedulingService $schedulingService)
+    {
+        $this->schedulingService = $schedulingService;
+    }
+
+    public function getScheduleData($id)
+    {
+        $instance = CourseInstance::findOrFail($id);
+
+        $availability = $this->schedulingService
+            ->getTeacherAvailability($instance->teacher_id);
+
+        return response()->json($availability);
+    }
+
+    public function storeSchedule(Request $request, $id)
+    {
+        $instance = CourseInstance::findOrFail($id);
+
+        $data = $request->validate([
+            'day_of_week' => 'required',
+            'time_slot_id' => 'required|exists:time_slot,time_slot_id',
+            'start_time' => 'required'
+        ]);
+
+        $slot = TimeSlot::find($data['time_slot_id']);
+
+        $this->schedulingService->validateSchedule([
+            'start_time' => $data['start_time'],
+            'time_slot' => $slot
+        ]);
+
+        $this->schedulingService->storeSchedule($id, $data);
+
+        return back()->with('success', 'Schedule saved successfully');
     }
 }
