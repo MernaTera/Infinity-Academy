@@ -94,6 +94,9 @@ Route::middleware(['auth', 'permission:enrollment.view'])
         Route::get('/waiting-list', [StudentCareController::class, 'waitingList'])->name('waiting-list');
         Route::post('/assign', [StudentCareController::class, 'assign'])->name('assign');
         Route::get('/outstanding', [StudentCareController::class, 'outstanding'])->name('outstanding');
+        Route::get('/postponed',                    [StudentCareController::class, 'postponed'])->name('postponed');
+        Route::patch('/postponed/{id}/resume',      [StudentCareController::class, 'resumePostponement'])->name('postponed.resume');
+        Route::patch('/postponed/{id}/expire',      [StudentCareController::class, 'expirePostponement'])->name('postponed.expire');
         Route::get('/course-instances', [CourseInstanceController::class, 'index'])->name('instances');
         Route::get('/course-instances/{id}', [CourseInstanceController::class, 'show'])->name('instances.show');
         Route::post('/course-instances/store', [CourseInstanceController::class, 'storeInstance'])->name('instance.store');

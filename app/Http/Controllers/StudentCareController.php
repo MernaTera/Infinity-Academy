@@ -128,4 +128,74 @@ class StudentCareController extends Controller
         return view('student-care.outstanding', compact('enrollments', 'stats'));
     }
 
+    public function postponed()
+    {
+        // Group postponements
+        $groupPostponed = \App\Models\Enrollment\Postponement::with([
+            'enrollment.student',
+            'enrollment.courseInstance.courseTemplate',
+            'enrollment.courseInstance.sessions',
+            'enrollment.attendances',
+            'createdBy',
+        ])
+        ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))
+        ->whereIn('status', ['Active', 'Expired'])
+        ->orderBy('status')
+        ->orderByDesc('created_at')
+        ->get();
+
+        // Private postponements
+        $privatePostponed = \App\Models\Enrollment\Postponement::with([
+            'enrollment.student',
+            'enrollment.courseInstance.courseTemplate',
+            'createdBy',
+        ])
+        ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))
+        ->whereIn('status', ['Active', 'Expired'])
+        ->orderBy('status')
+        ->orderByDesc('created_at')
+        ->get();
+
+        $stats = [
+            'active'   => \App\Models\Enrollment\Postponement::where('status', 'Active')->count(),
+            'expired'  => \App\Models\Enrollment\Postponement::where('status', 'Expired')->count(),
+            'returned' => \App\Models\Enrollment\Postponement::where('status', 'Returned')->count(),
+            'expiring_soon' => \App\Models\Enrollment\Postponement::where('status', 'Active')
+                ->where('expected_return_date', '<=', now()->addDays(7))->count(),
+        ];
+
+        return view('student-care.postponed', compact('groupPostponed', 'privatePostponed', 'stats'));
+    }
+
+    public function resumePostponement(Request $request, $id)
+    {
+        $postponement = \App\Models\Enrollment\Postponement::with('enrollment')->findOrFail($id);
+
+        if ($postponement->status !== 'Active') {
+            return back()->with('error', 'Postponement is not active.');
+        }
+
+        $postponement->update([
+            'status'             => 'Returned',
+            'actual_return_date' => now()->toDateString(),
+        ]);
+
+        $postponement->enrollment->update(['status' => 'Active']);
+
+        return back()->with('success', 'Student resumed successfully.');
+    }
+
+    public function expirePostponement($id)
+    {
+        $postponement = \App\Models\Enrollment\Postponement::with('enrollment')->findOrFail($id);
+
+        $postponement->update(['status' => 'Expired']);
+
+        $postponement->enrollment->update([
+            'status' => 'Expired',
+        ]);
+
+        return back()->with('success', 'Postponement marked as expired.');
+    }
+
 }
