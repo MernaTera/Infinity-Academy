@@ -108,24 +108,26 @@
                     </svg>
                 </button>
                 <div style="width:1px;height:24px;background:rgba(27,79,168,0.1);"></div>
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="flex items-center gap-3" style="background:none;border:none;cursor:pointer;outline:none;">
-                            <div class="nav-avatar">
-                                <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:#1B4FA8;letter-spacing:1px;">
-                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                </span>
-                            </div>
-                            <div class="flex flex-col items-start leading-none">
-                                <span style="font-size:12px;font-weight:500;color:#1A2A4A;letter-spacing:0.3px;">{{ Auth::user()->name }}</span>
-                                <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-top:2px;">Student Care </span>
-                            </div>
-                            <svg style="color:#AAB8C8;" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M7 10l5 5 5-5z"/>
-                            </svg>
-                        </button>
-                    </x-slot>
-                    <x-slot name="content">
+
+                <div style="position:relative;" id="userMenuWrap">
+                    <button onclick="toggleUserMenu()" class="flex items-center gap-3"
+                            style="background:none;border:none;cursor:pointer;outline:none;">
+                        <div class="nav-avatar">
+                            <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:#1B4FA8;letter-spacing:1px;">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            </span>
+                        </div>
+                        <div class="flex flex-col items-start leading-none">
+                            <span style="font-size:12px;font-weight:500;color:#1A2A4A;letter-spacing:0.3px;">{{ Auth::user()->name }}</span>
+                            <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-top:2px;">Student Care</span>
+                        </div>
+                        <svg style="color:#AAB8C8;" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+
+                    <div id="userMenuPanel"
+                        style="display:none;position:absolute;right:0;top:calc(100% + 10px);z-index:9999;">
                         <div class="nav-dropdown-panel" style="min-width:210px;">
                             <div style="padding:14px 20px 12px;border-bottom:1px solid rgba(27,79,168,0.06);">
                                 <div style="font-size:13px;color:#1A2A4A;font-weight:500;">{{ Auth::user()->name }}</div>
@@ -140,7 +142,8 @@
                                 <div style="height:1px;background:rgba(27,79,168,0.06);margin:4px 0;"></div>
                                 <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="nav-dropdown-item" style="background:none;border:none;cursor:pointer;width:100%;text-align:left;">
+                                    <button type="submit" class="nav-dropdown-item"
+                                            style="background:none;border:none;cursor:pointer;width:100%;text-align:left;">
                                         <svg style="display:inline;vertical-align:middle;margin-right:8px;opacity:0.4;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
                                             <polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
@@ -149,9 +152,11 @@
                                 </form>
                             </div>
                         </div>
-                    </x-slot>
-                </x-dropdown>
+                    </div>
+                </div>
             </div>
+
+
 
             {{-- HAMBURGER --}}
             <button @click="open = !open" class="sm:hidden flex flex-col gap-[5px] p-2" style="background:none;border:none;cursor:pointer;">
@@ -199,3 +204,16 @@
         </div>
     </div>
 </nav>
+
+<script>
+function toggleUserMenu() {
+    const panel = document.getElementById('userMenuPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('userMenuWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('userMenuPanel').style.display = 'none';
+    }
+});
+</script>
