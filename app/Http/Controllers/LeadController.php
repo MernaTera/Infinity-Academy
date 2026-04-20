@@ -94,11 +94,15 @@ class LeadController extends Controller
 
     public function store(StoreLeadRequest $request)
     {
-        $lead = $this->leadService->createLead($request->validated());
+        $data = $request->validated();
+
+        $data['status'] = $data['status'] ?? 'Waiting';
+
+        $lead = $this->leadService->createLead($data);
 
         return redirect()
             ->route('leads.index')
-            ->with('success','Lead created successfully');
+            ->with('success', 'Lead created successfully.');
     }
 
     /*
