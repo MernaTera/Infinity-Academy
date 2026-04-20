@@ -23,6 +23,10 @@ use App\Http\Controllers\Admin\OutstandingAdminController;
 use App\Http\Controllers\Admin\OffersController;
 use App\Http\Controllers\Admin\AuditController;
 
+use App\Http\Controllers\Teacher\TeacherController;
+use App\Http\Controllers\Teacher\TeacherAttendanceController;
+use App\Http\Controllers\Teacher\TeacherReportController;
+
 
 Route::get('/', function () {
     return view('welcome');
@@ -171,4 +175,32 @@ Route::middleware('auth')
         // Audit Logs
         Route::get('/audit',                  [AuditController::class, 'index'])->name('audit.index');
     });
+
+    ////// Teacher //////
+    Route::middleware('auth')
+        ->prefix('teacher')
+        ->name('teacher.')
+        ->group(function () {
+
+            // Dashboard
+            Route::get('/dashboard', [TeacherController::class, 'dashboard'])->name('dashboard');
+
+            // Patch Schedule (view only)
+            Route::get('/schedule', [TeacherController::class, 'schedule'])->name('schedule');
+
+            // Courses
+            Route::get('/courses', [TeacherController::class, 'courses'])->name('courses');
+            Route::get('/courses/{id}', [TeacherController::class, 'courseShow'])->name('courses.show');
+
+            // Attendance
+            Route::get('/attendance/{sessionId}', [TeacherAttendanceController::class, 'show'])->name('attendance.show');
+            Route::post('/attendance/{sessionId}', [TeacherAttendanceController::class, 'store'])->name('attendance.store');
+
+            // Reports
+            Route::get('/reports', [TeacherReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/create/{instanceId}', [TeacherReportController::class, 'create'])->name('reports.create');
+            Route::post('/reports', [TeacherReportController::class, 'store'])->name('reports.store');
+            Route::get('/reports/{id}/edit', [TeacherReportController::class, 'edit'])->name('reports.edit');
+            Route::put('/reports/{id}', [TeacherReportController::class, 'update'])->name('reports.update');
+        });
 require __DIR__.'/auth.php';
