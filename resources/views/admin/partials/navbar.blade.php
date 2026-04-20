@@ -34,7 +34,7 @@
                 <div class="logo-wrap">
                     <img src="{{ asset('images/logo.png') }}" alt="Infinity Logo">
                 </div>
-                <span class="admin-badge">Admin Panel</span>
+
             </a>
 
             {{-- DESKTOP LINKS --}}
@@ -66,45 +66,53 @@
                     </svg>
                 </button>
                 <div style="width:1px;height:24px;background:rgba(27,79,168,0.1);"></div>
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button class="flex items-center gap-3" style="background:none;border:none;cursor:pointer;outline:none;">
-                            <div class="nav-avatar">
-                                <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:#C47010;letter-spacing:1px;">
-                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                </span>
-                            </div>
-                            <div class="flex flex-col items-start leading-none">
-                                <span style="font-size:12px;font-weight:500;color:#1A2A4A;">{{ Auth::user()->name }}</span>
-                                <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C47010;margin-top:2px;">Administrator</span>
-                            </div>
-                            <svg style="color:#AAB8C8;" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
-                        </button>
-                    </x-slot>
-                    <x-slot name="content">
-                        <div class="nav-dropdown-panel" style="min-width:210px;">
-                            <div style="padding:14px 20px 12px;border-bottom:1px solid rgba(27,79,168,0.06);">
-                                <div style="font-size:13px;color:#1A2A4A;font-weight:500;">{{ Auth::user()->name }}</div>
-                                <div style="font-size:10px;color:#AAB8C8;margin-top:2px;">{{ Auth::user()->email }}</div>
-                            </div>
-                            <div style="padding:8px 0;">
-                                <a href="{{ route('profile.edit') }}" class="nav-dropdown-item">
-                                    <svg style="display:inline;vertical-align:middle;margin-right:8px;opacity:0.4;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                    Profile
-                                </a>
-                                <div style="height:1px;background:rgba(27,79,168,0.06);margin:4px 0;"></div>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <button type="submit" class="nav-dropdown-item" style="background:none;border:none;cursor:pointer;width:100%;text-align:left;">
-                                        <svg style="display:inline;vertical-align:middle;margin-right:8px;opacity:0.4;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                                        Log Out
-                                    </button>
-                                </form>
-                            </div>
+
+                {{-- User Dropdown --}}
+                <div style="position:relative;" id="userDropdownWrap">
+                    <button onclick="toggleUserDropdown()"
+                        style="display:flex;align-items:center;gap:10px;background:none;border:none;cursor:pointer;outline:none;">
+                        <div class="nav-avatar">
+                            <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:#C47010;letter-spacing:1px;">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            </span>
                         </div>
-                    </x-slot>
-                </x-dropdown>
+                        <div style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;">
+                            <span style="font-size:12px;font-weight:500;color:#1A2A4A;">{{ Auth::user()->name }}</span>
+                            <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C47010;margin-top:2px;">Administrator</span>
+                        </div>
+                        <svg style="color:#AAB8C8;" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+
+                    <div id="userDropdownMenu"
+                        style="display:none;position:absolute;right:0;top:calc(100% + 10px);min-width:210px;z-index:100;
+                                background:rgba(255,255,255,0.97);backdrop-filter:blur(16px);
+                                border:1px solid rgba(27,79,168,0.12);border-radius:6px;
+                                box-shadow:0 12px 40px rgba(27,79,168,0.1);overflow:hidden;">
+                        <div style="padding:14px 20px 12px;border-bottom:1px solid rgba(27,79,168,0.06);">
+                            <div style="font-size:13px;color:#1A2A4A;font-weight:500;">{{ Auth::user()->name }}</div>
+                            <div style="font-size:10px;color:#AAB8C8;margin-top:2px;">{{ Auth::user()->email }}</div>
+                        </div>
+                        <div style="padding:8px 0;">
+                            <a href="{{ route('profile.edit') }}" class="nav-dropdown-item">
+                                <svg style="display:inline;vertical-align:middle;margin-right:8px;opacity:0.4;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                Profile
+                            </a>
+                            <div style="height:1px;background:rgba(27,79,168,0.06);margin:4px 0;"></div>
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit" class="nav-dropdown-item"
+                                    style="background:none;border:none;cursor:pointer;width:100%;text-align:left;">
+                                    <svg style="display:inline;vertical-align:middle;margin-right:8px;opacity:0.4;" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                                    Log Out
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
+
 
             {{-- HAMBURGER --}}
             <button @click="open = !open" class="sm:hidden flex flex-col gap-[5px] p-2" style="background:none;border:none;cursor:pointer;">
@@ -147,3 +155,18 @@
         </div>
     </div>
 </nav>
+
+<script>
+function toggleUserDropdown() {
+    const menu = document.getElementById('userDropdownMenu');
+    menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close on outside click
+document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('userDropdownWrap');
+    if (wrap && !wrap.contains(e.target)) {
+        document.getElementById('userDropdownMenu').style.display = 'none';
+    }
+});
+</script>

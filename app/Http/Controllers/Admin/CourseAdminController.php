@@ -133,7 +133,7 @@ class CourseAdminController extends Controller
         }
 
         $course->update(['is_active' => !$course->is_active]);
-        
+        $old = $course->is_active;
         AuditService::updated('course_template', $id, 'is_active', $old ? 'Active' : 'Archived', $old ? 'Archived' : 'Active');
         $msg = $course->is_active ? 'Course restored.' : 'Course archived.';
         return back()->with('success', $msg);
