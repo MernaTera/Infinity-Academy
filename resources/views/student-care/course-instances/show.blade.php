@@ -319,66 +319,94 @@
                             <th>Hours Remaining</th>
                             <th>Start Date</th>
                             <th>Payment</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($instance->enrollments as $i => $enrollment)
-                        @php
-                            $eClass = match($enrollment->status) {
-                                'Active'           => 's-active',
-                                'Waiting'          => 's-waiting',
-                                'Restricted'       => 's-restricted',
-                                'Cancelled'        => 's-cancelled',
-                                'Pending_Approval' => 's-scheduled',
-                                default            => 's-default',
-                            };
-                        @endphp
-                        <tr>
-                            <td style="color:#AAB8C8;font-size:11px;">{{ $i + 1 }}</td>
-                            <td>
-                                <div class="st-name">{{ $enrollment->student->full_name ?? '—' }}</div>
-                            </td>
-                            <td>
-                                <div class="st-phone">
-                                    {{ $enrollment->student->phones->first()->phone_number ?? '—' }}
-                                </div>
-                            </td>
-                            <td>
-                                <span class="status-badge {{ $eClass }}">{{ $enrollment->status }}</span>
-                            </td>
-                            <td>
-                                @if($enrollment->hours_remaining !== null)
-                                    <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#1B4FA8;letter-spacing:1px;">
-                                        {{ $enrollment->hours_remaining }}
-                                    </span>
-                                    <span style="font-size:10px;color:#AAB8C8;"> hrs</span>
-                                @else
-                                    <span style="color:#AAB8C8;">—</span>
-                                @endif
-                            </td>
-                            <td>
-                                <span style="font-size:12px;color:#1A2A4A;">
-                                    {{ $enrollment->actual_start_date ? \Carbon\Carbon::parse($enrollment->actual_start_date)->format('d M Y') : '—' }}
+                    @forelse($instance->enrollments as $i => $enrollment)
+                    @php
+                        $eClass = match($enrollment->status) {
+                            'Active'           => 's-active',
+                            'Waiting'          => 's-waiting',
+                            'Restricted'       => 's-restricted',
+                            'Cancelled'        => 's-cancelled',
+                            'Postponed'        => 's-waiting',
+                            'Pending_Approval' => 's-scheduled',
+                            default            => 's-default',
+                        };
+                    @endphp
+                    <tr>
+                        <td style="color:#AAB8C8;font-size:11px;">{{ $i + 1 }}</td>
+                        <td>
+                            <div class="st-name">{{ $enrollment->student->full_name ?? '—' }}</div>
+                        </td>
+                        <td>
+                            <div class="st-phone">
+                                {{ $enrollment->student->phones->first()->phone_number ?? '—' }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge {{ $eClass }}">{{ $enrollment->status }}</span>
+                        </td>
+                        <td>
+                            @if($enrollment->hours_remaining !== null)
+                                <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#1B4FA8;letter-spacing:1px;">
+                                    {{ $enrollment->hours_remaining }}
                                 </span>
-                            </td>
-                            <td>
-                                <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#C47010;">Pending</span>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7">
-                                <div class="empty-state">
-                                    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1">
-                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                        <circle cx="9" cy="7" r="4"/>
-                                    </svg>
-                                    <div class="empty-title">No Students Yet</div>
-                                    <div class="empty-sub">No active enrollments in this instance</div>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
+                                <span style="font-size:10px;color:#AAB8C8;"> hrs</span>
+                            @else
+                                <span style="color:#AAB8C8;">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            <span style="font-size:12px;color:#1A2A4A;">
+                                {{ $enrollment->actual_start_date ? \Carbon\Carbon::parse($enrollment->actual_start_date)->format('d M Y') : '—' }}
+                            </span>
+                        </td>
+                        <td>
+                            <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#C47010;">Pending</span>
+                        </td>
+
+                        {{-- ✅ Actions Column --}}
+                        <td>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap">
+                                @if($enrollment->status === 'Active')
+                                <button onclick="openPostponeModal({{ $enrollment->enrollment_id }}, '{{ addslashes($enrollment->student?->full_name) }}')"
+                                    style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(245,145,30,0.25);background:transparent;color:#C47010;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
+                                    onmouseover="this.style.background='rgba(245,145,30,0.07)'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                    Postpone
+                                </button>
+                                @endif
+
+                                @if($enrollment->status === 'Postponed')
+                                <form method="POST" action="{{ route('student-care.postponed.resume', $enrollment->activePostponement?->postponement_id) }}" style="display:inline">
+                                    @csrf @method('PATCH')
+                                    <button type="submit"
+                                        style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(5,150,105,0.25);background:transparent;color:#059669;cursor:pointer;font-family:'DM Sans',sans-serif">
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        Resume
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="8">
+                            <div class="empty-state">
+                                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1">
+                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                </svg>
+                                <div class="empty-title">No Students Yet</div>
+                                <div class="empty-sub">No active enrollments in this instance</div>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
                     </tbody>
                 </table>
             </div>
@@ -657,11 +685,41 @@
 
                             {{-- Status --}}
                             <td>
-                                <span class="status-badge {{ $sClass }}">{{ $session->status }}</span>
+                                <div style="display:flex;gap:6px;flex-wrap:wrap">
+
+                                    {{-- Status badge --}}
+                                    <span class="status-badge {{ $eClass }}">{{ $enrollment->status }}</span>
+
+                                    {{-- Postpone button -- only if Active and no outstanding --}}
+                                    @if($enrollment->status === 'Active')
+                                    <button onclick="openPostponeModal({{ $enrollment->enrollment_id }}, '{{ addslashes($enrollment->student?->full_name) }}')"
+                                        style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(245,145,30,0.25);background:transparent;color:#C47010;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
+                                        onmouseover="this.style.background='rgba(245,145,30,0.07)'"
+                                        onmouseout="this.style.background='transparent'">
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        Postpone
+                                    </button>
+                                    @endif
+
+                                    {{-- Resume button -- if Postponed --}}
+                                    @if($enrollment->status === 'Postponed')
+                                    <form method="POST" action="{{ route('student-care.postponed.resume', $enrollment->activePostponement?->postponement_id) }}" style="display:inline">
+                                        @csrf @method('PATCH')
+                                        <button type="submit"
+                                            style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(5,150,105,0.25);background:transparent;color:#059669;cursor:pointer;font-family:'DM Sans',sans-serif">
+                                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                            Resume
+                                        </button>
+                                    </form>
+                                    @endif
+
+                                </div>
                             </td>
+                            
                         </tr>
                         @endforeach
                     </tbody>
+                
                 </table>
             </div>
         </div>
@@ -687,5 +745,105 @@ function openAttendance(sessionId) {
     document.getElementById('attendanceTab').style.display = 'block';
 }
 </script>
+{{-- Postpone Modal --}}
+<div id="postponeModal" style="display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:999;padding:20px;font-family:'DM Sans',sans-serif">
+    <div style="width:100%;max-width:460px;background:#F8F6F2;border:1px solid rgba(27,79,168,0.15);border-radius:8px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(27,79,168,0.18)">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)"></div>
 
+        <div style="padding:18px 22px 14px;border-bottom:1px solid rgba(27,79,168,0.07)">
+            <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:3px">Student Care</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#1B4FA8">Postpone Student</div>
+            <div style="font-size:12px;color:#7A8A9A;margin-top:3px" id="postponeStudentName">—</div>
+        </div>
+
+        <form id="postponeForm" method="POST">
+            @csrf
+            <div style="padding:18px 22px">
+
+                {{-- Eligibility Warning --}}
+                <div style="background:rgba(245,145,30,0.04);border:1px solid rgba(245,145,30,0.15);border-radius:4px;padding:10px 14px;font-size:11px;color:#C47010;margin-bottom:16px;line-height:1.5">
+                    ⚠ Postponement allowed only for students with <strong>100% payment completed</strong> and no outstanding balance. Max duration: <strong>3 months</strong>.
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+                    <div style="display:flex;flex-direction:column;gap:5px">
+                        <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Start Date *</label>
+                        <input type="date" name="start_date" id="postponeStart"
+                            style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;box-sizing:border-box;width:100%"
+                            value="{{ now()->toDateString() }}"
+                            onchange="updateMaxReturn()" required>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:5px">
+                        <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Expected Return *</label>
+                        <input type="date" name="expected_return_date" id="postponeReturn"
+                            style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;box-sizing:border-box;width:100%"
+                            onchange="checkDuration()" required>
+                    </div>
+                </div>
+
+                <div id="durationWarning" style="display:none;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);border-radius:4px;padding:8px 12px;font-size:11px;color:#DC2626;margin-bottom:12px">
+                    ⚠ Duration exceeds 3 months maximum. Enrollment will automatically expire.
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:5px">
+                    <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Reason (optional)</label>
+                    <textarea name="reason" rows="3"
+                        style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;resize:none;box-sizing:border-box;width:100%"
+                        placeholder="Travel, health, work..."></textarea>
+                </div>
+
+            </div>
+
+            <div style="padding:12px 22px 18px;border-top:1px solid rgba(27,79,168,0.07);display:flex;gap:10px;justify-content:flex-end">
+                <button type="button" onclick="closePostponeModal()"
+                    style="padding:9px 18px;background:transparent;border:1px solid rgba(27,79,168,0.15);border-radius:4px;color:#7A8A9A;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer">
+                    Cancel
+                </button>
+                <button type="submit"
+                    style="padding:10px 22px;background:#C47010;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer">
+                    Confirm Postpone
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openPostponeModal(enrollmentId, studentName) {
+    document.getElementById('postponeStudentName').textContent = studentName;
+    document.getElementById('postponeForm').action = `/student-care/enrollments/${enrollmentId}/postpone`;
+    // Set min return date to tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    document.getElementById('postponeReturn').min = tomorrow.toISOString().split('T')[0];
+    updateMaxReturn();
+    document.getElementById('postponeModal').style.display = 'flex';
+}
+
+function closePostponeModal() {
+    document.getElementById('postponeModal').style.display = 'none';
+}
+
+function updateMaxReturn() {
+    const start = document.getElementById('postponeStart').value;
+    if (!start) return;
+    const maxDate = new Date(start);
+    maxDate.setMonth(maxDate.getMonth() + 3);
+    // No hard max — just warn
+    document.getElementById('postponeReturn').min = start;
+    checkDuration();
+}
+
+function checkDuration() {
+    const start  = new Date(document.getElementById('postponeStart').value);
+    const ret    = new Date(document.getElementById('postponeReturn').value);
+    if (!start || !ret) return;
+    const diffDays = (ret - start) / (1000 * 60 * 60 * 24);
+    document.getElementById('durationWarning').style.display = diffDays > 90 ? 'block' : 'none';
+}
+
+document.getElementById('postponeModal').addEventListener('click', function(e) {
+    if (e.target === this) closePostponeModal();
+});
+</script>
 @endsection

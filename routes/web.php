@@ -102,6 +102,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
         Route::post('/course-instances/store', [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
         Route::get('/teachers/by-course/{courseId}', [CourseInstanceController::class, 'getTeachersByCourse'])->name('teachers.by-course');
         Route::get('/teachers/by-course-level/{levelId}', [CourseInstanceController::class, 'getTeachersByLevel'])->name('teachers.by-level');
+        Route::post('/enrollments/{id}/postpone', [CourseInstanceController::class, 'postponeEnrollment'])->name('instance.postpone');
         Route::get('/attendance/{session}', [AttendanceController::class, 'show'])->name('attendance.show');
         Route::post('/attendance', [AttendanceController::class, 'store'])->name('attendance.store');
         Route::get('/instance/{id}/schedule-data',   [CourseInstanceController::class, 'getScheduleData'])->name('instance.schedule-data');

@@ -109,6 +109,7 @@ class CourseInstanceController extends Controller
             'enrollments.student.phones',
             'sessions',              
             'instanceSchedules.timeSlot',
+            'enrollments.activePostponement', 
         ])->findOrFail($id);
 
         return view('student-care.course-instances.show', compact('instance'));
@@ -234,5 +235,30 @@ class CourseInstanceController extends Controller
         $instance->update(['status' => 'Upcoming']);
 
         return back()->with('success', "Schedule saved — {$count} sessions generated successfully.");
+    }
+
+    public function postponeEnrollment(Request $request, $enrollmentId)
+    {
+        $enrollment = \App\Models\Enrollment\Enrollment::findOrFail($enrollmentId);
+
+        $request->validate([
+            'start_date'           => 'required|date',
+            'expected_return_date' => 'required|date|after:start_date',
+        ]);
+
+        $scEmployeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->first()?->employee_id;
+
+        \App\Models\Enrollment\Postponement::create([
+            'enrollment_id'        => $enrollment->enrollment_id,
+            'start_date'           => $request->start_date,
+            'expected_return_date' => $request->expected_return_date,
+            'status'               => 'Active',
+            'reason'               => $request->reason,
+            'created_by_cs_id'     => $scEmployeeId,
+        ]);
+
+        $enrollment->update(['status' => 'Postponed']);
+
+        return back()->with('success', 'Student postponed successfully.');
     }
 }

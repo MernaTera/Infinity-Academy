@@ -28,7 +28,6 @@ use App\Models\Enrollment\WaitingList;
 use App\Models\Finance\PaymentPlan;
 use App\Models\Finance\PrivateBundle;
 
-
 /**
  * Class Enrollment
  * 
@@ -205,6 +204,12 @@ class Enrollment extends Model
 	public function postponements()
 	{
 		return $this->hasMany(Postponement::class, 'enrollment_id');
+	}
+
+	public function activePostponement()
+	{
+		return $this->hasOne(Postponement::class, 'enrollment_id')
+			->where('status', 'Active');
 	}
 
 	public function paymentPlan()
