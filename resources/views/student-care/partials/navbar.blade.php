@@ -84,7 +84,7 @@
         <div class="flex items-center justify-between h-[62px]">
 
             {{-- LOGO --}}
-            <a href="{{ route('student-care.dashboard') }}" class="flex items-center gap-2 group" style="text-decoration:none;">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 group" style="text-decoration:none;">
                 <div class="logo-wrap">
                     <img src="{{ asset('images/logo.png') }}" alt="Infinity Logo">
                 </div>
@@ -92,8 +92,8 @@
 
             {{-- DESKTOP LINKS --}}
             <div class="hidden sm:flex items-center gap-8">
-                <a href="{{ route('student-care.dashboard') }}"
-                   class="nav-link-item {{ request()->routeIs('student-care.dashboard') ? 'active' : '' }}">
+                <a href="{{ route('dashboard') }}"
+                   class="nav-link-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                     Dashboard
                 </a>
 

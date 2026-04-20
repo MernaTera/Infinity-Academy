@@ -16,8 +16,8 @@
 
     <span class="sl-label">Student Care</span>
 
-    <a href="{{ route('student-care.dashboard') }}"
-       class="sl-link {{ request()->routeIs('student-care.dashboard') ? 'active' : '' }}">
+    <a href="{{ route('dashboard') }}"
+       class="sl-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
             <rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
