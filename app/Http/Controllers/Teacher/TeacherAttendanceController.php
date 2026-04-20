@@ -26,12 +26,10 @@ class TeacherAttendanceController extends Controller
             'courseInstance.enrollments.attendances',
         ])->findOrFail($sessionId);
 
-        // Verify this session belongs to this teacher
         if ($session->courseInstance->teacher_id !== $teacher->teacher_id) {
             abort(403);
         }
 
-        // Check 20-minute window
         $start    = Carbon::parse($session->start_time);
         $deadline = $start->copy()->addMinutes(20);
         $now      = now();
