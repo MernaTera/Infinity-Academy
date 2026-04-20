@@ -4,7 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Leads\Lead;
-use App\Models\Academic\CourseTemplate;
+use App\Models\Leads\LeadCallLog;
+use App\Models\Enrollment\Enrollment;
+use App\Models\Finance\RevenueSplit;
+use App\Models\Enrollment\RestrictionLog;
+use App\Models\Finance\InstallmentSchedule;
+use App\Models\Enrollment\CsTarget;
+use App\Models\Academic\Patch;
 use App\Models\HR\Employee;
 use Illuminate\Support\Facades\DB;
 
@@ -12,76 +18,98 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // ── TOTAL STATS ──
-        $stats = [
-            'total'        => Lead::count(),
-            'registered'   => Lead::where('status', 'Registered')->count(),
-            'call_again'   => Lead::where('status', 'Call_Again')->count(),
-            'waiting'      => Lead::where('status', 'Waiting')->count(),
-            'archived'     => Lead::where('status', 'Archived')->count(),
-            'public'       => Lead::whereNull('owner_cs_id')->where('is_active', true)->count(),
+        $employee     = Employee::where('user_id', auth()->id())->first();
+        $currentPatch = Patch::active()->latest('start_date')->first();
+
+        // ══ LEADS ══════════════════════════════════════════════
+        $myLeads = Lead::where('owner_cs_id', $employee?->employee_id);
+
+        $leadsStats = [
+            'my_total'      => (clone $myLeads)->count(),
+            'my_active'     => (clone $myLeads)->whereIn('status', ['Waiting','Call_Again','Scheduled_Call'])->count(),
+            'my_registered' => (clone $myLeads)->where('status', 'Registered')->count(),
+            'my_overdue'    => (clone $myLeads)->where('updated_at', '<=', now()->subDays(4))
+                                ->whereIn('status', ['Waiting','Call_Again'])->count(),
+            'public'        => Lead::whereNull('owner_cs_id')->where('is_active', true)->count(),
         ];
 
-        // ── TODAY ──
-        $today = Lead::whereDate('created_at', now()->toDateString())
-            ->select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
+        // ══ SALES / REVENUE ════════════════════════════════════
+        $target = \App\Models\Enrollment\CsTarget::where('employee_id', $employee?->employee_id)
+            ->where('patch_id', $currentPatch?->patch_id)
+            ->first();
 
-        // ── THIS WEEK ──
-        $week = Lead::where('created_at', '>=', now()->startOfWeek()->toDateTimeString())
-            ->where('created_at', '<=', now()->endOfWeek()->toDateTimeString())
-            ->select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
+        $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)
+            ->where('patch_id', $currentPatch?->patch_id)
+            ->sum('amount_allocated');
 
-        // ── THIS MONTH ──
-        $month = Lead::where('created_at', '>=', now()->startOfMonth()->toDateTimeString())
-            ->where('created_at', '<=', now()->endOfMonth()->toDateTimeString())
-            ->select('status', DB::raw('count(*) as count'))
-            ->groupBy('status')
-            ->pluck('count', 'status')
-            ->toArray();
+        $targetAmount = $target?->target_amount ?? 0;
+        $remaining    = max(0, $targetAmount - $achieved);
+        $percentage   = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : 0;
 
-        // ── BY SOURCE ──
-        $bySource = Lead::select('source', DB::raw('count(*) as count'))
-            ->groupBy('source')
-            ->orderByDesc('count')
-            ->pluck('count', 'source')
-            ->toArray();
+        $salesStats = [
+            'target'        => $targetAmount,
+            'achieved'      => $achieved,
+            'remaining'     => $remaining,
+            'percentage'    => $percentage,
+            'registrations' => Enrollment::where('created_by_cs_id', $employee?->employee_id)
+                                ->where('patch_id', $currentPatch?->patch_id)->count(),
+        ];
 
-        // ── BY COURSE ──
-        $byCourse = Lead::whereNotNull('interested_course_template_id')
-            ->join('course_template', 'lead.interested_course_template_id', '=', 'course_template.course_template_id')
-            ->select('course_template.name', DB::raw('count(*) as count'))
-            ->groupBy('course_template.name')
-            ->orderByDesc('count')
-            ->pluck('count', 'course_template.name')
-            ->toArray();
+        // ══ OUTSTANDING ════════════════════════════════════════
+        $myEnrollments = Enrollment::where('created_by_cs_id', $employee?->employee_id)
+            ->whereIn('status', ['Active', 'Restricted'])
+            ->with('financialTransactions')
+            ->get();
 
-        // ── BY CS EMPLOYEE ──
-        $byCs = Lead::whereNotNull('owner_cs_id')
-            ->join('employee', 'lead.owner_cs_id', '=', 'employee.employee_id')
-            ->join('users', 'employee.user_id', '=', 'users.id')
-            ->select('users.name', DB::raw('count(*) as count'))
-            ->groupBy('users.name')
-            ->orderByDesc('count')
-            ->pluck('count', 'users.name')
-            ->toArray();
+        $outstandingCount  = 0;
+        $restrictedCount   = 0;
+        $totalOutstanding  = 0;
 
-        // ── RECENT LEADS ──
-        $recentLeads = Lead::latest()->limit(10)->get();
-
-        
-        if (!auth()->user()->can('leads.view')) {
-            return view('dashboard', compact(
-                        'stats', 'today', 'week', 'month',
-                        'bySource', 'byCourse', 'byCs',
-                        'recentLeads'
-                    ));
+        foreach ($myEnrollments as $e) {
+            $paid      = $e->financialTransactions->whereIn('transaction_type', ['Payment','Installment'])->sum('amount')
+                       - $e->financialTransactions->where('transaction_type', 'Refund')->sum('amount');
+            $remaining = max(0, $e->final_price - $paid);
+            if ($remaining > 0) {
+                $outstandingCount++;
+                $totalOutstanding += $remaining;
             }
-        
+            if ($e->restriction_flag) $restrictedCount++;
+        }
+
+        $outstandingStats = [
+            'count'      => $outstandingCount,
+            'restricted' => $restrictedCount,
+            'total_le'   => $totalOutstanding,
+        ];
+
+        // ══ CALLS DUE TODAY ════════════════════════════════════
+        $callsDueToday = Lead::where('owner_cs_id', $employee?->employee_id)
+            ->whereDate('next_call_at', today())
+            ->count();
+
+        // ══ RECENT LEADS (5 أحدث) ═════════════════════════════
+        $recentLeads = Lead::where('owner_cs_id', $employee?->employee_id)
+            ->with(['courseTemplate'])
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        // ══ RECENT PAYMENTS (5 أحدث) ══════════════════════════
+        $recentPayments = \App\Models\Finance\FinancialTransaction::where('created_by_employee_id', $employee?->employee_id)
+            ->with(['enrollment.student', 'enrollment.courseTemplate'])
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        return view('dashboard', compact(
+            'employee',
+            'currentPatch',
+            'leadsStats',
+            'salesStats',
+            'outstandingStats',
+            'callsDueToday',
+            'recentLeads',
+            'recentPayments',
+        ));
     }
 }

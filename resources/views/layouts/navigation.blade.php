@@ -106,6 +106,11 @@
                 class="nav-link-item {{ request()->routeIs('sales.*') ? 'active' : '' }}">
                     Sales
                 </a>
+
+                <a href="{{ route('outstanding.index') }}"
+                class="nav-link-item {{ request()->routeIs('outstanding.*') ? 'active' : '' }}">
+                    Outstanding
+                </a>
                 @endcando
             </div>
 
@@ -204,7 +209,7 @@
             <a href="{{ route('outstanding.index') }}"
             style="font-size:11px;letter-spacing:3px;text-transform:uppercase;
                     color:{{ request()->routeIs('outstanding.*') ? '#1B4FA8' : '#7A8A9A' }};
-                    padding:12px 0;text-decoration:none;">
+                    padding:12px 0;text-decoration:none;border-bottom:1px solid rgba(27,79,168,0.05);">
                 Outstanding
             </a>
         </div>
