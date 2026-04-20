@@ -57,7 +57,7 @@ class InstanceSchedule extends Model
 		return $this->belongsTo(CourseInstance::class, 'course_instance_id');
 	}
 
-	public function time_slot()
+	public function timeSlot()
 	{
 		return $this->belongsTo(TimeSlot::class, 'time_slot_id');
 	}

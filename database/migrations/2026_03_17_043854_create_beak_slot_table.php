@@ -3,43 +3,37 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
+class BreakSlotSeeder extends Seeder
 {
-    /**
-     * Run the migrations.
-     */
-    public function up(): void
+    public function run(): void
     {
-        Schema::create('break_slot', function (Blueprint $table) {
-            $table->id('break_slot_id');
-
-            $table->string('name', 100);
-
-            $table->time('start_time');
-            $table->time('end_time');
-
-            $table->boolean('is_active')->default(true);
-
-            $table->unsignedBigInteger('created_by_admin_id');
-
-            $table->timestamps();
-
-            $table->foreign('created_by_admin_id')
-                ->references('employee_id')
-                ->on('employee')
-                ->cascadeOnDelete();
-
-            $table->unique(['start_time', 'end_time']);
-
-        });
+        DB::table('break_slot')->insert([
+            [
+                'name' => 'Mid-Morning Break',
+                'start_time' => '11:00:00',
+                'end_time' => '12:00:00',
+                'is_active' => 1,
+                'created_by_admin_id' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'name' => 'Afternoon Break',
+                'start_time' => '14:00:00',
+                'end_time' => '18:00:00',
+                'is_active' => 1,
+                'created_by_admin_id' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('beak_slot');
+        DB::table('break_slot')->truncate();
     }
-};
+}

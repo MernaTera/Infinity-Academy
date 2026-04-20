@@ -440,10 +440,74 @@
                                 </svg>
                                 View
                             </a>
-                            <button onclick="openScheduleModal({{ $instance->course_instance_id }})">
-                                Set Schedule
-                            </button>
-                        </td>
+                            @php
+                                $hasSchedule  = $instance->instanceSchedules->isNotEmpty();
+                                $hasSessions  = $instance->sessions->isNotEmpty();
+                                $sessionCount = $instance->sessions->count();
+                            @endphp
+
+                            @if($hasSessions)
+                                {{-- ✅ Scheduled --}}
+                                <button
+                                    onclick="openScheduleModal({{ $instance->course_instance_id }})"
+                                    style="display:inline-flex;align-items:center;gap:6px;
+                                        padding:5px 12px;font-size:9px;letter-spacing:1.5px;
+                                        text-transform:uppercase;border-radius:3px;
+                                        font-family:'DM Sans',sans-serif;font-weight:500;
+                                        border:1px solid rgba(5,150,105,0.3);
+                                        background:rgba(5,150,105,0.06);
+                                        color:#059669;cursor:pointer;transition:all 0.2s;"
+                                    onmouseover="this.style.background='rgba(5,150,105,0.12)'"
+                                    onmouseout="this.style.background='rgba(5,150,105,0.06)'">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                        <polyline points="20 6 9 17 4 12"/>
+                                    </svg>
+                                    {{ $sessionCount }} Sessions
+                                </button>
+
+                            @elseif($hasSchedule)
+                                {{-- ⚠️ Schedule set but no sessions --}}
+                                <button
+                                    onclick="openScheduleModal({{ $instance->course_instance_id }})"
+                                    style="display:inline-flex;align-items:center;gap:6px;
+                                        padding:5px 12px;font-size:9px;letter-spacing:1.5px;
+                                        text-transform:uppercase;border-radius:3px;
+                                        font-family:'DM Sans',sans-serif;font-weight:500;
+                                        border:1px solid rgba(245,145,30,0.3);
+                                        background:rgba(245,145,30,0.06);
+                                        color:#C47010;cursor:pointer;transition:all 0.2s;"
+                                    onmouseover="this.style.background='rgba(245,145,30,0.12)'"
+                                    onmouseout="this.style.background='rgba(245,145,30,0.06)'">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="8" x2="12" y2="12"/>
+                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                    </svg>
+                                    Regenerate
+                                </button>
+
+                            @else
+                                {{-- ➕ No schedule yet --}}
+                                <button
+                                    onclick="openScheduleModal({{ $instance->course_instance_id }})"
+                                    style="display:inline-flex;align-items:center;gap:6px;
+                                        padding:5px 12px;font-size:9px;letter-spacing:1.5px;
+                                        text-transform:uppercase;border-radius:3px;
+                                        font-family:'DM Sans',sans-serif;font-weight:500;
+                                        border:1px solid rgba(27,79,168,0.25);
+                                        background:transparent;
+                                        color:#1B4FA8;cursor:pointer;transition:all 0.2s;"
+                                    onmouseover="this.style.background='rgba(27,79,168,0.07)'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="3" y="4" width="18" height="18" rx="2"/>
+                                        <line x1="16" y1="2" x2="16" y2="6"/>
+                                        <line x1="8" y1="2" x2="8" y2="6"/>
+                                        <line x1="3" y1="10" x2="21" y2="10"/>
+                                    </svg>
+                                    Set Schedule
+                                </button>
+                            @endif
 
                     </tr>
                     @empty

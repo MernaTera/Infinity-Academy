@@ -464,19 +464,211 @@
         </div>
     </div>
 
-    {{-- ══ SCHEDULE TAB ══ --}}
-    <div id="scheduleTab" style="display:none;">
-        <div class="tab-placeholder">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1">
+{{-- ══ SCHEDULE TAB ══ --}}
+<div id="scheduleTab" style="display:none;">
+
+    @php
+        $schedule = $instance->instanceSchedules->first();
+        $sessions = $instance->sessions->sortBy('session_number');
+
+        $pairLabels = [
+            'sun_wed' => 'Sunday & Wednesday',
+            'sat_tue' => 'Saturday & Tuesday',
+            'mon_thu' => 'Monday & Thursday',
+        ];
+
+        $completedCount  = $sessions->where('status','Completed')->count();
+        $scheduledCount  = $sessions->where('status','Scheduled')->count();
+        $cancelledCount  = $sessions->where('status','Cancelled')->count();
+        $totalCount      = $sessions->count();
+        $progressPct     = $totalCount > 0 ? round(($completedCount / $totalCount) * 100) : 0;
+    @endphp
+
+    @if(!$schedule)
+        {{-- No schedule yet --}}
+        <div style="text-align:center;padding:60px 24px;
+                    background:rgba(255,255,255,0.75);
+                    border:1px solid rgba(27,79,168,0.08);
+                    border-radius:6px;">
+            <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1" style="margin:0 auto 14px;display:block">
                 <rect x="3" y="4" width="18" height="18" rx="2"/>
                 <line x1="16" y1="2" x2="16" y2="6"/>
                 <line x1="8" y1="2" x2="8" y2="6"/>
                 <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-            <div class="tab-placeholder-title">Schedule Coming Soon</div>
-            <div class="tab-placeholder-sub">Instance schedule will be displayed here</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:#7A8A9A;margin-bottom:6px">
+                No Schedule Set
+            </div>
+            <div style="font-size:12px;color:#AAB8C8">
+                Go to Course Instances list and click "Set Schedule" to generate sessions.
+            </div>
         </div>
-    </div>
+
+    @else
+        {{-- ── Schedule Info Card ── --}}
+        <div style="background:rgba(255,255,255,0.85);border:1px solid rgba(27,79,168,0.1);
+                    border-radius:6px;padding:20px 24px;margin-bottom:20px;
+                    position:relative;overflow:hidden;">
+            <div style="position:absolute;top:0;left:0;right:0;height:2px;
+                        background:linear-gradient(90deg,transparent,#1B4FA8,transparent)"></div>
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:18px;margin-bottom:18px">
+                <div>
+                    <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Day Pair</div>
+                    <div style="font-size:13px;color:#1A2A4A;font-weight:500">
+                        {{ $pairLabels[$schedule->day_of_week] ?? $schedule->day_of_week }}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Time Slot</div>
+                    <div style="font-size:13px;color:#1A2A4A;font-weight:500">
+                        {{ $schedule->timeSlot?->name ?? '—' }}
+                    </div>
+                    <div style="font-size:10px;color:#7A8A9A;margin-top:2px">
+                        {{ $schedule->timeSlot ? \Carbon\Carbon::parse($schedule->timeSlot->start_time)->format('H:i').' – '.\Carbon\Carbon::parse($schedule->timeSlot->end_time)->format('H:i') : '' }}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Session Start</div>
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1B4FA8;letter-spacing:2px;line-height:1">
+                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Session End</div>
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1B4FA8;letter-spacing:2px;line-height:1">
+                        {{ \Carbon\Carbon::parse($schedule->start_time)->addHours((float)$instance->session_duration)->format('H:i') }}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Total Sessions</div>
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1B4FA8;letter-spacing:2px;line-height:1">
+                        {{ $totalCount }}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Duration</div>
+                    <div style="font-size:13px;color:#1A2A4A;font-weight:500">
+                        {{ $instance->session_duration }} hr / session
+                    </div>
+                </div>
+            </div>
+
+            {{-- Progress --}}
+            <div style="border-top:1px solid rgba(27,79,168,0.06);padding-top:16px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                    <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Course Progress</span>
+                    <div style="display:flex;gap:14px">
+                        <span style="font-size:10px;color:#059669">
+                            <span style="font-family:'Bebas Neue',sans-serif;font-size:16px">{{ $completedCount }}</span> Completed
+                        </span>
+                        <span style="font-size:10px;color:#1B4FA8">
+                            <span style="font-family:'Bebas Neue',sans-serif;font-size:16px">{{ $scheduledCount }}</span> Upcoming
+                        </span>
+                        @if($cancelledCount > 0)
+                        <span style="font-size:10px;color:#DC2626">
+                            <span style="font-family:'Bebas Neue',sans-serif;font-size:16px">{{ $cancelledCount }}</span> Cancelled
+                        </span>
+                        @endif
+                    </div>
+                </div>
+                <div style="background:#F0F0F0;border-radius:4px;height:6px;overflow:hidden">
+                    <div style="height:6px;border-radius:4px;background:linear-gradient(90deg,#1B4FA8,#059669);
+                                width:{{ $progressPct }}%;transition:width 0.6s ease"></div>
+                </div>
+                <div style="font-size:10px;color:#AAB8C8;margin-top:6px;text-align:right">
+                    {{ $progressPct }}% complete
+                </div>
+            </div>
+        </div>
+
+        {{-- ── Sessions List ── --}}
+        @if($sessions->isNotEmpty())
+        <div class="table-card">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Date</th>
+                            <th>Day</th>
+                            <th>Time</th>
+                            <th>Duration</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($sessions as $session)
+                        @php
+                            $isToday    = \Carbon\Carbon::parse($session->session_date)->isToday();
+                            $isPast     = \Carbon\Carbon::parse($session->session_date)->isPast();
+                            $sClass     = match($session->status) {
+                                'Scheduled' => 's-scheduled',
+                                'Completed' => 's-completed',
+                                'Cancelled' => 's-cancelled',
+                                default     => 's-default',
+                            };
+                        @endphp
+                        <tr style="{{ $isToday ? 'background:rgba(27,79,168,0.03)' : '' }}">
+
+                            {{-- Number --}}
+                            <td>
+                                <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;
+                                             color:{{ $session->status === 'Completed' ? '#059669' : ($isToday ? '#1B4FA8' : '#AAB8C8') }};
+                                             letter-spacing:1px;line-height:1">
+                                    {{ $session->session_number }}
+                                </span>
+                            </td>
+
+                            {{-- Date --}}
+                            <td>
+                                <div style="font-size:12px;color:#1A2A4A;font-weight:500">
+                                    {{ \Carbon\Carbon::parse($session->session_date)->format('d M Y') }}
+                                </div>
+                                @if($isToday)
+                                <div style="font-size:9px;color:#1B4FA8;letter-spacing:1px;text-transform:uppercase;margin-top:2px">
+                                    Today
+                                </div>
+                                @endif
+                            </td>
+
+                            {{-- Day --}}
+                            <td style="font-size:12px;color:#7A8A9A">
+                                {{ \Carbon\Carbon::parse($session->session_date)->format('l') }}
+                            </td>
+
+                            {{-- Time --}}
+                            <td>
+                                @if($session->start_time && $session->end_time)
+                                <span style="font-size:12px;color:#1A2A4A;font-family:monospace">
+                                    {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }}
+                                    <span style="color:#AAB8C8"> → </span>
+                                    {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}
+                                </span>
+                                @else
+                                <span style="color:#AAB8C8">—</span>
+                                @endif
+                            </td>
+
+                            {{-- Duration --}}
+                            <td style="font-size:12px;color:#7A8A9A">
+                                {{ $instance->session_duration }} hr
+                            </td>
+
+                            {{-- Status --}}
+                            <td>
+                                <span class="status-badge {{ $sClass }}">{{ $session->status }}</span>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+    @endif
+</div>
 
 </div>
 
