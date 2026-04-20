@@ -25,6 +25,8 @@ use App\Models\Finance\RefundRequest;
 use App\Models\Reports\Report;
 use App\Models\Enrollment\RestrictionLog;
 use App\Models\Enrollment\WaitingList;
+use App\Models\Finance\PaymentPlan;
+use App\Models\Finance\PrivateBundle;
 
 
 /**
@@ -205,6 +207,11 @@ class Enrollment extends Model
 		return $this->hasMany(Postponement::class, 'enrollment_id');
 	}
 
+	public function paymentPlan()
+	{
+		return $this->belongsTo(PaymentPlan::class, 'payment_plan_id');
+	}
+
 	public function refundRequests()
 	{
 		return $this->hasMany(RefundRequest::class, 'enrollment_id');
@@ -223,6 +230,11 @@ class Enrollment extends Model
 	public function waitingLists()
 	{
 		return $this->hasMany(WaitingList::class, 'enrollment_id');
+	}
+
+	public function createdByCs()
+	{
+		return $this->belongsTo(Employee::class, 'created_by_cs_id');
 	}
 
 	public function isActive()
@@ -261,6 +273,7 @@ class Enrollment extends Model
 			->where('transaction_type', 'Payment')
 			->sum('amount');
 	}
+
 
 	public function totalRefunded()
 	{

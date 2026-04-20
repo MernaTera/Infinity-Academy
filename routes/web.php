@@ -11,7 +11,7 @@ use App\Http\Controllers\StudentCareController;
 use App\Http\Controllers\CourseInstanceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\SalesController;
-
+use App\Http\Controllers\OutstandingController;
 
 
 Route::get('/', function () {
@@ -64,6 +64,14 @@ Route::middleware('auth')
         Route::get('/', [SalesController::class, 'index'])->name('index');
         Route::get('/daily', [SalesController::class, 'dailyBreakdown'])->name('daily');
         Route::get('/patch/{patch}', [SalesController::class, 'byPatch'])->name('by-patch');
+    });
+
+Route::middleware('auth')
+    ->prefix('outstanding')
+    ->name('outstanding.')
+    ->group(function () {
+        Route::get('/', [OutstandingController::class, 'index'])->name('index');
+        Route::post('/{enrollment}/pay', [OutstandingController::class, 'recordPayment'])->name('pay');
     });
 
 ////// Student Care //////

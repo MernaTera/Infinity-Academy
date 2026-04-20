@@ -201,6 +201,12 @@
                     padding:12px 0;text-decoration:none;border-bottom:1px solid rgba(27,79,168,0.05);">
                 Sales
             </a>
+            <a href="{{ route('outstanding.index') }}"
+            style="font-size:11px;letter-spacing:3px;text-transform:uppercase;
+                    color:{{ request()->routeIs('outstanding.*') ? '#1B4FA8' : '#7A8A9A' }};
+                    padding:12px 0;text-decoration:none;">
+                Outstanding
+            </a>
         </div>
         <div style="padding:16px 24px;border-top:1px solid rgba(27,79,168,0.07);">
             <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
