@@ -60,6 +60,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
     public function myLeads(int $employeeId)
     {
         return $this->model
+        ->with(['courseTemplate', 'level', 'sublevel'])
             ->whereNotNull('owner_cs_id')
             ->ownedBy($employeeId)
             ->active()
@@ -70,6 +71,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
     public function publicLeads()
     {
         return $this->model
+        ->with(['courseTemplate', 'level', 'sublevel'])
             ->whereNull('owner_cs_id')
             ->where('is_active', true)
             ->latest()
@@ -79,6 +81,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
     public function archivedLeads()
     {
         return $this->model
+        ->with(['courseTemplate', 'level', 'sublevel'])
             ->where('status', 'Archived')
             ->where('is_active', false)
             ->latest()

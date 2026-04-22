@@ -6,6 +6,7 @@ namespace App\Models\System;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class AuditLog

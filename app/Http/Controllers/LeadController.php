@@ -6,12 +6,11 @@ use App\Services\LeadService;
 use App\Interfaces\LeadRepositoryInterface;
 use App\Http\Requests\StoreLeadRequest;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
 use App\Models\Academic\CourseTemplate;
 use App\Models\Academic\Level;
 use App\Models\Academic\Sublevel;
 use App\Models\Leads\Lead;
-
+use App\Models\Leads\LeadHistory;
 
 class LeadController extends Controller
 {
@@ -22,27 +21,33 @@ class LeadController extends Controller
         LeadService $leadService,
         LeadRepositoryInterface $leadRepository
     ) {
-        $this->leadService = $leadService;
+        $this->leadService    = $leadService;
         $this->leadRepository = $leadRepository;
 
-        $this->middleware('permission:leads.view')->only(['index','publicLeads','archived']);
-        $this->middleware('permission:leads.create')->only(['create','store']);
-        $this->middleware('permission:leads.edit')->only(['edit','update']);
+        $this->middleware('permission:leads.view')->only(['index', 'publicLeads', 'archived']);
+        $this->middleware('permission:leads.create')->only(['create', 'store']);
+        $this->middleware('permission:leads.edit')->only(['edit', 'update']);
         $this->middleware('permission:leads.delete')->only(['destroy']);
+    }
+
+    // ─────────────────────────────────────────
+    // Helper
+    // ─────────────────────────────────────────
+    private function currentEmployeeId(): int
+    {
+        $employee = auth()->user()->employee;
+        if (!$employee) abort(403, 'No employee profile found.');
+        return $employee->employee_id;
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Private Leads (Follow-up list)
+    | My Leads (Follow-up list)
     |--------------------------------------------------------------------------
     */
-
     public function index()
     {
-        $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->first()->employee_id;
-
-        $leads = $this->leadRepository->myLeads($employeeId);
-
+        $leads = $this->leadRepository->myLeads($this->currentEmployeeId());
         return view('leads.index', compact('leads'));
     }
 
@@ -51,11 +56,9 @@ class LeadController extends Controller
     | Public Leads
     |--------------------------------------------------------------------------
     */
-
     public function publicLeads()
     {
         $leads = $this->leadRepository->publicLeads();
-
         return view('leads.public', compact('leads'));
     }
 
@@ -64,11 +67,9 @@ class LeadController extends Controller
     | Archived Leads
     |--------------------------------------------------------------------------
     */
-
     public function archived()
     {
         $leads = $this->leadRepository->archivedLeads();
-
         return view('leads.archived', compact('leads'));
     }
 
@@ -77,13 +78,12 @@ class LeadController extends Controller
     | Create Lead Form
     |--------------------------------------------------------------------------
     */
-
     public function create()
     {
         $courses = CourseTemplate::where('is_active', true)->get();
-            $levels    = Level::all();
-            $sublevels = Sublevel::all();
-        return view('leads.create', compact('courses','levels','sublevels'));
+
+        // levels & sublevels start empty — JS fetches them dynamically on course/level change
+        return view('leads.create', compact('courses'));
     }
 
     /*
@@ -91,18 +91,16 @@ class LeadController extends Controller
     | Store Lead
     |--------------------------------------------------------------------------
     */
-
     public function store(StoreLeadRequest $request)
     {
         $data = $request->validated();
-
         $data['status'] = $data['status'] ?? 'Waiting';
 
-        $lead = $this->leadService->createLead($data);
+        $this->leadService->createLead($data);
 
         return redirect()
             ->route('leads.index')
-            ->with('success', 'Lead created successfully.');
+            ->with('success', 'Lead added successfully.');
     }
 
     /*
@@ -110,15 +108,21 @@ class LeadController extends Controller
     | Edit Lead
     |--------------------------------------------------------------------------
     */
-
     public function edit($id)
     {
-        $lead = $this->leadRepository->find($id);
-        $courses   = CourseTemplate::where('is_active', true)->get();
-        $levels    = Level::all();
-        $sublevels = Sublevel::all();
+        $lead    = $this->leadRepository->find($id);
+        $courses = CourseTemplate::where('is_active', true)->get();
 
-        return view('leads.edit', compact( 'lead','courses','levels','sublevels'));
+        // Pre-load existing levels/sublevels for edit mode
+        $levels    = $lead->interested_course_template_id
+            ? Level::where('course_template_id', $lead->interested_course_template_id)->get()
+            : collect();
+
+        $sublevels = $lead->interested_level_id
+            ? Sublevel::where('level_id', $lead->interested_level_id)->get()
+            : collect();
+
+        return view('leads.edit', compact('lead', 'courses', 'levels', 'sublevels'));
     }
 
     /*
@@ -126,175 +130,54 @@ class LeadController extends Controller
     | Update Lead
     |--------------------------------------------------------------------------
     */
-
     public function update(Request $request, $id)
     {
+        // ── AJAX (inline status / next_call_at update) ──
         if ($request->expectsJson()) {
-
             $lead = $this->leadRepository->find($id);
             $old  = $lead->status;
-
             $data = [];
 
-            if ($request->has('status')) {
-                $data['status'] = $request->status;
-            }
-
-            if ($request->has('next_call_at')) {
-                $data['next_call_at'] = $request->next_call_at;
-            }
+            if ($request->has('status'))       $data['status']      = $request->status;
+            if ($request->has('next_call_at')) $data['next_call_at'] = $request->next_call_at;
 
             if (!$lead->owner_cs_id) {
-                $data['owner_cs_id'] = auth()->user()->employee->first()->employee_id;
+                $data['owner_cs_id'] = $this->currentEmployeeId();
             }
 
             $this->leadRepository->update($id, $data);
-
             $lead->refresh();
 
-            $this->leadService->logHistory(
-                $lead,
-                $old,
-                $lead->status,
-                'Updated from status'
-            );
+            $this->leadService->logHistory($lead, $old, $lead->status, 'Updated from status dropdown');
 
             return response()->json(['success' => true]);
         }
 
-        // ── Form update (edit page) ──
-        $lead = $this->leadRepository->find($id);
-        $old  = $lead->status;
-
+        // ── Form update ──
+        $lead      = $this->leadRepository->find($id);
+        $old       = $lead->status;
         $validated = app(StoreLeadRequest::class)->validated();
 
         $this->leadRepository->update($id, $validated);
-
         $lead->refresh();
 
-        $this->leadService->logHistory(
-            $lead,
-            $old,
-            $lead->status,
-            'Updated from edit form'
-        );
+        $this->leadService->logHistory($lead, $old, $lead->status, 'Updated from edit form');
 
         return redirect()
             ->route('leads.index')
-            ->with('success', 'Lead updated successfully');
+            ->with('success', 'Lead updated successfully.');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Schedule Call
+    | Assign (from public list)
     |--------------------------------------------------------------------------
     */
-
-    public function scheduleCall(Request $request, $id)
-    {
-        $request->validate([
-            'next_call_at' => 'required|date'
-        ]);
-
-        $this->leadService->scheduleCall($id,$request->next_call_at);
-
-        return back()->with('success','Call scheduled successfully');
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Call Again
-    |--------------------------------------------------------------------------
-    */
-
-    public function callAgain(Request $request, $id)
-    {
-        $request->validate([
-            'next_call_at' => 'required|date'
-        ]);
-
-        $this->leadService->markCallAgain($id,$request->next_call_at);
-
-        return back()->with('success','Lead scheduled for follow-up');
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Mark Registered
-    |--------------------------------------------------------------------------
-    */
-
-    public function markRegistered($id)
-    {
-        $this->leadService->markRegistered($id);
-
-        return redirect()
-            ->route('registration.create',['lead'=>$id]);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Not Interested
-    |--------------------------------------------------------------------------
-    */
-
-    public function notInterested($id)
-    {
-        $this->leadService->markNotInterested($id);
-
-        return back()->with('success','Lead marked as not interested');
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Archive Lead
-    |--------------------------------------------------------------------------
-    */
-
-    public function archive($id)
-    {
-        $this->leadService->archiveLead($id);
-
-        return back()->with('success','Lead archived');
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Delete Lead
-    |--------------------------------------------------------------------------
-    */
-
-    public function destroy($id)
-    {
-        $this->leadRepository->delete($id);
-
-        return redirect()
-            ->route('leads.index')
-            ->with('success','Lead deleted');
-    }
-
-    public function rules()
-    {
-        return [
-            'full_name' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
-            'source' => 'required',
-            'degree' => 'required',
-            'location' => 'nullable|string|max:255',
-            'interested_course_template_id' => 'nullable|exists:course_template,course_template_id',
-            'interested_level_id' => 'nullable|exists:level,level_id',
-            'interested_sublevel_id' => 'nullable|exists:sublevel,sublevel_id',
-            'next_call_at' => 'nullable|date',
-            'notes' => 'nullable|string'
-        ];
-    }
-
     public function assign($id)
     {
-        $employeeId = auth()->user()->employee->first()->employee_id;
-
-        $lead = Lead::findOrFail($id);
-        $old  = $lead->status;
+        $employeeId = $this->currentEmployeeId();
+        $lead       = Lead::findOrFail($id);
+        $old        = $lead->status;
 
         $lead->update([
             'owner_cs_id' => $employeeId,
@@ -302,53 +185,59 @@ class LeadController extends Controller
             'is_active'   => true,
         ]);
 
-        $source = request()->input('source', 'public');
+        $this->leadService->logHistory($lead, $old, 'Waiting', 'Taken from ' . request()->input('source', 'public') . ' leads');
 
-        $this->leadService->logHistory(
-            $lead,
-            $old,
-            'Waiting',
-            'Taken from ' . $source . ' leads'
-        );
         return response()->json(['success' => true]);
     }
 
+    /*
+    |--------------------------------------------------------------------------
+    | Update Status (inline dropdown)
+    |--------------------------------------------------------------------------
+    */
+    public function updateStatus(Request $request)
+    {
+        $request->validate([
+            'lead_id' => 'required|exists:lead,lead_id',
+            'status'  => 'required|string',
+        ]);
+
+        $lead      = $this->leadRepository->find($request->lead_id);
+        $oldStatus = $lead->status;
+
+        $this->leadRepository->update($lead->lead_id, ['status' => $request->status]);
+        $lead->refresh();
+
+        $this->leadService->logHistory($lead, $oldStatus, $lead->status, 'Status updated from dropdown');
+
+        return response()->json(['success' => true]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Lead History (AJAX)
+    |--------------------------------------------------------------------------
+    */
     public function history($id)
     {
-        $history = \App\Models\Leads\LeadHistory::where('lead_id', $id)
+        $history = LeadHistory::where('lead_id', $id)
             ->orderBy('changed_at', 'desc')
             ->get();
 
         return response()->json($history);
     }
 
-    public function updateStatus(Request $request)
+    /*
+    |--------------------------------------------------------------------------
+    | Delete Lead
+    |--------------------------------------------------------------------------
+    */
+    public function destroy($id)
     {
-        $request->validate([
-            'lead_id' => 'required|exists:leads,lead_id',
-            'status' => 'required|string'
-        ]);
+        $this->leadRepository->delete($id);
 
-        $lead = $this->leadRepository->find($request->lead_id);
-
-        $oldStatus = $lead->status;
-
-        $this->leadRepository->update($lead->lead_id, [
-            'status' => $request->status
-        ]);
-
-        $lead->refresh();
-
-        $this->leadService->logHistory(
-            $lead,
-            $oldStatus,
-            $lead->status,
-            'Status updated from dropdown'
-        );
-
-        return response()->json([
-            'success' => true
-        ]);
+        return redirect()
+            ->route('leads.index')
+            ->with('success', 'Lead deleted.');
     }
-
 }

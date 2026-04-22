@@ -890,4 +890,70 @@
     </div>
 </div>
 
+{{-- ── SUCCESS TOAST ── --}}
+@if(session('success'))
+<div id="successToast" style="
+    position: fixed;
+    top: 24px; right: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 20px;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(21,128,61,0.2);
+    border-left: 3px solid #15803D;
+    border-radius: 6px;
+    box-shadow: 0 8px 32px rgba(27,79,168,0.12), 0 2px 8px rgba(0,0,0,0.06);
+    animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
+    max-width: 340px;
+">
+    <div style="
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        background: rgba(21,128,61,0.08);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+    ">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+        </svg>
+    </div>
+    <div style="flex: 1;">
+        <div style="font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #15803D; margin-bottom: 2px; font-weight: 500;">Success</div>
+        <div style="font-size: 13px; color: #1A2A4A; font-weight: 300;">{{ session('success') }}</div>
+    </div>
+    <button onclick="document.getElementById('successToast').style.display='none'"
+        style="background: none; border: none; cursor: pointer; color: #AAB8C8; padding: 4px; flex-shrink: 0;"
+        onmouseover="this.style.color='#DC2626'"
+        onmouseout="this.style.color='#AAB8C8'">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+    </button>
+</div>
+
+<style>
+@keyframes toastIn {
+    from { opacity: 0; transform: translateX(20px) scale(0.96); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes toastOut {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateX(20px) scale(0.96); }
+}
+</style>
+
+<script>
+// Auto-dismiss after 4 seconds
+setTimeout(function() {
+    const toast = document.getElementById('successToast');
+    if (toast) {
+        toast.style.animation = 'toastOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+    }
+}, 4000);
+</script>
+@endif
 @endsection

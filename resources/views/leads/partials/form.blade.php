@@ -1,83 +1,114 @@
-<script src="{{ asset('js/leads/create-modal.js') }}"></script>
 <script src="{{ asset('js/leads/history-modal.js') }}"></script>
+
 <form method="POST"
       action="{{ isset($isRegistration) ? route('registration.store') : (isset($lead) ? route('leads.update', $lead->lead_id) : route('leads.store')) }}">
     @csrf
     @if(isset($lead)) @method('PUT') @endif
-
-    @if ($errors->any())
-        <div style="padding:12px 14px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);border-radius:4px;margin-bottom:20px;">
-            @foreach ($errors->all() as $error)
-                <p style="font-size:12px;color:#DC2626;margin:2px 0;">{{ $error }}</p>
-            @endforeach
-        </div>
-    @endif
 
     {{-- ══ 1. BASIC INFO ══ --}}
     <div class="form-section-label">Basic Information</div>
 
     <div class="form-grid">
 
+        {{-- Full Name --}}
         <div class="form-field">
             <label class="form-label">Full Name <span class="required">*</span></label>
-            <input type="text" name="full_name" class="form-control-inf"
+            <input type="text" name="full_name"
+                   class="form-control-inf @error('full_name') is-error @enderror"
                    placeholder="e.g. Ahmed Mohamed"
                    value="{{ old('full_name', $lead->full_name ?? '') }}" required>
-            @error('full_name')<span class="form-error">{{ $message }}</span>@enderror
+            @error('full_name')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
+        {{-- Phone --}}
         <div class="form-field">
             <label class="form-label">Phone <span class="required">*</span></label>
-            <input type="text" name="phone" class="form-control-inf"
+            <input type="text" name="phone"
+                   class="form-control-inf @error('phone') is-error @enderror"
                    placeholder="e.g. 01012345678"
-                   value="{{ old('phone', $lead->phone ?? '') }}" required>
-            @error('phone')<span class="form-error">{{ $message }}</span>@enderror
+                   value="{{ old('phone', $lead->phone ?? '') }}"
+                   maxlength="15" required>
+            @error('phone')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @else
+                <div class="field-msg field-msg--hint">Numbers only · 11–15 digits</div>
+            @enderror
         </div>
 
+        {{-- Birthdate --}}
         <div class="form-field">
             <label class="form-label">Birthdate</label>
-            <input type="date" name="birthdate" class="form-control-inf"
+            <input type="date" name="birthdate"
+                   class="form-control-inf @error('birthdate') is-error @enderror"
                    style="color-scheme:light;"
                    value="{{ old('birthdate', isset($lead->birthdate) ? \Carbon\Carbon::parse($lead->birthdate)->format('Y-m-d') : '') }}">
-            @error('birthdate')<span class="form-error">{{ $message }}</span>@enderror
+            @error('birthdate')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
+        {{-- Location --}}
         <div class="form-field">
             <label class="form-label">Location</label>
-            <input type="text" name="location" class="form-control-inf"
+            <input type="text" name="location"
+                   class="form-control-inf @error('location') is-error @enderror"
                    placeholder="e.g. Cairo"
                    value="{{ old('location', $lead->location ?? '') }}">
-            @error('location')<span class="form-error">{{ $message }}</span>@enderror
+            @error('location')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
-        {{-- Degree — DB enum: Student, Graduate --}}
+        {{-- Degree --}}
         <div class="form-field">
             <label class="form-label">Degree <span class="required">*</span></label>
-            <select name="degree" class="form-control-inf" required>
+            <select name="degree" class="form-control-inf @error('degree') is-error @enderror" required>
                 <option value="">— Select —</option>
                 @foreach(['Student','Graduate'] as $deg)
-                    <option value="{{ $deg }}"
-                        {{ old('degree', $lead->degree ?? '') === $deg ? 'selected' : '' }}>
+                    <option value="{{ $deg }}" {{ old('degree', $lead->degree ?? '') === $deg ? 'selected' : '' }}>
                         {{ $deg }}
                     </option>
                 @endforeach
             </select>
-            @error('degree')<span class="form-error">{{ $message }}</span>@enderror
+            @error('degree')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
-        {{-- Source — DB enum: Facebook, Website, Friend, Walk_In, Google, Other --}}
+        {{-- Source --}}
         <div class="form-field">
             <label class="form-label">Lead Source <span class="required">*</span></label>
-            <select name="source" class="form-control-inf" required>
+            <select name="source" class="form-control-inf @error('source') is-error @enderror" required>
                 <option value="">— Select —</option>
                 @foreach(['Facebook','Website','Friend','Walk_In','Google','Other'] as $src)
-                    <option value="{{ $src }}"
-                        {{ old('source', $lead->source ?? '') === $src ? 'selected' : '' }}>
+                    <option value="{{ $src }}" {{ old('source', $lead->source ?? '') === $src ? 'selected' : '' }}>
                         {{ str_replace('_',' ',$src) }}
                     </option>
                 @endforeach
             </select>
-            @error('source')<span class="form-error">{{ $message }}</span>@enderror
+            @error('source')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
     </div>
@@ -91,7 +122,9 @@
 
         <div class="form-field">
             <label class="form-label">Course</label>
-            <select name="interested_course_template_id" class="form-control-inf" id="course_select">
+            <select name="interested_course_template_id"
+                    class="form-control-inf @error('interested_course_template_id') is-error @enderror"
+                    id="course_select">
                 <option value="">— Select Course —</option>
                 @foreach($courses ?? [] as $course)
                     <option value="{{ $course->course_template_id }}"
@@ -100,12 +133,19 @@
                     </option>
                 @endforeach
             </select>
-            @error('interested_course_template_id')<span class="form-error">{{ $message }}</span>@enderror
+            @error('interested_course_template_id')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
         <div class="form-field">
             <label class="form-label">Level</label>
-            <select name="interested_level_id" class="form-control-inf" id="level_select">
+            <select name="interested_level_id"
+                    class="form-control-inf @error('interested_level_id') is-error @enderror"
+                    id="level_select">
                 <option value="">— Select Level —</option>
                 @foreach($levels ?? [] as $level)
                     <option value="{{ $level->level_id }}"
@@ -114,12 +154,19 @@
                     </option>
                 @endforeach
             </select>
-            @error('interested_level_id')<span class="form-error">{{ $message }}</span>@enderror
+            @error('interested_level_id')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
         <div class="form-field">
             <label class="form-label">Sublevel</label>
-            <select name="interested_sublevel_id" class="form-control-inf" id="sublevel_select">
+            <select name="interested_sublevel_id"
+                    class="form-control-inf @error('interested_sublevel_id') is-error @enderror"
+                    id="sublevel_select">
                 <option value="">— Select Sublevel —</option>
                 @foreach($sublevels ?? [] as $sublevel)
                     <option value="{{ $sublevel->sublevel_id }}"
@@ -128,7 +175,12 @@
                     </option>
                 @endforeach
             </select>
-            @error('interested_sublevel_id')<span class="form-error">{{ $message }}</span>@enderror
+            @error('interested_sublevel_id')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
     </div>
@@ -140,10 +192,10 @@
 
     <div class="form-grid cols-3">
 
-        {{-- Status — DB enum: Waiting, Call_Again, Scheduled_Call, Registered, Not_Interested, Archived --}}
+        {{-- Status --}}
         <div class="form-field">
             <label class="form-label">Status <span class="required">*</span></label>
-            <select name="status" class="form-control-inf" required>
+            <select name="status" class="form-control-inf @error('status') is-error @enderror" required>
                 <option value="">— Select —</option>
                 @foreach(['Waiting','Call_Again','Scheduled_Call','Registered','Not_Interested','Archived'] as $s)
                     <option value="{{ $s }}"
@@ -152,21 +204,34 @@
                     </option>
                 @endforeach
             </select>
-            @error('status')<span class="form-error">{{ $message }}</span>@enderror
+            @error('status')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
+        {{-- Next Call --}}
         <div class="form-field">
             <label class="form-label">Next Call At</label>
-            <input type="datetime-local" name="next_call_at" class="form-control-inf"
+            <input type="datetime-local" name="next_call_at"
+                   class="form-control-inf @error('next_call_at') is-error @enderror"
                    style="color-scheme:light;"
                    value="{{ old('next_call_at', isset($lead->next_call_at) ? $lead->next_call_at->format('Y-m-d\TH:i') : '') }}">
-            @error('next_call_at')<span class="form-error">{{ $message }}</span>@enderror
+            @error('next_call_at')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
-        {{-- Start Preference — DB enum: Current Patch, Next Patch, Specific Date --}}
+        {{-- Start Preference --}}
         <div class="form-field">
             <label class="form-label">Start Preference</label>
-            <select name="start_preference_type" class="form-control-inf">
+            <select name="start_preference_type"
+                    class="form-control-inf @error('start_preference_type') is-error @enderror">
                 <option value="">— Select —</option>
                 @foreach(['Current Patch','Next Patch','Specific Date'] as $pref)
                     <option value="{{ $pref }}"
@@ -175,13 +240,29 @@
                     </option>
                 @endforeach
             </select>
-            @error('start_preference_type')<span class="form-error">{{ $message }}</span>@enderror
+            @error('start_preference_type')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
+        {{-- Specific Date (hidden until selected) --}}
         <div class="form-field" id="specific_date_field" style="display:none;">
-            <label class="form-label">Specific Date</label>
-            <input type="datetime-local" name="start_preference_date" class="form-control-inf"
-                value="{{ old('start_preference_date', isset($lead->start_preference_date) ? $lead->start_preference_date->format('Y-m-d\TH:i') : '') }}">
+            <label class="form-label">
+                Specific Date <span class="required">*</span>
+            </label>
+            <input type="date" name="start_preference_date"
+                   class="form-control-inf @error('start_preference_date') is-error @enderror"
+                   style="color-scheme:light;"
+                   value="{{ old('start_preference_date', isset($lead->start_preference_date) ? \Carbon\Carbon::parse($lead->start_preference_date)->format('Y-m-d') : '') }}">
+            @error('start_preference_date')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
 
     </div>
@@ -194,9 +275,16 @@
     <div class="form-grid cols-1">
         <div class="form-field">
             <label class="form-label">Notes</label>
-            <textarea name="notes" class="form-control-inf"
-                      placeholder="Any additional info about this lead...">{{ old('notes', $lead->notes ?? '') }}</textarea>
-            @error('notes')<span class="form-error">{{ $message }}</span>@enderror
+            <textarea name="notes"
+                      class="form-control-inf @error('notes') is-error @enderror"
+                      placeholder="Any additional info about this lead..."
+                      maxlength="2000">{{ old('notes', $lead->notes ?? '') }}</textarea>
+            @error('notes')
+                <div class="field-msg field-msg--error">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
     </div>
 
@@ -213,4 +301,36 @@
         </button>
     </div>
 
-</form>>
+</form>
+
+{{-- ── Error + hint styles (scoped here so they work inside any layout) ── --}}
+<style>
+    .form-control-inf.is-error {
+        border-color: #DC2626 !important;
+        background: rgba(220,38,38,0.02) !important;
+    }
+    .form-control-inf.is-error:focus {
+        box-shadow: 0 0 0 3px rgba(220,38,38,0.10) !important;
+    }
+
+    .field-msg {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        margin-top: 5px;
+        font-size: 11px;
+        letter-spacing: 0.2px;
+        line-height: 1.4;
+        animation: msgIn 0.25s ease both;
+    }
+    @keyframes msgIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to   { opacity: 1; transform: none; }
+    }
+
+    .field-msg--error { color: #DC2626; }
+    .field-msg--error svg { flex-shrink: 0; color: #DC2626; }
+
+    .field-msg--hint { color: #AAB8C8; }
+    .field-msg--hint svg { flex-shrink: 0; }
+</style>
