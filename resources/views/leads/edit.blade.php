@@ -128,10 +128,9 @@
     textarea.form-control-inf { resize: vertical; min-height: 88px; }
 
     .form-error { font-size: 10px; color: #DC2626; margin-top: 4px; }
-
     .form-divider { height: 1px; background: rgba(27,79,168,0.06); margin: 22px 0; }
 
-    /* ── TOGGLE (is_active) ── */
+    /* ── TOGGLE ── */
     .toggle-row {
         display: flex; align-items: center; gap: 12px;
         padding: 12px 14px;
@@ -141,15 +140,11 @@
     }
     .toggle-label-text { font-size: 13px; color: #1A2A4A; }
     .toggle-sub { font-size: 10px; color: #AAB8C8; margin-top: 1px; }
-
-    .toggle-switch {
-        position: relative; width: 40px; height: 22px; flex-shrink: 0;
-    }
+    .toggle-switch { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
     .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .toggle-slider {
         position: absolute; inset: 0; cursor: pointer;
-        background: #E2E8F0; border-radius: 22px;
-        transition: background 0.3s;
+        background: #E2E8F0; border-radius: 22px; transition: background 0.3s;
     }
     .toggle-slider::before {
         content: ''; position: absolute;
@@ -327,11 +322,13 @@
 
                     <div class="form-field">
                         <label class="form-label">Course</label>
-                        <select name="interested_course_template_id" class="form-control-inf">
+                        <select name="interested_course_template_id"
+                                class="form-control-inf"
+                                id="course_select">
                             <option value="">— Select —</option>
                             @foreach($courses ?? [] as $ct)
                                 <option value="{{ $ct->course_template_id }}"
-                                    {{ old('interested_course_template_id',$lead->interested_course_template_id)==$ct->course_template_id?'selected':'' }}>
+                                    {{ old('interested_course_template_id', $lead->interested_course_template_id) == $ct->course_template_id ? 'selected' : '' }}>
                                     {{ $ct->name }}
                                 </option>
                             @endforeach
@@ -341,11 +338,14 @@
 
                     <div class="form-field">
                         <label class="form-label">Level</label>
-                        <select name="interested_level_id" class="form-control-inf">
+                        <select name="interested_level_id"
+                                class="form-control-inf"
+                                id="level_select"
+                                data-selected="{{ old('interested_level_id', $lead->interested_level_id) }}">
                             <option value="">— Select —</option>
                             @foreach($levels ?? [] as $lv)
                                 <option value="{{ $lv->level_id }}"
-                                    {{ old('interested_level_id',$lead->interested_level_id)==$lv->level_id?'selected':'' }}>
+                                    {{ old('interested_level_id', $lead->interested_level_id) == $lv->level_id ? 'selected' : '' }}>
                                     {{ $lv->name }}
                                 </option>
                             @endforeach
@@ -355,11 +355,14 @@
 
                     <div class="form-field">
                         <label class="form-label">Sublevel</label>
-                        <select name="interested_sublevel_id" class="form-control-inf">
+                        <select name="interested_sublevel_id"
+                                class="form-control-inf"
+                                id="sublevel_select"
+                                data-selected="{{ old('interested_sublevel_id', $lead->interested_sublevel_id) }}">
                             <option value="">— Select —</option>
                             @foreach($sublevels ?? [] as $sl)
                                 <option value="{{ $sl->sublevel_id }}"
-                                    {{ old('interested_sublevel_id',$lead->interested_sublevel_id)==$sl->sublevel_id?'selected':'' }}>
+                                    {{ old('interested_sublevel_id', $lead->interested_sublevel_id) == $sl->sublevel_id ? 'selected' : '' }}>
                                     {{ $sl->name }}
                                 </option>
                             @endforeach
@@ -470,20 +473,5 @@
 
 </div>
 
-<script>
-    const prefSelect = document.querySelector('[name="start_preference_type"]');
-    const dateField = document.getElementById('specific_date_field');
-
-    function toggleDateField() {
-        if (prefSelect.value === 'Specific Date') {
-            dateField.style.display = 'block';
-        } else {
-            dateField.style.display = 'none';
-        }
-    }
-
-    toggleDateField();
-    prefSelect.addEventListener('change', toggleDateField);
-</script>
-
+<script src="{{ asset('js/leads/create-modal.js') }}"></script>
 @endsection
