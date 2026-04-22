@@ -1,31 +1,344 @@
-// function updateStatus(el, leadId, newStatus) {
+// ═══════════════════════════════════════════════════════
+// Infinity Academy — Confirm Modal
+// Replaces native browser confirm() with branded UI
+// ═══════════════════════════════════════════════════════
 
-//     if (newStatus === 'Registered') {
-//         if (confirm("Are you sure you want to register this lead?")) {
-//             window.location.href = `/registration/from-lead/${leadId}`;
-//         }
-//         return;
-//     }
+// ─────────────────────────────────────────
+// Inject modal HTML + styles once
+// ─────────────────────────────────────────
+(function injectConfirmModal() {
+    if (document.getElementById('inf-confirm-overlay')) return;
 
-//     fetch(`/leads/${leadId}`, {
-//         method: 'PUT',
-//         headers: {
-//             'Content-Type': 'application/json',
-//             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-//             'Accept': 'application/json'
-//         },
-//         body: JSON.stringify({ status: newStatus })
-//     })
-//     .then(res => res.json())
-//     .then(data => {
-//         if (data.success) location.reload();
-//     })
-//     .catch(err => {
-//         console.error(err);
-//         alert("Error updating status");
-//     });
-// }
+    const style = document.createElement('style');
+    style.textContent = `
+        #inf-confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 20, 40, 0.45);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 99999;
+            align-items: center;
+            justify-content: center;
+        }
+        #inf-confirm-overlay.active {
+            display: flex;
+            animation: infOverlayIn 0.2s ease both;
+        }
+        @keyframes infOverlayIn {
+            from { opacity: 0; }
+            to   { opacity: 1; }
+        }
 
+        .inf-confirm-box {
+            background: rgba(255,255,255,0.97);
+            backdrop-filter: blur(20px);
+            border-radius: 10px;
+            width: 420px;
+            max-width: calc(100vw - 32px);
+            overflow: hidden;
+            position: relative;
+            box-shadow:
+                0 24px 60px rgba(27,79,168,0.15),
+                0 4px 16px rgba(0,0,0,0.08);
+            animation: infBoxIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
+        }
+        @keyframes infBoxIn {
+            from { opacity: 0; transform: scale(0.94) translateY(12px); }
+            to   { opacity: 1; transform: none; }
+        }
+
+        /* top accent */
+        .inf-confirm-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #F5911E, #1B4FA8, transparent);
+        }
+
+        .inf-confirm-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 32px 0;
+        }
+
+        .inf-confirm-icon-wrap {
+            width: 52px; height: 52px;
+            border-radius: 50%;
+            background: rgba(245,145,30,0.08);
+            border: 1px solid rgba(245,145,30,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .inf-confirm-icon-pulse {
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 1px solid rgba(245,145,30,0.15);
+            animation: infPulse 2s ease-in-out infinite;
+        }
+        @keyframes infPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: 0; transform: scale(1.2); }
+        }
+
+        .inf-confirm-body {
+            padding: 20px 32px 28px;
+            text-align: center;
+        }
+
+        .inf-confirm-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 11px;
+            letter-spacing: 5px;
+            color: #F5911E;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .inf-confirm-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 22px;
+            letter-spacing: 3px;
+            color: #1B4FA8;
+            margin-bottom: 10px;
+            line-height: 1.1;
+        }
+
+        .inf-confirm-message {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 300;
+            color: #7A8A9A;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .inf-confirm-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .inf-confirm-cancel {
+            flex: 1;
+            max-width: 140px;
+            padding: 11px 20px;
+            background: transparent;
+            border: 1px solid rgba(27,79,168,0.15);
+            border-radius: 4px;
+            color: #7A8A9A;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .inf-confirm-cancel:hover {
+            border-color: rgba(27,79,168,0.3);
+            color: #1A2A4A;
+        }
+
+        .inf-confirm-ok {
+            flex: 1;
+            max-width: 180px;
+            padding: 11px 20px;
+            background: transparent;
+            border: 1.5px solid #1B4FA8;
+            border-radius: 4px;
+            color: #1B4FA8;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 14px;
+            letter-spacing: 4px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: color 0.35s, border-color 0.35s;
+        }
+        .inf-confirm-ok::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(90deg, #1B4FA8, #2D6FDB);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.35s cubic-bezier(0.16,1,0.3,1);
+        }
+        .inf-confirm-ok:hover::before  { transform: scaleX(1); }
+        .inf-confirm-ok:hover { color: #fff; border-color: #2D6FDB; }
+        .inf-confirm-ok span { position: relative; z-index: 1; }
+
+        .inf-confirm-footer {
+            padding: 12px 32px;
+            border-top: 1px solid rgba(27,79,168,0.06);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 10px;
+            color: #C8D4E0;
+            letter-spacing: 0.5px;
+        }
+    `;
+    document.head.appendChild(style);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'inf-confirm-overlay';
+    overlay.innerHTML = `
+        <div class="inf-confirm-box">
+            <div class="inf-confirm-icon">
+                <div class="inf-confirm-icon-wrap">
+                    <div class="inf-confirm-icon-pulse"></div>
+                    <svg id="inf-confirm-icon-svg" width="22" height="22" viewBox="0 0 24 24"
+                         fill="none" stroke="#F5911E" stroke-width="1.5"
+                         stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="inf-confirm-body">
+                <div class="inf-confirm-label" id="inf-confirm-label">Confirm Action</div>
+                <div class="inf-confirm-title"  id="inf-confirm-title">Are you sure?</div>
+                <div class="inf-confirm-message" id="inf-confirm-message">This action cannot be undone.</div>
+                <div class="inf-confirm-actions">
+                    <button class="inf-confirm-cancel" id="inf-confirm-cancel">Cancel</button>
+                    <button class="inf-confirm-ok"     id="inf-confirm-ok"><span id="inf-confirm-ok-text">Confirm</span></button>
+                </div>
+            </div>
+            <div class="inf-confirm-footer">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                Infinity Academy — Internal System
+            </div>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+
+    // Close on overlay click
+    overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) infConfirm.reject();
+    });
+
+    // ESC to close
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') infConfirm.reject();
+    });
+})();
+
+// ─────────────────────────────────────────
+// infConfirm — public API
+// ─────────────────────────────────────────
+const infConfirm = {
+    _resolve: null,
+
+    show({ label = 'Confirm Action', title = 'Are you sure?', message = 'This action cannot be undone.', okText = 'Confirm' } = {}) {
+        return new Promise((resolve) => {
+            this._resolve = resolve;
+
+            document.getElementById('inf-confirm-label').textContent   = label;
+            document.getElementById('inf-confirm-title').textContent   = title;
+            document.getElementById('inf-confirm-message').textContent = message;
+            document.getElementById('inf-confirm-ok-text').textContent = okText;
+
+            const overlay = document.getElementById('inf-confirm-overlay');
+            overlay.classList.add('active');
+
+            document.getElementById('inf-confirm-ok').onclick = () => this.confirm();
+            document.getElementById('inf-confirm-cancel').onclick = () => this.reject();
+        });
+    },
+
+    confirm() {
+        document.getElementById('inf-confirm-overlay').classList.remove('active');
+        if (this._resolve) this._resolve(true);
+        this._resolve = null;
+    },
+
+    reject() {
+        document.getElementById('inf-confirm-overlay').classList.remove('active');
+        if (this._resolve) this._resolve(false);
+        this._resolve = null;
+    }
+};
+
+// ─────────────────────────────────────────
+// updateLeadStatus — used from index.blade
+// ─────────────────────────────────────────
+async function updateLeadStatus(el, leadId, newStatus) {
+
+    // Close any open dropdowns
+    document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
+
+    if (newStatus === 'Registered') {
+        const confirmed = await infConfirm.show({
+            label:   'Lead Registration',
+            title:   'Register This Lead?',
+            message: 'This will convert the lead into a registered student and open the registration form.',
+            okText:  'Register Now',
+        });
+
+        if (confirmed) {
+            window.location.href = `/registration/from-lead/${leadId}`;
+        }
+        return;
+    }
+
+    fetch(`/leads/${leadId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) location.reload();
+    })
+    .catch(err => {
+        console.error(err);
+        infConfirm.show({
+            label:   'Error',
+            title:   'Something Went Wrong',
+            message: 'Failed to update the lead status. Please try again.',
+            okText:  'OK',
+        });
+    });
+}
+
+// ─────────────────────────────────────────
+// toggleDropdown — status dropdown toggle
+// ─────────────────────────────────────────
+function toggleDropdown(badge) {
+    const dropdown = badge.nextElementSibling;
+    const isOpen   = dropdown.style.display === 'block';
+
+    // Close all
+    document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
+
+    if (!isOpen) dropdown.style.display = 'block';
+
+    // Close on outside click
+    setTimeout(() => {
+        document.addEventListener('click', function closeDD(e) {
+            if (!dropdown.contains(e.target) && e.target !== badge) {
+                dropdown.style.display = 'none';
+            }
+            document.removeEventListener('click', closeDD);
+        });
+    }, 0);
+}
 document.addEventListener('DOMContentLoaded', function () {
 
     const course = document.getElementById('course_select');

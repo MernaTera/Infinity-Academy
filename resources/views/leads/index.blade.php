@@ -779,8 +779,9 @@
                                     </svg>
                                     Edit
                                 </a>
+                                {{-- ✅ بعد --}}
                                 <form action="{{ route('leads.destroy', $lead->lead_id) }}" method="POST"
-                                      style="display:inline;" onsubmit="return confirm('Delete this lead?')">
+                                    style="display:inline;" class="delete-lead-form">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn-action btn-delete">
@@ -946,7 +947,22 @@
 </style>
 
 <script>
-// Auto-dismiss after 4 seconds
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.delete-lead-form').forEach(form => {
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const confirmed = await infConfirm.show({
+                label:   'Delete Lead',
+                title:   'Delete This Lead?',
+                message: 'This will permanently remove the lead and all its history. This action cannot be undone.',
+                okText:  'Delete',
+            });
+
+            if (confirmed) form.submit();
+        });
+    });
+});
 setTimeout(function() {
     const toast = document.getElementById('successToast');
     if (toast) {
