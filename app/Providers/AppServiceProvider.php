@@ -6,8 +6,31 @@ use Illuminate\Support\ServiceProvider;
 
 use App\Interfaces\LeadRepositoryInterface;
 use App\Repositories\LeadRepository;
+use App\Observers\AuditObserver;
 
-
+// ── Models to audit ──
+use App\Models\Leads\Lead;
+use App\Models\Student\Student;
+use App\Models\Enrollment\Enrollment;
+use App\Models\Finance\FinancialTransaction;
+use App\Models\Finance\InstallmentSchedule;
+use App\Models\Finance\InstallmentApprovalLog;
+use App\Models\Finance\RefundRequest;
+use App\Models\Finance\Offer;
+use App\Models\Finance\PaymentPlan;
+use App\Models\Finance\PrivateBundle;
+use App\Models\Academic\CourseTemplate;
+use App\Models\Academic\Level;
+use App\Models\Academic\Sublevel;
+use App\Models\Academic\CourseInstance;
+use App\Models\Academic\Patch;
+use App\Models\Academic\TimeSlot;
+use App\Models\Academic\BreakSlot;
+use App\Models\HR\Employee;
+use App\Models\HR\Teacher;
+use App\Models\Reports\Report;
+use App\Models\Enrollment\RestrictionLog;
+use App\Models\Auth\User;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,7 +39,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind (
+        $this->app->bind(
             LeadRepositoryInterface::class,
             LeadRepository::class
         );
@@ -27,8 +50,35 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // ── Blade directive ──
         \Illuminate\Support\Facades\Blade::if('cando', function (string $permission) {
             return auth()->check() && auth()->user()->canDo($permission);
         });
+
+        // ── Audit Observers ──
+        // Each model listed here will have Create/Update/Delete logged automatically
+
+        Lead::observe(AuditObserver::class);
+        Student::observe(AuditObserver::class);
+        Enrollment::observe(AuditObserver::class);
+        FinancialTransaction::observe(AuditObserver::class);
+        InstallmentSchedule::observe(AuditObserver::class);
+        InstallmentApprovalLog::observe(AuditObserver::class);
+        RefundRequest::observe(AuditObserver::class);
+        Offer::observe(AuditObserver::class);
+        PaymentPlan::observe(AuditObserver::class);
+        PrivateBundle::observe(AuditObserver::class);
+        CourseTemplate::observe(AuditObserver::class);
+        Level::observe(AuditObserver::class);
+        Sublevel::observe(AuditObserver::class);
+        CourseInstance::observe(AuditObserver::class);
+        Patch::observe(AuditObserver::class);
+        TimeSlot::observe(AuditObserver::class);
+        BreakSlot::observe(AuditObserver::class);
+        Employee::observe(AuditObserver::class);
+        Teacher::observe(AuditObserver::class);
+        Report::observe(AuditObserver::class);
+        RestrictionLog::observe(AuditObserver::class);
+        User::observe(AuditObserver::class);
     }
 }

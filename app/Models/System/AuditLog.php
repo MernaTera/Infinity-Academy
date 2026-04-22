@@ -1,133 +1,102 @@
 <?php
 
-
 namespace App\Models\System;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\HR\Employee;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\HR\Employee;
 
-/**
- * Class AuditLog
- * 
- * @property int $audit_log_id
- * @property string $table_name
- * @property int $record_id
- * @property string $field_name
- * @property string $action_type
- * @property string|null $old_value
- * @property string|null $new_value
- * @property int $changed_by
- * @property Carbon|null $changed_at
- * 
- * @property Employee $employee
- *
- * @package App\Models
- */
 class AuditLog extends Model
 {
-	protected $table = 'audit_log';
-	protected $primaryKey = 'audit_log_id';
-	public $timestamps = true;
+    protected $table      = 'audit_log';
+    protected $primaryKey = 'audit_log_id';
+    public $timestamps    = true;
 
-	protected $casts = [
-		'record_id' => 'integer',
-		'changed_by' => 'integer',
-		'changed_at' => 'datetime',
+    protected $casts = [
+        'record_id'  => 'integer',
+        'changed_by' => 'integer',
+        'changed_at' => 'datetime',
         'created_at' => 'datetime',
-        'updated_at' => 'datetime'
-	];
+        'updated_at' => 'datetime',
+    ];
 
-	protected $fillable = [
-		'table_name',
-		'record_id',
-		'field_name',
-		'action_type',
-		'old_value',
-		'new_value',
-		'changed_by',
-		'changed_at'
-	];
+    protected $fillable = [
+        'table_name',
+        'record_id',
+        'field_name',
+        'action_type',
+        'old_value',
+        'new_value',
+        'changed_by',
+        'changed_at',
+    ];
 
-	public function employee()
-	{
-		return $this->belongsTo(Employee::class, 'changed_by');
-	}
+    // ─────────────────────────────────────────
+    // Relations
+    // ─────────────────────────────────────────
 
-    public function isCreate()
+    public function employee()
     {
-        return $this->action_type === 'Create';
+        return $this->belongsTo(Employee::class, 'changed_by', 'employee_id');
     }
 
-    public function isUpdate()
+    // ─────────────────────────────────────────
+    // Helpers
+    // ─────────────────────────────────────────
+
+    public function isCreate(): bool { return $this->action_type === 'Create'; }
+    public function isUpdate(): bool { return $this->action_type === 'Update'; }
+    public function isDelete(): bool { return $this->action_type === 'Delete'; }
+
+    public function changeSummary(): string
     {
-        return $this->action_type === 'Update';
+        if ($this->isCreate()) return "Created record #{$this->record_id}";
+        if ($this->isDelete()) return "Deleted record #{$this->record_id}";
+        return "{$this->field_name}: {$this->old_value} → {$this->new_value}";
     }
 
-    public function isDelete()
+    public function changeAge(): ?string
     {
-        return $this->action_type === 'Delete';
+        return $this->changed_at?->diffForHumans();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Query Scopes
-    |--------------------------------------------------------------------------
-    */
+    // ─────────────────────────────────────────
+    // Scopes
+    // ─────────────────────────────────────────
 
-    public function scopeForTable(Builder $query, $table)
+    public function scopeForTable(Builder $query, string $table): Builder
     {
         return $query->where('table_name', $table);
     }
 
-    public function scopeForRecord(Builder $query, $recordId)
+    public function scopeForRecord(Builder $query, int $recordId): Builder
     {
         return $query->where('record_id', $recordId);
     }
 
-    public function scopeByEmployee(Builder $query, $employeeId)
+    public function scopeByEmployee(Builder $query, int $employeeId): Builder
     {
         return $query->where('changed_by', $employeeId);
     }
 
-    public function scopeCreated(Builder $query)
+    public function scopeCreated(Builder $query): Builder
     {
         return $query->where('action_type', 'Create');
     }
 
-    public function scopeUpdated(Builder $query)
+    public function scopeUpdated(Builder $query): Builder
     {
         return $query->where('action_type', 'Update');
     }
 
-    public function scopeDeleted(Builder $query)
+    public function scopeDeleted(Builder $query): Builder
     {
         return $query->where('action_type', 'Delete');
     }
 
-    public function scopeToday(Builder $query)
+    public function scopeToday(Builder $query): Builder
     {
         return $query->whereDate('changed_at', today());
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | Utilities
-    |--------------------------------------------------------------------------
-    */
-
-    public function changeSummary()
-    {
-        return "{$this->field_name}: {$this->old_value} → {$this->new_value}";
-    }
-
-    public function changeAge()
-    {
-        if (!$this->changed_at) {
-            return null;
-        }
-
-        return $this->changed_at->diffForHumans();
     }
 }
