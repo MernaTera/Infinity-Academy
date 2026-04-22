@@ -25,7 +25,7 @@ class LeadService
 
     public function createLead(array $data): Lead
     {
-        $data['owner_cs_id'] = Auth::user()->employees->first()->employee_id ?? null;
+        $data['owner_cs_id'] = Auth::user()->employee->first()->employee_id ?? null;
         
         $lead = $this->leadRepository->create($data);
 
@@ -49,7 +49,7 @@ class LeadService
     {
         $lead = $this->leadRepository->find($leadId);
 
-        $employeeId = auth()->user()->employees->first()->employee_id;
+        $employeeId = auth()->user()->employee->first()->employee_id;
 
         $old = $lead->status;
 
@@ -81,7 +81,7 @@ class LeadService
 
         LeadCallLog::create([
             'lead_id' => $lead->lead_id,
-            'cs_id' => auth()->user()->employees->first()->employee_id,
+            'cs_id' => auth()->user()->employee->first()->employee_id,
             'call_datetime' => now(),
             'outcome' => 'Follow_Up_Scheduled',
             'notes' => 'Call scheduled'
@@ -108,7 +108,7 @@ class LeadService
 
         LeadCallLog::create([
             'lead_id' => $lead->lead_id,
-            'cs_id' => auth()->user()->employees->first()->employee_id,
+            'cs_id' => auth()->user()->employee->first()->employee_id,
             'call_datetime' => now(),
             'outcome' => 'Follow_Up_Scheduled',
             'notes' => 'Call scheduled'
@@ -258,14 +258,14 @@ class LeadService
             'old_status' => $old,
             'new_status' => $new,
             'notes' => $note,
-            'changed_by' => auth()->user()->employees->first()->employee_id,
+            'changed_by' => auth()->user()->employee->first()->employee_id,
             'changed_at' => now()
         ]);
     }   
 
     private function authorizeLead($lead)
     {
-        $employeeId = auth()->user()->employees->first()->employee_id;
+        $employeeId = auth()->user()->employee->first()->employee_id;
 
         if ($lead->owner_cs_id && $lead->owner_cs_id != $employeeId) {
             abort(403, 'Unauthorized');

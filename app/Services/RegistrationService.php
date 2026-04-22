@@ -203,7 +203,7 @@ class RegistrationService
                 ? 'Active'
                 : 'Waiting',
 
-            'created_by_cs_id' => auth()->user()->employees->first()->employee_id ?? null
+            'created_by_cs_id' => auth()->user()->employee->first()->employee_id ?? null
         ]);
     }
 

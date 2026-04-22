@@ -62,7 +62,7 @@ class CourseInstanceController extends Controller
         CourseInstance::create([
             ...$data,
             'status' => 'Upcoming',
-            'created_by_employee_id' => auth()->user()->employees->first()->employee_id ?? null,
+            'created_by_employee_id' => auth()->user()->employee->first()->employee_id ?? null,
         ]);
 
         return back()->with('success', 'Instance created successfully');

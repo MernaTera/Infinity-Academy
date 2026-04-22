@@ -127,7 +127,7 @@ class EmployeeController extends Controller
                         'contract_type'        => $request->contract_type,
                         'max_sessions_allowed' => $request->max_sessions ?? 9,
                         'is_active'            => true,
-                        'created_by_admin_id'  => auth()->user()->employees->first()->employee_id,
+                        'created_by_admin_id'  => auth()->user()->employee->first()->employee_id,
                     ]);
                 }
             }
@@ -139,7 +139,7 @@ class EmployeeController extends Controller
                     'patch_id'           => $request->patch_id,
                     'target_amount'      => $request->target_amount,
                     'is_locked'          => false,
-                    'created_by_admin_id'=> auth()->user()->employees->first()->employee_id,
+                    'created_by_admin_id'=> auth()->user()->employee->first()->employee_id,
                 ]);
             }
         });

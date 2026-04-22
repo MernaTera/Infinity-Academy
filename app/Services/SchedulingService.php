@@ -104,7 +104,7 @@ class SchedulingService
             'day_of_week'            => $data['day_of_week'],
             'time_slot_id'           => $data['time_slot_id'],
             'start_time'             => $data['start_time'],
-            'created_by_employee_id' => auth()->user()->employees->first()?->employee_id,
+            'created_by_employee_id' => auth()->user()->employee->first()?->employee_id,
         ]);
     }
 

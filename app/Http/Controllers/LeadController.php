@@ -145,7 +145,7 @@ class LeadController extends Controller
             }
 
             if (!$lead->owner_cs_id) {
-                $data['owner_cs_id'] = auth()->user()->employees->first()->employee_id;
+                $data['owner_cs_id'] = auth()->user()->employee->first()->employee_id;
             }
 
             $this->leadRepository->update($id, $data);
@@ -291,7 +291,7 @@ class LeadController extends Controller
 
     public function assign($id)
     {
-        $employeeId = auth()->user()->employees->first()->employee_id;
+        $employeeId = auth()->user()->employee->first()->employee_id;
 
         $lead = Lead::findOrFail($id);
         $old  = $lead->status;
