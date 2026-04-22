@@ -378,7 +378,7 @@
                     <div class="form-field">
                         <label class="form-label">Status <span class="req">*</span></label>
                         <select name="status" class="form-control-inf" required>
-                            @foreach(['Waiting','Call_Again','Scheduled_Call','Registered','Not_Interested','Archived'] as $s)
+                            @foreach(['Waiting','Call_Again'] as $s)
                                 <option value="{{ $s }}" {{ old('status',$lead->status)===$s?'selected':'' }}>
                                     {{ str_replace('_',' ',$s) }}
                                 </option>
