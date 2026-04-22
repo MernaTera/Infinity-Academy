@@ -17,10 +17,8 @@ use App\Services\PricingService;
 use App\Models\Academic\TimeSlot;
 use Illuminate\Support\Facades\DB;
 
-
 class RegistrationController extends Controller
 {
-
     protected $registrationService;
 
     public function __construct(RegistrationService $registrationService)
@@ -30,136 +28,149 @@ class RegistrationController extends Controller
 
     /*
     |------------------------------------------------------------------
-    | Show Form (from lead)
+    | Show Registration Form (from lead)
     |------------------------------------------------------------------
     */
-
     public function createFromLead($lead_id)
     {
         $lead = Lead::findOrFail($lead_id);
 
         if ($lead->status === 'Registered' && $lead->student_id) {
-            return back()->with('error', 'Already registered');
+            return back()->with('error', 'This lead is already registered.');
         }
 
-        $courses   = CourseTemplate::where('is_active', true)->get();
-        $levels    = Level::all();
-        $sublevels = Sublevel::all();
-        $timeSlots = TimeSlot::all();
+        $courses      = CourseTemplate::where('is_active', true)->get();
+        $paymentPlans = PaymentPlan::where('is_active', true)->get();
+        $bundles      = PrivateBundle::all();
+        $timeSlots    = TimeSlot::all();
 
-        $instances = CourseInstance::all();
-        $patches = Patch::all();
-        $paymentPlans = PaymentPlan::all();
-        $bundles = PrivateBundle::all();
+        $levels = $lead->interested_course_template_id
+            ? Level::where('course_template_id', $lead->interested_course_template_id)->get()
+            : collect();
+
+        $levelBelongsToCourse = $levels->contains('level_id', $lead->interested_level_id);
+
+        $sublevels = ($lead->interested_level_id && $levelBelongsToCourse)
+            ? Sublevel::where('level_id', $lead->interested_level_id)->get()
+            : collect();
+
+        if (!$levelBelongsToCourse) {
+            $lead->interested_level_id    = null;
+            $lead->interested_sublevel_id = null;
+        }
 
         return view('registration.create', compact(
             'lead',
             'courses',
             'levels',
             'sublevels',
-            'instances',
-            'patches',
             'paymentPlans',
-            'timeSlots',
             'bundles',
+            'timeSlots',
         ));
     }
-    
 
     /*
     |------------------------------------------------------------------
-    | STORE 
+    | Store Registration
     |------------------------------------------------------------------
     */
     public function store(Request $request)
     {
-        // dd("storing registration...", $request->all());
         $request->validate([
-
-            'lead_id' => 'required|exists:lead,lead_id',
-            'type' => 'required|in:group,private',
+            'lead_id'            => 'required|exists:lead,lead_id',
+            'type'               => 'required|in:group,private',
             'course_template_id' => 'required|exists:course_template,course_template_id',
-
-            'payment_plan_id' => 'required',
-
-            'patch_option' => 'required|in:current,next,custom',
-
-            'teacher_id' => 'nullable',
-            'day' => 'required_if:type,private',
-            'time_slot_id' => 'required_if:type,private',
-
-            'custom_date' => 'nullable|date'
+            'payment_plan_id'    => 'required',
+            'patch_option'       => 'required|in:current,next,custom',
+            'teacher_id'         => 'nullable',
+            'day'                => 'required_if:type,private',
+            'time_slot_id'       => 'required_if:type,private',
+            'custom_date'        => 'nullable|date',
         ]);
+
         try {
-            // dd("validated, proceeding to register...",  $request->all());
             $this->registrationService->register($request->all());
 
             return redirect()
                 ->route('leads.index')
-                ->with('success', 'Student registered successfully');
+                ->with('success', 'Student registered successfully.');
 
         } catch (\Exception $e) {
-            dd("error during registration", $e->getMessage());
-            return back()->with('error', $e->getMessage());
+            return back()
+                ->with('error', $e->getMessage())
+                ->withInput();
         }
     }
 
+    /*
+    |------------------------------------------------------------------
+    | AJAX Helpers
+    |------------------------------------------------------------------
+    */
     public function getPatchOptions($courseId)
     {
         $options = app(PatchService::class)->getOptions($courseId);
-
         return response()->json($options);
     }
 
     public function calculatePrice(Request $request)
     {
         $result = app(PricingService::class)->calculate($request->all());
-
-        return response()->json($result); 
+        return response()->json($result);
     }
 
     public function getAvailableTeachers(Request $request)
     {
         $teachers = app(\App\Services\TeacherAvailabilityService::class)
             ->getAvailableTeachers($request->all());
-
         return response()->json($teachers);
     }
 
     public function getMaterial(Request $request)
     {
-        $sublevelId = $request->sublevel_id;
-        $levelId = $request->level_id;
-        $courseId = $request->course_template_id;
+        $sublevelId = $request->sublevel_id ?: null;
+        $levelId    = $request->level_id    ?: null;
+        $courseId   = $request->course_template_id ?: null;
 
+        $material = null;
 
-        $material = DB::table('material_assignment')
-            ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
-            ->where(function ($q) use ($sublevelId, $levelId, $courseId) {
+        if ($sublevelId) {
+            $material = DB::table('material_assignment')
+                ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
+                ->where('materials.is_active', true)
+                ->where('material_assignment.sublevel_id', $sublevelId)
+                ->select('materials.material_id', 'materials.name', 'materials.price', 'material_assignment.is_mandatory')
+                ->first();
+        }
 
-                if ($sublevelId) {
-                    $q->where('material_assignment.sublevel_id', $sublevelId);
-                } elseif ($levelId) {
-                    $q->where('material_assignment.level_id', $levelId);
-                } elseif ($courseId) {
-                    $q->where('material_assignment.course_template_id', $courseId);
-                }
+        if (!$material && $levelId) {
+            $material = DB::table('material_assignment')
+                ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
+                ->where('materials.is_active', true)
+                ->where('material_assignment.level_id', $levelId)
+                ->whereNull('material_assignment.sublevel_id')
+                ->select('materials.material_id', 'materials.name', 'materials.price', 'material_assignment.is_mandatory')
+                ->first();
+        }
 
-            })
-            ->select('materials.material_id', 'materials.name', 'materials.price')
-            ->first() ?? null;
+        if (!$material && $courseId) {
+            $material = DB::table('material_assignment')
+                ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
+                ->where('materials.is_active', true)
+                ->where('material_assignment.course_template_id', $courseId)
+                ->whereNull('material_assignment.level_id')
+                ->whereNull('material_assignment.sublevel_id')
+                ->select('materials.material_id', 'materials.name', 'materials.price', 'material_assignment.is_mandatory')
+                ->first();
+        }
 
         return response()->json($material);
     }
 
     public function getTeacherSchedule(Request $request)
     {
-        $teacherId = $request->teacher_id;
-
-        $availability = \App\Models\HR\TeacherAvailability::where('teacher_id', $teacherId)
-            ->get();
-
+        $availability = \App\Models\HR\TeacherAvailability::where('teacher_id', $request->teacher_id)->get();
         return response()->json($availability);
     }
-    
 }

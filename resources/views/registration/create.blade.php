@@ -42,15 +42,9 @@
         display: flex; gap: 16px; flex-wrap: wrap;
         padding: 14px 0; margin-bottom: 20px;
     }
-    .lead-badge {
-        display: flex; flex-direction: column; gap: 2px;
-    }
-    .lead-badge-label {
-        font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #AAB8C8;
-    }
-    .lead-badge-value {
-        font-size: 13px; color: #1A2A4A; font-weight: 500;
-    }
+    .lead-badge { display: flex; flex-direction: column; gap: 2px; }
+    .lead-badge-label { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: #AAB8C8; }
+    .lead-badge-value { font-size: 13px; color: #1A2A4A; font-weight: 500; }
 
     /* ── FORM CARD ── */
     .form-card {
@@ -78,7 +72,7 @@
     }
 
     /* ── GRIDS ── */
-    .form-grid        { display: grid; grid-template-columns: 1fr 1fr;             gap: 16px 20px; margin-bottom: 20px; }
+    .form-grid        { display: grid; grid-template-columns: 1fr 1fr;         gap: 16px 20px; margin-bottom: 20px; }
     .form-grid.cols-1 { grid-template-columns: 1fr; }
     .form-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
     .form-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
@@ -116,6 +110,7 @@
         color: #7A8A9A;
         cursor: default;
     }
+    textarea.form-control-inf { resize: vertical; min-height: 88px; }
 
     select.form-control-inf {
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%237A8A9A'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
@@ -129,9 +124,7 @@
     .form-divider { height: 1px; background: rgba(27,79,168,0.06); margin: 24px 0; }
 
     /* ── RADIO GROUP ── */
-    .form-radio-group {
-        display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px;
-    }
+    .form-radio-group { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
     .form-radio-group label {
         display: flex; align-items: center; gap: 8px;
         padding: 10px 18px;
@@ -146,16 +139,35 @@
         background: rgba(27,79,168,0.04);
         color: #1B4FA8;
     }
-    .form-radio-group input[type="radio"] {
-        accent-color: #1B4FA8;
-        width: 14px; height: 14px;
+    .form-radio-group input[type="radio"] { accent-color: #1B4FA8; width: 14px; height: 14px; }
+
+    /* ── MATERIAL TOGGLE ── */
+    .material-toggle {
+        display: flex; align-items: center; gap: 10px;
+        padding: 12px 14px;
+        background: rgba(27,79,168,0.02);
+        border: 1px solid rgba(27,79,168,0.1);
+        border-radius: 4px; cursor: pointer;
+        font-size: 12px; color: #4A5A7A;
+        transition: all 0.2s; margin-bottom: 12px;
+    }
+    .material-toggle:has(input:checked) {
+        border-color: #1B4FA8; background: rgba(27,79,168,0.04); color: #1B4FA8;
+    }
+    .material-toggle input { accent-color: #1B4FA8; }
+
+    /* ── MATERIAL CS SPLIT BADGE ── */
+    .material-split {
+        display: inline-flex; align-items: center; gap: 8px;
+        padding: 6px 12px; margin-top: 8px;
+        background: rgba(245,145,30,0.06);
+        border: 1px solid rgba(245,145,30,0.2);
+        border-radius: 4px;
+        font-size: 10px; color: #92400E; letter-spacing: 0.5px;
     }
 
-    /* ── PRICING CARDS ── */
-    .pricing-grid {
-        display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;
-        margin-bottom: 20px;
-    }
+    /* ── PRICING ── */
+    .pricing-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
     .pricing-card {
         background: rgba(255,255,255,0.9);
         border: 1px solid rgba(27,79,168,0.1);
@@ -176,21 +188,6 @@
         color: var(--pc, #1B4FA8); letter-spacing: 2px;
         box-shadow: none !important;
     }
-
-    /* ── MATERIAL TOGGLE ── */
-    .material-toggle {
-        display: flex; align-items: center; gap: 10px;
-        padding: 12px 14px;
-        background: rgba(27,79,168,0.02);
-        border: 1px solid rgba(27,79,168,0.1);
-        border-radius: 4px; cursor: pointer;
-        font-size: 12px; color: #4A5A7A;
-        transition: all 0.2s; margin-bottom: 12px;
-    }
-    .material-toggle:has(input:checked) {
-        border-color: #1B4FA8; background: rgba(27,79,168,0.04); color: #1B4FA8;
-    }
-    .material-toggle input { accent-color: #1B4FA8; }
 
     /* ── MT UTILITY ── */
     .mt-2 { margin-top: 10px; }
@@ -229,54 +226,36 @@
     .btn-submit:hover::before { transform: scaleX(1); }
     .btn-submit:hover { color: #fff; }
     .btn-submit span, .btn-submit svg { position: relative; z-index: 1; }
-        /* ══ PAYMENT SUMMARY WIDGET ══ */
-    #payment_details {
-        display: none;
-        margin-top: 16px;
-        font-family: 'DM Sans', sans-serif;
-    }
- 
+
+    /* ── PAYMENT SUMMARY ── */
+    #payment_details { display: none; margin-top: 16px; font-family: 'DM Sans', sans-serif; }
+
     .inf-pay-summary {
         background: rgba(27,79,168,0.04);
         border: 1px solid rgba(27,79,168,0.1);
-        border-radius: 5px;
-        padding: 14px 16px;
-        margin-bottom: 12px;
+        border-radius: 5px; padding: 14px 16px; margin-bottom: 12px;
     }
- 
     .inf-pay-row {
         display: flex; justify-content: space-between; align-items: baseline;
         padding: 5px 0; border-bottom: 1px solid rgba(27,79,168,0.06);
     }
     .inf-pay-row:last-child { border-bottom: none; }
- 
-    .inf-pay-key {
-        font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
-        color: #7A8A9A; font-weight: 400;
-    }
-    .inf-pay-val {
-        font-size: 12px; color: #1A2A4A; font-weight: 500;
-    }
+    .inf-pay-key { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #7A8A9A; }
+    .inf-pay-val { font-size: 12px; color: #1A2A4A; font-weight: 500; }
     .inf-pay-val.accent  { color: #F5911E; }
     .inf-pay-val.blue    { color: #1B4FA8; }
     .inf-pay-val.success { color: #059669; }
- 
-    /* ── installments table ── */
+
     .inf-inst-label {
         font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
         color: #F5911E; margin: 14px 0 8px; padding-bottom: 7px;
         border-bottom: 1px solid rgba(245,145,30,0.15);
     }
- 
-    #installments_table {
-        width: 100%; border-collapse: collapse;
-        display: none;
-    }
+    #installments_table { width: 100%; border-collapse: collapse; display: none; }
     #installments_table thead th {
         font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
         color: #7A8A9A; padding: 6px 8px; text-align: left;
-        border-bottom: 1px solid rgba(27,79,168,0.1);
-        font-weight: 500;
+        border-bottom: 1px solid rgba(27,79,168,0.1); font-weight: 500;
     }
     #installments_table tbody td {
         font-size: 12px; color: #1A2A4A; font-weight: 300;
@@ -294,17 +273,26 @@
             <div class="page-eyebrow">Registration</div>
             <h1 class="page-title">Register Student</h1>
         </div>
-        <a href="{{ route('leads.index') }}" class="btn-back">Back</a>
+        <a href="{{ route('leads.index') }}" class="btn-back">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back
+        </a>
     </div>
 
     <div class="form-card">
         <div class="form-card-body">
 
-            <form id="main_form"method="POST" action="{{ route('registration.store') }}">
+            <form id="main_form" method="POST" action="{{ route('registration.store') }}">
                 @csrf
-                <input type="hidden" name="lead_id" value="{{ $lead->lead_id }}">
+                <input type="hidden" name="lead_id"      value="{{ $lead->lead_id }}">
+                <input type="hidden" name="final_price"  id="final_price_hidden">
+                <input type="hidden" name="discount_value" id="discount_hidden">
+                <input type="hidden" name="material_price" id="material_price_hidden">
+                <input type="hidden" name="course_instance_id" id="course_instance_id">
 
-                {{-- STUDENT --}}
+                {{-- ══ STUDENT INFO ══ --}}
                 <div class="form-section-label">Student Information</div>
 
                 <div class="lead-badge-strip">
@@ -324,37 +312,67 @@
                         <span class="lead-badge-label">Location</span>
                         <span class="lead-badge-value">{{ $lead->location ?? '—' }}</span>
                     </div>
+                    @if($lead->start_preference_type)
+                    <div class="lead-badge">
+                        <span class="lead-badge-label">Start Preference</span>
+                        <span class="lead-badge-value">{{ $lead->start_preference_type }}</span>
+                    </div>
+                    @endif
                 </div>
 
                 <div class="form-divider"></div>
 
-                {{-- COURSE --}}
+                {{-- ══ COURSE SETUP ══ --}}
                 <div class="form-section-label">Course Setup</div>
 
                 <div class="form-grid cols-3">
-                    <select id="course_select" name="course_template_id" class="form-control-inf">
-                        @foreach($courses as $course)
-                            <option value="{{ $course->course_template_id }}"
-                                {{ $lead->interested_course_template_id == $course->course_template_id ? 'selected' : '' }}>
-                                {{ $course->name }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <div class="form-field">
+                        <label class="form-label">Course <span class="required">*</span></label>
+                        <select id="course_select" name="course_template_id" class="form-control-inf">
+                            <option value="">— Select Course —</option>
+                            @foreach($courses as $course)
+                                <option value="{{ $course->course_template_id }}"
+                                    {{ $lead->interested_course_template_id == $course->course_template_id ? 'selected' : '' }}>
+                                    {{ $course->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                    <select id="level_select" name="level_id" class="form-control-inf">
-                        <option value="">Select Level</option>
-                    </select>
+                    <div class="form-field">
+                        <label class="form-label">Level</label>
+                        <select id="level_select" name="level_id" class="form-control-inf"
+                                data-selected="{{ $lead->interested_level_id }}">
+                            <option value="">— Select Level —</option>
+                            @foreach($levels as $level)
+                                <option value="{{ $level->level_id }}"
+                                    {{ $lead->interested_level_id == $level->level_id ? 'selected' : '' }}>
+                                    {{ $level->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
 
-                    <select id="sublevel_select" name="sublevel_id" class="form-control-inf">
-                        <option value="">Select Sublevel</option>
-                    </select>
+                    <div class="form-field">
+                        <label class="form-label">Sublevel</label>
+                        <select id="sublevel_select" name="sublevel_id" class="form-control-inf"
+                                data-selected="{{ $lead->interested_sublevel_id }}">
+                            <option value="">— Select Sublevel —</option>
+                            @foreach($sublevels as $sublevel)
+                                <option value="{{ $sublevel->sublevel_id }}"
+                                    {{ $lead->interested_sublevel_id == $sublevel->sublevel_id ? 'selected' : '' }}>
+                                    {{ $sublevel->name }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
 
                 <div class="form-divider"></div>
 
-                {{-- MATERIAL --}}
+                {{-- ══ MATERIAL ══ --}}
                 <div id="material_section" style="display:none;">
-                    <div class="form-section-label">Material</div>
+                    <div class="form-section-label">Study Material</div>
 
                     <label class="material-toggle">
                         <input type="checkbox" id="material_check">
@@ -362,15 +380,29 @@
                     </label>
 
                     <div id="material_price_block" style="display:none;">
-                        <input type="text" id="material_name" class="form-control-inf mb-2" readonly>
-                        <input type="text" id="material_price" class="form-control-inf" readonly>
-                        <input type="hidden" id="material_price_hidden" name="material_price">
+                        <div class="form-grid cols-2">
+                            <div class="form-field">
+                                <label class="form-label">Material Name</label>
+                                <input type="text" id="material_name" class="form-control-inf" readonly>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Material Price</label>
+                                <input type="text" id="material_price" class="form-control-inf" readonly>
+                            </div>
+                        </div>
+                        {{-- CS split badge — shown when cs_percentage > 0 --}}
+                        <div id="material_split_badge" class="material-split" style="display:none;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <span id="material_split_text"></span>
+                        </div>
                     </div>
 
                     <div class="form-divider"></div>
                 </div>
 
-                {{-- TYPE --}}
+                {{-- ══ ENROLLMENT TYPE ══ --}}
                 <div class="form-section-label">Enrollment Type</div>
 
                 <div class="form-radio-group">
@@ -380,7 +412,7 @@
 
                 <div class="form-divider"></div>
 
-                {{-- DELIVERY --}}
+                {{-- ══ DELIVERY MODE ══ --}}
                 <div class="form-section-label">Delivery Mode</div>
 
                 <select name="mode" class="form-control-inf">
@@ -390,27 +422,32 @@
 
                 <div class="form-divider"></div>
 
-                {{-- PATCH --}}
+                {{-- ══ START OPTION ══ --}}
                 <div class="form-section-label">Start Option</div>
 
                 <select id="patch_select" name="patch_option" class="form-control-inf"></select>
                 <input type="hidden" id="patch_id" name="patch_id">
 
-                <input type="date" id="custom_date" name="custom_date"
-                       class="form-control-inf mt-2"
-                       style="display:none;">
+                <div id="custom_date_wrap" style="display:none; margin-top:12px;">
+                    <label class="form-label">Specific Start Date <span class="required">*</span></label>
+                    <input type="date" id="custom_date" name="custom_date"
+                           class="form-control-inf" style="color-scheme:light;">
+                </div>
 
                 <div class="form-divider"></div>
 
-                {{-- PRIVATE --}}
+                {{-- ══ PRIVATE EXTRA ══ --}}
                 <div id="private_extra" style="display:none;">
                     <div id="teacher_block">
                         <div class="form-section-label">Teacher</div>
-                        <select id="teacher_select" name="teacher_id" class="form-control-inf"></select>
+                        <select id="teacher_select" name="teacher_id" class="form-control-inf">
+                            <option value="">— Select Teacher —</option>
+                        </select>
                     </div>
+
                     <div class="form-section-label mt-2">Preferred Days</div>
                     <select id="day_select" name="day" class="form-control-inf">
-                        <option value="">Select Pair</option>
+                        <option value="">— Select Days —</option>
                         <option value="sat_tue">Saturday - Tuesday</option>
                         <option value="sun_wed">Sunday - Wednesday</option>
                         <option value="mon_thu">Monday - Thursday</option>
@@ -418,10 +455,10 @@
 
                     <div class="form-section-label mt-3">Bundles</div>
                     <select id="bundle_select" name="bundle_id" class="form-control-inf">
-                        <option value="">Select Bundle</option>
+                        <option value="">— Select Bundle —</option>
                         @foreach($bundles as $b)
                             <option value="{{ $b->bundle_id }}" data-price="{{ $b->price }}">
-                                {{ $b->hours }} hrs ({{ $b->price }} LE)
+                                {{ $b->hours }} hrs — {{ $b->price }} LE
                             </option>
                         @endforeach
                     </select>
@@ -429,98 +466,122 @@
                     <div class="form-divider"></div>
                 </div>
 
-                {{-- PRICING --}}
+                {{-- ══ PRICING ══ --}}
                 <div class="form-section-label">Pricing</div>
 
                 <div class="form-grid cols-3">
-                    <div>
-                        <label>Base Price</label>
-                        <input id="base_price" readonly class="form-control-inf">
+                    <div class="form-field">
+                        <label class="form-label">Base Price</label>
+                        <input id="base_price" class="form-control-inf" readonly placeholder="—">
                     </div>
-
-                    <div>
-                        <label>Discount</label>
-                        <input id="discount" readonly class="form-control-inf">
-                        <input type="hidden" name="discount_value" id="discount_hidden">
+                    <div class="form-field">
+                        <label class="form-label">Discount</label>
+                        <input id="discount" class="form-control-inf" readonly placeholder="—">
                     </div>
-
-                    <div>
-                        <label>Final Price</label>
-                        <input id="final_price" readonly class="form-control-inf">
+                    <div class="form-field">
+                        <label class="form-label">Final Price (Course)</label>
+                        <input id="final_price" class="form-control-inf" readonly placeholder="—">
                     </div>
                 </div>
 
                 <div class="form-divider"></div>
 
-                {{-- TEST --}}
+                {{-- ══ PLACEMENT TEST ══ --}}
                 <div class="form-section-label">Placement Test</div>
 
                 <div class="form-grid cols-2">
-                    <input name="test_score" placeholder="Score" class="form-control-inf">
-                    <input name="test_fee" placeholder="Fee" class="form-control-inf">
+                    <div class="form-field">
+                        <label class="form-label">Test Score</label>
+                        <input name="test_score" class="form-control-inf" placeholder="e.g. 85">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Test Fee (LE)</label>
+                        <input name="test_fee" class="form-control-inf" placeholder="e.g. 200">
+                    </div>
                 </div>
 
                 <div class="form-divider"></div>
 
-                {{-- PAYMENT --}}
-                <div class="form-section-label">Payment</div>
+                {{-- ══ PAYMENT PLAN ══ --}}
+                <div class="form-section-label">Payment Plan</div>
 
-                <select id="payment_plan_id" name="payment_plan_id">
-                    @foreach($paymentPlans as $plan)
-                        <option 
-                            value="{{ $plan->payment_plan_id }}"
-                            data-deposit="{{ $plan->deposit_percentage }}"
-                            data-installments="{{ $plan->installment_count }}"
-                            data-grace="{{ $plan->grace_period_days }}"
-                        >
-                            {{ $plan->name }}
-                        </option>
-                    @endforeach
-                </select>
+                <div class="form-field">
+                    <label class="form-label">Select Plan <span class="required">*</span></label>
+                    <select id="payment_plan_id" name="payment_plan_id" class="form-control-inf">
+                        <option value="">— Select Plan —</option>
+                        @foreach($paymentPlans as $plan)
+                            <option
+                                value="{{ $plan->payment_plan_id }}"
+                                data-deposit="{{ $plan->deposit_percentage }}"
+                                data-installments="{{ $plan->installment_count }}"
+                                data-grace="{{ $plan->grace_period_days }}"
+                                data-approval="{{ $plan->requires_admin_approval ? 1 : 0 }}">
+                                {{ $plan->name }}
+                                ({{ $plan->deposit_percentage }}% deposit
+                                @if($plan->installment_count > 0)
+                                    · {{ $plan->installment_count }} installments
+                                @else
+                                    · Full payment
+                                @endif)
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
 
-                {{-- ══ PAYMENT SUMMARY ══ --}}
+                {{-- Payment Summary --}}
                 <div id="payment_details">
-                
                     <div class="inf-pay-summary" id="payment_summary"></div>
-                
-                    <div class="inf-inst-label" id="installments_label" style="display:none;">
-                        Installment Schedule
-                    </div>
-                
+                    <div class="inf-inst-label" id="installments_label" style="display:none;">Installment Schedule</div>
                     <table id="installments_table">
                         <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>Amount</th>
-                                <th>Due Date</th>
-                            </tr>
+                            <tr><th>#</th><th>Amount</th><th>Due Date</th></tr>
                         </thead>
                         <tbody></tbody>
                     </table>
-                
                 </div>
 
                 <div class="form-divider"></div>
 
+                {{-- ══ NOTES ══ --}}
+                <div class="form-section-label">Registration Notes</div>
+
+                <div class="form-field">
+                    <label class="form-label">Notes</label>
+                    <textarea name="notes" class="form-control-inf"
+                              placeholder="Any additional notes about this registration..."></textarea>
+                </div>
+
+                <div class="form-divider"></div>
+
+                {{-- ══ FOOTER ══ --}}
                 <div class="form-footer">
-                    <input type="hidden" id="student_name" value="{{ $lead->full_name }}">
-                    <input type="hidden" id="student_phone" value="{{ $lead->phone }}">
-                    <input type="hidden" id="discount_hidden">
-                    <input type="hidden" id="material_price_hidden">
-                    <input type="hidden" name="final_price" id="final_price_hidden">
-                    <input type="hidden" name="course_instance_id" id="course_instance_id">
-                    <button type="button" id="preview_invoice_btn" class="btn-submit">view Invoice</button>
+                    <a href="{{ route('leads.index') }}" class="btn-cancel">Cancel</a>
+                    <button type="button" id="preview_invoice_btn" class="btn-cancel" style="color:#1B4FA8;border-color:rgba(27,79,168,0.3);">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        View Invoice
+                    </button>
+                    <button type="button" id="register_btn" class="btn-submit">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span>Confirm & Register</span>
+                    </button>
                 </div>
 
             </form>
+
             @include('registration.invoice')
 
         </div>
     </div>
 
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="{{ asset('js/register/register-modal.js') }}"></script>
 
+<script src="{{ asset('js/register/register-modal.js') }}"></script>
 
 @endsection
