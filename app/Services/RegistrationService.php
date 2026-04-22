@@ -114,7 +114,7 @@ class RegistrationService
 
                 'notes' => $data['notes'] ?? null,
 
-                'created_by_cs_id' => auth()->user()?->employees?->first()?->employee_id,
+                'created_by_cs_id' => auth()->user()?->employee?->employee_id,
             ]);
             event(new WaitingListUpdated($waiting));
 
@@ -203,7 +203,7 @@ class RegistrationService
                 ? 'Active'
                 : 'Waiting',
 
-            'created_by_cs_id' => auth()->user()->employee->first()->employee_id ?? null
+            'created_by_cs_id' => auth()->user()->employee?->employee_id ?? null
         ]);
     }
 
@@ -369,6 +369,19 @@ class RegistrationService
             'amount_allocated'  => $depositAmount,
             'allocation_type'   => 'Direct',
         ]);
+
+        $methods = $data['deposit_methods'] ?? [];
+        foreach ($methods as $method) {
+            if (empty($method['amount']) || $method['amount'] <= 0) continue;
+            \Illuminate\Support\Facades\DB::table('deposit_payment')->insert([
+                'enrollment_id'    => $enrollment->enrollment_id,
+                'method'           => $method['method'],
+                'amount'           => $method['amount'],
+                'reference_number' => $method['reference'] ?? null,
+                'created_at'       => now(),
+                'updated_at'       => now(),
+            ]);
+        }
 
         $testFee = floatval($data['test_fee'] ?? 0);
         if ($testFee > 0) {

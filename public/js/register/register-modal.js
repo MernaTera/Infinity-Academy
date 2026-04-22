@@ -423,7 +423,9 @@ document.addEventListener('DOMContentLoaded', function () {
             loadPaymentDetails();
         });
     }
-
+    document.querySelectorAll('.form-control-inf').forEach(el => {
+        el.addEventListener('change', calculatePrice);
+    });
     bundle?.addEventListener('change', calculatePrice);
     document.querySelectorAll('input[name="type"]').forEach(r => r.addEventListener('change', calculatePrice));
 
@@ -602,4 +604,170 @@ document.addEventListener('DOMContentLoaded', function () {
         calculatePrice();
         loadMaterial();
     }, 200);
+
+    // ─── DEPOSIT PAYMENT METHODS ───
+    let methodRowCount = 1;
+
+    // Show/hide deposit section based on payment plan
+    function updateDepositSection() {
+        const planSelect = document.getElementById('payment_plan_id');
+        const depositSection = document.getElementById('deposit_section');
+        const depositAmountEl = document.getElementById('deposit_required_amount');
+
+        if (!planSelect || !depositSection) return;
+
+        const selected = planSelect.options[planSelect.selectedIndex];
+        const deposit  = parseFloat(selected?.dataset?.deposit || 0);
+
+        const finalPriceInput = document.getElementById('final_price');
+        const finalPrice = parseFloat(finalPriceInput?.value?.replace(' LE','') || 0);
+
+        if (deposit > 0 && finalPrice > 0) {
+            const depositAmount = (finalPrice * deposit / 100).toFixed(2);
+            depositSection.style.display = 'block';
+            if (depositAmountEl) depositAmountEl.textContent = depositAmount + ' LE';
+
+            // Store required deposit for validation
+            depositSection.dataset.required = depositAmount;
+            updatePaymentTotal();
+        } else {
+            depositSection.style.display = 'none';
+        }
+    }
+
+    // Add new payment method row
+    window.addPaymentMethod = function() {
+        const container = document.getElementById('payment_methods_container');
+        const idx = methodRowCount++;
+
+        const row = document.createElement('div');
+        row.className = 'payment-method-row';
+        row.id = `method_row_${idx}`;
+        row.innerHTML = `
+            <div class="form-field">
+                <label class="form-label">Method</label>
+                <select name="deposit_methods[${idx}][method]" class="form-control-inf method-select"
+                        onchange="toggleRefField(this, ${idx})">
+                    <option value="Cash">Cash</option>
+                    <option value="Instapay">Instapay</option>
+                    <option value="Vodafone_Cash">Vodafone Cash</option>
+                </select>
+            </div>
+            <div class="form-field">
+                <label class="form-label">Amount (LE)</label>
+                <input type="number" name="deposit_methods[${idx}][amount]"
+                    class="form-control-inf method-amount"
+                    placeholder="0.00" step="0.01" min="0"
+                    oninput="updatePaymentTotal()">
+            </div>
+            <button type="button" class="btn-remove-method" onclick="removePaymentMethod(${idx})">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        `;
+        container.appendChild(row);
+    };
+
+    // Remove payment method row
+    window.removePaymentMethod = function(idx) {
+        const row = document.getElementById(`method_row_${idx}`);
+        if (row) {
+            row.style.animation = 'none';
+            row.style.opacity = '0';
+            row.style.transform = 'translateY(-4px)';
+            row.style.transition = 'all 0.2s';
+            setTimeout(() => { row.remove(); updatePaymentTotal(); }, 200);
+        }
+    };
+
+    // Show/hide reference field for non-cash methods
+    window.toggleRefField = function(select, idx) {
+        const refField = document.getElementById(`ref_field_${idx}`);
+        if (refField) {
+            refField.style.display = (select.value !== 'Cash') ? 'block' : 'none';
+        }
+    };
+
+    // Handle first row method change
+    const firstMethodSelect = document.querySelector('#method_row_0 .method-select');
+    if (firstMethodSelect) {
+        firstMethodSelect.addEventListener('change', function() {
+            toggleRefField(this, 0);
+        });
+    }
+
+    // Calculate total and validate
+    window.updatePaymentTotal = function() {
+        const amounts  = document.querySelectorAll('.method-amount');
+        const totalEl  = document.getElementById('payment_total_display');
+        const msgEl    = document.getElementById('payment_validation_msg');
+        const section  = document.getElementById('deposit_section');
+
+        if (!totalEl || !section) return;
+
+        let total = 0;
+        amounts.forEach(input => {
+            total += parseFloat(input.value || 0);
+        });
+
+        const required = parseFloat(section.dataset.required || 0);
+
+        totalEl.textContent = total.toFixed(2) + ' LE';
+
+        if (required > 0) {
+            if (Math.abs(total - required) < 0.01) {
+                // ✅ exact match
+                totalEl.className = 'payment-total-value success';
+                msgEl.className   = 'payment-validation-msg success';
+                msgEl.textContent = '✓ Payment amounts match the required deposit.';
+                msgEl.style.display = 'block';
+            } else if (total > required) {
+                // ❌ overpaid
+                totalEl.className = 'payment-total-value error';
+                msgEl.className   = 'payment-validation-msg error';
+                msgEl.textContent = `Amount entered (${total.toFixed(2)} LE) exceeds the required deposit (${required.toFixed(2)} LE).`;
+                msgEl.style.display = 'block';
+            } else {
+                // ⚠️ underpaid
+                totalEl.className = 'payment-total-value error';
+                msgEl.className   = 'payment-validation-msg error';
+                const remaining = (required - total).toFixed(2);
+                msgEl.textContent = `Still need ${remaining} LE more to complete the deposit.`;
+                msgEl.style.display = 'block';
+            }
+        }
+    };
+
+    // Hook into payment plan change
+    if (paymentSelect) {
+        paymentSelect.addEventListener('change', updateDepositSection);
+    }
+
+    // Hook into price calculation to refresh deposit
+    const origCalculatePrice = calculatePrice;
+    // Call updateDepositSection after price loads
+    setTimeout(updateDepositSection, 500);
+
+    // ─── VALIDATION BEFORE SUBMIT ───
+    // في الـ register_btn click handler — ضيفي الـ validation ده قبل infConfirm.show():
+
+    // Validate deposit payments
+    const depositSection = document.getElementById('deposit_section');
+    if (depositSection && depositSection.style.display !== 'none') {
+        const required = parseFloat(depositSection.dataset.required || 0);
+        const amounts  = document.querySelectorAll('.method-amount');
+        let total = 0;
+        amounts.forEach(input => { total += parseFloat(input.value || 0); });
+
+        if (Math.abs(total - required) > 0.01) {
+            infConfirm.show({
+                label:   'Validation',
+                title:   'Deposit Incomplete',
+                message: `The deposit payment total (${total.toFixed(2)} LE) must equal the required deposit (${required.toFixed(2)} LE).`,
+                okText:  'OK',
+            });
+            return;
+        }
+    }
 });

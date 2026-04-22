@@ -89,6 +89,25 @@ class RegistrationController extends Controller
             'custom_date'        => 'nullable|date',
         ]);
 
+        $plan = \App\Models\Finance\PaymentPlan::find($request->payment_plan_id);
+        $finalPrice = (float) $request->final_price;
+
+        if ($plan && $plan->deposit_percentage > 0 && $finalPrice > 0) {
+            $requiredDeposit = round($finalPrice * $plan->deposit_percentage / 100, 2);
+            
+            $methods = $request->input('deposit_methods', []);
+            $totalPaid = collect($methods)->sum(fn($m) => (float)($m['amount'] ?? 0));
+            $totalPaid = round($totalPaid, 2);
+
+            if (abs($totalPaid - $requiredDeposit) > 0.01) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'deposit_methods' => "Deposit total ({$totalPaid} LE) must equal required deposit ({$requiredDeposit} LE)."
+                    ]);
+            }
+        }
+
         try {
             $this->registrationService->register($request->all());
 

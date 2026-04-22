@@ -251,6 +251,78 @@
         color: #F5911E; margin: 14px 0 8px; padding-bottom: 7px;
         border-bottom: 1px solid rgba(245,145,30,0.15);
     }
+    .payment-methods-section { margin-top: 16px; }
+    
+    .payment-method-row {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr auto;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 10px;
+        padding: 12px 14px;
+        background: rgba(255,255,255,0.9);
+        border: 1px solid rgba(27,79,168,0.1);
+        border-radius: 4px;
+        animation: rowIn 0.25s ease both;
+    }
+    .deposit-error {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 10px;
+        padding: 10px 14px;
+        background: rgba(220,38,38,0.05);
+        border: 1px solid rgba(220,38,38,0.2);
+        border-left: 3px solid #DC2626;
+        border-radius: 4px;
+        font-size: 12px;
+        color: #DC2626;
+        letter-spacing: 0.2px;
+        animation: msgIn 0.25s ease both;
+    }
+    @keyframes rowIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:none; } }
+    
+    .payment-method-row .form-control-inf { margin: 0; }
+    
+    .btn-remove-method {
+        width: 30px; height: 30px;
+        display: flex; align-items: center; justify-content: center;
+        background: transparent;
+        border: 1px solid rgba(220,38,38,0.2);
+        border-radius: 4px; cursor: pointer; color: #DC2626;
+        transition: all 0.2s; flex-shrink: 0;
+    }
+    .btn-remove-method:hover { background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.4); }
+    
+    .btn-add-method {
+        display: inline-flex; align-items: center; gap: 6px;
+        padding: 8px 16px; margin-top: 4px;
+        background: transparent;
+        border: 1px dashed rgba(27,79,168,0.25);
+        border-radius: 4px; color: #7A8A9A;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 11px; letter-spacing: 2px; text-transform: uppercase;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .btn-add-method:hover { border-color: #1B4FA8; color: #1B4FA8; }
+    
+    .payment-total-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 14px; margin-top: 8px;
+        border-top: 1px solid rgba(27,79,168,0.08);
+        font-size: 12px;
+    }
+    .payment-total-label { color: #7A8A9A; letter-spacing: 1px; text-transform: uppercase; font-size: 10px; }
+    .payment-total-value { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 2px; color: #1B4FA8; }
+    .payment-total-value.error { color: #DC2626; }
+    .payment-total-value.success { color: #059669; }
+    
+    .payment-validation-msg {
+        font-size: 11px; margin-top: 6px; padding: 8px 12px;
+        border-radius: 4px; display: none;
+    }
+    .payment-validation-msg.error { color: #DC2626; background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.15); }
+    .payment-validation-msg.success { color: #059669; background: rgba(5,150,105,0.05); border: 1px solid rgba(5,150,105,0.15); }
     #installments_table { width: 100%; border-collapse: collapse; display: none; }
     #installments_table thead th {
         font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
@@ -541,6 +613,72 @@
                 </div>
 
                 <div class="form-divider"></div>
+    
+                {{-- ── DEPOSIT PAYMENT METHODS ── --}}
+                <div id="deposit_section" style="display:none;">
+                    <div class="form-section-label">Deposit Payment Methods</div>
+                
+                    <div id="deposit_required_notice"
+                        style="font-size:12px;color:#7A8A9A;margin-bottom:12px;padding:10px 14px;
+                                background:rgba(27,79,168,0.03);border:1px solid rgba(27,79,168,0.08);border-radius:4px;">
+                        Deposit required:
+                        <strong id="deposit_required_amount" style="color:#1B4FA8;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;">
+                            — LE
+                        </strong>
+                    </div>
+                
+                    <div class="payment-methods-section">
+                        <div id="payment_methods_container">
+                            {{-- First row always shown --}}
+                            <div class="payment-method-row" id="method_row_0">
+                                <div class="form-field">
+                                    <label class="form-label">Method</label>
+                                    <select name="deposit_methods[0][method]" class="form-control-inf method-select">
+                                        <option value="Cash">Cash</option>
+                                        <option value="Instapay">Instapay</option>
+                                        <option value="Vodafone_Cash">Vodafone Cash</option>
+                                    </select>
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">Amount (LE)</label>
+                                    <input type="number" name="deposit_methods[0][amount]"
+                                        class="form-control-inf method-amount"
+                                        placeholder="0.00" step="0.01" min="0"
+                                        oninput="updatePaymentTotal()">
+                                </div>
+                                <div style="display:flex;align-items:flex-end;padding-bottom:0;">
+                                    {{-- First row has no remove button --}}
+                                </div>
+                            </div>
+                        </div>
+                
+                        <button type="button" class="btn-add-method" onclick="addPaymentMethod()">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                <path d="M12 5v14M5 12h14"/>
+                            </svg>
+                            Add Another Method
+                        </button>
+                
+                        {{-- Total row --}}
+                        <div class="payment-total-row">
+                            <span class="payment-total-label">Total Entered</span>
+                            <span class="payment-total-value" id="payment_total_display">0.00 LE</span>
+                        </div>
+                
+                        <div class="payment-validation-msg" id="payment_validation_msg"></div>
+                    </div>
+                
+                    <div class="form-divider"></div>
+                </div>
+                @error('deposit_methods')
+                    <div class="deposit-error">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M12 8v4m0 4h.01"/>
+                        </svg>
+                        {{ $message }}
+                    </div>
+                @enderror
 
                 {{-- ══ NOTES ══ --}}
                 <div class="form-section-label">Registration Notes</div>
@@ -572,7 +710,8 @@
                         <span>Confirm & Register</span>
                     </button>
                 </div>
-
+                <input type="hidden" id="student_name"  value="{{ $lead->full_name }}">
+                <input type="hidden" id="student_phone" value="{{ $lead->phone }}">
             </form>
 
             @include('registration.invoice')
