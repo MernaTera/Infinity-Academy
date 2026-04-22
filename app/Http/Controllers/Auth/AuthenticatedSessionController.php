@@ -26,69 +26,64 @@ class AuthenticatedSessionController extends Controller
     {
         $credentials = $request->only('email', 'password');
 
-        $user = \App\Models\Auth\User::where('email', $credentials['email'])
-                ->with('role.permissions')
-                ->first();
-                
+        // 1. Check user exists
+        $user = \App\Models\Auth\User::where('email', $credentials['email'])->first();
+
         if (!$user) {
-            return back()->withErrors([
-                'email' => 'Invalid credentials.'
-            ]);
-        }
-
-        // check if account active
-        if (!$user->is_active) {
-            return back()->withErrors([
-                'email' => 'Your account is inactive.'
-            ]);
-        }
-
-        // check if account locked
-        if ($user->isLocked()) {
-            return back()->withErrors([
-                'email' => 'Account locked. Try again later.'
-            ]);
-        }
-
-        // attempt login
-        if (!Auth::attempt($credentials)) {
-
-            // record failed attempt
-            $user->recordFailedLogin();
-
             return back()
-                ->withErrors(['email' => 'Invalid credentials.'])
+                ->withErrors(['email' => 'No account found with this email address.'])
                 ->withInput($request->only('email'));
         }
 
-        // login success
-        $request->session()->regenerate();
-        $user->load('role.permissions');
+        // 2. Check account is active
+        if (!$user->is_active) {
+            return back()
+                ->withErrors(['email' => 'Your account has been deactivated. Please contact your administrator.'])
+                ->withInput($request->only('email'));
+        }
 
-        // reset attempts
+        // 3. Check if account is locked
+        if ($user->isLocked()) {
+            $remaining = now()->diffInMinutes($user->locked_until, false);
+            return back()
+                ->withErrors(['email' => "Account temporarily locked. Try again in {$remaining} minute(s)."])
+                ->withInput($request->only('email'));
+        }
+
+        // 4. Attempt login
+        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+            $user->recordFailedLogin();
+
+            $attemptsLeft = 5 - $user->fresh()->failed_attempts;
+
+            if ($attemptsLeft <= 0) {
+                return back()
+                    ->withErrors(['email' => 'Too many failed attempts. Account locked for 15 minutes.'])
+                    ->withInput($request->only('email'));
+            }
+
+            return back()
+                ->withErrors(['password' => "Incorrect password. {$attemptsLeft} attempt(s) remaining."])
+                ->withInput($request->only('email'));
+        }
+
+        // 5. Login success — reset failed attempts
+        $request->session()->regenerate();
+
         $user->update([
             'failed_attempts' => 0,
-            'locked_until' => null,
-            'last_login_at' => now()
+            'locked_until'    => null,
+            'last_login_at'   => now(),
         ]);
-         switch ($user->role_id) {
 
-        case 1: // Admin
-            return redirect('/admin/dashboard');
-
-        case 2: // CS
-            return redirect('/leads/dashboard');
-
-        case 3: // Student Care 🔥
-            return redirect('/student-care/dashboard');
-
-        case 4: // Teacher
-            return redirect('/teacher/dashboard');
-        default:
-            return redirect()->intended(route('/dashboard'));
-         }
-
-        return redirect()->intended(route('dashboard'));
+        // 6. Redirect based on role
+        return match((int) $user->role_id) {
+            1 => redirect()->intended('/admin/dashboard'),
+            2 => redirect()->intended('/dashboard'),
+            3 => redirect()->intended('/student-care/dashboard'),
+            4 => redirect()->intended('/teacher/dashboard'),
+            default => abort(403),
+        };
     }
 
     /**
@@ -99,7 +94,6 @@ class AuthenticatedSessionController extends Controller
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
-
         $request->session()->regenerateToken();
 
         return redirect('/');
