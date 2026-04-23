@@ -64,6 +64,11 @@ class RegistrationService
                     ->get();
             }
             $pricing = app(\App\Services\PricingService::class)->calculate($data);
+
+            $formFinalPrice = (float) ($data['final_price'] ?? 0);
+            if ($formFinalPrice > 0) {
+                $pricing['final_price'] = $formFinalPrice;
+            }
             $data['final_price'] = $pricing['final_price'];
 
             $enrollment = $this->createEnrollment($student, $data, $patchData);
@@ -246,12 +251,11 @@ class RegistrationService
         if (empty($data['teacher_id'])) return;
 
         $exists = \App\Models\HR\TeacherAvailability::where('teacher_id', $data['teacher_id'])
-            ->where('day_of_week', $data['day'])
-            ->where('time_slot_id', $data['time_slot_id'])
+            ->where('day_of_week', $data['day'] ?? null)
             ->exists();
 
         if (!$exists) {
-            throw new \Exception('Teacher not available anymore');
+            throw new \Exception('Teacher not available on this day');
         }
     }
 
@@ -261,9 +265,9 @@ class RegistrationService
 
         $conflict = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
             ->where('patch_id', $data['patch_id'])
-            ->whereHas('schedules', function ($q) use ($data) {
-                $q->where('day_of_week', $data['day'])
-                ->where('time_slot_id', $data['time_slot_id']);
+            ->whereHas('instanceSchedules', function ($q) use ($data) { // ← instanceSchedules
+                $q->where('day_of_week', $data['day'] ?? null)
+                ->where('time_slot_id', $data['time_slot_id'] ?? null);
             })
             ->exists();
 

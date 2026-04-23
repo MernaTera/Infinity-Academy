@@ -75,52 +75,47 @@ class RegistrationController extends Controller
     | Store Registration
     |------------------------------------------------------------------
     */
-    public function store(Request $request)
-    {
-        $request->validate([
-            'lead_id'            => 'required|exists:lead,lead_id',
-            'type'               => 'required|in:group,private',
-            'course_template_id' => 'required|exists:course_template,course_template_id',
-            'payment_plan_id'    => 'required',
-            'patch_option'       => 'required|in:current,next,custom',
-            'teacher_id'         => 'nullable',
-            'day'                => 'required_if:type,private',
-            'time_slot_id'       => 'required_if:type,private',
-            'custom_date'        => 'nullable|date',
-        ]);
+public function store(Request $request)
+{
+    $request->validate([
+        'lead_id'            => 'required|exists:lead,lead_id',
+        'type'               => 'required|in:group,private',
+        'course_template_id' => 'required|exists:course_template,course_template_id',
+        'payment_plan_id'    => 'required',
+        'patch_option'       => 'required|in:current,next,custom',
+        'teacher_id'         => 'nullable',
+        'day'                => 'nullable',
+        'custom_date'        => 'nullable|date',
+    ]);
 
-        $plan = \App\Models\Finance\PaymentPlan::find($request->payment_plan_id);
-        $finalPrice = (float) $request->final_price;
+    $plan = \App\Models\Finance\PaymentPlan::find($request->payment_plan_id);
+    $finalPrice    = (float) $request->final_price;
+    $materialPrice = (float) $request->material_price;
+    $testFee       = (float) $request->test_fee;
 
-        if ($plan && $plan->deposit_percentage > 0 && $finalPrice > 0) {
-            $requiredDeposit = round($finalPrice * $plan->deposit_percentage / 100, 2);
-            
-            $methods = $request->input('deposit_methods', []);
-            $totalPaid = collect($methods)->sum(fn($m) => (float)($m['amount'] ?? 0));
-            $totalPaid = round($totalPaid, 2);
+    if ($plan && $plan->deposit_percentage > 0 && $finalPrice > 0) {
+        
+        $depositOnCourse = round($finalPrice * $plan->deposit_percentage / 100, 2);
+        
+        $requiredDeposit = round($depositOnCourse + $materialPrice + $testFee, 2);
+        
+        $methods   = $request->input('deposit_methods', []);
+        $totalPaid = round(collect($methods)->sum(fn($m) => (float)($m['amount'] ?? 0)), 2);
 
-            if (abs($totalPaid - $requiredDeposit) > 0.01) {
-                return back()
-                    ->withInput()
-                    ->withErrors([
-                        'deposit_methods' => "Deposit total ({$totalPaid} LE) must equal required deposit ({$requiredDeposit} LE)."
-                    ]);
-            }
-        }
-
-        try {
-            $this->registrationService->register($request->all());
-
-            return redirect()
-                ->route('leads.index')
-                ->with('success', 'Student registered successfully.');
-
-        } catch (\Exception $e) {
-            return back()
-                ->with('error', $e->getMessage())
-                ->withInput();
+        if (abs($totalPaid - $requiredDeposit) > 0.01) {
+            return back()->withInput()->withErrors([
+                'deposit_methods' => "Deposit total ({$totalPaid} LE) must equal required ({$requiredDeposit} LE)."
+            ]);
         }
     }
+
+    try {
+        $this->registrationService->register($request->all());
+        return redirect()->route('leads.index')->with('success', 'Student registered successfully.');
+    } catch (\Throwable $e) {
+        dd($e->getMessage(), $e->getFile(), $e->getLine());
+    }
+}
 
     /*
     |------------------------------------------------------------------
@@ -191,5 +186,15 @@ class RegistrationController extends Controller
     {
         $availability = \App\Models\HR\TeacherAvailability::where('teacher_id', $request->teacher_id)->get();
         return response()->json($availability);
+    }
+
+    public function getLevelPackages($courseId)
+    {
+        $packages = \App\Models\Finance\LevelPackage::active()
+            ->forCourse($courseId)
+            ->orderBy('levels_count')
+            ->get(['package_id', 'name', 'levels_count', 'package_price']);
+    
+        return response()->json($packages);
     }
 }

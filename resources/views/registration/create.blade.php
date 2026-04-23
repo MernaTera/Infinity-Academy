@@ -323,6 +323,47 @@
     }
     .payment-validation-msg.error { color: #DC2626; background: rgba(220,38,38,0.05); border: 1px solid rgba(220,38,38,0.15); }
     .payment-validation-msg.success { color: #059669; background: rgba(5,150,105,0.05); border: 1px solid rgba(5,150,105,0.15); }
+    .package-card {
+        padding: 14px 18px;
+        background: rgba(255,255,255,0.9);
+        border: 1.5px solid rgba(27,79,168,0.12);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.25s;
+        min-width: 160px;
+        position: relative;
+        overflow: hidden;
+    }
+    .package-card::before {
+        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, #1B4FA8, transparent);
+        opacity: 0; transition: opacity 0.25s;
+    }
+    .package-card:hover { border-color: rgba(27,79,168,0.3); }
+    .package-card.selected {
+        border-color: #1B4FA8;
+        background: rgba(27,79,168,0.04);
+    }
+    .package-card.selected::before { opacity: 1; }
+    .package-card-levels {
+        font-family: 'Bebas Neue', sans-serif;
+        font-size: 28px; letter-spacing: 2px; color: #1B4FA8; line-height: 1;
+    }
+    .package-card-label { font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: #AAB8C8; margin-bottom: 6px; }
+    .package-card-price { font-size: 13px; color: #1A2A4A; font-weight: 500; margin-top: 4px; }
+    .package-card-per { font-size: 10px; color: #7A8A9A; margin-top: 2px; }
+    .package-card-check {
+        position: absolute; top: 8px; right: 8px;
+        width: 18px; height: 18px; border-radius: 50%;
+        background: #1B4FA8;
+        display: none; align-items: center; justify-content: center;
+    }
+    .optional-label {
+        color: #AAB8C8;
+        font-size: 8px;
+        letter-spacing: 1px;
+    }
+    .package-card.selected .package-card-check { display: flex; }
     #installments_table { width: 100%; border-collapse: collapse; display: none; }
     #installments_table thead th {
         font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
@@ -440,6 +481,7 @@
                     </div>
                 </div>
 
+
                 <div class="form-divider"></div>
 
                 {{-- ══ MATERIAL ══ --}}
@@ -508,6 +550,22 @@
 
                 <div class="form-divider"></div>
 
+                <div id="package_section" style="display:none;">
+                <div class="form-section-label">Level Package <span class="optional-label">(Optional)</span></div>
+                
+                    <div id="package_options" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+                
+                    <input type="hidden" name="package_id" id="package_id_hidden">
+                
+                    <div id="package_selected_notice" style="display:none;
+                        padding:10px 14px;margin-top:4px;
+                        background:rgba(27,79,168,0.04);
+                        border:1px solid rgba(27,79,168,0.15);
+                        border-radius:4px;font-size:12px;color:#1B4FA8;">
+                    </div>
+                
+                    <div class="form-divider"></div>
+                </div>
                 {{-- ══ PRIVATE EXTRA ══ --}}
                 <div id="private_extra" style="display:none;">
                     <div id="teacher_block">

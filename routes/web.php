@@ -103,6 +103,7 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::post('/available-teachers',              [RegistrationController::class, 'getAvailableTeachers']);
         Route::post('/teacher-schedule',                [RegistrationController::class, 'getTeacherSchedule']);
         Route::post('/get-material',                    [RegistrationController::class, 'getMaterial']);
+        Route::get('/level-packages/{courseId}', [RegistrationController::class, 'getLevelPackages']);
     });
 
 // ─────────────────────────────────────────────────────────────────

@@ -46,6 +46,7 @@ use Database\Seeders\Finance\RefundRequestSeeder;
 use Database\Seeders\Finance\RevenueSplitSeeder;
 use Database\Seeders\Finance\BundleUsageLogSeeder;
 use Database\Seeders\Finance\OutstandingBalanceSeeder;
+use Database\Seeders\Finance\LevelPackageSeeder;
 
 use Database\Seeders\HR\EmployeeSeeder;
 use Database\Seeders\HR\TeacherSeeder;
@@ -128,6 +129,7 @@ class DatabaseSeeder extends Seeder
             RevenueSplitSeeder::class,
             BundleUsageLogSeeder::class,
             OutstandingBalanceSeeder::class,
+            LevelPackageSeeder::class,
         ]);
 
         //  ATTENDANCE
