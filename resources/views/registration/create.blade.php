@@ -484,38 +484,6 @@
 
                 <div class="form-divider"></div>
 
-                {{-- ══ MATERIAL ══ --}}
-                <div id="material_section" style="display:none;">
-                    <div class="form-section-label">Study Material</div>
-
-                    <label class="material-toggle">
-                        <input type="checkbox" id="material_check">
-                        Include Study Material
-                    </label>
-
-                    <div id="material_price_block" style="display:none;">
-                        <div class="form-grid cols-2">
-                            <div class="form-field">
-                                <label class="form-label">Material Name</label>
-                                <input type="text" id="material_name" class="form-control-inf" readonly>
-                            </div>
-                            <div class="form-field">
-                                <label class="form-label">Material Price</label>
-                                <input type="text" id="material_price" class="form-control-inf" readonly>
-                            </div>
-                        </div>
-                        {{-- CS split badge — shown when cs_percentage > 0 --}}
-                        <div id="material_split_badge" class="material-split" style="display:none;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                            </svg>
-                            <span id="material_split_text"></span>
-                        </div>
-                    </div>
-
-                    <div class="form-divider"></div>
-                </div>
-
                 {{-- ══ ENROLLMENT TYPE ══ --}}
                 <div class="form-section-label">Enrollment Type</div>
 
@@ -550,22 +518,6 @@
 
                 <div class="form-divider"></div>
 
-                <div id="package_section" style="display:none;">
-                <div class="form-section-label">Level Package <span class="optional-label">(Optional)</span></div>
-                
-                    <div id="package_options" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
-                
-                    <input type="hidden" name="package_id" id="package_id_hidden">
-                
-                    <div id="package_selected_notice" style="display:none;
-                        padding:10px 14px;margin-top:4px;
-                        background:rgba(27,79,168,0.04);
-                        border:1px solid rgba(27,79,168,0.15);
-                        border-radius:4px;font-size:12px;color:#1B4FA8;">
-                    </div>
-                
-                    <div class="form-divider"></div>
-                </div>
                 {{-- ══ PRIVATE EXTRA ══ --}}
                 <div id="private_extra" style="display:none;">
                     <div id="teacher_block">
@@ -595,7 +547,53 @@
 
                     <div class="form-divider"></div>
                 </div>
+                {{-- ══ MATERIAL ══ --}}
+                <div id="material_section" style="display:none;">
+                    <div class="form-section-label">Study Material</div>
 
+                    <label class="material-toggle">
+                        <input type="checkbox" id="material_check">
+                        Include Study Material
+                    </label>
+
+                    <div id="material_price_block" style="display:none;">
+                        <div class="form-grid cols-2">
+                            <div class="form-field">
+                                <label class="form-label">Material Name</label>
+                                <input type="text" id="material_name" class="form-control-inf" readonly>
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Material Price</label>
+                                <input type="text" id="material_price" class="form-control-inf" readonly>
+                            </div>
+                        </div>
+                        {{-- CS split badge — shown when cs_percentage > 0 --}}
+                        <div id="material_split_badge" class="material-split" style="display:none;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                            </svg>
+                            <span id="material_split_text"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-divider"></div>
+                </div>
+                <div id="package_section" style="display:none;">
+                <div class="form-section-label">Level Package <span class="optional-label">(Optional)</span></div>
+                
+                    <div id="package_options" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
+                
+                    <input type="hidden" name="package_id" id="package_id_hidden">
+                
+                    <div id="package_selected_notice" style="display:none;
+                        padding:10px 14px;margin-top:4px;
+                        background:rgba(27,79,168,0.04);
+                        border:1px solid rgba(27,79,168,0.15);
+                        border-radius:4px;font-size:12px;color:#1B4FA8;">
+                    </div>
+                
+                    <div class="form-divider"></div>
+                </div>
                 {{-- ══ PRICING ══ --}}
                 <div class="form-section-label">Pricing</div>
 
@@ -752,20 +750,13 @@
                 {{-- ══ FOOTER ══ --}}
                 <div class="form-footer">
                     <a href="{{ route('leads.index') }}" class="btn-cancel">Cancel</a>
-                    <button type="button" id="preview_invoice_btn" class="btn-cancel" style="color:#1B4FA8;border-color:rgba(27,79,168,0.3);">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                        View Invoice
-                    </button>
-                    <button type="button" id="register_btn" class="btn-submit">
+                    <button type="button" id="preview_invoice_btn" class="btn-submit">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
                             <circle cx="9" cy="7" r="4"/>
                             <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
                         </svg>
-                        <span>Confirm & Register</span>
+                        <span>Review &amp; Register</span>
                     </button>
                 </div>
                 <input type="hidden" id="student_name"  value="{{ $lead->full_name }}">

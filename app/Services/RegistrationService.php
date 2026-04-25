@@ -320,23 +320,50 @@ class RegistrationService
 
     private function attachMaterials($enrollment, $data)
     {
-        $materials = \App\Models\Enrollment\MaterialAssignment::where(function ($q) use ($data) {
-
-            $q->where('course_template_id', $data['course_template_id'])
-            ->orWhere('level_id', $data['level_id'])
-            ->orWhere('sublevel_id', $data['sublevel_id']);
-
-        })->with('material')->get();
-
-        foreach ($materials as $m) {
-
-            \App\Models\Enrollment\EnrollmentMaterial::create([
-                'enrollment_id' => $enrollment->enrollment_id,
-                'material_id' => $m->material_id,
-                'price' => $m->material->price ?? 0,
-                'status' => 'Pending'
-            ]);
+        // Bug fix: كانت بتستخدم orWhere فبتجيب كل المواد
+        // الصح: cascade — sublevel → level → course (زي الـ pricing)
+        $materialAssignment = null;
+    
+        // 1. Try sublevel first
+        if (!empty($data['sublevel_id'])) {
+            $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('sublevel_id', $data['sublevel_id'])
+                ->with('material')
+                ->first();
         }
+    
+        // 2. Try level
+        if (!$materialAssignment && !empty($data['level_id'])) {
+            $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('level_id', $data['level_id'])
+                ->whereNull('sublevel_id')
+                ->with('material')
+                ->first();
+        }
+    
+        // 3. Try course
+        if (!$materialAssignment && !empty($data['course_template_id'])) {
+            $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('course_template_id', $data['course_template_id'])
+                ->whereNull('level_id')
+                ->whereNull('sublevel_id')
+                ->with('material')
+                ->first();
+        }
+    
+        if (!$materialAssignment || !$materialAssignment->material) {
+            return; // no material found
+        }
+    
+        // Check if material was actually selected by CS
+        $materialPrice = floatval($data['material_price'] ?? 0);
+        if ($materialPrice <= 0) {
+            return; // CS didn't include material
+        }
+    
+        \App\Models\Enrollment\EnrollmentMaterial::create([
+            'enrollment_id' => $enrollment->enrollment_id,
+            'material_id'   => $materialAssignment->material_id,
+            'price'         => $materialAssignment->material->price ?? 0,
+            'status'        => 'Pending',
+        ]);
     }
 
     private function createFinancialRecords($enrollment, $data, $pricing, $patch)

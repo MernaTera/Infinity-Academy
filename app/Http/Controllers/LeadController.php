@@ -132,14 +132,17 @@ class LeadController extends Controller
     */
     public function update(Request $request, $id)
     {
-        // ── AJAX (inline status / next_call_at update) ──
         if ($request->expectsJson()) {
             $lead = $this->leadRepository->find($id);
             $old  = $lead->status;
             $data = [];
 
             if ($request->has('status'))       $data['status']      = $request->status;
-            if ($request->has('next_call_at')) $data['next_call_at'] = $request->next_call_at;
+            if ($request->has('next_call_at')) {
+                $data['next_call_at'] = $request->next_call_at
+                    ? \Carbon\Carbon::parse($request->next_call_at)->format('Y-m-d H:i:s')
+                    : null;
+            }
 
             if (!$lead->owner_cs_id) {
                 $data['owner_cs_id'] = $this->currentEmployeeId();
@@ -153,7 +156,6 @@ class LeadController extends Controller
             return response()->json(['success' => true]);
         }
 
-        // ── Form update ──
         $lead      = $this->leadRepository->find($id);
         $old       = $lead->status;
         $validated = app(StoreLeadRequest::class)->validated();

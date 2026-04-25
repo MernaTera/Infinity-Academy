@@ -3,32 +3,43 @@ let currentSelect = null;
 
 
 
-function updateLeadStatus(select, leadId, newStatus) {
+async function updateLeadStatus(el, leadId, newStatus) {
+    document.querySelectorAll('.status-dropdown').forEach(d => d.style.display='none');
 
-    document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
-
-    const status = (newStatus || select?.value)?.trim();
+    const status = (newStatus || el?.value)?.trim();
     if (!status) return;
 
-    // 🔥 CASE 1: Call Again → modal
     if (status === 'Call_Again') {
-        currentLeadId = leadId;
-        currentSelect = select;
-        document.getElementById('callModal').style.display = 'flex';
-        return;
-    }
-
-    // 🔥 CASE 2: Registered → redirect
-    if (status === 'Registered') {
-        if (confirm("Are you sure you want to register this lead?")) {
-            window.location.href = `/registration/from-lead/${leadId}`;
+        const modal = document.getElementById('callModal');
+        if (modal) {
+            modal.style.display = 'flex';
+            modal._leadId = leadId;
         }
         return;
     }
 
-    // 🔥 CASE 3: normal update
-    sendUpdate(select, leadId, { status });
-}
+    if (status === 'Registered') {
+        const ok = await infConfirm.show({
+            label:   'Lead Registration',
+            title:   'Register This Lead?',
+            message: 'This will convert the lead into a registered student and open the registration form.',
+            okText:  'Register Now'
+        });
+        if (ok) window.location.href = `/registration/from-lead/${leadId}`;
+        return;
+    }
+
+    fetch(`/leads/${leadId}`, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'Accept':'application/json',
+            'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content,
+            'X-HTTP-Method-Override':'PUT'
+        },
+        body:JSON.stringify({ _method:'PUT', status })
+        }).then(r=>r.json()).then(d=>{ if(d.success) location.reload(); });
+    }
 function sendUpdate(select, leadId, data) {
     fetch(`/leads/${leadId}`, {
         method: 'POST',
@@ -61,21 +72,31 @@ function closeModal() {
 }
 
 function confirmCall() {
-    let input = document.getElementById('callDate').value;
+    const modal  = document.getElementById('callModal');
+    const leadId = modal?._leadId;
+    const input  = document.getElementById('callDate').value;
 
-    if (!input) {
-        alert("Please select date & time");
-        return;
-    }
+    if (!leadId) { alert('Error: Lead not found'); return; }
+    if (!input)  { alert('Please select date & time'); return; }
 
-    let formatted = input;
-
-    sendUpdate(currentSelect, currentLeadId, {
-        status: 'Call_Again',
-        next_call_at: formatted
+    fetch(`/leads/${leadId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'X-HTTP-Method-Override': 'PUT'
+        },
+        body: JSON.stringify({
+            _method: 'PUT',
+            status: 'Call_Again',
+            next_call_at: input
+        })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) { modal.style.display='none'; location.reload(); }
     });
-
-    closeModal();
 }
 
 
