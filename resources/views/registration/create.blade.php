@@ -396,7 +396,17 @@
 
     <div class="form-card">
         <div class="form-card-body">
-
+            @if(session('error'))
+            <div style="max-width:920px;margin:0 auto 16px;padding:14px 18px;
+                        background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.2);
+                        border-left:3px solid #DC2626;border-radius:6px;
+                        display:flex;align-items:center;gap:12px;font-size:13px;color:#DC2626;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+                {{ session('error') }}
+            </div>
+            @endif
             <form id="main_form" method="POST" action="{{ route('registration.store') }}">
                 @csrf
                 <input type="hidden" name="lead_id"      value="{{ $lead->lead_id }}">

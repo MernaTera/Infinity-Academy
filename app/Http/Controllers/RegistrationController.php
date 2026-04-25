@@ -112,9 +112,12 @@ public function store(Request $request)
     try {
         $this->registrationService->register($request->all());
         return redirect()->route('leads.index')->with('success', 'Student registered successfully.');
-    } catch (\Throwable $e) {
-        dd($e->getMessage(), $e->getFile(), $e->getLine());
-    }
+        } catch (\Throwable $e) {
+            \Log::error('Registration failed: ' . $e->getMessage());
+            return back()
+                ->withInput()
+                ->with('error', 'Registration failed: ' . $e->getMessage() . ' — Please try again or contact support.');
+        }
 }
 
     /*

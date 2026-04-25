@@ -74,24 +74,6 @@ const infConfirm = {
     reject()  { document.getElementById('inf-confirm-overlay').classList.remove('active'); if(this._resolve) this._resolve(false); this._resolve=null; }
 };
 
-// ─────────────────────────────────────────
-// Leads index helpers
-// ─────────────────────────────────────────
-// async function updateLeadStatus(el, leadId, newStatus) {
-//     document.querySelectorAll('.status-dropdown').forEach(d => d.style.display='none');
-//     if (newStatus === 'Registered') {
-//         const ok = await infConfirm.show({ label:'Lead Registration', title:'Register This Lead?',
-//             message:'This will convert the lead into a registered student and open the registration form.', okText:'Register Now' });
-//         if (ok) window.location.href = `/registration/from-lead/${leadId}`;
-//         return;
-//     }
-//     fetch(`/leads/${leadId}`, {
-//         method:'PUT',
-//         headers:{'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content,'Accept':'application/json'},
-//         body:JSON.stringify({status:newStatus})
-//     }).then(r=>r.json()).then(d=>{ if(d.success) location.reload(); });
-// }
-
 function toggleDropdown(badge) {
     const dd = badge.nextElementSibling;
     const open = dd.style.display==='block';
@@ -509,13 +491,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     if (teacher) {
         teacher.addEventListener('change', function() {
-            if (!this.value) return;
-            fetch('/teacher-schedule',{method:'POST',headers:{'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},body:JSON.stringify({teacher_id:this.value})})
-            .then(r=>r.json()).then(data => {
-                const ds = document.getElementById('day_select');
-                if (!ds) return;
-                ds.innerHTML='';
-                [...new Set(data.map(a=>a.day_of_week))].forEach(d=>{ds.innerHTML+=`<option value="${d}">${d}</option>`;});
+            const ds = document.getElementById('day_select');
+            if (!ds) return;
+
+            if (!this.value) {
+                ds.innerHTML = `
+                    <option value="">— Select Days —</option>
+                    <option value="sat_tue">Saturday - Tuesday</option>
+                    <option value="sun_wed">Sunday - Wednesday</option>
+                    <option value="mon_thu">Monday - Thursday</option>`;
+                return;
+            }
+
+            fetch('/teacher-schedule', {
+                method:'POST',
+                headers:{'Content-Type':'application/json','X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]').content},
+                body:JSON.stringify({teacher_id:this.value})
+            })
+            .then(r=>r.json())
+            .then(data => {
+                ds.innerHTML = '<option value="">— Select Days —</option>';
+                if (!data.length) {
+                    ds.innerHTML = '<option disabled>No available days</option>';
+                    return;
+                }
+                [...new Set(data.map(a=>a.day_of_week))].forEach(d => {
+                    const label = {
+                        'sat_tue':  'Saturday - Tuesday',
+                        'sun_wed':  'Sunday - Wednesday',
+                        'mon_thu':  'Monday - Thursday',
+                    }[d] || d;
+                    ds.innerHTML += `<option value="${d}">${label}</option>`;
+                });
             });
         });
     }
