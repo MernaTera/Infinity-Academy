@@ -1,234 +1,331 @@
-<nav x-data="{ open: false, scrolled: false }"
-     x-init="window.addEventListener('scroll', () => scrolled = window.scrollY > 20)"
-     :class="scrolled ? 'shadow-md bg-white/95 backdrop-blur-md border-b border-blue-100' : 'bg-white/80 backdrop-blur-sm border-b border-blue-50'"
-     class="sticky top-0 z-50 transition-all duration-500"
-     style="font-family: 'DM Sans', sans-serif;">
+<nav id="mainNav"
+     x-data="{ open: false }"
+     style="font-family: 'DM Sans', sans-serif; position:sticky; top:0; z-index:50;
+            background:rgba(255,255,255,0.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+            border-bottom:1px solid rgba(27,79,168,0.08);
+            transition:box-shadow 0.3s, background 0.3s;">
 
     @once
     <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     @endonce
 
     <style>
-        .nav-link-item {
-            position: relative; font-size: 11px; letter-spacing: 3px;
-            text-transform: uppercase; color: #7A8A9A; text-decoration: none;
-            font-weight: 400; padding: 4px 0; transition: color 0.3s;
+        #mainNav.scrolled {
+            background: rgba(255,255,255,0.98) !important;
+            box-shadow: 0 2px 20px rgba(27,79,168,0.08);
         }
-        .nav-link-item::after {
-            content: ''; position: absolute; bottom: -2px; left: 0;
+
+        .nav-link {
+            font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+            color: #7A8A9A; text-decoration: none; font-weight: 400;
+            padding: 6px 0; position: relative; transition: color 0.25s;
+            white-space: nowrap;
+        }
+        .nav-link::after {
+            content: ''; position: absolute; bottom: -1px; left: 0;
             width: 0; height: 1.5px;
             background: linear-gradient(90deg, #F5911E, #1B4FA8);
             transition: width 0.35s cubic-bezier(0.16,1,0.3,1);
         }
-        .nav-link-item:hover, .nav-link-item.active { color: #1B4FA8; }
-        .nav-link-item:hover::after, .nav-link-item.active::after { width: 100%; }
+        .nav-link:hover, .nav-link.active { color: #1B4FA8; text-decoration: none; }
+        .nav-link:hover::after, .nav-link.active::after { width: 100%; }
 
-        .nav-dropdown-panel {
-            background: rgba(255,255,255,0.97); backdrop-filter: blur(16px);
-            border: 1px solid rgba(27,79,168,0.12); border-radius: 6px;
-            box-shadow: 0 12px 40px rgba(27,79,168,0.1); overflow: hidden;
+        .nav-avatar {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(27,79,168,0.07);
+            border: 1.5px solid rgba(27,79,168,0.18);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: border-color 0.25s;
+            flex-shrink: 0;
         }
-        .nav-dropdown-item {
-            display: block; padding: 10px 20px; font-size: 11px;
-            letter-spacing: 2px; text-transform: uppercase; color: #7A8A9A;
-            text-decoration: none; transition: color 0.2s, background 0.2s;
-            white-space: nowrap; font-family: 'DM Sans', sans-serif;
-        }
-        .nav-dropdown-item:hover { color: #1B4FA8; background: rgba(27,79,168,0.04); }
+        .nav-avatar:hover { border-color: #1B4FA8; }
 
-        .hamburger-line {
+        .user-dropdown {
+            display: none; position: absolute; right: 0; top: calc(100% + 8px);
+            background: rgba(255,255,255,0.98); backdrop-filter: blur(16px);
+            border: 1px solid rgba(27,79,168,0.1); border-radius: 8px;
+            box-shadow: 0 12px 40px rgba(27,79,168,0.12);
+            min-width: 200px; overflow: hidden; z-index: 999;
+        }
+        .user-dropdown.open { display: block; animation: dropIn 0.2s ease both; }
+        @keyframes dropIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
+
+        .user-dropdown-item {
+            display: block; padding: 10px 16px;
+            font-size: 10px; letter-spacing: 2px; text-transform: uppercase;
+            color: #7A8A9A; text-decoration: none;
+            transition: color 0.2s, background 0.2s;
+            font-family: 'DM Sans', sans-serif;
+        }
+        .user-dropdown-item:hover { color: #1B4FA8; background: rgba(27,79,168,0.04); text-decoration: none; }
+        .user-dropdown-item.danger:hover { color: #DC2626; background: rgba(220,38,38,0.04); }
+
+        /* Mobile menu */
+        .mobile-menu {
+            display: none;
+            border-top: 1px solid rgba(27,79,168,0.07);
+            background: rgba(255,255,255,0.98);
+        }
+        .mobile-menu.open { display: block; animation: slideDown 0.25s ease both; }
+        @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:none} }
+
+        .mobile-nav-link {
+            display: flex; align-items: center; gap: 10px;
+            padding: 14px 20px; font-size: 10px; letter-spacing: 3px;
+            text-transform: uppercase; color: #7A8A9A; text-decoration: none;
+            border-bottom: 1px solid rgba(27,79,168,0.04);
+            transition: color 0.2s, background 0.2s;
+        }
+        .mobile-nav-link:hover,
+        .mobile-nav-link.active { color: #1B4FA8; background: rgba(27,79,168,0.03); }
+
+        .hamburger { background: none; border: none; cursor: pointer; padding: 6px; display: none; }
+        @media (max-width: 768px) {
+            .nav-desktop-links { display: none !important; }
+            .hamburger { display: flex; flex-direction: column; gap: 5px; }
+        }
+
+        .ham-line {
             display: block; width: 22px; height: 1.5px;
             background: #7A8A9A; transition: all 0.3s; transform-origin: center;
         }
-        .nav-avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: rgba(27,79,168,0.08); border: 1.5px solid rgba(27,79,168,0.2);
-            display: flex; align-items: center; justify-content: center;
-            transition: border-color 0.3s; flex-shrink: 0;
+        @media (max-width: 768px) {
+            #bellPanel {
+                position: fixed !important;
+                left: 16px !important;
+                right: 16px !important;
+                width: auto !important;
+                top: 60px !important;
+            }
         }
-        .nav-avatar:hover { border-color: #1B4FA8; }
-        .nav-bell {
-            color: #AAB8C8; transition: color 0.2s;
-            background: none; border: none; cursor: pointer; padding: 0;
-        }
-        .nav-bell:hover { color: #F5911E; }
-        .logo-wrap img { height: 38px; width: auto; object-fit: contain; display: block; }
-
-        /* ── Leads pill ── */
-        .nav-leads-pill {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 5px 14px;
-            background: rgba(27,79,168,0.05);
-            border: 1px solid rgba(27,79,168,0.15);
-            border-radius: 20px;
-            font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
-            color: #1B4FA8; text-decoration: none; font-weight: 500;
-            transition: all 0.3s; position: relative; overflow: hidden;
-        }
-        .nav-leads-pill::before {
-            content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, #1B4FA8, #2D6FDB);
-            transform: scaleX(0); transform-origin: left;
-            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
-        }
-        .nav-leads-pill:hover::before,
-        .nav-leads-pill.active::before { transform: scaleX(1); }
-        .nav-leads-pill:hover,
-        .nav-leads-pill.active { color: #fff; border-color: transparent; text-decoration: none; }
-        .nav-leads-pill > * { position: relative; z-index: 1; }
     </style>
 
-    <div class="mx-auto px-6 lg:px-8 mx-4">
-        <div class="flex items-center justify-between h-[62px]">
+    <div style="max-width:1400px; margin:0 auto; padding:0 24px;">
+        <div style="display:flex; align-items:center; justify-content:space-between; height:60px; gap:20px;">
 
-            {{-- LOGO --}}
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 group" style="text-decoration:none;">
-                <div class="logo-wrap">
-                    <img src="{{ asset('images/logo.png') }}" alt="Infinity Logo">
-                </div>
+            {{-- Logo --}}
+            <a href="{{ route('dashboard') }}" style="text-decoration:none; flex-shrink:0;">
+                <img src="{{ asset('images/logo.png') }}" alt="Infinity" style="height:36px; width:auto; display:block;">
             </a>
 
-            {{-- DESKTOP LINKS --}}
-            <div class="hidden sm:flex items-center gap-8">
-                <a href="{{ route('dashboard') }}"
-                   class="nav-link-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                    Dashboard
-                </a>
+            {{-- Desktop links --}}
+            <div class="nav-desktop-links" style="display:flex; align-items:center; gap:28px;">
+                <a href="{{ route('dashboard') }}" class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">Dashboard</a>
                 @cando('leads.view')
-                <a href="{{ route('leads.index') }}"
-                   class="nav-link-item {{ request()->routeIs('leads.*') ? 'active' : '' }}">
-                    <span>Leads</span>
-                </a>
-
-                <a href="{{ route('sales.index') }}"
-                class="nav-link-item {{ request()->routeIs('sales.*') ? 'active' : '' }}">
-                    Sales
-                </a>
-
-                <a href="{{ route('outstanding.index') }}"
-                class="nav-link-item {{ request()->routeIs('outstanding.*') ? 'active' : '' }}">
-                    Outstanding
-                </a>
+                <a href="{{ route('leads.index') }}"    class="nav-link {{ request()->routeIs('leads.*')       ? 'active' : '' }}">Leads</a>
+                <a href="{{ route('sales.index') }}"    class="nav-link {{ request()->routeIs('sales.*')       ? 'active' : '' }}">Sales</a>
+                <a href="{{ route('outstanding.index') }}" class="nav-link {{ request()->routeIs('outstanding.*') ? 'active' : '' }}">Outstanding</a>
                 @endcando
             </div>
 
-            {{-- RIGHT SIDE --}}
-            <div style="position:relative;" id="userMenuWrap">
-                <button onclick="toggleUserMenu()" class="flex items-center gap-3"
-                        style="background:none;border:none;cursor:pointer;outline:none;">
-                    <div class="nav-avatar">
-                        <span style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:#1B4FA8;letter-spacing:1px;">
-                            {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                        </span>
-                    </div>
-                    <div class="flex flex-col items-start leading-none">
-                        <span style="font-size:12px;font-weight:500;color:#1A2A4A;">{{ Auth::user()->name }}</span>
-                        <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-top:2px;">Administrator</span>
-                    </div>
-                    <svg style="color:#AAB8C8;" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M7 10l5 5 5-5z"/>
+            {{-- Right side --}}
+            <div style="display:flex; align-items:center; gap:12px; flex-shrink:0;">
+
+            {{-- Notification Bell --}}
+            <div style="position:relative;" id="bellWrap">
+                <button onclick="toggleBell()" id="bellBtn"
+                        style="background:none; border:none; cursor:pointer; padding:6px;
+                            color:#AAB8C8; position:relative; transition:color 0.2s;"
+                        onmouseover="this.style.color='#F5911E'"
+                        onmouseout="this.style.color='#AAB8C8'">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                     </svg>
+                    {{-- Unread badge --}}
+                    <span id="bellBadge" style="position:absolute; top:4px; right:4px;
+                        width:7px; height:7px; border-radius:50%;
+                        background:#F5911E; border:1.5px solid #fff;
+                        display:none;">
+                    </span>
                 </button>
 
-                <div id="userMenuPanel"
-                    style="display:none;position:absolute;right:0;top:calc(100% + 10px);z-index:9999;">
-                    <div class="nav-dropdown-panel" style="min-width:210px;">
-                        <div style="padding:14px 20px 12px;border-bottom:1px solid rgba(27,79,168,0.06);">
-                            <div style="font-size:13px;color:#1A2A4A;font-weight:500;">{{ Auth::user()->name }}</div>
-                            <div style="font-size:10px;color:#AAB8C8;margin-top:2px;">{{ Auth::user()->email }}</div>
+                {{-- Dropdown --}}
+                <div id="bellPanel" style="display:none; position:absolute; right:0; top:calc(100% + 8px);
+                    width:300px; max-width:calc(100vw - 80px);
+                    background:rgba(255,255,255,0.98);
+                    backdrop-filter:blur(16px); border:1px solid rgba(27,79,168,0.1);
+                    border-radius:8px; box-shadow:0 12px 40px rgba(27,79,168,0.12);
+                    overflow:hidden; z-index:999;">
+
+                    {{-- Header --}}
+                    <div style="padding:14px 16px 12px; border-bottom:1px solid rgba(27,79,168,0.06);
+                                display:flex; align-items:center; justify-content:space-between;">
+                        <span style="font-family:'Bebas Neue',sans-serif; font-size:14px;
+                                    letter-spacing:3px; color:#1B4FA8;">Notifications</span>
+                        <button onclick="markAllRead()"
+                                style="background:none; border:none; cursor:pointer;
+                                    font-size:9px; letter-spacing:2px; text-transform:uppercase;
+                                    color:#AAB8C8; font-family:'DM Sans',sans-serif;
+                                    transition:color 0.2s;"
+                                onmouseover="this.style.color='#1B4FA8'"
+                                onmouseout="this.style.color='#AAB8C8'">
+                            Mark all read
+                        </button>
+                    </div>
+
+                    {{-- Notifications list --}}
+                    <div id="bellList" style="max-height:280px; overflow-y:auto;
+                                            scrollbar-width:thin; scrollbar-color:rgba(27,79,168,0.1) transparent;">
+                        {{-- Empty state --}}
+                        <div id="bellEmpty" style="padding:32px 16px; text-align:center;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1.5"
+                                style="margin:0 auto 8px; display:block;">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                            <div style="font-size:11px; color:#AAB8C8; letter-spacing:1px;">No notifications</div>
                         </div>
-                        <div style="padding:8px 0;">
-                            <a href="{{ route('profile.edit') }}" class="nav-dropdown-item">Profile</a>
-                            <div style="height:1px;background:rgba(27,79,168,0.06);margin:4px 0;"></div>
+                    </div>
+
+                    {{-- Footer --}}
+                    <div style="padding:10px 16px; border-top:1px solid rgba(27,79,168,0.05); text-align:center;">
+                        <a href="#" style="font-size:9px; letter-spacing:2px; text-transform:uppercase;
+                                        color:#1B4FA8; text-decoration:none; transition:opacity 0.2s;"
+                        onmouseover="this.style.opacity='0.7'"
+                        onmouseout="this.style.opacity='1'">
+                            View All
+                        </a>
+                    </div>
+                </div>
+            </div>
+                {{-- User menu --}}
+                <div style="position:relative;" id="userMenuWrap">
+                    <button onclick="toggleUserMenu()"
+                            style="background:none; border:none; cursor:pointer; display:flex; align-items:center; gap:10px; padding:4px;">
+                        <div class="nav-avatar">
+                            <span style="font-family:'Bebas Neue',sans-serif; font-size:14px; color:#1B4FA8; letter-spacing:1px;">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                            </span>
+                        </div>
+                        <div class="nav-desktop-links" style="display:flex; flex-direction:column; align-items:flex-start; line-height:1;">
+                            <span style="font-size:12px; font-weight:500; color:#1A2A4A; white-space:nowrap;">{{ Auth::user()->name }}</span>
+                            <span style="font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#AAB8C8; margin-top:2px;">CS User</span>
+                        </div>
+                        <svg style="color:#AAB8C8;" width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M7 10l5 5 5-5z"/>
+                        </svg>
+                    </button>
+
+                    <div id="userMenuPanel" class="user-dropdown">
+                        <div style="padding:14px 16px 12px; border-bottom:1px solid rgba(27,79,168,0.06);">
+                            <div style="font-size:13px; color:#1A2A4A; font-weight:500;">{{ Auth::user()->name }}</div>
+                            <div style="font-size:10px; color:#AAB8C8; margin-top:2px; letter-spacing:0.3px;">{{ Auth::user()->email }}</div>
+                        </div>
+                        <div style="padding:6px 0;">
+                            <a href="{{ route('profile.edit') }}" class="user-dropdown-item">Profile</a>
+                            <div style="height:1px; background:rgba(27,79,168,0.05); margin:4px 0;"></div>
                             <form method="POST" action="{{ route('logout') }}">
                                 @csrf
-                                <button type="submit" class="nav-dropdown-item"
-                                        style="background:none;border:none;cursor:pointer;width:100%;text-align:left;">
+                                <button type="submit" class="user-dropdown-item danger"
+                                        style="background:none; border:none; cursor:pointer; width:100%; text-align:left;">
                                     Log Out
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
+
             </div>
-
-
-
-            {{-- HAMBURGER --}}
-            <button @click="open = !open" class="sm:hidden flex flex-col gap-[5px] p-2" style="background:none;border:none;cursor:pointer;">
-                <span class="hamburger-line" :style="open ? 'transform:translateY(6.5px) rotate(45deg);background:#1B4FA8' : ''"></span>
-                <span class="hamburger-line" :style="open ? 'opacity:0' : ''"></span>
-                <span class="hamburger-line" :style="open ? 'transform:translateY(-6.5px) rotate(-45deg);background:#1B4FA8' : ''"></span>
-            </button>
         </div>
     </div>
 
-    {{-- MOBILE MENU --}}
-    <div x-show="open"
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 -translate-y-2"
-         x-transition:enter-end="opacity-100 translate-y-0"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 translate-y-0"
-         x-transition:leave-end="opacity-0 -translate-y-2"
-         class="sm:hidden"
-         style="border-top:1px solid rgba(27,79,168,0.07);background:rgba(255,255,255,0.97);backdrop-filter:blur(16px);">
-        <div style="padding:12px 24px;display:flex;flex-direction:column;gap:4px;">
-            <a href="{{ route('dashboard') }}"
-               style="font-size:11px;letter-spacing:3px;text-transform:uppercase;
-                      color:{{ request()->routeIs('dashboard') ? '#1B4FA8' : '#7A8A9A' }};
-                      padding:12px 0;text-decoration:none;border-bottom:1px solid rgba(27,79,168,0.05);">
+    {{-- Mobile menu --}}
+    <div class="mobile-menu" id="mobileMenu">
+        <div style="padding:8px 0;">
+            <a href="{{ route('dashboard') }}"    class="mobile-nav-link {{ request()->routeIs('dashboard')      ? 'active' : '' }}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 Dashboard
             </a>
-            <a href="{{ route('leads.index') }}"
-               style="font-size:11px;letter-spacing:3px;text-transform:uppercase;
-                      color:{{ request()->routeIs('leads.*') ? '#1B4FA8' : '#7A8A9A' }};
-                      padding:12px 0;text-decoration:none;">
+            @cando('leads.view')
+            <a href="{{ route('leads.index') }}"       class="mobile-nav-link {{ request()->routeIs('leads.*')       ? 'active' : '' }}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                 Leads
             </a>
-            <a href="{{ route('sales.index') }}"
-            style="font-size:11px;letter-spacing:3px;text-transform:uppercase;
-                    color:{{ request()->routeIs('sales.*') ? '#1B4FA8' : '#7A8A9A' }};
-                    padding:12px 0;text-decoration:none;border-bottom:1px solid rgba(27,79,168,0.05);">
+            <a href="{{ route('sales.index') }}"       class="mobile-nav-link {{ request()->routeIs('sales.*')       ? 'active' : '' }}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
                 Sales
             </a>
-            <a href="{{ route('outstanding.index') }}"
-            style="font-size:11px;letter-spacing:3px;text-transform:uppercase;
-                    color:{{ request()->routeIs('outstanding.*') ? '#1B4FA8' : '#7A8A9A' }};
-                    padding:12px 0;text-decoration:none;border-bottom:1px solid rgba(27,79,168,0.05);">
+            <a href="{{ route('outstanding.index') }}" class="mobile-nav-link {{ request()->routeIs('outstanding.*') ? 'active' : '' }}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                 Outstanding
             </a>
+            @endcando
         </div>
-        <div style="padding:16px 24px;border-top:1px solid rgba(27,79,168,0.07);">
-            <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-                <div class="nav-avatar" style="width:38px;height:38px;">
-                    <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#1B4FA8;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
-                </div>
-                <div>
-                    <div style="font-size:13px;color:#1A2A4A;font-weight:500;">{{ Auth::user()->name }}</div>
-                    <div style="font-size:10px;color:#AAB8C8;letter-spacing:0.4px;">{{ Auth::user()->email }}</div>
-                </div>
+        <div style="padding:14px 20px; border-top:1px solid rgba(27,79,168,0.06); display:flex; align-items:center; gap:12px;">
+            <div class="nav-avatar" style="width:38px; height:38px;">
+                <span style="font-family:'Bebas Neue',sans-serif; font-size:16px; color:#1B4FA8;">{{ strtoupper(substr(Auth::user()->name, 0, 1)) }}</span>
             </div>
-            <a href="{{ route('profile.edit') }}" style="display:block;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#7A8A9A;padding:10px 0;text-decoration:none;border-bottom:1px solid rgba(27,79,168,0.05);">Profile</a>
-            <form method="POST" action="{{ route('logout') }}">
-                @csrf
-                <button type="submit" style="width:100%;text-align:left;background:none;border:none;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:#DC2626;padding:10px 0;cursor:pointer;font-family:'DM Sans',sans-serif;">Log Out</button>
-            </form>
+            <div>
+                <div style="font-size:13px; color:#1A2A4A; font-weight:500;">{{ Auth::user()->name }}</div>
+                <div style="font-size:10px; color:#AAB8C8; letter-spacing:0.3px;">{{ Auth::user()->email }}</div>
+            </div>
         </div>
     </div>
 </nav>
 
 <script>
+// Scroll effect
+window.addEventListener('scroll', function() {
+    const nav = document.getElementById('mainNav');
+    if (nav) {
+        nav.classList.toggle('scrolled', window.scrollY > 10);
+    }
+});
+
+// User menu
 function toggleUserMenu() {
     const panel = document.getElementById('userMenuPanel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    panel.classList.toggle('open');
 }
 document.addEventListener('click', function(e) {
     const wrap = document.getElementById('userMenuWrap');
-    if (wrap && !wrap.contains(e.target)) {
-        document.getElementById('userMenuPanel').style.display = 'none';
+    const panel = document.getElementById('userMenuPanel');
+    if (wrap && !wrap.contains(e.target) && panel) {
+        panel.classList.remove('open');
+    }
+});
+
+// Mobile menu
+let mobileOpen = false;
+function toggleMobileMenu() {
+    mobileOpen = !mobileOpen;
+    const menu = document.getElementById('mobileMenu');
+    const hl1  = document.getElementById('hl1');
+    const hl2  = document.getElementById('hl2');
+    const hl3  = document.getElementById('hl3');
+
+    menu.classList.toggle('open', mobileOpen);
+
+    if (mobileOpen) {
+        hl1.style.transform = 'translateY(6.5px) rotate(45deg)';
+        hl1.style.background = '#1B4FA8';
+        hl2.style.opacity = '0';
+        hl3.style.transform = 'translateY(-6.5px) rotate(-45deg)';
+        hl3.style.background = '#1B4FA8';
+    } else {
+        hl1.style.transform = ''; hl1.style.background = '';
+        hl2.style.opacity = '';
+        hl3.style.transform = ''; hl3.style.background = '';
+    }
+}
+function toggleBell() {
+    const panel = document.getElementById('bellPanel');
+    const isOpen = panel.style.display !== 'none';
+    document.getElementById('userMenuPanel')?.classList.remove('open');
+    panel.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) panel.style.animation = 'dropIn 0.2s ease both';
+}
+function markAllRead() {
+    document.getElementById('bellBadge').style.display = 'none';
+}
+document.addEventListener('click', function(e) {
+    const wrap = document.getElementById('bellWrap');
+    const panel = document.getElementById('bellPanel');
+    if (wrap && !wrap.contains(e.target) && panel) {
+        panel.style.display = 'none';
     }
 });
 </script>
