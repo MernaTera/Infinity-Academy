@@ -74,6 +74,36 @@ class RegistrationService
             $enrollment = $this->createEnrollment($student, $data, $patchData);
             $this->attachMaterials($enrollment, $data);
             $this->createFinancialRecords($enrollment, $data, $pricing, $currentPatch);
+            $plan = \App\Models\Finance\PaymentPlan::find($data['payment_plan_id']);
+            if ($plan && $plan->requires_admin_approval) {
+                \App\Models\Finance\InstallmentApprovalLog::create([
+                    'enrollment_id'    => $enrollment->enrollment_id,
+                    'payment_plan_id'  => $data['payment_plan_id'],
+                    'request_by_cs_id' => auth()->user()?->employee?->employee_id,
+                    'status'           => 'Pending',
+                ]);
+            
+                // Notify all admin users
+                $admins = \App\Models\Auth\User::whereHas('role', fn($q) =>
+                    $q->where('role_name', 'Admin')
+                )->get();
+            
+                foreach ($admins as $admin) {
+                    $adminEmployee = \App\Models\HR\Employee::where('user_id', $admin->id)->first();
+                    if ($adminEmployee) {
+                        \Illuminate\Support\Facades\DB::table('user_notification')->insert([
+                            'employee_id'         => $adminEmployee->employee_id,
+                            'title'               => 'New Installment Approval Request',
+                            'message'             => 'CS ' . (auth()->user()->name ?? '') . ' submitted an installment plan request for student ' . ($lead->full_name ?? '') . '.',
+                            'related_entity_type' => 'installment_approval',
+                            'related_entity_id'   => $enrollment->enrollment_id,
+                            'is_read'             => false,
+                            'created_at'          => now(),
+                            'updated_at'          => now(),
+                        ]);
+                    }
+                }
+            }
             $availableTeachers = [];
 
             foreach ($availabilities as $availability) {
@@ -204,9 +234,7 @@ class RegistrationService
             'bundle_id' => $data['bundle_id'] ?? null,
             'discount_value' => $data['discount_value'] ?? 0,
 
-            'status' => $patchData['type'] === 'direct'
-                ? 'Active'
-                : 'Waiting',
+            'status' => $this->determineStatus($data, $patchData),
 
             'created_by_cs_id' => auth()->user()->employee?->employee_id ?? null
         ]);
@@ -305,33 +333,26 @@ class RegistrationService
     private function determineStatus($data, $patchData)
     {
         if (!empty($data['payment_plan_id'])) {
-
             $plan = PaymentPlan::find($data['payment_plan_id']);
-
             if ($plan && $plan->requires_admin_approval) {
                 return 'Pending_Approval';
             }
         }
 
-        return $patchData['type'] === 'direct'
-            ? 'Active'
-            : 'Pending_Approval';
+        return $patchData['type'] === 'direct' ? 'Active' : 'Waiting';
     }
 
     private function attachMaterials($enrollment, $data)
     {
-        // Bug fix: كانت بتستخدم orWhere فبتجيب كل المواد
-        // الصح: cascade — sublevel → level → course (زي الـ pricing)
+
         $materialAssignment = null;
     
-        // 1. Try sublevel first
         if (!empty($data['sublevel_id'])) {
             $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('sublevel_id', $data['sublevel_id'])
                 ->with('material')
                 ->first();
         }
     
-        // 2. Try level
         if (!$materialAssignment && !empty($data['level_id'])) {
             $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('level_id', $data['level_id'])
                 ->whereNull('sublevel_id')
@@ -339,7 +360,6 @@ class RegistrationService
                 ->first();
         }
     
-        // 3. Try course
         if (!$materialAssignment && !empty($data['course_template_id'])) {
             $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('course_template_id', $data['course_template_id'])
                 ->whereNull('level_id')
@@ -349,13 +369,12 @@ class RegistrationService
         }
     
         if (!$materialAssignment || !$materialAssignment->material) {
-            return; // no material found
+            return; 
         }
     
-        // Check if material was actually selected by CS
         $materialPrice = floatval($data['material_price'] ?? 0);
         if ($materialPrice <= 0) {
-            return; // CS didn't include material
+            return; 
         }
     
         \App\Models\Enrollment\EnrollmentMaterial::create([

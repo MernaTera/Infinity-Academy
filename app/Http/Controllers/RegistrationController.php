@@ -75,50 +75,54 @@ class RegistrationController extends Controller
     | Store Registration
     |------------------------------------------------------------------
     */
-public function store(Request $request)
-{
-    $request->validate([
-        'lead_id'            => 'required|exists:lead,lead_id',
-        'type'               => 'required|in:group,private',
-        'course_template_id' => 'required|exists:course_template,course_template_id',
-        'payment_plan_id'    => 'required',
-        'patch_option'       => 'required|in:current,next,custom',
-        'teacher_id'         => 'nullable',
-        'day'                => 'nullable',
-        'custom_date'        => 'nullable|date',
-    ]);
+    public function store(Request $request)
+    {
+        $request->validate([
+            'lead_id'            => 'required|exists:lead,lead_id',
+            'type'               => 'required|in:group,private',
+            'course_template_id' => 'required|exists:course_template,course_template_id',
+            'payment_plan_id'    => 'required',
+            'patch_option'       => 'required|in:current,next,custom',
+            'teacher_id'         => 'nullable',
+            'day'                => 'nullable',
+            'custom_date'        => 'nullable|date',
+        ]);
 
-    $plan = \App\Models\Finance\PaymentPlan::find($request->payment_plan_id);
-    $finalPrice    = (float) $request->final_price;
-    $materialPrice = (float) $request->material_price;
-    $testFee       = (float) $request->test_fee;
+        $plan          = \App\Models\Finance\PaymentPlan::find($request->payment_plan_id);
+        $finalPrice    = (float) $request->final_price;
+        $materialPrice = (float) $request->material_price;
+        $testFee       = (float) $request->test_fee;
 
-    if ($plan && $plan->deposit_percentage > 0 && $finalPrice > 0) {
-        
-        $depositOnCourse = round($finalPrice * $plan->deposit_percentage / 100, 2);
-        
-        $requiredDeposit = round($depositOnCourse + $materialPrice + $testFee, 2);
-        
-        $methods   = $request->input('deposit_methods', []);
-        $totalPaid = round(collect($methods)->sum(fn($m) => (float)($m['amount'] ?? 0)), 2);
+        if ($plan && $plan->deposit_percentage > 0 && $finalPrice > 0) {
+            $depositOnCourse = round($finalPrice * $plan->deposit_percentage / 100, 2);
+            $requiredDeposit = round($depositOnCourse + $materialPrice + $testFee, 2);
+            $methods   = $request->input('deposit_methods', []);
+            $totalPaid = round(collect($methods)->sum(fn($m) => (float)($m['amount'] ?? 0)), 2);
 
-        if (abs($totalPaid - $requiredDeposit) > 0.01) {
-            return back()->withInput()->withErrors([
-                'deposit_methods' => "Deposit total ({$totalPaid} LE) must equal required ({$requiredDeposit} LE)."
-            ]);
+            if (abs($totalPaid - $requiredDeposit) > 0.01) {
+                return back()->withInput()->withErrors([
+                    'deposit_methods' => "Deposit total ({$totalPaid} LE) must equal required ({$requiredDeposit} LE)."
+                ]);
+            }
         }
-    }
 
-    try {
-        $this->registrationService->register($request->all());
-        return redirect()->route('leads.index')->with('success', 'Student registered successfully.');
+        try {
+            // ✅ مرة واحدة بس
+            $enrollment = $this->registrationService->register($request->all());
+
+            if ($plan && $plan->requires_admin_approval) {
+                return redirect()->route('registration.pending', $enrollment->enrollment_id);
+            }
+
+            return redirect()->route('leads.index')->with('success', 'Student registered successfully.');
+
         } catch (\Throwable $e) {
             \Log::error('Registration failed: ' . $e->getMessage());
             return back()
                 ->withInput()
                 ->with('error', 'Registration failed: ' . $e->getMessage() . ' — Please try again or contact support.');
         }
-}
+    }
 
     /*
     |------------------------------------------------------------------
@@ -200,4 +204,30 @@ public function store(Request $request)
     
         return response()->json($packages);
     }
+
+    public function pending($enrollmentId)
+    {
+        $enrollment = \App\Models\Enrollment\Enrollment::with([
+            'student', 'courseTemplate', 'paymentPlan'
+        ])->findOrFail($enrollmentId);
+    
+        return view('registration.pending', compact('enrollment'));
+    }
+    
+    public function checkApprovalStatus($enrollmentId)
+    {
+        $enrollment = \App\Models\Enrollment\Enrollment::find($enrollmentId);
+        if (!$enrollment) return response()->json(['status' => 'not_found'], 404);
+    
+        $log = \App\Models\Finance\InstallmentApprovalLog::where('enrollment_id', $enrollmentId)
+            ->latest()
+            ->first();
+    
+        return response()->json([
+            'status'          => $enrollment->status,
+            'approval_status' => $log?->status,
+            'rejection_note'  => $log?->rejection_note,
+        ]);
+    }
+ 
 }

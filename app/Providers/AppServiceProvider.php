@@ -31,6 +31,8 @@ use App\Models\HR\Teacher;
 use App\Models\Reports\Report;
 use App\Models\Enrollment\RestrictionLog;
 use App\Models\Auth\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -80,5 +82,31 @@ class AppServiceProvider extends ServiceProvider
         Report::observe(AuditObserver::class);
         RestrictionLog::observe(AuditObserver::class);
         User::observe(AuditObserver::class);
+
+
+        // ── Navbar Notifications ──
+        View::composer('layouts.*', function ($view) {
+            if (auth()->check()) {
+
+                $employeeId = Employee::where('user_id', auth()->id())
+                    ->value('employee_id');
+
+                $navNotifications = DB::table('user_notification')
+                    ->where('employee_id', $employeeId)
+                    ->orderByDesc('created_at')
+                    ->limit(10)
+                    ->get();
+
+                $navUnreadCount = DB::table('user_notification')
+                    ->where('employee_id', $employeeId)
+                    ->where('is_read', false)
+                    ->count();
+
+                $view->with([
+                    'navNotifications' => $navNotifications,
+                    'navUnreadCount'   => $navUnreadCount,
+                ]);
+            }
+        });
     }
 }

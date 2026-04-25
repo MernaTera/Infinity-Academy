@@ -150,45 +150,89 @@
                     border-radius:8px; box-shadow:0 12px 40px rgba(27,79,168,0.12);
                     overflow:hidden; z-index:999;">
 
-                    {{-- Header --}}
-                    <div style="padding:14px 16px 12px; border-bottom:1px solid rgba(27,79,168,0.06);
-                                display:flex; align-items:center; justify-content:space-between;">
-                        <span style="font-family:'Bebas Neue',sans-serif; font-size:14px;
-                                    letter-spacing:3px; color:#1B4FA8;">Notifications</span>
-                        <button onclick="markAllRead()"
-                                style="background:none; border:none; cursor:pointer;
-                                    font-size:9px; letter-spacing:2px; text-transform:uppercase;
-                                    color:#AAB8C8; font-family:'DM Sans',sans-serif;
-                                    transition:color 0.2s;"
-                                onmouseover="this.style.color='#1B4FA8'"
-                                onmouseout="this.style.color='#AAB8C8'">
+                {{-- Header --}}
+                <div style="padding:14px 16px 12px; border-bottom:1px solid rgba(27,79,168,0.06);
+                            display:flex; align-items:center; justify-content:space-between;">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <span style="font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:3px; color:#1B4FA8;">Notifications</span>
+                        @if(isset($navUnreadCount) && $navUnreadCount > 0)
+                        <span style="background:#F5911E;color:#fff;font-size:9px;padding:2px 7px;border-radius:20px;">
+                            {{ $navUnreadCount }}
+                        </span>
+                        @endif
+                    </div>
+                    <form method="POST" action="/notifications/mark-all-read" style="display:inline;">
+                        @csrf
+                        <button type="submit" style="background:none;border:none;cursor:pointer;font-size:9px;
+                                letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;font-family:'DM Sans',sans-serif;">
                             Mark all read
                         </button>
-                    </div>
+                    </form>
+                </div>
 
-                    {{-- Notifications list --}}
-                    <div id="bellList" style="max-height:280px; overflow-y:auto;
-                                            scrollbar-width:thin; scrollbar-color:rgba(27,79,168,0.1) transparent;">
-                        {{-- Empty state --}}
-                        <div id="bellEmpty" style="padding:32px 16px; text-align:center;">
-                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1.5"
-                                style="margin:0 auto 8px; display:block;">
+                {{-- List --}}
+                <div style="max-height:320px;overflow-y:auto;">
+                    @if(isset($navNotifications) && $navNotifications->count())
+                        @foreach($navNotifications as $notif)
+                        <a href="{{ $notif->url ?? '#' }}"
+                        onclick="markRead({{ $notif->user_notification_id }})"
+                        style="display:flex;align-items:flex-start;gap:12px;padding:12px 16px;
+                                text-decoration:none;border-bottom:1px solid rgba(27,79,168,0.04);
+                                background:{{ $notif->is_read ? 'transparent' : 'rgba(27,79,168,0.025)' }};
+                                transition:background 0.2s;"
+                        onmouseover="this.style.background='rgba(27,79,168,0.04)'"
+                        onmouseout="this.style.background='{{ $notif->is_read ? 'transparent' : 'rgba(27,79,168,0.025)' }}'">
+
+                            <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;
+                                        display:flex;align-items:center;justify-content:center;
+                                        background:{{ $notif->related_entity_type === 'installment_approved' ? 'rgba(5,150,105,0.1)' : ($notif->related_entity_type === 'installment_rejected' ? 'rgba(220,38,38,0.08)' : 'rgba(245,145,30,0.1)') }};">
+
+                                @if($notif->related_entity_type === 'installment_approved')
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                @elseif($notif->related_entity_type === 'installment_rejected')
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                @else
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                @endif
+                            </div>
+
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:12px;color:#1A2A4A;font-weight:{{ $notif->is_read ? '400' : '500' }};margin-bottom:3px;">
+                                    {{ $notif->title }}
+                                </div>
+                                <div style="font-size:11px;color:#7A8A9A;line-height:1.5;margin-bottom:4px;
+                                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                    {{ Str::limit($notif->message, 65) }}
+                                </div>
+                                <div style="font-size:10px;color:#AAB8C8;">
+                                    {{ \Carbon\Carbon::parse($notif->created_at)->diffForHumans() }}
+                                </div>
+                            </div>
+
+                            @if(!$notif->is_read)
+                            <div style="width:6px;height:6px;border-radius:50%;background:#F5911E;flex-shrink:0;margin-top:4px;"></div>
+                            @endif
+                        </a>
+                        @endforeach
+                    @else
+                        <div style="padding:36px 16px;text-align:center;">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1.5" style="margin:0 auto 10px;display:block;">
                                 <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                                 <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                             </svg>
-                            <div style="font-size:11px; color:#AAB8C8; letter-spacing:1px;">No notifications</div>
+                            <div style="font-size:11px;color:#AAB8C8;letter-spacing:1px;">No notifications</div>
                         </div>
-                    </div>
+                    @endif
+                </div>
 
-                    {{-- Footer --}}
-                    <div style="padding:10px 16px; border-top:1px solid rgba(27,79,168,0.05); text-align:center;">
-                        <a href="#" style="font-size:9px; letter-spacing:2px; text-transform:uppercase;
-                                        color:#1B4FA8; text-decoration:none; transition:opacity 0.2s;"
-                        onmouseover="this.style.opacity='0.7'"
-                        onmouseout="this.style.opacity='1'">
-                            View All
-                        </a>
-                    </div>
+                {{-- Footer --}}
+                @if(isset($navNotifications) && $navNotifications->count())
+                <div style="padding:10px 16px;border-top:1px solid rgba(27,79,168,0.05);text-align:center;">
+                    <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1B4FA8;">
+                        {{ $navUnreadCount }} unread
+                    </span>
+                </div>
+                @endif
                 </div>
             </div>
                 {{-- User menu --}}
@@ -318,8 +362,17 @@ function toggleBell() {
     panel.style.display = isOpen ? 'none' : 'block';
     if (!isOpen) panel.style.animation = 'dropIn 0.2s ease both';
 }
-function markAllRead() {
-    document.getElementById('bellBadge').style.display = 'none';
+const unreadCount = {{ isset($navUnreadCount) ? $navUnreadCount : 0 }};
+if (unreadCount > 0) {
+    const badge = document.getElementById('bellBadge');
+    if (badge) badge.style.display = 'block';
+}
+
+async function markRead(id) {
+    await fetch(`/notifications/${id}/read`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content }
+    });
 }
 document.addEventListener('click', function(e) {
     const wrap = document.getElementById('bellWrap');

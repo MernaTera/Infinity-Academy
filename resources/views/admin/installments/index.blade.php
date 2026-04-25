@@ -93,18 +93,13 @@
                     <tr>
                         <td>
                             <div style="font-weight:500;color:#1A2A4A">{{ $log->enrollment?->student?->full_name ?? '—' }}</div>
+                            <div style="font-size:10px;color:#AAB8C8;margin-top:2px;">CS: {{ $log->requestedBy?->full_name ?? '—' }}</div>
                         </td>
-                        <td style="font-size:12px">{{ $log->enrollment?->courseInstance?->courseTemplate?->name ?? '—' }}</td>
-                        <td style="font-size:12px;color:#7A8A9A">{{ $log->enrollment?->courseInstance?->patch?->name ?? '—' }}</td>
-                        <td>
-                            <span style="font-size:11px;color:#7A8A9A">{{ $log->old_plan ?? '—' }}</span>
-                        </td>
-                        <td>
-                            <span style="font-size:11px;color:#1B4FA8;font-weight:500">{{ $log->new_plan ?? '—' }}</span>
-                        </td>
-                        <td style="font-size:11px;color:#7A8A9A;max-width:180px">
-                            {{ Str::limit($log->cs_reason ?? '—', 50) }}
-                        </td>
+                        <td style="font-size:12px">{{ $log->enrollment?->courseTemplate?->name ?? '—' }}</td>
+                        <td style="font-size:12px;color:#7A8A9A">{{ $log->enrollment?->patch?->name ?? '—' }}</td>
+                        <td><span style="font-size:11px;color:#7A8A9A">—</span></td>
+                        <td><span style="font-size:11px;color:#1B4FA8;font-weight:500">{{ $log->paymentPlan?->name ?? '—' }}</span></td>
+                        <td style="font-size:11px;color:#7A8A9A;max-width:180px">{{ Str::limit($log->rejection_note ?? '—', 50) }}</td>
                         <td style="font-size:10px;color:#AAB8C8">
                             {{ \Carbon\Carbon::parse($log->created_at)->format('d M Y') }}
                         </td>

@@ -96,6 +96,8 @@ Route::middleware(['auth', 'permission:enrollment.create'])
     ->group(function () {
         Route::get('/registration/from-lead/{lead_id}', [RegistrationController::class, 'createFromLead'])->name('registration.from.lead');
         Route::post('/registration/store',              [RegistrationController::class, 'store'])->name('registration.store');
+        Route::get('/registration/check-status/{enrollmentId}', [RegistrationController::class, 'checkApprovalStatus'])->name('registration.check-status');
+        Route::get('/registration/pending/{enrollmentId}', [RegistrationController::class, 'pending'])->name('registration.pending');
 
         // AJAX helpers used inside the registration form
         Route::get('/patch-options/{courseId}',         [RegistrationController::class, 'getPatchOptions']);
@@ -226,6 +228,7 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::get('/installments',                    [InstallmentApprovalController::class, 'index'])->name('installments.index');
         Route::patch('/installments/{id}/approve',     [InstallmentApprovalController::class, 'approve'])->name('installments.approve');
         Route::patch('/installments/{id}/reject',      [InstallmentApprovalController::class, 'reject'])->name('installments.reject');
+        Route::get('/installments/check/{enrollmentId}', [InstallmentApprovalController::class, 'checkStatus'])->name('installments.check-status');
 
         // Outstanding
         Route::get('/outstanding',                     [OutstandingAdminController::class, 'index'])->name('outstanding.index');
@@ -275,6 +278,30 @@ Route::middleware(['auth', 'permission:reports.create'])
         Route::get('/reports/{id}/edit',           [TeacherReportController::class, 'edit'])->name('reports.edit');
         Route::put('/reports/{id}',                [TeacherReportController::class, 'update'])->name('reports.update');
     });
+
+// ─────────────────────────────────────────────────────────────────
+// Notifications
+// ─────────────────────────────────────────────────────────────────
+Route::post('/notifications/mark-all-read', function() {
+    $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+    if ($employee) {
+        \DB::table('user_notification')
+            ->where('employee_id', $employee->employee_id)
+            ->update(['is_read' => true]);
+    }
+    return back();
+})->middleware('auth');
+
+Route::post('/notifications/{id}/read', function($id) {
+    $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+    if ($employee) {
+        \DB::table('user_notification')
+            ->where('user_notification_id', $id)
+            ->where('employee_id', $employee->employee_id)
+            ->update(['is_read' => true]);
+    }
+    return response()->json(['ok' => true]);
+})->middleware('auth');
 
 // ─────────────────────────────────────────────────────────────────
 require __DIR__ . '/auth.php';
