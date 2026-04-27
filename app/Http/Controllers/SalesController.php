@@ -23,9 +23,10 @@ class SalesController extends Controller
     public function index(Request $request)
     {
         $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
-        
+        $filterType = $request->query('filter', 'patch'); 
         $patchId  = $request->query('patch_id');
-
+        $month = $request->query('month', now()->format('Y-m'));
+        $day = $request->query('day', now()->format('Y-m-d'));
         // Default to current active patch
        $currentPatch = $patchId
             ? Patch::findOrFail($patchId)
@@ -33,12 +34,15 @@ class SalesController extends Controller
 
         $allPatches  = Patch::orderByDesc('start_date')->get();
 
-        $data = $this->salesService->getSalesData($employee, $currentPatch);
+        $data = $this->salesService->getSalesData($employee, $currentPatch, $filterType, $month, $day);
 
         return view('sales.index', array_merge($data, [
             'currentPatch' => $currentPatch,
             'allPatches'   => $allPatches,
             'employee'     => $employee,
+            'filterType'   => $filterType,
+            'month'        => $month,
+            'day'          => $day,
         ]));
     }
 
