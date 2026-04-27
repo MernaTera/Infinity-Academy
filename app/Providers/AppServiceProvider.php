@@ -34,6 +34,10 @@ use App\Models\Auth\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
 
+use App\Http\Controllers\Admin\PaymentPolicyController;
+use App\Http\Controllers\Admin\InstallmentApprovalController;
+use App\Http\Controllers\RegistrationController;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -85,7 +89,7 @@ class AppServiceProvider extends ServiceProvider
 
 
         // ── Navbar Notifications ──
-        View::composer('layouts.*', function ($view) {
+        View::composer(['layouts.*', 'admin.layouts.*'], function ($view) {
             if (auth()->check()) {
 
                 $employeeId = Employee::where('user_id', auth()->id())
@@ -105,7 +109,10 @@ class AppServiceProvider extends ServiceProvider
                 $view->with([
                     'navNotifications' => $navNotifications,
                     'navUnreadCount'   => $navUnreadCount,
+                    'navPrevUnread'    => session('prev_unread_count', 0),
                 ]);
+
+                session(['prev_unread_count' => $navUnreadCount]);
             }
         });
     }

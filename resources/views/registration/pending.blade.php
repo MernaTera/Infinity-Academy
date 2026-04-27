@@ -280,13 +280,12 @@ function showRejected(note) {
     document.getElementById('stateSuccess').style.display  = 'none';
     document.getElementById('stateRejected').style.display = 'block';
 
-    if (note) {
-        const noteEl = document.getElementById('rejectionNote');
+    const noteEl = document.getElementById('rejectionNote');
+    if (noteEl && note) {
         noteEl.textContent = 'Reason: ' + note;
         noteEl.style.display = 'block';
     }
 
-    // Redirect after 5 seconds
     setTimeout(() => {
         window.location.href = '{{ route("leads.index") }}';
     }, 5000);

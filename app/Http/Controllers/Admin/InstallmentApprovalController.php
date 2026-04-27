@@ -58,10 +58,8 @@ class InstallmentApprovalController extends Controller
             $enrollment    = $log->enrollment;
             $plan          = $log->paymentPlan;
 
-            // 1. Activate enrollment
             $enrollment->update(['status' => 'Active']);
 
-            // 2. Create installment schedule
             $remaining     = $enrollment->final_price * (1 - $plan->deposit_percentage / 100);
             $installmentAmt = $plan->installment_count > 0
                 ? round($remaining / $plan->installment_count, 2)
@@ -73,7 +71,6 @@ class InstallmentApprovalController extends Controller
             for ($i = 1; $i <= $plan->installment_count; $i++) {
                 $dueDate = now()->addDays($plan->grace_period_days * $i);
 
-                // Create financial transaction for each installment
                 $tx = FinancialTransaction::create([
                     'enrollment_id'          => $enrollment->enrollment_id,
                     'patch_id'               => $enrollment->patch_id,
@@ -95,14 +92,12 @@ class InstallmentApprovalController extends Controller
                 ]);
             }
 
-            // 3. Update approval log
             $log->update([
                 'status'               => 'Approved',
                 'approved_by_admin_id' => $adminEmployee?->employee_id,
                 'approved_at'          => now(),
             ]);
 
-            // 4. Notify the CS who made the request (user_notification table)
             $csEmployeeId = $log->request_by_cs_id;
             if ($csEmployeeId) {
                 DB::table('user_notification')->insert([
@@ -137,25 +132,39 @@ class InstallmentApprovalController extends Controller
             $adminEmployee = Employee::where('user_id', auth()->id())->first();
             $enrollment    = $log->enrollment;
 
-            // 1. Cancel enrollment
             $enrollment->update(['status' => 'Cancelled']);
 
-            // 2. Update log
+            $studentPhone = \App\Models\Student\StudentPhone::where('student_id', $enrollment->student_id)
+                ->where('is_primary', true)
+                ->first();
+
+            $lead = null;
+            $studentName = 'student';
+
+            if ($studentPhone) {
+                $lead = \App\Models\Leads\Lead::where('phone', $studentPhone->phone_number)->first();
+                if ($lead) {
+                    $studentName = $lead->full_name;
+                    $lead->update(['status' => 'Waiting']);
+                }
+            }
+
+            $enrollment->student?->update(['is_active' => false, 'global_status' => 'Inactive']);
+
             $log->update([
                 'status'               => 'Rejected',
                 'approved_by_admin_id' => $adminEmployee?->employee_id,
                 'approved_at'          => now(),
-                'rejection_note'       => $request->reason,
+                'rejection_note'       => $studentName . '||' . $request->reason,
             ]);
 
-            // 3. Notify CS
             $csEmployeeId = $log->request_by_cs_id;
             if ($csEmployeeId) {
                 DB::table('user_notification')->insert([
                     'employee_id'         => $csEmployeeId,
                     'title'               => 'Installment Request Declined',
                     'message'             => 'Your installment plan request for ' .
-                                            ($enrollment->student?->full_name ?? 'student') .
+                                            $studentName .
                                             ' was declined. Reason: ' . $request->reason,
                     'related_entity_type' => 'installment_approval',
                     'related_entity_id'   => $enrollment->enrollment_id,

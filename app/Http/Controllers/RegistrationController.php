@@ -217,16 +217,28 @@ class RegistrationController extends Controller
     public function checkApprovalStatus($enrollmentId)
     {
         $enrollment = \App\Models\Enrollment\Enrollment::find($enrollmentId);
-        if (!$enrollment) return response()->json(['status' => 'not_found'], 404);
-    
+        
         $log = \App\Models\Finance\InstallmentApprovalLog::where('enrollment_id', $enrollmentId)
             ->latest()
             ->first();
-    
+
+        if (!$enrollment) {
+            return response()->json([
+                'status'          => 'Cancelled',
+                'approval_status' => $log?->status ?? 'Rejected',
+                'rejection_note'  => $log?->rejection_note,
+            ]);
+        }
+
+        $note = $log?->rejection_note;
+        if ($note && str_contains($note, '||')) {
+            $note = explode('||', $note)[1]; 
+        }
+
         return response()->json([
             'status'          => $enrollment->status,
             'approval_status' => $log?->status,
-            'rejection_note'  => $log?->rejection_note,
+            'rejection_note'  => $note,
         ]);
     }
  

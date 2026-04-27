@@ -46,7 +46,6 @@ class PaymentPolicyController extends Controller
             'is_active'               => true,
             'created_by_admin_id'     => $adminId,
         ]);
-        AuditService::created('payment_plan', $plan->payment_plan_id, 'name', $plan->name);
         return back()->with('success', 'Payment plan created successfully.');
     }
 

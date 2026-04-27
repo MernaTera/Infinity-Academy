@@ -87,6 +87,10 @@
             display: block; width: 22px; height: 1.5px;
             background: #7A8A9A; transition: all 0.3s; transform-origin: center;
         }
+        @keyframes toastIn {
+            from { opacity:0; transform:translateX(20px) scale(0.96); }
+            to   { opacity:1; transform:none; }
+        }
     </style>
 
     <div style="max-width:1400px; margin:0 auto; padding:0 24px;">
@@ -368,5 +372,48 @@ function toggleAdminMobileMenu() {
         hl2.style.opacity = '';
         hl3.style.transform = ''; hl3.style.background = '';
     }
+}
+// Notification sound + popup
+const prevUnread = {{ $navPrevUnread ?? 0 }};
+const currUnread = {{ isset($navUnreadCount) ? $navUnreadCount : 0 }};
+
+if (currUnread > prevUnread) {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = 520;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.4);
+
+    // Popup toast
+    const toast = document.createElement('div');
+    toast.innerHTML = `
+        <div style="position:fixed;bottom:24px;right:24px;z-index:99999;
+                    display:flex;align-items:center;gap:12px;
+                    padding:14px 18px;
+                    background:rgba(255,255,255,0.98);
+                    border:1px solid rgba(27,79,168,0.12);
+                    border-left:3px solid #F5911E;
+                    border-radius:8px;
+                    box-shadow:0 8px 32px rgba(27,79,168,0.15);
+                    animation:toastIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
+                    font-family:'DM Sans',sans-serif;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,145,30,0.1);
+                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                </svg>
+            </div>
+            <div>
+                <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#F5911E;margin-bottom:2px;">New Notification</div>
+                <div style="font-size:13px;color:#1A2A4A;">You have a new notification</div>
+            </div>
+        </div>`;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 4000);
 }
 </script>

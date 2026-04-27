@@ -80,11 +80,8 @@
                     <tr>
                         <th>Student</th>
                         <th>Course</th>
-                        <th>Patch</th>
-                        <th>Current Plan</th>
                         <th>Requested Plan</th>
-                        <th>CS Reason</th>
-                        <th>Requested</th>
+                        <th>Date Requested</th>
                         <th></th>
                     </tr>
                 </thead>
@@ -93,13 +90,9 @@
                     <tr>
                         <td>
                             <div style="font-weight:500;color:#1A2A4A">{{ $log->enrollment?->student?->full_name ?? '—' }}</div>
-                            <div style="font-size:10px;color:#AAB8C8;margin-top:2px;">CS: {{ $log->requestedBy?->full_name ?? '—' }}</div>
                         </td>
                         <td style="font-size:12px">{{ $log->enrollment?->courseTemplate?->name ?? '—' }}</td>
-                        <td style="font-size:12px;color:#7A8A9A">{{ $log->enrollment?->patch?->name ?? '—' }}</td>
-                        <td><span style="font-size:11px;color:#7A8A9A">—</span></td>
                         <td><span style="font-size:11px;color:#1B4FA8;font-weight:500">{{ $log->paymentPlan?->name ?? '—' }}</span></td>
-                        <td style="font-size:11px;color:#7A8A9A;max-width:180px">{{ Str::limit($log->rejection_note ?? '—', 50) }}</td>
                         <td style="font-size:10px;color:#AAB8C8">
                             {{ \Carbon\Carbon::parse($log->created_at)->format('d M Y') }}
                         </td>
@@ -141,8 +134,16 @@
                 <tbody>
                     @forelse($history as $log)
                     <tr>
-                        <td style="font-weight:500;color:#1A2A4A">{{ $log->enrollment?->student?->full_name ?? '—' }}</td>
-                        <td>
+                    <td style="font-weight:500;color:#1A2A4A">
+                        @php
+                            $name = $log->enrollment?->student?->full_name;
+                            if (!$name && $log->rejection_note && str_contains($log->rejection_note, '||')) {
+                                $name = explode('||', $log->rejection_note)[0];
+                            }
+                        @endphp
+                        {{ $name ?? '—' }}
+                    </td>                   
+                    <td>
                             <span class="badge {{ $log->status === 'Approved' ? 'badge-approved' : 'badge-rejected' }}">
                                 {{ $log->status }}
                             </span>
@@ -203,5 +204,6 @@ function closeReject() {
 document.getElementById('rejectModal').addEventListener('click', function(e) {
     if (e.target === this) closeReject();
 });
+setTimeout(() => location.reload(), 30000);
 </script>
 @endsection
