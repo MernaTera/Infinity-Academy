@@ -169,21 +169,26 @@ class EmployeeController extends Controller
         // CS-specific data
         $csData = null;
         if ($roleName === 'Customer Service') {
-            $achieved = RevenueSplit::where('employee_id', $employee->employee_id)
-                ->where('patch_id', $currentPatch?->patch_id)
-                ->sum('amount_allocated');
+            $currentMonth = now()->format('Y-m');
 
+            // ✅ target by month
             $target = CsTarget::where('employee_id', $employee->employee_id)
-                ->where('patch_id', $currentPatch?->patch_id)
+                ->where('month', $currentMonth)
                 ->first();
+
+            $achieved = RevenueSplit::where('employee_id', $employee->employee_id)
+                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+                ->sum('amount_allocated');
 
             $leads = \App\Models\Leads\Lead::where('owner_cs_id', $employee->employee_id);
 
             $csData = [
                 'target'        => $target?->target_amount ?? 0,
+                'target_id'     => $target?->target_id,
+                'current_month' => $currentMonth,
                 'achieved'      => $achieved,
                 'registrations' => \App\Models\Enrollment\Enrollment::where('created_by_cs_id', $employee->employee_id)
-                    ->where('patch_id', $currentPatch?->patch_id)->count(),
+                    ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])->count(),
                 'total_leads'   => (clone $leads)->count(),
                 'active_leads'  => (clone $leads)->whereIn('status', ['Waiting','Call_Again'])->count(),
             ];
@@ -279,5 +284,44 @@ class EmployeeController extends Controller
         $employee->user->update(['is_active' => $newStatus === 'Active']);
 
         return back()->with('success', "Employee {$newStatus} successfully.");
+    }
+
+    public function updateProfile(Request $request, $id)
+    {
+        $request->validate([
+            'full_name'     => 'required|string|max:255',
+            'salary'        => 'nullable|numeric|min:0', 
+            'target_amount' => 'nullable|numeric|min:0',
+            'target_month'  => 'required|string',
+        ]);
+
+        $employee = Employee::with('user')->findOrFail($id);
+
+        $employee->update([
+            'full_name' => $request->full_name,
+            'salary'    => $request->salary,        
+        ]);
+        $employee->user->update(['name' => $request->full_name]);
+
+        if ($request->filled('new_password')) {     
+            $request->validate(['new_password' => 'min:8']);
+            $employee->user->update(['password' => \Hash::make($request->new_password)]);
+        }
+
+        if ($request->filled('target_amount')) {
+            $adminEmployee = Employee::where('user_id', auth()->id())->first();
+            CsTarget::updateOrCreate(
+                [
+                    'employee_id' => $employee->employee_id,
+                    'month'       => $request->target_month,
+                ],
+                [
+                    'target_amount'       => $request->target_amount,
+                    'created_by_admin_id' => $adminEmployee->employee_id,
+                ]
+            );
+        }
+
+        return back()->with('success', 'Employee updated successfully.');
     }
 }

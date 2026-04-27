@@ -201,7 +201,8 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::get('/employees/{id}/edit',     [EmployeeController::class, 'edit'])->name('employees.edit');
         Route::put('/employees/{id}',          [EmployeeController::class, 'update'])->name('employees.update');
         Route::patch('/employees/{id}/toggle', [EmployeeController::class, 'toggle'])->name('employees.toggle');
-
+        Route::post('/employees/{id}/profile', [EmployeeController::class, 'updateProfile'])->name('employees.update-profile');        
+        
         // Courses
         Route::get('/courses',                 [CourseAdminController::class, 'index'])->name('courses.index');
         Route::get('/courses/create',          [CourseAdminController::class, 'create'])->name('courses.create');

@@ -136,14 +136,14 @@
         </div>
     </div>
 
-    {{-- Role-specific Performance --}}
+    {{-- CS Performance --}}
     @if($roleName === 'Customer Service' && $csData)
     <div class="profile-card">
         <div class="profile-body">
-            <div class="sec-label">CS Performance — Current Patch</div>
+            <div class="sec-label">CS Performance — {{ now()->format('F Y') }}</div>
             <div class="stat-row stat-row-5">
                 <div class="stat-mini">
-                    <div class="slabel">Target</div>
+                    <div class="slabel">Monthly Target</div>
                     <div class="sval" style="color:#1B4FA8">{{ number_format($csData['target']) }}</div>
                     <div style="font-size:9px;color:#AAB8C8;margin-top:3px">LE</div>
                 </div>
@@ -169,6 +169,7 @@
     </div>
     @endif
 
+    {{-- Teacher Info --}}
     @if($roleName === 'Teacher' && $teacherData)
     <div class="profile-card">
         <div class="profile-body">
@@ -194,9 +195,7 @@
             <div class="stat-row stat-row-3">
                 <div class="stat-mini">
                     <div class="slabel">Contract Type</div>
-                    <div class="sval" style="font-size:16px;font-family:'DM Sans',sans-serif">
-                        {{ $teacherData['contract']->contract_type }}
-                    </div>
+                    <div class="sval" style="font-size:16px;font-family:'DM Sans',sans-serif">{{ $teacherData['contract']->contract_type }}</div>
                 </div>
                 <div class="stat-mini">
                     <div class="slabel">Max Sessions</div>
@@ -204,9 +203,7 @@
                 </div>
                 <div class="stat-mini">
                     <div class="slabel">Patch</div>
-                    <div class="sval" style="font-size:14px;font-family:'DM Sans',sans-serif">
-                        {{ $teacherData['contract']->patch?->name ?? '—' }}
-                    </div>
+                    <div class="sval" style="font-size:14px;font-family:'DM Sans',sans-serif">{{ $teacherData['contract']->patch?->name ?? '—' }}</div>
                 </div>
             </div>
             @endif
@@ -214,50 +211,71 @@
     </div>
     @endif
 
-    {{-- Edit Form --}}
+    {{-- ── EDIT EMPLOYEE ── --}}
     <div class="profile-card">
         <div class="profile-body">
             <div class="sec-label">Edit Employee</div>
-            <form method="POST" action="{{ route('admin.employees.update', $employee->employee_id) }}">
-                @csrf @method('PUT')
-                <div class="edit-form">
-                    <div class="form-field">
-                        <label class="form-label">Salary (LE)</label>
-                        <input type="number" name="salary" class="form-control"
-                               value="{{ $employee->salary }}" placeholder="Monthly salary">
+
+            {{-- ✅ Main update form --}}
+            <form method="POST" action="{{ route('admin.employees.update-profile', $employee->employee_id) }}">
+                @csrf
+                <input type="hidden" name="target_month" value="{{ now()->format('Y-m') }}">
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+                    <div>
+                        <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;display:block;margin-bottom:6px;">Full Name</label>
+                        <input type="text" name="full_name" value="{{ $employee->full_name }}"
+                            style="width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;outline:none;box-sizing:border-box;">
                     </div>
-                    <div class="form-field">
-                        <label class="form-label">Branch</label>
-                        <select name="branch_id" class="form-control">
-                            @foreach(\App\Models\Core\Branch::all() as $b)
-                            <option value="{{ $b->branch_id }}" {{ $employee->branch_id == $b->branch_id ? 'selected' : '' }}>
-                                {{ $b->name }}
-                            </option>
-                            @endforeach
-                        </select>
+
+                    @if($roleName === 'Customer Service')
+                    <div>
+                        <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;display:block;margin-bottom:6px;">
+                            Monthly Target (LE) — {{ now()->format('M Y') }}
+                        </label>
+                        <input type="number" name="target_amount" value="{{ $csData['target'] ?? '' }}"
+                            placeholder="e.g. 15000" step="0.01" min="0"
+                            style="width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;outline:none;box-sizing:border-box;">
                     </div>
-                    <div class="form-field">
-                        <label class="form-label">Status</label>
-                        <select name="status" class="form-control">
-                            <option value="Active" {{ $employee->status === 'Active' ? 'selected' : '' }}>Active</option>
-                            <option value="Inactive" {{ $employee->status === 'Inactive' ? 'selected' : '' }}>Inactive</option>
-                        </select>
+                    @endif
+
+                    <div>
+                        <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;display:block;margin-bottom:6px;">Salary (LE)</label>
+                        <input type="number" name="salary" value="{{ $employee->salary }}"
+                            style="width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;outline:none;box-sizing:border-box;">
                     </div>
-                    <div class="form-field">
-                        <label class="form-label">New Password (optional)</label>
-                        <input type="password" name="new_password" class="form-control" placeholder="Leave blank to keep current">
+
+                    <div>
+                        <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;display:block;margin-bottom:6px;">New Password (Optional)</label>
+                        <input type="password" name="new_password" placeholder="Leave blank to keep current"
+                            style="width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;outline:none;box-sizing:border-box;">
                     </div>
+
                 </div>
-                <div style="display:flex;gap:10px;margin-top:20px;align-items:center">
-                    <button type="submit" class="btn-save">Save Changes</button>
-                    <form method="POST" action="{{ route('admin.employees.toggle', $employee->employee_id) }}" style="margin:0">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="btn-danger">
-                            {{ $employee->status === 'Active' ? 'Deactivate Account' : 'Activate Account' }}
-                        </button>
-                    </form>
-                </div>
+
+                <button type="submit"
+                        style="padding:10px 28px;background:#1B4FA8;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;transition:background 0.2s;"
+                        onmouseover="this.style.background='#2D6FDB'" onmouseout="this.style.background='#1B4FA8'">
+                    Save Changes
+                </button>
             </form>
+
+            {{-- ✅ Toggle form — منفصلة تماماً عن الـ main form --}}
+            <form method="POST" action="{{ route('admin.employees.toggle', $employee->employee_id) }}"
+                  style="display:inline-block;margin-top:12px;">
+                @csrf @method('PATCH')
+                <button type="submit"
+                        style="padding:10px 24px;background:transparent;
+                               border:1px solid {{ $employee->status === 'Active' ? 'rgba(220,38,38,0.3)' : 'rgba(5,150,105,0.3)' }};
+                               border-radius:4px;
+                               color:{{ $employee->status === 'Active' ? '#DC2626' : '#059669' }};
+                               font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;
+                               text-transform:uppercase;cursor:pointer;transition:all 0.2s;">
+                    {{ $employee->status === 'Active' ? 'Deactivate Account' : 'Activate Account' }}
+                </button>
+            </form>
+
         </div>
     </div>
 
