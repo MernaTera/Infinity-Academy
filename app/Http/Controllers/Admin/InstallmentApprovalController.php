@@ -67,13 +67,14 @@ class InstallmentApprovalController extends Controller
 
             $currentPatch = $enrollment->patch;
             $branchId     = $adminEmployee?->branch_id ?? $currentPatch?->branch_id;
+            $patchId      = $enrollment->patch_id ?? $currentPatch?->patch_id;
 
             for ($i = 1; $i <= $plan->installment_count; $i++) {
                 $dueDate = now()->addDays($plan->grace_period_days * $i);
 
                 $tx = FinancialTransaction::create([
                     'enrollment_id'          => $enrollment->enrollment_id,
-                    'patch_id'               => $enrollment->patch_id,
+                    'patch_id'               => $patchId ?? null,  
                     'branch_id'              => $branchId,
                     'transaction_type'       => 'Installment',
                     'transaction_category'   => 'Course',
@@ -115,7 +116,7 @@ class InstallmentApprovalController extends Controller
             }
         });
 
-        return back()->with('success', 'Request approved and installment schedule created.');
+        return back()->with('success', 'Request approved and student registered successfully.');
     }
 
     public function reject(Request $request, $id)

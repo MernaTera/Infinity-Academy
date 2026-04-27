@@ -48,6 +48,7 @@ class RegistrationService
                 'global_status' => 'Active',
                 'is_active' => true
             ]);
+            StudentPhone::where('phone_number', $lead->phone)->delete();
             StudentPhone::create([
                 'student_id' => $student->student_id,
                 'phone_number' => $lead->phone,
@@ -259,12 +260,6 @@ class RegistrationService
             }
         }
 
-        if ($data['type'] === 'private') {
-
-            if (empty($data['teacher_id']) && empty($data['recommended_date'])) {
-                throw new \Exception('Choose teacher or date');
-            }
-        }
 
         if (!empty($data['custom_date'])) {
 

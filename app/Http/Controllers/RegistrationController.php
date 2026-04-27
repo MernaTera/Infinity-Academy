@@ -35,7 +35,7 @@ class RegistrationController extends Controller
     {
         $lead = Lead::findOrFail($lead_id);
 
-        if ($lead->status === 'Registered' && $lead->student_id) {
+        if ($lead->status === 'Registered') {
             return back()->with('error', 'This lead is already registered.');
         }
 
@@ -161,7 +161,7 @@ class RegistrationController extends Controller
                 ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
                 ->where('materials.is_active', true)
                 ->where('material_assignment.sublevel_id', $sublevelId)
-                ->select('materials.material_id', 'materials.name', 'materials.price', 'material_assignment.is_mandatory')
+                ->select('materials.material_id', 'materials.name', 'materials.price', 'materials.cs_percentage', 'material_assignment.is_mandatory')
                 ->first();
         }
 
@@ -171,7 +171,7 @@ class RegistrationController extends Controller
                 ->where('materials.is_active', true)
                 ->where('material_assignment.level_id', $levelId)
                 ->whereNull('material_assignment.sublevel_id')
-                ->select('materials.material_id', 'materials.name', 'materials.price', 'material_assignment.is_mandatory')
+                ->select('materials.material_id', 'materials.name', 'materials.price', 'materials.cs_percentage', 'material_assignment.is_mandatory')
                 ->first();
         }
 
@@ -182,7 +182,7 @@ class RegistrationController extends Controller
                 ->where('material_assignment.course_template_id', $courseId)
                 ->whereNull('material_assignment.level_id')
                 ->whereNull('material_assignment.sublevel_id')
-                ->select('materials.material_id', 'materials.name', 'materials.price', 'material_assignment.is_mandatory')
+                ->select('materials.material_id', 'materials.name', 'materials.price', 'materials.cs_percentage', 'material_assignment.is_mandatory')
                 ->first();
         }
 
