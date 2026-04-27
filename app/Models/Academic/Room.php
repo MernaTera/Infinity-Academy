@@ -7,7 +7,7 @@ namespace App\Models\Academic;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Auth\Employee;
+use App\Models\HR\Employee;
 use App\Models\Core\Branch;
 use App\Models\Academic\CourseInstance;
 use App\Models\Academic\CourseSession;

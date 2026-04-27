@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\CourseAdminController;
 use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\PatchAdminController;
+use App\Http\Controllers\Admin\RoomController;
 use App\Http\Controllers\Admin\PaymentPolicyController;
 use App\Http\Controllers\Admin\InstallmentApprovalController;
 use App\Http\Controllers\Admin\OutstandingAdminController;
@@ -233,6 +234,13 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::patch('/patches/time-slots/{id}',    [PatchAdminController::class, 'toggleTimeSlot'])->name('patches.timeslots.toggle');
         Route::post('/patches/break-slots',         [PatchAdminController::class, 'storeBreakSlot'])->name('patches.breakslots.store');
         Route::patch('/patches/break-slots/{id}',   [PatchAdminController::class, 'toggleBreakSlot'])->name('patches.breakslots.toggle');
+
+        //Rooms
+        Route::get('/rooms',               [RoomController::class, 'index'])->name('rooms.index');
+        Route::post('/rooms',              [RoomController::class, 'store'])->name('rooms.store');
+        Route::put('/rooms/{id}',          [RoomController::class, 'update'])->name('rooms.update');
+        Route::patch('/rooms/{id}/toggle', [RoomController::class, 'toggle'])->name('rooms.toggle');
+        Route::delete('/rooms/{id}',       [RoomController::class, 'destroy'])->name('rooms.destroy');
 
         // Payment Policy
         Route::get('/payment-policy',              [PaymentPolicyController::class, 'index'])->name('payment-policy.index');
