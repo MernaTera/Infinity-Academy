@@ -64,22 +64,36 @@
     <div class="page-eyebrow">Customer Service</div>
     <h1 class="page-title">Sales Table</h1>
 
-    {{-- ── FILTER TABS ── --}}
+    {{-- FILTER TABS --}}
     <div class="filter-tabs">
         <a href="{{ route('sales.index', ['filter' => 'month', 'month' => $month]) }}"
-           class="filter-tab {{ $filterType !== 'day' ? 'active' : '' }}">By Month</a>
+        class="filter-tab {{ $filterType === 'month' ? 'active' : '' }}">By Month</a>
+        <a href="{{ route('sales.index', ['filter' => 'week', 'day' => $day]) }}"
+        class="filter-tab {{ $filterType === 'week' ? 'active' : '' }}">By Week</a>
         <a href="{{ route('sales.index', ['filter' => 'day', 'day' => $day]) }}"
-           class="filter-tab {{ $filterType === 'day' ? 'active' : '' }}">By Day</a>
+        class="filter-tab {{ $filterType === 'day' ? 'active' : '' }}">By Day</a>
     </div>
 
     {{-- ── FILTER INPUT ── --}}
-    @if($filterType === 'day')
+    @if($filterType === 'week')
+    <div class="filter-bar">
+        <label>Select Week:</label>
+        <input type="week" value="{{ \Carbon\Carbon::parse($day)->format('Y-\WW') }}" class="filter-sel"
+            onchange="
+                const [year, week] = this.value.split('-W');
+                const date = new Date(year, 0, 1 + (week - 1) * 7);
+                const d = date.toISOString().split('T')[0];
+                window.location.href='{{ route('sales.index') }}?filter=week&day='+d;
+            ">
+    </div>
+    @elseif($filterType === 'day')
     <div class="filter-bar">
         <label>Select Day:</label>
         <input type="date" value="{{ $day }}" class="filter-sel" style="color-scheme:light;"
                onchange="window.location.href='{{ route('sales.index') }}?filter=day&day='+this.value">
     </div>
     @else
+    
     <div class="filter-bar">
         <label>Select Month:</label>
         <input type="month" value="{{ $month }}" class="filter-sel"
@@ -104,7 +118,12 @@
         <div class="kpi-card" style="--kc:#059669">
             <div class="kpi-label">Achieved</div>
             <div class="kpi-val">{{ number_format($kpis['achieved']) }}</div>
-            <div class="kpi-sub">LE {{ $filterType === 'day' ? 'today' : 'this month' }}</div>
+            <div class="kpi-sub">LE
+                @if($filterType === 'day') today
+                @elseif($filterType === 'week') this week
+                @else this month
+                @endif
+            </div>
             @if($kpis['percentage'] !== null)
             <div class="prog"><div class="prog-fill" style="width:{{ min($kpis['percentage'],100) }}%"></div></div>
             @endif
@@ -214,9 +233,13 @@
 
     {{-- ── CHART ── --}}
     <span class="sec-label">
-        {{ $filterType === 'day'
-            ? 'Revenue — '.\Carbon\Carbon::parse($day)->format('d M Y')
-            : 'Daily Revenue — '.\Carbon\Carbon::parse($month.'-01')->format('F Y') }}
+        @if($filterType === 'day')
+            Revenue — {{ \Carbon\Carbon::parse($day)->format('d M Y') }}
+        @elseif($filterType === 'week')
+            Revenue — Week of {{ \Carbon\Carbon::parse($day)->startOfWeek()->format('d M Y') }}
+        @else
+            Daily Revenue — {{ \Carbon\Carbon::parse($month.'-01')->format('F Y') }}
+        @endif
     </span>
     <div class="chart-card">
         <div class="chart-wrap">

@@ -23,7 +23,7 @@ class SalesController extends Controller
     public function index(Request $request)
     {
         $employee   = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
-        $filterType = $request->query('filter', 'month'); // ← default month
+        $filterType = $request->query('filter', 'month'); 
         $month      = $request->query('month', now()->format('Y-m'));
         $day        = $request->query('day', now()->format('Y-m-d'));
 

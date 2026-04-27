@@ -33,13 +33,18 @@ class SalesService
                 'end'   => \Carbon\Carbon::parse($day)->endOfDay(),
             ];
         }
+        if ($filterType === 'week') {
+            return [
+                'start' => \Carbon\Carbon::parse($day)->startOfWeek(),
+                'end'   => \Carbon\Carbon::parse($day)->endOfWeek(),
+            ];
+        }
         if ($filterType === 'month') {
             return [
                 'start' => \Carbon\Carbon::parse($month)->startOfMonth(),
                 'end'   => \Carbon\Carbon::parse($month)->endOfMonth(),
             ];
         }
-        // patch
         return [
             'start' => $patch?->start_date ? \Carbon\Carbon::parse($patch->start_date)->startOfDay() : null,
             'end'   => $patch?->end_date   ? \Carbon\Carbon::parse($patch->end_date)->endOfDay()     : now(),
@@ -56,6 +61,7 @@ public function getKPIs(Employee $employee, ?Patch $patch, string $filterType = 
                     ? \Carbon\Carbon::parse($patch->start_date)->format('Y-m')
                     : now()->format('Y-m'),
         'month' => $month,
+        'week'  => \Carbon\Carbon::parse($day)->format('Y-m'), 
         'day'   => \Carbon\Carbon::parse($day)->format('Y-m'),
     };
 
