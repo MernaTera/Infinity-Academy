@@ -16,6 +16,7 @@ use App\Http\Controllers\OutstandingController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\CourseAdminController;
+use App\Http\Controllers\Admin\EnglishLevelController;
 use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\PatchAdminController;
 use App\Http\Controllers\Admin\RoomController;
@@ -215,6 +216,12 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::get('/courses/{id}/edit',       [CourseAdminController::class, 'edit'])->name('courses.edit');
         Route::put('/courses/{id}',            [CourseAdminController::class, 'update'])->name('courses.update');
         Route::patch('/courses/{id}/archive',  [CourseAdminController::class, 'archive'])->name('courses.archive');
+
+        //English Levels
+        Route::get('/english-levels',          [EnglishLevelController::class, 'index'])->name('english-levels.index');
+        Route::post('/english-levels',         [EnglishLevelController::class, 'store'])->name('english-levels.store');
+        Route::put('/english-levels/{id}',     [EnglishLevelController::class, 'update'])->name('english-levels.update');
+        Route::delete('/english-levels/{id}',  [EnglishLevelController::class, 'destroy'])->name('english-levels.destroy');
 
         // Materials
         Route::get('/materials/levels/{courseId}',   [MaterialController::class, 'getLevels'])->name('materials.levels');
