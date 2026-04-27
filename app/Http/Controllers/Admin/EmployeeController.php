@@ -303,9 +303,10 @@ class EmployeeController extends Controller
         ]);
         $employee->user->update(['name' => $request->full_name]);
 
-        if ($request->filled('new_password')) {     
-            $request->validate(['new_password' => 'min:8']);
-            $employee->user->update(['password' => \Hash::make($request->new_password)]);
+        if ($request->filled('new_password')) {
+            \DB::table('users')
+                ->where('id', $employee->user_id)
+                ->update(['password' => \Hash::make($request->new_password)]);
         }
 
         if ($request->filled('target_amount')) {
