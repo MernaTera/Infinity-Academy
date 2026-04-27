@@ -44,6 +44,7 @@ class CsTarget extends Model
 	protected $fillable = [
 		'employee_id',
 		'patch_id',
+		'month',
 		'target_amount',
 		'target_registrations',
 		'is_locked',
@@ -53,6 +54,11 @@ class CsTarget extends Model
 	public function employee()
 	{
 		return $this->belongsTo(Employee::class, 'employee_id');
+	}
+
+	public function scopeForMonth($query, string $month)
+	{
+		return $query->where('month', $month);
 	}
 
 	public function patch()

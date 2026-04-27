@@ -11,28 +11,17 @@
 .page-eyebrow { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:#F5911E; margin-bottom:4px; }
 .page-title { font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:4px; color:#1B4FA8; margin-bottom:20px; }
 
-/* Filter tabs */
 .filter-tabs { display:flex; gap:8px; margin-bottom:16px; }
-.filter-tab {
-    padding:7px 20px; border-radius:4px; font-size:10px; letter-spacing:2px;
-    text-transform:uppercase; text-decoration:none; border:1px solid;
-    transition:all 0.2s; font-family:'DM Sans',sans-serif;
-}
+.filter-tab { padding:7px 20px; border-radius:4px; font-size:10px; letter-spacing:2px; text-transform:uppercase; text-decoration:none; border:1px solid; transition:all 0.2s; font-family:'DM Sans',sans-serif; }
 .filter-tab.active { background:#1B4FA8; color:#fff; border-color:#1B4FA8; }
 .filter-tab:not(.active) { color:#7A8A9A; border-color:rgba(27,79,168,0.2); background:#fff; }
 .filter-tab:not(.active):hover { border-color:#1B4FA8; color:#1B4FA8; text-decoration:none; }
 
-/* Filter bar */
-.filter-bar { display:flex; align-items:center; gap:12px; margin-bottom:24px; flex-wrap:wrap; }
-.filter-bar label { font-size:11px; color:#7A8A9A; }
-.filter-sel {
-    font-family:'DM Sans',sans-serif; font-size:12px; padding:8px 14px;
-    border:1px solid rgba(27,79,168,0.15); border-radius:4px;
-    background:#fff; color:#1A2A4A; cursor:pointer; outline:none;
-}
+.filter-bar { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
+.filter-bar label { font-size:11px; color:#7A8A9A; white-space:nowrap; }
+.filter-sel { font-family:'DM Sans',sans-serif; font-size:12px; padding:8px 14px; border:1px solid rgba(27,79,168,0.15); border-radius:4px; background:#fff; color:#1A2A4A; cursor:pointer; outline:none; }
 .filter-sel:focus { border-color:#1B4FA8; }
 
-/* KPI */
 .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:28px; }
 @media(max-width:900px) { .kpi-grid { grid-template-columns:repeat(3,1fr); } }
 @media(max-width:600px) { .kpi-grid { grid-template-columns:1fr 1fr; } }
@@ -40,22 +29,19 @@
 .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--kc,#1B4FA8); }
 .kpi-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#7A8A9A; margin-bottom:6px; }
 .kpi-val { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:2px; color:var(--kc,#1B4FA8); line-height:1; }
-.kpi-sub { font-size:10px; color:#AAB8C8; margin-top:4px; }
 .kpi-na { font-family:'Bebas Neue',sans-serif; font-size:20px; color:#D0D8E4; letter-spacing:2px; }
+.kpi-sub { font-size:10px; color:#AAB8C8; margin-top:4px; }
 .prog { background:#F0F0F0; border-radius:4px; height:4px; margin-top:10px; overflow:hidden; }
 .prog-fill { height:4px; border-radius:4px; background:var(--kc); transition:width .5s; }
 
-/* Section label */
 .sec-label { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:#F5911E; margin-bottom:14px; margin-top:8px; padding-bottom:9px; border-bottom:1px solid rgba(245,145,30,0.15); display:block; }
 
-/* Followup */
 .fu-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:28px; }
 @media(max-width:900px) { .fu-grid { grid-template-columns:repeat(3,1fr); } }
 .fu-card { background:#fff; border:1px solid rgba(27,79,168,0.1); border-radius:6px; padding:14px; text-align:center; }
 .fu-val { font-family:'Bebas Neue',sans-serif; font-size:24px; color:#1A2A4A; }
 .fu-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:#7A8A9A; margin-top:4px; }
 
-/* Table */
 .tbl-card { background:#fff; border:1px solid rgba(27,79,168,0.1); border-radius:6px; overflow:hidden; margin-bottom:28px; }
 .tbl { width:100%; border-collapse:collapse; }
 .tbl thead th { padding:11px 14px; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#7A8A9A; text-align:left; font-weight:500; background:rgba(27,79,168,0.02); border-bottom:1px solid rgba(27,79,168,0.07); white-space:nowrap; }
@@ -69,7 +55,6 @@
 .badge-direct { background:rgba(5,150,105,0.1); color:#059669; }
 .badge-shared { background:rgba(27,79,168,0.08); color:#1B4FA8; }
 
-/* Chart */
 .chart-card { background:#fff; border:1px solid rgba(27,79,168,0.1); border-radius:6px; padding:20px 22px; margin-bottom:28px; }
 .chart-wrap { position:relative; height:180px; margin-top:14px; }
 </style>
@@ -81,107 +66,76 @@
 
     {{-- ── FILTER TABS ── --}}
     <div class="filter-tabs">
-        <a href="{{ route('sales.index', ['filter' => 'patch']) }}"
-           class="filter-tab {{ $filterType === 'patch' ? 'active' : '' }}">By Patch</a>
         <a href="{{ route('sales.index', ['filter' => 'month', 'month' => $month]) }}"
-           class="filter-tab {{ $filterType === 'month' ? 'active' : '' }}">By Month</a>
+           class="filter-tab {{ $filterType !== 'day' ? 'active' : '' }}">By Month</a>
         <a href="{{ route('sales.index', ['filter' => 'day', 'day' => $day]) }}"
            class="filter-tab {{ $filterType === 'day' ? 'active' : '' }}">By Day</a>
     </div>
 
     {{-- ── FILTER INPUT ── --}}
-    @if($filterType === 'patch')
-    <div class="filter-bar">
-        <label>Viewing patch:</label>
-        <select class="filter-sel" onchange="window.location.href='{{ route('sales.index') }}?filter=patch&patch_id='+this.value">
-            @foreach($allPatches as $p)
-                <option value="{{ $p->patch_id }}" {{ $p->patch_id == $currentPatch?->patch_id ? 'selected' : '' }}>
-                    {{ $p->name ?? 'Patch ' . \Carbon\Carbon::parse($p->start_date)->format('M Y') }}
-                    @if($p->status === 'Active') (Current) @endif
-                </option>
-            @endforeach
-        </select>
-    </div>
-
-    @elseif($filterType === 'month')
-    <div class="filter-bar">
-        <label>Select Month:</label>
-        <input type="month" value="{{ $month }}" class="filter-sel"
-               onchange="window.location.href='{{ route('sales.index') }}?filter=month&month='+this.value">
-    </div>
-
-    @elseif($filterType === 'day')
+    @if($filterType === 'day')
     <div class="filter-bar">
         <label>Select Day:</label>
         <input type="date" value="{{ $day }}" class="filter-sel" style="color-scheme:light;"
                onchange="window.location.href='{{ route('sales.index') }}?filter=day&day='+this.value">
+    </div>
+    @else
+    <div class="filter-bar">
+        <label>Select Month:</label>
+        <input type="month" value="{{ $month }}" class="filter-sel"
+               onchange="window.location.href='{{ route('sales.index') }}?filter=month&month='+this.value">
     </div>
     @endif
 
     {{-- ── KPI CARDS ── --}}
     <div class="kpi-grid">
 
-        {{-- Target — patch only --}}
         <div class="kpi-card" style="--kc:#1B4FA8">
-            <div class="kpi-label">{{ $filterType === 'patch' ? 'Patch Target' : 'Target' }}</div>
-            @if($filterType === 'patch')
+            <div class="kpi-label">Monthly Target</div>
+            @if($kpis['target'] > 0)
                 <div class="kpi-val">{{ number_format($kpis['target']) }}</div>
-                <div class="kpi-sub">LE — set by admin</div>
+                <div class="kpi-sub">LE — {{ \Carbon\Carbon::parse($kpis['target_month'].'-01')->format('M Y') }}</div>
             @else
-                <div class="kpi-na">N/A</div>
-                <div class="kpi-sub">Patch view only</div>
+                <div class="kpi-na">No Target</div>
+                <div class="kpi-sub">Not set for this month</div>
             @endif
         </div>
 
-        {{-- Achieved --}}
         <div class="kpi-card" style="--kc:#059669">
             <div class="kpi-label">Achieved</div>
             <div class="kpi-val">{{ number_format($kpis['achieved']) }}</div>
-            <div class="kpi-sub">LE
-                @if($filterType === 'patch') this patch
-                @elseif($filterType === 'month') this month
-                @else today
-                @endif
-            </div>
-            @if($filterType === 'patch' && $kpis['percentage'] !== null)
+            <div class="kpi-sub">LE {{ $filterType === 'day' ? 'today' : 'this month' }}</div>
+            @if($kpis['percentage'] !== null)
             <div class="prog"><div class="prog-fill" style="width:{{ min($kpis['percentage'],100) }}%"></div></div>
             @endif
         </div>
 
-        {{-- Remaining — patch only --}}
         <div class="kpi-card" style="--kc:#F5911E">
             <div class="kpi-label">Remaining</div>
-            @if($filterType === 'patch' && $kpis['remaining'] !== null)
+            @if($kpis['remaining'] !== null)
                 <div class="kpi-val">{{ number_format($kpis['remaining']) }}</div>
-                <div class="kpi-sub">LE to target</div>
+                <div class="kpi-sub">LE to monthly target</div>
             @else
                 <div class="kpi-na">N/A</div>
-                <div class="kpi-sub">Patch view only</div>
+                <div class="kpi-sub">No target set</div>
             @endif
         </div>
 
-        {{-- Achievement % — patch only --}}
         <div class="kpi-card" style="--kc:#7F77DD">
             <div class="kpi-label">Achievement</div>
-            @if($filterType === 'patch' && $kpis['percentage'] !== null)
+            @if($kpis['percentage'] !== null)
                 <div class="kpi-val">{{ $kpis['percentage'] }}%</div>
-                <div class="kpi-sub">of target reached</div>
+                <div class="kpi-sub">of monthly target</div>
             @else
                 <div class="kpi-na">N/A</div>
-                <div class="kpi-sub">Patch view only</div>
+                <div class="kpi-sub">No target set</div>
             @endif
         </div>
 
-        {{-- Registrations --}}
         <div class="kpi-card" style="--kc:#1D9E75">
             <div class="kpi-label">Registrations</div>
             <div class="kpi-val">{{ $kpis['registrations'] }}</div>
-            <div class="kpi-sub">students
-                @if($filterType === 'patch') this patch
-                @elseif($filterType === 'month') this month
-                @else today
-                @endif
-            </div>
+            <div class="kpi-sub">students {{ $filterType === 'day' ? 'today' : 'this month' }}</div>
         </div>
 
     </div>
@@ -190,12 +144,12 @@
     <span class="sec-label">Follow-up Statistics</span>
     <div class="fu-grid">
         @foreach([
-            ['val' => $followupStats['total_leads'],   'label' => 'Total Leads'],
-            ['val' => $followupStats['total_calls'],   'label' => 'Total Calls'],
-            ['val' => $followupStats['answered'],      'label' => 'Answered'],
-            ['val' => $followupStats['unanswered'],    'label' => 'Unanswered'],
-            ['val' => $followupStats['registered'],    'label' => 'Registered'],
-            ['val' => $followupStats['conversion'].'%','label' => 'Conversion Rate'],
+            ['val' => $followupStats['total_leads'],    'label' => 'Total Leads'],
+            ['val' => $followupStats['total_calls'],    'label' => 'Total Calls'],
+            ['val' => $followupStats['answered'],       'label' => 'Answered'],
+            ['val' => $followupStats['unanswered'],     'label' => 'Unanswered'],
+            ['val' => $followupStats['registered'],     'label' => 'Registered'],
+            ['val' => $followupStats['conversion'].'%', 'label' => 'Conversion Rate'],
         ] as $stat)
         <div class="fu-card">
             <div class="fu-val">{{ $stat['val'] }}</div>
@@ -258,15 +212,13 @@
         </div>
     </div>
 
-    {{-- ── DAILY CHART ── --}}
-    <span class="sec-label">Revenue Over Time</span>
+    {{-- ── CHART ── --}}
+    <span class="sec-label">
+        {{ $filterType === 'day'
+            ? 'Revenue — '.\Carbon\Carbon::parse($day)->format('d M Y')
+            : 'Daily Revenue — '.\Carbon\Carbon::parse($month.'-01')->format('F Y') }}
+    </span>
     <div class="chart-card">
-        <div style="font-size:11px;color:#7A8A9A;">
-            @if($filterType === 'patch') Daily revenue — {{ $currentPatch?->name ?? 'Current Patch' }}
-            @elseif($filterType === 'month') Daily revenue — {{ \Carbon\Carbon::parse($month)->format('F Y') }}
-            @else Revenue — {{ \Carbon\Carbon::parse($day)->format('d M Y') }}
-            @endif
-        </div>
         <div class="chart-wrap">
             <canvas id="dailyChart"></canvas>
         </div>
@@ -276,16 +228,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-const labels = @json($dailyRevenue['labels']);
-const values = @json($dailyRevenue['values']);
-
 new Chart(document.getElementById('dailyChart'), {
     type: 'bar',
     data: {
-        labels,
+        labels: @json($dailyRevenue['labels']),
         datasets: [{
             label: 'Revenue (LE)',
-            data: values,
+            data: @json($dailyRevenue['values']),
             backgroundColor: 'rgba(27,79,168,0.65)',
             borderRadius: 3,
             borderSkipped: false,
