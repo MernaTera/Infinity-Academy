@@ -21,6 +21,7 @@ use App\Http\Controllers\Admin\PaymentPolicyController;
 use App\Http\Controllers\Admin\InstallmentApprovalController;
 use App\Http\Controllers\Admin\OutstandingAdminController;
 use App\Http\Controllers\Admin\OffersController;
+use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\AuditController;
 
 use App\Http\Controllers\Teacher\TeacherController;
@@ -240,6 +241,9 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::post('/offers',                 [OffersController::class, 'store'])->name('offers.store');
         Route::put('/offers/{id}',             [OffersController::class, 'update'])->name('offers.update');
         Route::patch('/offers/{id}/toggle',    [OffersController::class, 'toggle'])->name('offers.toggle');
+
+        //Sales Tables
+        Route::get('/sales', [AdminSalesController::class, 'index'])->name('sales.index');
 
         // Audit
         Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');

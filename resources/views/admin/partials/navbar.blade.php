@@ -105,6 +105,7 @@
             <div class="anav-desktop-links" style="display:flex; align-items:center; gap:28px;">
                 <a href="{{ route('admin.dashboard') }}"         class="anav-link {{ request()->routeIs('admin.dashboard')      ? 'active' : '' }}">Dashboard</a>
                 <a href="{{ route('admin.employees.index') }}"   class="anav-link {{ request()->routeIs('admin.employees.*')    ? 'active' : '' }}">Employees</a>
+                <a href="{{ route('admin.sales.index') }}" class="anav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">Sales</a>
                 <a href="{{ route('admin.courses.index') }}"     class="anav-link {{ request()->routeIs('admin.courses.*')      ? 'active' : '' }}">Courses</a>
                 <a href="{{ route('admin.installments.index') }}" class="anav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}">
                     Approvals
@@ -280,6 +281,10 @@
             <a href="{{ route('admin.employees.index') }}"    class="amobile-nav-link {{ request()->routeIs('admin.employees.*')    ? 'active' : '' }}">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                 Employees
+            </a>
+            <a href="{{ route('admin.sales.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                Sales
             </a>
             <a href="{{ route('admin.courses.index') }}"      class="amobile-nav-link {{ request()->routeIs('admin.courses.*')      ? 'active' : '' }}">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
