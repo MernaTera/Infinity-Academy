@@ -22,6 +22,7 @@ use App\Http\Controllers\Admin\PaymentPolicyController;
 use App\Http\Controllers\Admin\InstallmentApprovalController;
 use App\Http\Controllers\Admin\OutstandingAdminController;
 use App\Http\Controllers\Admin\OffersController;
+use App\Http\Controllers\Admin\LevelPackageController;
 use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\AuditController;
 
@@ -253,6 +254,13 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::post('/offers',                 [OffersController::class, 'store'])->name('offers.store');
         Route::put('/offers/{id}',             [OffersController::class, 'update'])->name('offers.update');
         Route::patch('/offers/{id}/toggle',    [OffersController::class, 'toggle'])->name('offers.toggle');
+
+        // Level Packages
+        Route::get('/packages',               [LevelPackageController::class, 'index'])->name('packages.index');
+        Route::post('/packages',              [LevelPackageController::class, 'store'])->name('packages.store');
+        Route::put('/packages/{id}',          [LevelPackageController::class, 'update'])->name('packages.update');
+        Route::patch('/packages/{id}/toggle', [LevelPackageController::class, 'toggle'])->name('packages.toggle');
+        Route::delete('/packages/{id}',       [LevelPackageController::class, 'destroy'])->name('packages.destroy');
 
         //Sales Tables
         Route::get('/sales', [AdminSalesController::class, 'index'])->name('sales.index');
