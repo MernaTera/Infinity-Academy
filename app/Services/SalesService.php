@@ -131,11 +131,24 @@ public function getKPIs(Employee $employee, ?Patch $patch, string $filterType = 
             ->map(function ($splits) {
                 $first      = $splits->first();
                 $enrollment = $first->financialTransaction?->enrollment;
+
+                $deposit  = $splits->where('allocation_type', 'Direct')
+                                ->filter(fn($r) => $r->financialTransaction?->transaction_category === 'Course')
+                                ->sum('amount_allocated');
+
+                $testFee  = $splits->where('allocation_type', 'Direct')
+                                ->filter(fn($r) => $r->financialTransaction?->transaction_category === 'Test')
+                                ->sum('amount_allocated');
+
+                $material = $splits->where('allocation_type', 'Shared')
+                                ->sum('amount_allocated');
+
                 return [
                     'student_name' => $enrollment?->student?->full_name ?? '—',
                     'course'       => $enrollment?->courseTemplate?->name ?? '—',
-                    'deposit'      => $splits->where('allocation_type', 'Direct')->sum('amount_allocated'),
-                    'material'     => $splits->where('allocation_type', 'Shared')->sum('amount_allocated'),
+                    'deposit'      => $deposit,
+                    'test_fee'     => $testFee,   // ← جديد
+                    'material'     => $material,
                     'total'        => $splits->sum('amount_allocated'),
                     'date'         => $first->created_at?->format('d M Y'),
                 ];

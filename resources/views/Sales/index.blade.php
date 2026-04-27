@@ -187,6 +187,7 @@
                         <th>Student</th>
                         <th>Course</th>
                         <th>Deposit</th>
+                        <th>Test Fee</th>
                         <th>Material</th>
                         <th>Total Revenue</th>
                         <th>Type</th>
@@ -199,6 +200,7 @@
                         <td style="font-weight:500;color:#1A2A4A;">{{ $row['student_name'] }}</td>
                         <td>{{ $row['course'] }}</td>
                         <td class="money">{{ number_format($row['deposit']) }} LE</td>
+                        <td class="money">{{ number_format($row['test_fee']) }} LE</td>
                         <td class="money">{{ number_format($row['material']) }} LE</td>
                         <td class="total">{{ number_format($row['total']) }} LE</td>
                         <td>
@@ -221,6 +223,7 @@
                     <tr style="border-top:2px solid rgba(27,79,168,0.1);">
                         <td colspan="2" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;padding:10px 14px;">Total</td>
                         <td class="money" style="font-weight:500;">{{ number_format($revenueRows->sum('deposit')) }} LE</td>
+                        <td class="money" style="font-weight:500;">{{ number_format($revenueRows->sum('test_fee')) }} LE</td>
                         <td class="money" style="font-weight:500;">{{ number_format($revenueRows->sum('material')) }} LE</td>
                         <td class="total" style="font-size:15px;">{{ number_format($revenueRows->sum('total')) }} LE</td>
                         <td colspan="2"></td>

@@ -289,38 +289,72 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(e => { if (e.name!=='AbortError' && materialSection) materialSection.style.opacity='1'; });
     }
 
-    function applyMaterial(data) {
-        if (!data?.material_id) {
-            if (materialSection) materialSection.style.display = 'none';
-            pricing.materialPrice = 0;
-            if (materialCheck)     materialCheck.checked = false;
-            if (materialPriceBlock) materialPriceBlock.style.display = 'none';
-            updatePriceDisplay();
-            return;
-        }
-        if (materialSection) materialSection.style.display = 'block';
-        const nameEl     = document.getElementById('material_name');
-        const priceEl    = document.getElementById('material_price');
-        const splitBadge = document.getElementById('material_split_badge');
-        const splitText  = document.getElementById('material_split_text');
-        if (nameEl)  nameEl.value  = data.name;
-        if (priceEl) priceEl.value = parseFloat(data.price).toFixed(2) + ' LE';
-        if (materialPriceHidden) materialPriceHidden.value = data.price;
-        if (splitBadge && splitText && data.cs_percentage > 0) {
-            const csAmt   = (data.price * data.cs_percentage / 100).toFixed(2);
-            const acadAmt = (data.price - csAmt).toFixed(2);
-            splitText.textContent = `CS commission: ${data.cs_percentage}% = ${csAmt} LE · Academy: ${acadAmt} LE`;
-            splitBadge.style.display = 'flex';
-        } else if (splitBadge) { splitBadge.style.display = 'none'; }
+function applyMaterial(data) {
+    if (!data?.material_id) {
+        if (materialSection) materialSection.style.display = 'none';
+        pricing.materialPrice = 0;
+        if (materialCheck)      materialCheck.checked = false;
+        if (materialPriceBlock) materialPriceBlock.style.display = 'none';
+        updatePriceDisplay();
+        return;
     }
 
-    if (materialCheck) {
-        materialCheck.addEventListener('change', function() {
-            if (materialPriceBlock) materialPriceBlock.style.display = this.checked ? 'block' : 'none';
-            pricing.materialPrice = this.checked ? parseFloat(materialPriceHidden?.value || 0) : 0;
-            updatePriceDisplay();
-        });
+    if (materialSection) materialSection.style.display = 'block';
+
+    const nameEl     = document.getElementById('material_name');
+    const priceEl    = document.getElementById('material_price');
+    const splitBadge = document.getElementById('material_split_badge');
+    const splitText  = document.getElementById('material_split_text');
+
+    if (nameEl)  nameEl.value  = data.name;
+    if (priceEl) priceEl.value = parseFloat(data.price).toFixed(2) + ' LE';
+    if (materialPriceHidden) materialPriceHidden.value = data.price;
+
+    if (data.is_mandatory) {
+        if (materialCheck) {
+            materialCheck.checked  = true;
+            materialCheck.disabled = true;
+        }
+        if (materialPriceBlock) materialPriceBlock.style.display = 'block';
+        pricing.materialPrice = parseFloat(data.price || 0);
+
+        const toggle = document.querySelector('.material-toggle');
+        if (toggle) {
+            toggle.style.borderColor = 'rgba(245,145,30,0.3)';
+            toggle.style.background  = 'rgba(245,145,30,0.04)';
+            if (!toggle.querySelector('.mandatory-tag')) {
+                const tag = document.createElement('span');
+                tag.className = 'mandatory-tag';
+                tag.style.cssText = 'font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#C47010;background:rgba(245,145,30,0.1);padding:2px 7px;border-radius:3px;margin-left:auto;';
+                tag.textContent = 'Mandatory';
+                toggle.appendChild(tag);
+            }
+        }
+    } else {
+        if (materialCheck) {
+            materialCheck.checked  = false;
+            materialCheck.disabled = false;
+        }
+        if (materialPriceBlock) materialPriceBlock.style.display = 'none';
+        pricing.materialPrice = 0;
+
+        const tag = document.querySelector('.mandatory-tag');
+        if (tag) tag.remove();
+        const toggle = document.querySelector('.material-toggle');
+        if (toggle) { toggle.style.borderColor = ''; toggle.style.background = ''; }
     }
+
+    if (splitBadge && splitText && data.cs_percentage > 0) {
+        const csAmt   = (data.price * data.cs_percentage / 100).toFixed(2);
+        const acadAmt = (data.price - csAmt).toFixed(2);
+        splitText.textContent = `CS commission: ${data.cs_percentage}% = ${csAmt} LE · Academy: ${acadAmt} LE`;
+        splitBadge.style.display = 'flex';
+    } else if (splitBadge) {
+        splitBadge.style.display = 'none';
+    }
+
+    updatePriceDisplay();
+}
 
     // ─────────────────────────────────────────
     // Test fee

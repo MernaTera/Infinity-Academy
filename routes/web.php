@@ -16,6 +16,7 @@ use App\Http\Controllers\OutstandingController;
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\CourseAdminController;
+use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\PatchAdminController;
 use App\Http\Controllers\Admin\PaymentPolicyController;
 use App\Http\Controllers\Admin\InstallmentApprovalController;
@@ -211,6 +212,17 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::get('/courses/{id}/edit',       [CourseAdminController::class, 'edit'])->name('courses.edit');
         Route::put('/courses/{id}',            [CourseAdminController::class, 'update'])->name('courses.update');
         Route::patch('/courses/{id}/archive',  [CourseAdminController::class, 'archive'])->name('courses.archive');
+
+        // Materials
+        Route::get('/materials/levels/{courseId}',   [MaterialController::class, 'getLevels'])->name('materials.levels');
+        Route::get('/materials/sublevels/{levelId}', [MaterialController::class, 'getSublevels'])->name('materials.sublevels');
+        Route::post('/materials/assign',             [MaterialController::class, 'assign'])->name('materials.assign');
+        Route::delete('/materials/unassign/{id}',    [MaterialController::class, 'unassign'])->name('materials.unassign');
+        Route::get('/materials',               [MaterialController::class, 'index'])->name('materials.index');
+        Route::post('/materials',              [MaterialController::class, 'store'])->name('materials.store');
+        Route::put('/materials/{id}',          [MaterialController::class, 'update'])->name('materials.update');
+        Route::patch('/materials/{id}/toggle', [MaterialController::class, 'toggle'])->name('materials.toggle');
+
 
         // Patches & Time
         Route::get('/patches',                      [PatchAdminController::class, 'index'])->name('patches.index');
