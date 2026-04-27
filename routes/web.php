@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\InstallmentApprovalController;
 use App\Http\Controllers\Admin\OutstandingAdminController;
 use App\Http\Controllers\Admin\OffersController;
 use App\Http\Controllers\Admin\LevelPackageController;
+use App\Http\Controllers\Admin\PrivateBundleController;
 use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\AuditController;
 
@@ -261,6 +262,13 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::put('/packages/{id}',          [LevelPackageController::class, 'update'])->name('packages.update');
         Route::patch('/packages/{id}/toggle', [LevelPackageController::class, 'toggle'])->name('packages.toggle');
         Route::delete('/packages/{id}',       [LevelPackageController::class, 'destroy'])->name('packages.destroy');
+
+        //Bundles
+        Route::get('/bundles',               [PrivateBundleController::class, 'index'])->name('bundles.index');
+        Route::post('/bundles',              [PrivateBundleController::class, 'store'])->name('bundles.store');
+        Route::put('/bundles/{id}',          [PrivateBundleController::class, 'update'])->name('bundles.update');
+        Route::patch('/bundles/{id}/toggle', [PrivateBundleController::class, 'toggle'])->name('bundles.toggle');
+        Route::delete('/bundles/{id}',       [PrivateBundleController::class, 'destroy'])->name('bundles.destroy');
 
         //Sales Tables
         Route::get('/sales', [AdminSalesController::class, 'index'])->name('sales.index');
