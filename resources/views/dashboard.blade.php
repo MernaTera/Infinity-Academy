@@ -114,7 +114,7 @@
     @endif
 
     {{-- SALES KPIs --}}
-    <div class="sec-label">Sales Performance — {{ $currentPatch?->name ?? 'Current Patch' }}</div>
+    <div class="sec-label">Sales Performance — {{ now()->format('F Y') }}</div>
     <div class="kpi-grid kpi-grid-5">
         <div class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Monthly Target</div>
@@ -124,7 +124,7 @@
         <div class="kpi-card" style="--kc:#059669">
             <div class="kpi-label">Achieved</div>
             <div class="kpi-val">{{ number_format($salesStats['achieved']) }}</div>
-            <div class="kpi-sub">LE this patch</div>
+            <div class="kpi-sub">LE this month</div>
             <div class="prog"><div class="prog-fill" style="width:{{ min(100,$salesStats['percentage']) }}%;background:#059669"></div></div>
         </div>
         <div class="kpi-card" style="--kc:#F5911E">

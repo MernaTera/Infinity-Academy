@@ -33,27 +33,34 @@ class DashboardController extends Controller
             'public'        => Lead::whereNull('owner_cs_id')->where('is_active', true)->count(),
         ];
 
-        // ══ SALES / REVENUE ════════════════════════════════════
-        $target = \App\Models\Enrollment\CsTarget::where('employee_id', $employee?->employee_id)
-            ->where('patch_id', $currentPatch?->patch_id)
-            ->first();
+    // ══ SALES / REVENUE ════════════════════════════════════
+    $currentMonth = now()->format('Y-m');
 
-        $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)
-            ->where('patch_id', $currentPatch?->patch_id)
-            ->sum('amount_allocated');
+    // ✅ target by month مش by patch
+    $target = CsTarget::where('employee_id', $employee?->employee_id)
+        ->where('month', $currentMonth)
+        ->first();
 
-        $targetAmount = $target?->target_amount ?? 0;
-        $remaining    = max(0, $targetAmount - $achieved);
-        $percentage   = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : 0;
+    $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)
+        ->whereBetween('created_at', [
+            now()->startOfMonth(),
+            now()->endOfMonth(),
+        ])
+        ->sum('amount_allocated');
 
-        $salesStats = [
-            'target'        => $targetAmount,
-            'achieved'      => $achieved,
-            'remaining'     => $remaining,
-            'percentage'    => $percentage,
-            'registrations' => Enrollment::where('created_by_cs_id', $employee?->employee_id)
-                                ->where('patch_id', $currentPatch?->patch_id)->count(),
-        ];
+    $targetAmount = $target?->target_amount ?? 0;
+    $remaining    = max(0, $targetAmount - $achieved);
+    $percentage   = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : 0;
+
+    $salesStats = [
+        'target'        => $targetAmount,
+        'achieved'      => $achieved,
+        'remaining'     => $remaining,
+        'percentage'    => $percentage,
+        'registrations' => Enrollment::where('created_by_cs_id', $employee?->employee_id)
+                            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+                            ->count(),
+    ];
 
         // ══ OUTSTANDING ════════════════════════════════════════
         $myEnrollments = Enrollment::where('created_by_cs_id', $employee?->employee_id)
