@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
 use App\Models\HR\Employee;
 use App\Models\Lead\Lead;
-use App\Models\Academic\Enrollment;
+use App\Models\Enrollment\Enrollment;
 
 
 /**

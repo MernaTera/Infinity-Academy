@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
-use App\Models\Academic\Enrollment;
+use App\Models\Enrollment\Enrollment;
 use App\Models\HR\Teacher;
 use App\Models\Reports\ReportScore;
 use Illuminate\Database\Eloquent\Builder;

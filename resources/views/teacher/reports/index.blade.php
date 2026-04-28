@@ -1,207 +1,274 @@
 @extends('teacher.layouts.app')
-@section('title', 'Reports')
+
+@section('title', 'My Reports')
 
 @section('content')
 @once
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 @endonce
 
 <style>
-.rep-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#059669;margin:0}
-.page-header{margin-bottom:28px}
+:root{--blue:#1B4FA8;--blue-l:rgba(27,79,168,0.08);--orange:#F5911E;--orange-l:rgba(245,145,30,0.08);--green:#059669;--green-l:rgba(5,150,105,0.08);--red:#DC2626;--red-l:rgba(220,38,38,0.06);--purple:#7F77DD;--purple-l:rgba(127,119,221,0.08);--border:rgba(27,79,168,0.1);--bg:#F8F6F2;--card:#fff;--text:#1A2A4A;--muted:#7A8A9A;--faint:#AAB8C8;}
+*{box-sizing:border-box;}
+.trp-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text);}
+.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:4px;}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--blue);margin:0 0 24px;}
+.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
+.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(245,145,30,0.15);display:block;}
 
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
-.kpi-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:6px;padding:16px 20px;position:relative;overflow:hidden}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,#059669)}
-.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:5px}
-.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--kc,#059669);line-height:1}
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:16px 18px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--blue));}
+.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:5px;}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--kc,var(--blue));line-height:1;}
 
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:14px;display:block;padding-bottom:8px;border-bottom:1px solid rgba(5,150,105,0.1)}
+/* Overdue alert */
+.overdue-alert{display:flex;align-items:center;gap:14px;background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.2);border-left:3px solid var(--red);border-radius:6px;padding:14px 18px;margin-bottom:20px;}
+.overdue-alert-text{font-size:13px;color:var(--red);}
 
-/* Course Section */
-.course-section{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;overflow:hidden;margin-bottom:16px}
-.cs-header{padding:16px 20px;border-bottom:1px solid rgba(5,150,105,0.06);display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:background 0.2s}
-.cs-header:hover{background:rgba(5,150,105,0.02)}
-.cs-course-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#1A2A4A}
-.cs-meta{font-size:11px;color:#7A8A9A;margin-top:3px}
+/* Pending cards */
+.pending-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:28px;}
+@media(max-width:800px){.pending-grid{grid-template-columns:1fr;}}
+.pending-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;position:relative;box-shadow:0 2px 8px rgba(27,79,168,0.04);}
+.pending-card.overdue{border-color:rgba(220,38,38,0.3);}
+.pending-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--orange),var(--blue));}
+.pending-card.overdue::before{background:linear-gradient(90deg,var(--red),var(--orange));}
+.pending-card-body{padding:18px 20px;}
+.pending-student{font-size:15px;font-weight:600;color:var(--text);}
+.pending-course{font-size:11px;color:var(--faint);margin-top:3px;}
+.pending-deadline{font-size:10px;margin-top:8px;padding:4px 10px;border-radius:3px;display:inline-flex;align-items:center;gap:4px;}
+.deadline-ok{background:var(--blue-l);color:var(--blue);}
+.deadline-warn{background:var(--orange-l);color:#C47010;}
+.deadline-over{background:var(--red-l);color:var(--red);}
+.pending-card-footer{padding:12px 20px;border-top:1px solid var(--border);}
 
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;font-weight:500;white-space:nowrap}
-.badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0}
-.badge-pending{color:#C47010;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2)}
-.badge-submitted{color:#1B4FA8;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.15)}
-.badge-approved{color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.15)}
-.badge-rejected{color:#DC2626;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15)}
+/* Reports table */
+.tbl-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(27,79,168,0.04);}
+.tbl{width:100%;border-collapse:collapse;}
+.tbl thead th{padding:11px 16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);text-align:left;font-weight:500;background:rgba(27,79,168,0.02);border-bottom:1px solid var(--border);white-space:nowrap;}
+.tbl tbody tr{border-bottom:1px solid rgba(27,79,168,0.04);transition:background 0.15s;}
+.tbl tbody tr:last-child{border-bottom:none;}
+.tbl tbody tr:hover{background:rgba(27,79,168,0.02);}
+.tbl td{padding:14px 16px;font-size:13px;color:var(--muted);vertical-align:middle;}
 
-/* Student Report Row */
-.student-rep-row{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:1px solid rgba(5,150,105,0.04);transition:background 0.2s}
-.student-rep-row:last-child{border-bottom:none}
-.student-rep-row:hover{background:rgba(5,150,105,0.02)}
-.srr-name{font-weight:500;color:#1A2A4A;font-size:13px;flex:1}
-.srr-score{font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1A2A4A;letter-spacing:1px;min-width:50px;text-align:center}
+/* Status */
+.status-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;}
+.status-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0;}
+.badge-draft{color:var(--faint);background:rgba(170,184,200,0.1);border:1px solid rgba(170,184,200,0.2);}
+.badge-submitted{color:#C47010;background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);}
+.badge-approved{color:var(--green);background:var(--green-l);border:1px solid rgba(5,150,105,0.2);}
+.badge-rejected{color:var(--red);background:var(--red-l);border:1px solid rgba(220,38,38,0.15);}
+.badge-sent{color:var(--purple);background:var(--purple-l);border:1px solid rgba(127,119,221,0.2);}
 
-.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:none;transition:all 0.2s;white-space:nowrap}
-.btn-write{color:#059669;border-color:rgba(5,150,105,0.25)}
-.btn-write:hover{background:rgba(5,150,105,0.07);text-decoration:none}
-.btn-edit{color:#C47010;border-color:rgba(245,145,30,0.2)}
-.btn-edit:hover{background:rgba(245,145,30,0.06);text-decoration:none}
-.btn-view{color:#1B4FA8;border-color:rgba(27,79,168,0.2)}
-.btn-view:hover{background:rgba(27,79,168,0.06);text-decoration:none}
+/* Score bar */
+.score-bar{display:flex;align-items:center;gap:8px;}
+.score-track{flex:1;background:#F0F0F0;border-radius:3px;height:5px;overflow:hidden;min-width:50px;}
+.score-fill{height:5px;border-radius:3px;}
 
-/* Deadline */
-.deadline-warn{font-size:10px;color:#DC2626;letter-spacing:1px;text-transform:uppercase}
-.deadline-ok{font-size:10px;color:#AAB8C8;letter-spacing:1px}
+/* Rejection note */
+.rejection-box{background:var(--red-l);border:1px solid rgba(220,38,38,0.2);border-radius:4px;padding:8px 12px;font-size:11px;color:var(--red);margin-top:6px;}
 
-.empty-state{text-align:center;padding:60px;background:#fff;border:1px solid rgba(5,150,105,0.08);border-radius:8px}
-.empty-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:#AAB8C8;margin-bottom:6px}
+/* Buttons */
+.btn-primary{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;background:transparent;border:1.5px solid var(--blue);border-radius:4px;color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.3s;text-decoration:none;}
+.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--blue),#2D6FDB);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);}
+.btn-primary:hover::before{transform:scaleX(1);}
+.btn-primary:hover{color:#fff;text-decoration:none;}
+.btn-primary span,.btn-primary svg{position:relative;z-index:1;}
+.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;font-family:'DM Sans',sans-serif;border:1px solid;background:transparent;cursor:pointer;transition:all 0.2s;text-decoration:none;}
+.btn-edit{color:var(--blue);border-color:rgba(27,79,168,0.25);}
+.btn-edit:hover{background:var(--blue-l);text-decoration:none;}
+.btn-send{color:var(--green);border-color:rgba(5,150,105,0.3);}
+.btn-send:hover{background:var(--green-l);}
+.btn-new{color:var(--orange);border-color:rgba(245,145,30,0.3);}
+.btn-new:hover{background:var(--orange-l);text-decoration:none;}
 
-@media(max-width:768px){.rep-page{padding:18px 14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:768px){.trp-page{padding:18px 14px;}.kpi-grid{grid-template-columns:1fr 1fr;}}
 </style>
 
-<div class="rep-page">
+<div class="trp-page">
 
     <div class="page-header">
-        <div class="page-eyebrow">Instructor</div>
-        <h1 class="page-title">Reports</h1>
+        <div>
+            <div class="page-eyebrow">Teacher Dashboard</div>
+            <h1 class="page-title">Student Reports</h1>
+        </div>
+        <a href="{{ route('teacher.reports.create') }}" class="btn-primary">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>New Report</span>
+        </a>
     </div>
 
     @if(session('success'))
-    <div style="background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:#059669;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">{{ session('success') }}</div>
+    <div style="background:var(--green-l);border:1px solid rgba(5,150,105,0.2);color:var(--green);padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px;">{{ session('success') }}</div>
+    @endif
+    @if(session('error'))
+    <div style="background:var(--red-l);border:1px solid rgba(220,38,38,0.2);color:var(--red);padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px;">{{ session('error') }}</div>
+    @endif
+
+    {{-- Overdue Warning --}}
+    @if($stats['overdue'] > 0)
+    <div class="overdue-alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;color:var(--red);">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+        <div>
+            <div class="overdue-alert-text">
+                <strong>{{ $stats['overdue'] }} report{{ $stats['overdue'] > 1 ? 's' : '' }} overdue!</strong>
+                The 3-day deadline has passed for these courses. Please submit them immediately.
+            </div>
+        </div>
+    </div>
     @endif
 
     {{-- KPIs --}}
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:#C47010">
-            <div class="kpi-label">Pending</div>
-            <div class="kpi-val">{{ $stats['pending'] }}</div>
-        </div>
-        <div class="kpi-card" style="--kc:#1B4FA8">
-            <div class="kpi-label">Submitted</div>
-            <div class="kpi-val">{{ $stats['submitted'] }}</div>
-        </div>
-        <div class="kpi-card" style="--kc:#059669">
-            <div class="kpi-label">Approved</div>
-            <div class="kpi-val">{{ $stats['approved'] }}</div>
-        </div>
-        <div class="kpi-card" style="--kc:#DC2626">
-            <div class="kpi-label">Rejected</div>
-            <div class="kpi-val">{{ $stats['rejected'] }}</div>
-        </div>
+        <div class="kpi-card" style="--kc:var(--orange)"><div class="kpi-label">Pending Reports</div><div class="kpi-val">{{ $stats['pending'] }}</div></div>
+        <div class="kpi-card" style="--kc:#C47010"><div class="kpi-label">Awaiting Approval</div><div class="kpi-val">{{ $stats['submitted'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--green)"><div class="kpi-label">Approved</div><div class="kpi-val">{{ $stats['approved'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--red)"><div class="kpi-label">Rejected</div><div class="kpi-val">{{ $stats['rejected'] }}</div></div>
     </div>
 
-    <span class="sec-label">Completed Courses</span>
-
-    @if($completedInstances->isEmpty())
-    <div class="empty-state">
-        <div class="empty-title">No Completed Courses</div>
-        <div style="font-size:12px;color:#AAB8C8">Reports will appear here after course completion</div>
-    </div>
-    @else
-    @foreach($completedInstances as $instance)
-    @php
-        $deadline    = \Carbon\Carbon::parse($instance->end_date)->addDays(3);
-        $isLate      = now()->gt($deadline);
-        $daysLeft    = (int)now()->diffInDays($deadline, false);
-    @endphp
-    <div class="course-section">
-        <div class="cs-header" onclick="toggleSection('sec_{{ $instance->course_instance_id }}', 'chev_{{ $instance->course_instance_id }}')">
-            <div>
-                <div class="cs-course-name">{{ $instance->courseTemplate?->name ?? '—' }}</div>
-                <div class="cs-meta">
-                    @if($instance->level) {{ $instance->level->name }} · @endif
-                    {{ $instance->type }} · {{ $instance->patch?->name ?? '—' }}
-                    · Ended {{ \Carbon\Carbon::parse($instance->end_date)->format('d M Y') }}
+    {{-- Pending Reports --}}
+    @if($pendingEnrollments->count())
+    <span class="sec-label">⚠ Courses Awaiting Report</span>
+    <div class="pending-grid">
+        @foreach($pendingEnrollments as $e)
+        @php
+            $endDate = $e->courseInstance?->end_date;
+            $deadline = $endDate ? \Carbon\Carbon::parse($endDate)->addDays(3) : null;
+            $daysLeft = $deadline ? now()->diffInDays($deadline, false) : null;
+            $isOver   = $daysLeft !== null && $daysLeft < 0;
+            $isWarn   = $daysLeft !== null && $daysLeft <= 1 && !$isOver;
+        @endphp
+        <div class="pending-card {{ $isOver ? 'overdue' : '' }}">
+            <div class="pending-card-body">
+                <div class="pending-student">{{ $e->student?->full_name ?? '—' }}</div>
+                <div class="pending-course">
+                    {{ $e->courseTemplate?->name ?? '—' }}
+                    @if($e->level) · {{ $e->level->name }} @endif
+                    @if($e->sublevel) › {{ $e->sublevel->name }} @endif
                 </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:12px">
-                @if($isLate)
-                <span class="deadline-warn">⚠ Overdue</span>
-                @elseif($daysLeft <= 3)
-                <span class="deadline-warn">{{ $daysLeft }}d left</span>
-                @else
-                <span class="deadline-ok">Due {{ $deadline->format('d M') }}</span>
-                @endif
-                <svg id="chev_{{ $instance->course_instance_id }}" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="2" style="transition:transform 0.2s"><polyline points="6 9 12 15 18 9"/></svg>
-            </div>
-        </div>
-
-        <div id="sec_{{ $instance->course_instance_id }}">
-            @foreach($instance->enrollments as $enrollment)
-            @php
-                $report = $enrollment->report;
-                $status = $report?->status ?? 'Draft';
-                $statusBadge = match($status) {
-                    'Draft'     => 'badge-pending',
-                    'Submitted' => 'badge-submitted',
-                    'Approved'  => 'badge-approved',
-                    'Rejected'  => 'badge-rejected',
-                    default     => 'badge-pending',
-                };
-                $statusLabel = match($status) {
-                    'Draft'     => 'Not Submitted',
-                    'Submitted' => 'Under Review',
-                    'Approved'  => 'Approved',
-                    'Rejected'  => 'Rejected',
-                    default     => 'Pending',
-                };
-            @endphp
-            <div class="student-rep-row">
-                <div style="width:30px;height:30px;border-radius:50%;background:rgba(5,150,105,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:#059669;flex-shrink:0">
-                    {{ strtoupper(substr($enrollment->student?->full_name ?? '?', 0, 1)) }}
-                </div>
-                <div style="flex:1">
-                    <div class="srr-name">{{ $enrollment->student?->full_name ?? '—' }}</div>
-                </div>
-
-                @if($report)
-                <div class="srr-score" style="color:{{ $report->total_score >= 60 ? '#059669' : '#DC2626' }}">
-                    {{ $report->total_score }}<span style="font-size:12px;color:#AAB8C8">/100</span>
-                </div>
-                @endif
-
-                <span class="badge {{ $statusBadge }}">{{ $statusLabel }}</span>
-
-                @if($report?->rejection_note)
-                <div style="font-size:10px;color:#DC2626;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ $report->rejection_note }}">
-                    {{ Str::limit($report->rejection_note, 30) }}
-                </div>
-                @endif
-
-                <div style="display:flex;gap:6px">
-                    @if(!$report || $status === 'Draft')
-                    <a href="{{ route('teacher.reports.create', $instance->course_instance_id) }}?enrollment={{ $enrollment->enrollment_id }}"
-                       class="btn-sm btn-write">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        Write Report
-                    </a>
-                    @elseif($status === 'Rejected')
-                    <a href="{{ route('teacher.reports.edit', $report->report_id) }}" class="btn-sm btn-edit">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        Resubmit
-                    </a>
-                    @else
-                    <span class="btn-sm btn-view" style="cursor:default;opacity:0.7">
-                        {{ $status === 'Submitted' ? 'Pending Admin' : 'Approved' }}
+                <div style="margin-top:8px;">
+                    @if($deadline)
+                    <span class="pending-deadline {{ $isOver ? 'deadline-over' : ($isWarn ? 'deadline-warn' : 'deadline-ok') }}">
+                        @if($isOver)
+                            ⚠ Overdue — {{ abs($daysLeft) }} day{{ abs($daysLeft) != 1 ? 's' : '' }} past deadline
+                        @elseif($isWarn)
+                            ⚡ {{ $daysLeft }} day{{ $daysLeft != 1 ? 's' : '' }} left
+                        @else
+                            Deadline: {{ $deadline->format('d M Y') }}
+                        @endif
                     </span>
                     @endif
                 </div>
             </div>
-            @endforeach
+            <div class="pending-card-footer">
+                <a href="{{ route('teacher.reports.create', ['enrollment_id' => $e->enrollment_id]) }}"
+                   class="btn-sm btn-new">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Write Report
+                </a>
+            </div>
         </div>
+        @endforeach
     </div>
-    @endforeach
     @endif
 
-</div>
+    {{-- Reports Table --}}
+    <span class="sec-label">All Reports</span>
+    <div class="tbl-card">
+        <div style="overflow-x:auto;">
+            <table class="tbl">
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Course / Level</th>
+                        <th>Total Score</th>
+                        <th>Status</th>
+                        <th>Last Updated</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($reports as $report)
+                    @php
+                        $pct = $report->total_score;
+                        $scoreColor = $pct >= 80 ? 'var(--green)' : ($pct >= 60 ? 'var(--blue)' : 'var(--red)');
+                        $comments = null;
+                        if ($report->rejection_note && str_starts_with($report->rejection_note, '__COMMENTS__')) {
+                            $comments = substr($report->rejection_note, 12);
+                        }
+                        $rejectionNote = (!str_starts_with($report->rejection_note ?? '', '__COMMENTS__'))
+                            ? $report->rejection_note
+                            : null;
+                    @endphp
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;color:var(--text);">{{ $report->enrollment?->student?->full_name ?? '—' }}</div>
+                        </td>
+                        <td>
+                            <div style="font-size:12px;font-weight:500;color:var(--text);">{{ $report->enrollment?->courseTemplate?->name ?? '—' }}</div>
+                            <div style="font-size:10px;color:var(--faint);">
+                                {{ $report->enrollment?->level?->name ?? '' }}
+                                @if($report->enrollment?->sublevel) › {{ $report->enrollment->sublevel->name }} @endif
+                            </div>
+                        </td>
+                        <td>
+                            @if($report->total_score > 0)
+                            <div class="score-bar">
+                                <div class="score-track">
+                                    <div class="score-fill" style="width:{{ $pct }}%;background:{{ $scoreColor }};"></div>
+                                </div>
+                                <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:{{ $scoreColor }};white-space:nowrap;">
+                                    {{ $report->total_score }}/100
+                                </span>
+                            </div>
+                            @else
+                            <span style="color:var(--faint);font-size:11px;">—</span>
+                            @endif
+                        </td>
+                        <td>
+                            <span class="status-badge badge-{{ strtolower($report->status) }}">{{ $report->status }}</span>
+                            @if($rejectionNote)
+                            <div class="rejection-box">⚠ {{ $rejectionNote }}</div>
+                            @endif
+                        </td>
+                        <td style="font-size:11px;color:var(--faint);">{{ $report->updated_at?->format('d M Y') }}</td>
+                        <td>
+                            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                @if(in_array($report->status, ['Draft', 'Rejected']))
+                                <a href="{{ route('teacher.reports.edit', $report->report_id) }}" class="btn-sm btn-edit">
+                                    {{ $report->status === 'Rejected' ? '✏ Revise' : '✏ Edit' }}
+                                </a>
+                                @endif
+                                @if($report->status === 'Approved')
+                                <form method="POST" action="{{ route('teacher.reports.mark-sent', $report->report_id) }}" style="display:inline;">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="btn-sm btn-send">✓ Mark as Sent</button>
+                                </form>
+                                @endif
+                                @if($report->status === 'Sent')
+                                <span style="font-size:10px;color:var(--green);display:flex;align-items:center;gap:3px;">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Sent to student
+                                </span>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6" style="text-align:center;padding:40px;color:var(--faint);font-size:13px;">
+                            No reports yet. Start by writing a report for a completed course.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
 
-<script>
-function toggleSection(id, chevId) {
-    const sec   = document.getElementById(id);
-    const chev  = document.getElementById(chevId);
-    const show  = sec.style.display === 'none';
-    sec.style.display = show ? '' : 'none';
-    if (chev) chev.style.transform = show ? 'rotate(180deg)' : '';
-}
-</script>
+</div>
 @endsection

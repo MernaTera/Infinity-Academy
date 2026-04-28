@@ -688,10 +688,11 @@
                                 <div style="display:flex;gap:6px;flex-wrap:wrap">
 
                                     {{-- Status badge --}}
-                                    <span class="status-badge {{ $eClass }}">{{ $enrollment->status }}</span>
+
+                                    <span class="status-badge {{ $sClass }}">{{ $session->status }}</span>
 
                                     {{-- Postpone button -- only if Active and no outstanding --}}
-                                    @if($enrollment->status === 'Active')
+                                    @if($session->status === 'Active')
                                     <button onclick="openPostponeModal({{ $enrollment->enrollment_id }}, '{{ addslashes($enrollment->student?->full_name) }}')"
                                         style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(245,145,30,0.25);background:transparent;color:#C47010;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
                                         onmouseover="this.style.background='rgba(245,145,30,0.07)'"
@@ -702,7 +703,7 @@
                                     @endif
 
                                     {{-- Resume button -- if Postponed --}}
-                                    @if($enrollment->status === 'Postponed')
+                                    @if($session->status === 'Postponed')
                                     <form method="POST" action="{{ route('student-care.postponed.resume', $enrollment->activePostponement?->postponement_id) }}" style="display:inline">
                                         @csrf @method('PATCH')
                                         <button type="submit"

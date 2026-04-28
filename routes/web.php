@@ -15,6 +15,7 @@ use App\Http\Controllers\OutstandingController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\CourseAdminController;
 use App\Http\Controllers\Admin\EnglishLevelController;
 use App\Http\Controllers\Admin\MaterialController;
@@ -208,6 +209,13 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::put('/employees/{id}',          [EmployeeController::class, 'update'])->name('employees.update');
         Route::patch('/employees/{id}/toggle', [EmployeeController::class, 'toggle'])->name('employees.toggle');
         Route::post('/employees/{id}/profile', [EmployeeController::class, 'updateProfile'])->name('employees.update-profile');        
+
+        //Teacher
+        Route::get('/reports',                    [AdminReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/{id}',               [AdminReportController::class, 'show'])->name('reports.show');
+        Route::patch('/reports/{id}/approve',     [AdminReportController::class, 'approve'])->name('reports.approve');
+        Route::patch('/reports/{id}/reject',      [AdminReportController::class, 'reject'])->name('reports.reject');
+
         
         // Courses
         Route::get('/courses',                 [CourseAdminController::class, 'index'])->name('courses.index');
@@ -306,8 +314,14 @@ Route::middleware(['auth', 'permission:academic.view'])
         Route::get('/courses',   [TeacherController::class, 'courses'])->name('courses');
         Route::get('/courses/{id}', [TeacherController::class, 'courseShow'])->name('courses.show');
 
-        Route::get('/reports',                         [TeacherReportController::class, 'index'])->name('reports.index');
         Route::get('/attendance/{sessionId}',          [TeacherAttendanceController::class, 'show'])->name('attendance.show');
+
+        Route::get('/reports',            [TeacherReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/create',     [TeacherReportController::class, 'create'])->name('reports.create');
+        Route::post('/reports',           [TeacherReportController::class, 'store'])->name('reports.store');
+        Route::get('/reports/{id}/edit',  [TeacherReportController::class, 'edit'])->name('reports.edit');
+        Route::put('/reports/{id}',       [TeacherReportController::class, 'update'])->name('reports.update');
+        Route::patch('/reports/{id}/sent',[TeacherReportController::class, 'markSent'])->name('reports.mark-sent');
     });
 
 Route::middleware(['auth', 'permission:attendance.create'])
