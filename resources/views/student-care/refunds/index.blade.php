@@ -114,7 +114,7 @@
         <div class="kpi-card" style="--kc:var(--green)"><div class="kpi-label">Eligible Now</div><div class="kpi-val">{{ $stats['eligible'] }}</div></div>
         <div class="kpi-card" style="--kc:#C47010"><div class="kpi-label">Pending</div><div class="kpi-val">{{ $stats['pending'] }}</div></div>
         <div class="kpi-card" style="--kc:var(--blue)"><div class="kpi-label">Approved</div><div class="kpi-val">{{ $stats['approved'] }}</div></div>
-        <div class="kpi-card" style="--kc:var(--purple)"><div class="kpi-label">Processed</div><div class="kpi-val">{{ $stats['processed'] }}</div></div>
+        <!-- <div class="kpi-card" style="--kc:var(--purple)"><div class="kpi-label">Processed</div><div class="kpi-val">{{ $stats['processed'] }}</div></div> -->
     </div>
 
     {{-- Eligible Enrollments --}}

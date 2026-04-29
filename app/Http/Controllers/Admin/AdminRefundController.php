@@ -68,7 +68,7 @@ class AdminRefundController extends Controller
 
             // 2) Mark refund request as Processed
             $refund->update([
-                'status'                   => 'Processed',
+                'status'                   => 'Approved',
                 'approved_by_admin_id'     => $adminEmployee->employee_id,
                 'approved_at'              => now(),
                 'processed_transaction_id' => $transaction->transaction_id,

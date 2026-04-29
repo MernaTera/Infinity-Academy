@@ -83,10 +83,6 @@
             <div class="kpi-label">Pending</div>
             <div class="kpi-val">{{ $stats['pending'] }}</div>
         </div>
-        <div class="kpi-card" style="--kc:var(--green)" onclick="filterTable('Processed')">
-            <div class="kpi-label">Processed</div>
-            <div class="kpi-val">{{ $stats['processed'] }}</div>
-        </div>
         <div class="kpi-card" style="--kc:var(--red)" onclick="filterTable('Rejected')">
             <div class="kpi-label">Rejected</div>
             <div class="kpi-val">{{ $stats['rejected'] }}</div>
