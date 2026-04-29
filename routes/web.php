@@ -182,8 +182,7 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::post('/assign',                        [StudentCareController::class, 'assign'])->name('assign');
         Route::post('/course-instances/store',        [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
         Route::post('/enrollments/{id}/postpone',     [CourseInstanceController::class, 'postponeEnrollment'])->name('instance.postpone');
-        Route::post('/attendance',                    [AttendanceController::class, 'store'])->name('attendance.store');
-        Route::post('/instance/{id}/preview',         [CourseInstanceController::class, 'previewSchedule'])->name('instance.preview');
+        Route::post('/attendance/{sessionId}', [AttendanceController::class, 'store'])->name('attendance.store');          Route::post('/instance/{id}/preview',         [CourseInstanceController::class, 'previewSchedule'])->name('instance.preview');
         Route::post('/instance/{id}/schedule',        [CourseInstanceController::class, 'storeSchedule'])->name('instance.schedule');
         Route::post('/check-conflicts', [CourseInstanceController::class, 'checkConflicts'])->name('check-conflicts');
     });

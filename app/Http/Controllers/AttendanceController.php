@@ -5,119 +5,99 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Academic\CourseSession;
 use App\Models\Enrollment\Enrollment;
-use App\Models\Academic\CourseInstance;
-use App\Models\Academic\CourseTemplate;
-use App\Models\Academic\Level;
-use App\Models\Academic\Patch;
-use App\Models\Academic\Sublevel;
-use App\Models\Academic\Room;
-use App\Models\HR\Employee;
-use App\Models\HR\Teacher;
-use App\Models\Academic\InstanceSchedule;
-use App\Models\Academic\ScheduleChangeLog;
-use App\Models\Enrollment\FinancialTransaction;
-use App\Models\Enrollment\InstallmentApprovalLog;
-use App\Models\Enrollment\BundleUsageLog;
 use App\Models\Attendance\Attendance;
+use App\Models\HR\Employee;
+use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
+    /*
+    |------------------------------------------------------------------
+    | Student Care — Show attendance form
+    |------------------------------------------------------------------
+    */
     public function show($sessionId)
     {
         $session = CourseSession::with([
             'courseInstance.courseTemplate',
+            'courseInstance.level',
+            'courseInstance.sublevel',
             'courseInstance.teacher.employee',
             'courseInstance.enrollments.student.phones',
-            'courseInstance.enrollments.attendances'
+            'courseInstance.enrollments.attendances',
         ])->findOrFail($sessionId);
 
-        return view('student-care.attendance.index', compact('session'));
-    }
-    public function store(Request $request)
-    {
-        
-        $session = CourseSession::findOrFail($request->session_id);
+        // Window logic — SC: during session time only
+        $now         = Carbon::now();
+        $sessionDate = Carbon::parse($session->session_date);
+        $startTime = $sessionDate->copy()->setTimeFromTimeString($session->start_time);
+        $endTime   = $sessionDate->copy()->setTimeFromTimeString($session->end_time);
 
-        if ($session->isCompleted()) {
-            return back()->with('error', 'Session locked');
+        $isToday     = $sessionDate->isToday();
+        $isOpen      = $isToday && $now->between($startTime, $endTime);
+        $isCompleted = $session->status === 'Completed';
+        $isPast      = $sessionDate->isPast() && !$isToday;
+        $isFuture    = $sessionDate->isFuture();
+
+        // Existing attendance keyed by enrollment_id
+        $existingAttendance = [];
+        foreach ($session->courseInstance->enrollments as $enrollment) {
+            $att = $enrollment->attendances
+                ->where('course_session_id', $session->course_session_id)
+                ->first();
+            $existingAttendance[$enrollment->enrollment_id] = $att?->status;
         }
 
-        if ($session->session_date > now()->toDateString()) {
-            return back()->with('error', 'Future session');
-        }
-
-        foreach ($request->attendance as $enrollmentId => $status) {
-
-            $enrollment = Enrollment::find($enrollmentId);
-
-            if ($enrollment->status === 'Cancelled') continue;
-
-            if ($enrollment->status === 'Restricted') {
-                $status = 'Absent';
-            }
-
-            foreach ($request->attendance as $enrollmentId => $status) {
-
-                Attendance::updateOrCreate(
-                    [
-                        'enrollment_id' => $enrollmentId,
-                        'course_session_id' => $session->course_session_id
-                    ],
-                    [
-                        'status' => $status,
-                        'recorded_by' => auth()->id(),
-                    ]
-                );
-            }
-        }
-
-        if ($session->session_date <= now()->toDateString()) {
-            $session->update(['status' => 'Completed']);
-        }
-
-        return back()->with('success', 'Saved');
+        return view('student-care.attendance.index', compact(
+            'session', 'isOpen', 'isCompleted', 'isPast', 'isFuture', 'existingAttendance'
+        ));
     }
 
-    public function markAttendance(Request $request, $sessionId)
+    /*
+    |------------------------------------------------------------------
+    | Student Care — Store attendance
+    |------------------------------------------------------------------
+    */
+    public function store(Request $request, $sessionId)
     {
-        $session = CourseSession::with([
-            'courseInstance.enrollments'
-        ])->findOrFail($sessionId);
+        $session = CourseSession::findOrFail($sessionId);
 
-        if (!$session->isScheduled()) {
-            return back()->with('error', 'Session not available');
+        // Window check — SC: during session time only
+        $now       = Carbon::now();
+        $startTime = Carbon::parse($session->session_date . ' ' . Carbon::parse($session->start_time)->format('H:i:s'));
+        $endTime   = Carbon::parse($session->session_date . ' ' . Carbon::parse($session->end_time)->format('H:i:s'));
+        $isOpen    = Carbon::parse($session->session_date)->isToday() && $now->between($startTime, $endTime);
+
+        // Allow editing completed sessions too (SC can always edit within session time)
+        if (!$isOpen) {
+            return back()->with('error', 'Attendance can only be taken during session time.');
         }
 
-        if ($session->session_date > now()->toDateString()) {
-            return back()->with('error', 'Future session');
-        }
+        $employeeId = Employee::where('user_id', auth()->id())->value('employee_id');
 
-        if ($session->isCompleted()) {
-            return back()->with('error', 'Session locked');
-        }
-
-        foreach ($request->attendance as $enrollmentId => $status) {
-
+        foreach ($request->attendance ?? [] as $enrollmentId => $status) {
             $enrollment = Enrollment::find($enrollmentId);
-
+            if (!$enrollment) continue;
             if ($enrollment->status === 'Cancelled') continue;
-
-            if ($enrollment->status === 'Restricted') {
-                $status = 'Absent';
-            }
+            if ($enrollment->status === 'Restricted') $status = 'Absent';
+            if (!in_array($status, ['Present', 'Absent'])) continue;
 
             Attendance::updateOrCreate(
                 [
-                    'enrollment_id' => $enrollmentId,
-                    'course_session_id' => $sessionId,
+                    'enrollment_id'    => $enrollmentId,
+                    'course_session_id'=> $session->course_session_id,
                 ],
                 [
-                    'status' => $status,
-                    'recorded_by' => auth()->id(),
+                    'status'      => $status,
+                    'recorded_by' => $employeeId,
+                    'recorded_at' => now(),
                 ]
             );
         }
 
-        return back()->with('success', 'Attendance saved');
+        // Mark session completed
+        $session->update(['status' => 'Completed']);
+
+        return back()->with('success', 'Attendance saved successfully.');
     }
 }
