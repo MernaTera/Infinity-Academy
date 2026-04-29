@@ -125,7 +125,7 @@
         @php
             $deposit    = $enrollment->financialTransactions->first();
             $daysAgo    = $deposit ? (int) $deposit->created_at->diffInDays(now()) : 0;
-            $hoursLeft  = $deposit ? max(0, 72 - $deposit->created_at->diffInHours(now())) : 0;
+            $hoursLeft = $deposit ? max(0, 72 - (int)$deposit->created_at->diffInHours(now())) : 0;
             $timerClass = $hoursLeft > 24 ? 'timer-ok' : ($hoursLeft > 6 ? 'timer-warn' : 'timer-urgent');
             $hasPending = $enrollment->refundRequests->whereIn('status', ['Pending','Approved'])->count() > 0;
         @endphp

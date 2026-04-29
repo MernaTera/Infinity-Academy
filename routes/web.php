@@ -30,6 +30,7 @@ use App\Http\Controllers\Admin\LevelPackageController;
 use App\Http\Controllers\Admin\PrivateBundleController;
 use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\AuditController;
+use App\Http\Controllers\Admin\AdminRefundController;
 
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
@@ -303,6 +304,11 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::put('/bundles/{id}',          [PrivateBundleController::class, 'update'])->name('bundles.update');
         Route::patch('/bundles/{id}/toggle', [PrivateBundleController::class, 'toggle'])->name('bundles.toggle');
         Route::delete('/bundles/{id}',       [PrivateBundleController::class, 'destroy'])->name('bundles.destroy');
+
+        //Refund
+        Route::get('/refunds',                [AdminRefundController::class, 'index'])->name('refunds.index');
+        Route::patch('/refunds/{id}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
+        Route::patch('/refunds/{id}/reject',  [AdminRefundController::class, 'reject'])->name('refunds.reject');
 
         //Sales Tables
         Route::get('/sales', [AdminSalesController::class, 'index'])->name('sales.index');
