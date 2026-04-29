@@ -170,6 +170,10 @@
         </svg>
         Outstanding
     </a>
+    <a href="{{ route('student-care.refunds.index') }}" class="sl-link {{ request()->routeIs('student-care.refunds.*') ? 'active' : '' }}">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"/></svg>
+        Refunds
+    </a>
     @endcando
 
 </aside>

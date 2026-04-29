@@ -12,6 +12,7 @@ use App\Http\Controllers\CourseInstanceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\OutstandingController;
+use App\Http\Controllers\RefundController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
@@ -173,6 +174,9 @@ Route::middleware(['auth', 'permission:enrollment.view'])
 
         Route::get('/levels/{courseId}',   fn($id) => \App\Models\Academic\Level::where('course_template_id', $id)->get());
         Route::get('/sublevels/{levelId}', fn($id) => \App\Models\Academic\Sublevel::where('level_id', $id)->get());
+
+        Route::get('/refunds',  [RefundController::class, 'index'])->name('refunds.index');
+        Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
     });
 
 Route::middleware(['auth', 'permission:enrollment.create'])
