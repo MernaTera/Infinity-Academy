@@ -78,10 +78,10 @@ class AuthenticatedSessionController extends Controller
 
         // 6. Redirect based on role
         return match((int) $user->role_id) {
-            1 => redirect()->intended('/admin/dashboard'),
-            2 => redirect()->intended('/dashboard'),
-            3 => redirect()->intended('/student-care/dashboard'),
-            4 => redirect()->intended('/teacher/dashboard'),
+            1 => redirect('/admin/dashboard'),
+            2 => redirect('/dashboard'),
+            3 => redirect('/student-care/dashboard'),
+            4 => redirect('/teacher/dashboard'),
             default => abort(403),
         };
     }

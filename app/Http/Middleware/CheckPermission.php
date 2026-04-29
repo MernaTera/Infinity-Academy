@@ -17,8 +17,15 @@ class CheckPermission
             abort(401, 'Unauthorized');
         }
 
-        if (!$user->isActive()) {
-            abort(403, 'Account inactive');
+        if (!$user->canDo($permission)) {
+            $dashboard = match(true) {
+                $user->isAdmin()   => '/admin/dashboard',
+                $user->isSC()      => '/student-care/dashboard',
+                $user->isTeacher() => '/teacher/dashboard',
+                $user->isCS()      => '/dashboard',
+                default            => '/',
+            };
+            abort(403, 'Forbidden');
         }
 
         if (!$user->canDo($permission)) {
