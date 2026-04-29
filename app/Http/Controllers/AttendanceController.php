@@ -13,7 +13,7 @@ class AttendanceController extends Controller
 {
     /*
     |------------------------------------------------------------------
-    | Student Care — Show attendance form
+    | Student Care — Show
     |------------------------------------------------------------------
     */
     public function show($sessionId)
@@ -27,19 +27,23 @@ class AttendanceController extends Controller
             'courseInstance.enrollments.attendances',
         ])->findOrFail($sessionId);
 
-        // Window logic — SC: during session time only
-        $now         = Carbon::now();
         $sessionDate = Carbon::parse($session->session_date);
-        $startTime = $sessionDate->copy()->setTimeFromTimeString($session->start_time);
-        $endTime   = $sessionDate->copy()->setTimeFromTimeString($session->end_time);
-
         $isToday     = $sessionDate->isToday();
-        $isOpen      = $isToday && $now->between($startTime, $endTime);
+
+        // String comparison to avoid timezone issues
+        $nowTime   = now()->format('H:i');
+        $startTime = Carbon::parse($session->start_time)->format('H:i');
+        $endTime   = Carbon::parse($session->end_time)->format('H:i');
+
+        $isOpen      = $isToday
+                    && $nowTime >= $startTime
+                    && $nowTime <= $endTime
+                    && $session->status !== 'Cancelled';
+
         $isCompleted = $session->status === 'Completed';
-        $isPast      = $sessionDate->isPast() && !$isToday;
+        $isPast      = !$isToday && $sessionDate->isPast();
         $isFuture    = $sessionDate->isFuture();
 
-        // Existing attendance keyed by enrollment_id
         $existingAttendance = [];
         foreach ($session->courseInstance->enrollments as $enrollment) {
             $att = $enrollment->attendances
@@ -55,20 +59,23 @@ class AttendanceController extends Controller
 
     /*
     |------------------------------------------------------------------
-    | Student Care — Store attendance
+    | Student Care — Store
     |------------------------------------------------------------------
     */
     public function store(Request $request, $sessionId)
     {
         $session = CourseSession::findOrFail($sessionId);
 
-        // Window check — SC: during session time only
-        $now       = Carbon::now();
-        $startTime = Carbon::parse($session->session_date . ' ' . Carbon::parse($session->start_time)->format('H:i:s'));
-        $endTime   = Carbon::parse($session->session_date . ' ' . Carbon::parse($session->end_time)->format('H:i:s'));
-        $isOpen    = Carbon::parse($session->session_date)->isToday() && $now->between($startTime, $endTime);
+        $nowTime   = now()->format('H:i');
+        $startTime = Carbon::parse($session->start_time)->format('H:i');
+        $endTime   = Carbon::parse($session->end_time)->format('H:i');
+        $isToday   = Carbon::parse($session->session_date)->isToday();
 
-        // Allow editing completed sessions too (SC can always edit within session time)
+        $isOpen = $isToday
+               && $nowTime >= $startTime
+               && $nowTime <= $endTime
+               && $session->status !== 'Cancelled';
+
         if (!$isOpen) {
             return back()->with('error', 'Attendance can only be taken during session time.');
         }
@@ -84,8 +91,8 @@ class AttendanceController extends Controller
 
             Attendance::updateOrCreate(
                 [
-                    'enrollment_id'    => $enrollmentId,
-                    'course_session_id'=> $session->course_session_id,
+                    'enrollment_id'     => $enrollmentId,
+                    'course_session_id' => $session->course_session_id,
                 ],
                 [
                     'status'      => $status,
@@ -95,7 +102,6 @@ class AttendanceController extends Controller
             );
         }
 
-        // Mark session completed
         $session->update(['status' => 'Completed']);
 
         return back()->with('success', 'Attendance saved successfully.');

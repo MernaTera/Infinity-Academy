@@ -13,11 +13,15 @@ use Carbon\Carbon;
 
 class TeacherAttendanceController extends Controller
 {
+    /*
+    |------------------------------------------------------------------
+    | Show — 20 min window from session start
+    |------------------------------------------------------------------
+    */
     public function show($sessionId)
     {
-        $teacher = Teacher::where('employee_id',
-            Employee::where('user_id', auth()->id())->first()?->employee_id
-        )->first();
+        $employee = Employee::where('user_id', auth()->id())->first();
+        $teacher  = Teacher::where('employee_id', $employee?->employee_id)->first();
 
         $session = CourseSession::with([
             'courseInstance.courseTemplate',
@@ -30,21 +34,30 @@ class TeacherAttendanceController extends Controller
             abort(403);
         }
 
-        $start    = Carbon::parse($session->start_time);
-        $deadline = $start->copy()->addMinutes(20);
-        $now      = now();
+        $isToday = Carbon::parse($session->session_date)->isToday();
 
-        $isOpen     = $session->status === 'Scheduled'
-                   && Carbon::parse($session->session_date)->isToday()
-                   && $now->between($start, $deadline);
+        // String comparison to avoid timezone issues
+        $nowTime      = now()->format('H:i');
+        $startTimeStr = Carbon::parse($session->start_time)->format('H:i');
+        $deadlineStr  = Carbon::parse($session->start_time)->addMinutes(20)->format('H:i');
 
-        $isLocked   = $session->status === 'Completed'
-                   || (!Carbon::parse($session->session_date)->isToday())
-                   || $now->gt($deadline);
+        $isOpen  = $isToday
+                && $session->status === 'Scheduled'
+                && $nowTime >= $startTimeStr
+                && $nowTime <= $deadlineStr;
 
-        $minutesLeft = $isOpen ? (int)$now->diffInMinutes($deadline, false) : 0;
+        $isLocked = !$isOpen && (
+            $session->status === 'Completed'
+            || !$isToday
+            || $nowTime > $deadlineStr
+        );
 
-        // Get existing attendance for this session
+        $minutesLeft = 0;
+        if ($isOpen) {
+            $deadline    = Carbon::parse($session->start_time)->addMinutes(20);
+            $minutesLeft = max(0, (int) now()->diffInMinutes($deadline, false));
+        }
+
         $existingAttendance = Attendance::where('course_session_id', $sessionId)
             ->pluck('status', 'enrollment_id');
 
@@ -53,11 +66,15 @@ class TeacherAttendanceController extends Controller
         ));
     }
 
+    /*
+    |------------------------------------------------------------------
+    | Store — 20 min window
+    |------------------------------------------------------------------
+    */
     public function store(Request $request, $sessionId)
     {
-        $teacher = Teacher::where('employee_id',
-            Employee::where('user_id', auth()->id())->first()?->employee_id
-        )->first();
+        $employee = Employee::where('user_id', auth()->id())->first();
+        $teacher  = Teacher::where('employee_id', $employee?->employee_id)->first();
 
         $session = CourseSession::with('courseInstance')->findOrFail($sessionId);
 
@@ -65,16 +82,18 @@ class TeacherAttendanceController extends Controller
             abort(403);
         }
 
-        // Check window
-        $start    = Carbon::parse($session->start_time);
-        $deadline = $start->copy()->addMinutes(20);
+        $isToday      = Carbon::parse($session->session_date)->isToday();
+        $nowTime      = now()->format('H:i');
+        $startTimeStr = Carbon::parse($session->start_time)->format('H:i');
+        $deadlineStr  = Carbon::parse($session->start_time)->addMinutes(20)->format('H:i');
 
-        if (!now()->between($start, $deadline) || !Carbon::parse($session->session_date)->isToday()) {
-            return back()->with('error', 'Attendance window is closed.');
-        }
+        $isOpen = $isToday
+               && $session->status === 'Scheduled'
+               && $nowTime >= $startTimeStr
+               && $nowTime <= $deadlineStr;
 
-        if ($session->status === 'Completed') {
-            return back()->with('error', 'Session attendance already saved.');
+        if (!$isOpen) {
+            return back()->with('error', 'Attendance window is closed. You have 20 minutes from session start.');
         }
 
         $enrollments = Enrollment::where('course_instance_id', $session->course_instance_id)
@@ -84,19 +103,18 @@ class TeacherAttendanceController extends Controller
         foreach ($enrollments as $enrollment) {
             $status = $request->attendance[$enrollment->enrollment_id] ?? 'Absent';
 
-            // Restricted students are always absent
             if ($enrollment->status === 'Restricted') {
                 $status = 'Absent';
             }
 
             Attendance::updateOrCreate(
                 [
-                    'enrollment_id'    => $enrollment->enrollment_id,
-                    'course_session_id'=> $sessionId,
+                    'enrollment_id'     => $enrollment->enrollment_id,
+                    'course_session_id' => $sessionId,
                 ],
                 [
                     'status'      => $status,
-                    'recorded_by' => auth()->id(),
+                    'recorded_by' => $teacher->employee_id,
                     'recorded_at' => now(),
                 ]
             );
