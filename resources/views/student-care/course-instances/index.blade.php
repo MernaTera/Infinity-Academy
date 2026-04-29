@@ -214,10 +214,10 @@
                 {{ $instances->total() }}
             </span>
         </div>
-        <button onclick="openCreateInstanceModal()"
-        style="padding:10px 16px;background:#1B4FA8;color:#fff;border:none;border-radius:6px;">
-        + New Course
-        </button>
+        <a href="{{ route('student-care.instances.create') }}" class="btn-primary" style="padding:10px 16px;background:#1B4FA8;color:#fff;border:none;border-radius:6px;">
+            + New Course
+        </a>
+
     </div>
 
     {{-- ── STATS ── --}}

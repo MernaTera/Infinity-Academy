@@ -367,7 +367,7 @@ ciCourse.addEventListener('change', async function () {
 
     try {
         setLoading(ciLevel);
-        const res  = await fetch(`/levels/${courseId}`);
+        const res = await fetch(`/student-care/levels/${courseId}`);
         const data = await res.json();
 
         if (!data.length) {
@@ -414,7 +414,7 @@ ciLevel.addEventListener('change', async function () {
 
     try {
         setLoading(ciSublevel);
-        const res  = await fetch(`/sublevels/${levelId}`);
+        const res = await fetch(`/student-care/sublevels/${levelId}`);
         const data = await res.json();
 
         if (!data.length) {

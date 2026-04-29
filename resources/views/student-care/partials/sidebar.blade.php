@@ -51,7 +51,7 @@
         Active Courses
     </a>
 
-    <a href="{{ route('student-care.instances') }}?create=1"
+    <a href="{{ route('student-care.instances.create') }}"
    class="sl-link">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>

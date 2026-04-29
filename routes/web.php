@@ -156,6 +156,10 @@ Route::middleware(['auth', 'permission:enrollment.view'])
         Route::get('/outstanding',   [StudentCareController::class, 'outstanding'])->name('outstanding');
         Route::get('/postponed',     [StudentCareController::class, 'postponed'])->name('postponed');
 
+        Route::get('/course-instances/create', [CourseInstanceController::class, 'create'])->name('instances.create');
+        Route::get('/time-slots-for-pair',     [CourseInstanceController::class, 'getTimeSlotsForPair'])->name('time-slots-for-pair');
+        Route::get('/occupied-slots',          [CourseInstanceController::class, 'getOccupiedSlots'])->name('occupied-slots');
+
         Route::get('/course-instances',      [CourseInstanceController::class, 'index'])->name('instances');
         Route::get('/course-instances/{id}', [CourseInstanceController::class, 'show'])->name('instances.show');
 
@@ -166,6 +170,9 @@ Route::middleware(['auth', 'permission:enrollment.view'])
 
         Route::get('/instance/{id}/schedule-data', [CourseInstanceController::class, 'getScheduleData'])->name('instance.schedule-data');
         Route::get('/time-slots',                  fn() => \App\Models\Academic\TimeSlot::all())->name('time-slots');
+
+        Route::get('/levels/{courseId}',   fn($id) => \App\Models\Academic\Level::where('course_template_id', $id)->get());
+        Route::get('/sublevels/{levelId}', fn($id) => \App\Models\Academic\Sublevel::where('level_id', $id)->get());
     });
 
 Route::middleware(['auth', 'permission:enrollment.create'])
@@ -178,6 +185,7 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::post('/attendance',                    [AttendanceController::class, 'store'])->name('attendance.store');
         Route::post('/instance/{id}/preview',         [CourseInstanceController::class, 'previewSchedule'])->name('instance.preview');
         Route::post('/instance/{id}/schedule',        [CourseInstanceController::class, 'storeSchedule'])->name('instance.schedule');
+        Route::post('/check-conflicts', [CourseInstanceController::class, 'checkConflicts'])->name('check-conflicts');
     });
 
 Route::middleware(['auth', 'permission:enrollment.edit'])

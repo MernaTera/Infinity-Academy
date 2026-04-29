@@ -12,9 +12,21 @@ use Carbon\Carbon;
 
 class SchedulingService
 {
+    const DAY_MAP = [
+        'sun_wed' => [0, 3],
+        'sat_tue' => [6, 2],
+        'mon_thu' => [1, 4],
+    ];
+
+    const PAIR_LABELS = [
+        'sun_wed' => 'Sun & Wed',
+        'sat_tue' => 'Sat & Tue',
+        'mon_thu' => 'Mon & Thu',
+    ];
+
     /*
     |------------------------------------------------------------------
-    | Teacher Availability — للـ modal
+    | Teacher Availability
     |------------------------------------------------------------------
     */
     public function getTeacherAvailablePairs($teacherId): array
@@ -23,12 +35,6 @@ class SchedulingService
             ->where('teacher_id', $teacherId)
             ->get();
 
-        $pairLabels = [
-            'sun_wed' => 'Sun & Wed',
-            'sat_tue' => 'Sat & Tue',
-            'mon_thu' => 'Mon & Thu',
-        ];
-
         $result = [];
 
         foreach ($availability as $record) {
@@ -36,7 +42,7 @@ class SchedulingService
 
             $result[] = [
                 'pair'      => $record->day_of_week,
-                'label'     => $pairLabels[$record->day_of_week] ?? $record->day_of_week,
+                'label'     => self::PAIR_LABELS[$record->day_of_week] ?? $record->day_of_week,
                 'time_slot' => $record->timeSlot,
             ];
         }
@@ -46,28 +52,21 @@ class SchedulingService
 
     private function pairLabel(string $pair): string
     {
-        return match($pair) {
-            'sun_wed' => 'Sun & Wed',
-            'sat_tue' => 'Sat & Tue',
-            'mon_thu' => 'Mon & Thu',
-            default   => $pair,
-        };
+        return self::PAIR_LABELS[$pair] ?? $pair;
     }
 
     /*
     |------------------------------------------------------------------
     | Validate Schedule
-    | start_time لازم جوا الـ time_slot وبعيد عن الـ breaks
     |------------------------------------------------------------------
     */
     public function validateSchedule(array $data): void
     {
-        $startTime    = Carbon::createFromTimeString($data['start_time']);
-        $slotStart    = Carbon::createFromTimeString($data['time_slot']->start_time);
-        $slotEnd      = Carbon::createFromTimeString($data['time_slot']->end_time);
+        $startTime  = Carbon::createFromTimeString($data['start_time']);
+        $slotStart  = Carbon::createFromTimeString($data['time_slot']->start_time);
+        $slotEnd    = Carbon::createFromTimeString($data['time_slot']->end_time);
         $sessionEnd = $startTime->copy()->addHours((float) $data['session_duration']);
 
-        // لازم جوا الـ slot
         if ($startTime->lt($slotStart) || $sessionEnd->gt($slotEnd)) {
             throw new \Exception(
                 "Session time ({$startTime->format('H:i')} → {$sessionEnd->format('H:i')}) " .
@@ -75,7 +74,6 @@ class SchedulingService
             );
         }
 
-        // مش في break
         $breaks = BreakSlot::all();
         foreach ($breaks as $break) {
             $breakStart = Carbon::createFromTimeString($break->start_time);
@@ -91,18 +89,15 @@ class SchedulingService
 
     /*
     |------------------------------------------------------------------
-    | Store Schedule
+    | Store Schedule — single pair record
     |------------------------------------------------------------------
     */
     public function storeSchedule(int $instanceId, array $data): InstanceSchedule
     {
-        // امسح القديم لو موجود
-        InstanceSchedule::where('course_instance_id', $instanceId)->delete();
-
         return InstanceSchedule::create([
             'course_instance_id'     => $instanceId,
             'day_of_week'            => $data['day_of_week'],
-            'time_slot_id'           => $data['time_slot_id'],
+            'time_slot_id'           => $data['time_slot_id'] ?? null,
             'start_time'             => $data['start_time'],
             'created_by_employee_id' => auth()->user()->employee->first()?->employee_id,
         ]);
@@ -110,44 +105,55 @@ class SchedulingService
 
     /*
     |------------------------------------------------------------------
-    | Generate Sessions
-    | بيولد كل الـ CourseSession records بناءً على الـ schedule
+    | Store Multiple Schedules (multi-pair)
+    | الـ controller بيمسح القديم ويستدعي الـ method دي
     |------------------------------------------------------------------
     */
-    public function generateSessions(CourseInstance $instance, InstanceSchedule $schedule): int
+    public function storeMultipleSchedules(int $instanceId, array $pairs, string $startTime, ?int $timeSlotId): array
     {
-        $dayMap = [
-            'sun_wed' => [0, 3],
-            'sat_tue' => [6, 2],
-            'mon_thu' => [1, 4],
-        ];
+        $schedules = [];
+        foreach ($pairs as $pair) {
+            $schedules[] = $this->storeSchedule($instanceId, [
+                'day_of_week'  => $pair,
+                'time_slot_id' => $timeSlotId,
+                'start_time'   => $startTime,
+            ]);
+        }
+        return $schedules;
+    }
 
-        $targetDays = $dayMap[$schedule->day_of_week] ?? [];
+    /*
+    |------------------------------------------------------------------
+    | Generate Sessions — مع support للـ session_number counter
+    | مش بتمسح — المسح بيكون في الـ controller قبل الـ loop
+    |------------------------------------------------------------------
+    */
+    public function generateSessions(
+        CourseInstance $instance,
+        InstanceSchedule $schedule,
+        int &$sessionNum = 1,
+        int $remainingSessions = 0
+    ): int {
+        $targetDays = self::DAY_MAP[$schedule->day_of_week] ?? [];
 
         if (empty($targetDays)) {
-            throw new \Exception('Invalid day pair selected.');
+            throw new \Exception('Invalid day pair: ' . $schedule->day_of_week);
         }
 
-        // عدد الـ sessions المطلوبة
-        $totalSessions = (int) ceil($instance->total_hours / $instance->session_duration);
+        $totalSessions = $remainingSessions > 0
+            ? $remainingSessions
+            : (int) ceil($instance->total_hours / $instance->session_duration);
 
-        // امسح الـ sessions القديمة
-        CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();
-
-        $current    = Carbon::parse($instance->start_date);
-        $end        = Carbon::parse($instance->end_date);
-        $sessionNum = 1;
-        $generated  = 0;
+        $current   = Carbon::parse($instance->start_date);
+        $end       = Carbon::parse($instance->end_date);
+        $generated = 0;
 
         while ($current->lte($end) && $generated < $totalSessions) {
-
             if (in_array($current->dayOfWeek, $targetDays)) {
-
                 $startDateTime = Carbon::parse(
                     $current->toDateString() . ' ' . Carbon::parse($schedule->start_time)->format('H:i:s')
                 );
-                $endDateTime = $startDateTime->copy()
-                    ->addHours((float) $instance->session_duration);
+                $endDateTime = $startDateTime->copy()->addHours((float) $instance->session_duration);
 
                 CourseSession::create([
                     'course_instance_id'      => $instance->course_instance_id,
@@ -163,7 +169,6 @@ class SchedulingService
                 $sessionNum++;
                 $generated++;
             }
-
             $current->addDay();
         }
 
@@ -172,18 +177,71 @@ class SchedulingService
 
     /*
     |------------------------------------------------------------------
-    | Preview — للـ AJAX قبل الحفظ
+    | Generate Sessions for Multiple Pairs
+    | الـ method الرئيسية لما في أكتر من pair
+    | بتوزع الـ sessions بالتساوي على الـ pairs
+    |------------------------------------------------------------------
+    */
+    public function generateSessionsMultiPair(CourseInstance $instance, array $schedules): int
+    {
+        // امسح القديم
+        CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();
+
+        $totalSessions = (int) ceil($instance->total_hours / $instance->session_duration);
+        $pairCount     = count($schedules);
+
+        // وزّع الـ sessions على الـ pairs بالتساوي
+        $perPair   = (int) floor($totalSessions / $pairCount);
+        $remainder = $totalSessions % $pairCount;
+
+        $sessionNum    = 1;
+        $totalGenerated = 0;
+
+        foreach ($schedules as $i => $schedule) {
+            // الـ pair الأول بياخد الـ remainder
+            $sessionsForThisPair = $perPair + ($i === 0 ? $remainder : 0);
+
+            $generated = $this->generateSessions(
+                $instance,
+                $schedule,
+                $sessionNum,
+                $sessionsForThisPair
+            );
+
+            $totalGenerated += $generated;
+        }
+
+        // Sort sessions by date and re-number
+        $this->renumberSessions($instance->course_instance_id);
+
+        return $totalGenerated;
+    }
+
+    /*
+    |------------------------------------------------------------------
+    | Re-number sessions by date after multi-pair generation
+    |------------------------------------------------------------------
+    */
+    private function renumberSessions(int $instanceId): void
+    {
+        $sessions = CourseSession::where('course_instance_id', $instanceId)
+            ->orderBy('session_date')
+            ->orderBy('start_time')
+            ->get();
+
+        foreach ($sessions as $i => $session) {
+            $session->update(['session_number' => $i + 1]);
+        }
+    }
+
+    /*
+    |------------------------------------------------------------------
+    | Preview — يدعم multi-pair
     |------------------------------------------------------------------
     */
     public function previewSessions(CourseInstance $instance, string $dayOfWeek, string $startTime): array
     {
-        $dayMap = [
-            'sun_wed' => [0, 3],
-            'sat_tue' => [6, 2],
-            'mon_thu' => [1, 4],
-        ];
-
-        $targetDays    = $dayMap[$dayOfWeek] ?? [];
+        $targetDays    = self::DAY_MAP[$dayOfWeek] ?? [];
         $totalSessions = (int) ceil($instance->total_hours / $instance->session_duration);
 
         $current   = Carbon::parse($instance->start_date);
@@ -210,6 +268,50 @@ class SchedulingService
             'end_time'         => Carbon::createFromTimeString($startTime)
                                     ->addHours((float) $instance->session_duration)
                                     ->format('H:i'),
+        ];
+    }
+
+    /*
+    |------------------------------------------------------------------
+    | Preview Multi-Pair
+    |------------------------------------------------------------------
+    */
+    public function previewMultiPair(
+        string $startDate,
+        string $endDate,
+        array  $pairs,
+        float  $totalHours,
+        float  $sessionDuration,
+        string $startTime
+    ): array {
+        $totalSessions = (int) ceil($totalHours / $sessionDuration);
+        $allTargetDays = array_merge(...array_map(fn($p) => self::DAY_MAP[$p] ?? [], $pairs));
+
+        $current   = Carbon::parse($startDate);
+        $end       = Carbon::parse($endDate);
+        $count     = 0;
+        $firstDate = null;
+        $lastDate  = null;
+
+        while ($current->lte($end) && $count < $totalSessions) {
+            if (in_array($current->dayOfWeek, $allTargetDays)) {
+                if (!$firstDate) $firstDate = $current->toDateString();
+                $lastDate = $current->toDateString();
+                $count++;
+            }
+            $current->addDay();
+        }
+
+        $endTime = Carbon::createFromTimeString($startTime)
+            ->addHours($sessionDuration)
+            ->format('H:i');
+
+        return [
+            'total_sessions' => $count,
+            'first_session'  => $firstDate,
+            'last_session'   => $lastDate,
+            'end_time'       => $endTime,
+            'pairs'          => array_map(fn($p) => self::PAIR_LABELS[$p] ?? $p, $pairs),
         ];
     }
 }
