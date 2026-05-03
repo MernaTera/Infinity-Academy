@@ -7,7 +7,7 @@
 @endonce
 
 <style>
-.sc-dash{background:#F8F6F2;min-height:100vh;padding:36px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
+.sc-dash{font-family:'DM Sans',sans-serif;color:#1A2A4A}
 .page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:4px}
 .page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0;line-height:1}
 .page-sub{font-size:12px;color:#7A8A9A;margin-top:4px}

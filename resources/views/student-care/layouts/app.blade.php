@@ -2,25 +2,24 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Student Care</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Student Care — @yield('title', 'Infinity Academy')</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-
-<body style="margin:0; background:#f7f9fc; font-family:'DM Sans', sans-serif;">
+<body style="margin:0;background:#F8F6F2;font-family:'DM Sans',sans-serif;">
 
     {{-- Navbar --}}
     @include('student-care.partials.navbar')
 
-    <div style="display:flex; min-height:calc(100vh - 62px);">
+    {{-- Layout --}}
+    <div style="display:flex;min-height:calc(100vh - 62px);">
 
-        {{-- Sidebar --}}
-        <aside style="width:250px; background:#fff; border-right:1px solid #e5e7eb;">
-            @include('student-care.partials.sidebar')
-        </aside>
+        {{-- Sidebar (بدون <aside> wrapper زيادة) --}}
+        @include('student-care.partials.sidebar')
 
         {{-- Content --}}
-        <main style="flex:1; padding:30px;">
+        <main style="flex:1;overflow-x:hidden;min-width:0;padding:30px;">
             @yield('content')
         </main>
 

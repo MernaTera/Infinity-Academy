@@ -16,9 +16,9 @@
     body { min-width: fit-content; }
 
     .wl-page {
-        background: #F8F6F2;
+
         min-height: 100vh;
-        padding: 36px 32px;
+
         color: #1A2A4A;
         overflow-: hidden;
     }
