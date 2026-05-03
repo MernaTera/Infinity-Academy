@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+
+/* Fix double-click issue — ::before hover overlays */
+*::before, *::after {
+    pointer-events: none;
+}
