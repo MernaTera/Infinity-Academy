@@ -217,10 +217,10 @@
                         <div style="font-size:11px;color:#AAB8C8;margin-top:2px;">{{ Auth::user()->email ?? '' }}</div>
                     </div>
                     <div style="padding:6px 0;">
-                        <a href="{{ route('profile.edit') }}" class="nav-dropdown-item">
+                        <!-- <a href="{{ route('profile.edit') }}" class="nav-dropdown-item">
                             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                             Profile
-                        </a>
+                        </a> -->
                         <div style="height:1px;background:rgba(27,79,168,0.05);margin:4px 0;"></div>
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
