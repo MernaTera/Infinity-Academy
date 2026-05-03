@@ -172,11 +172,32 @@ function closeHistoryModal() {
 }
 
 function toggleDropdown(badge) {
+    // Close all others
+    document.querySelectorAll('.status-dropdown').forEach(d => {
+        if (d !== badge.nextElementSibling) d.style.display = 'none';
+    });
+
     const dropdown = badge.nextElementSibling;
-    const isOpen = dropdown.style.display === 'block';
-    document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
-    dropdown.style.display = isOpen ? 'none' : 'block';
+    const isOpen   = dropdown.style.display === 'block';
+
+    if (isOpen) {
+        dropdown.style.display = 'none';
+        return;
+    }
+
+    const rect = badge.getBoundingClientRect();
+    dropdown.style.position = 'fixed';
+    dropdown.style.top      = (rect.bottom + 6) + 'px';
+    dropdown.style.left     = rect.left + 'px';
+    dropdown.style.zIndex   = '9999';
+    dropdown.style.display  = 'block';
 }
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.status-badge') && !e.target.closest('.status-dropdown')) {
+        document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
+    }
+});
 
 document.addEventListener('click', e => {
     if (!e.target.closest('.status-badge') && !e.target.closest('.status-dropdown')) {

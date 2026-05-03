@@ -100,7 +100,7 @@
             <div class="kpi-val">{{ $stats['inactive'] }}</div>
         </a>
         <a href="{{ route('admin.employees.index', ['role'=>'Customer Service']) }}" class="kpi-card {{ request('role')==='Customer Service' ? 'active-filter' : '' }}" style="--kc:#1B4FA8">
-            <div class="kpi-label">CS</div>
+            <div class="kpi-label">Customer Service</div>
             <div class="kpi-val">{{ $stats['cs'] }}</div>
         </a>
         <a href="{{ route('admin.employees.index', ['role'=>'Teacher']) }}" class="kpi-card {{ request('role')==='Teacher' ? 'active-filter' : '' }}" style="--kc:#059669">

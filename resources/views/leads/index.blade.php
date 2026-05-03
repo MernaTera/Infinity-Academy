@@ -446,7 +446,6 @@
 /* ── STATUS DROPDOWN ── */
 .status-dropdown {
     display: none;
-    position: absolute;
     top: calc(100% + 6px);
     left: 0;
     z-index: 100;
