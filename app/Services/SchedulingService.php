@@ -229,8 +229,16 @@ class SchedulingService
             ->orderBy('start_time')
             ->get();
 
+        foreach ($sessions as $session) {
+            \DB::table('course_session')
+                ->where('course_session_id', $session->course_session_id)
+                ->update(['session_number' => -$session->course_session_id]);
+        }
+
         foreach ($sessions as $i => $session) {
-            $session->update(['session_number' => $i + 1]);
+            \DB::table('course_session')
+                ->where('course_session_id', $session->course_session_id)
+                ->update(['session_number' => $i + 1]);
         }
     }
 

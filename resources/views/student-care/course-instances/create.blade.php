@@ -155,13 +155,9 @@
                             </select>
                         </div>
                         <div class="field">
-                            <label class="field-label">Branch <span class="req">*</span></label>
-                            <select name="branch_id" class="field-select" required onchange="updateSummary()">
-                                <option value="">— Select Branch —</option>
-                                @foreach($branches as $b)
-                                <option value="{{ $b->branch_id }}">{{ $b->name }}</option>
-                                @endforeach
-                            </select>
+                            <label class="field-label">Branch</label>
+                            <input type="text" class="field-input" value="{{ $userBranch?->name ?? '—' }}" disabled>
+                            <input type="hidden" name="branch_id" value="{{ $userBranch?->branch_id }}">
                         </div>
                         <div class="field">
                             <label class="field-label">Type <span class="req">*</span></label>
@@ -172,7 +168,7 @@
                         </div>
                         <div class="field">
                             <label class="field-label">Mode <span class="req">*</span></label>
-                            <select name="delivery_mood" class="field-select" required onchange="updateSummary()">
+                            <select name="delivery_mood" class="field-select" required onchange="onModeChange()">
                                 <option value="Offline">Offline</option>
                                 <option value="Online">Online</option>
                             </select>
@@ -663,5 +659,30 @@ function updateSummary() {
     document.getElementById('sum-start').textContent    = formatDate(document.getElementById('ci_start_date').value);
     document.getElementById('sum-end').textContent      = formatDate(document.getElementById('ci_end_date').value);
 }
+
+function onModeChange() {
+    const mode = document.querySelector('[name="delivery_mood"]').value;
+    const roomSel = document.getElementById('ci_room');
+
+    [...roomSel.options].forEach(opt => {
+        if (!opt.value) return;
+        const roomType = opt.dataset.type?.toLowerCase() || '';
+        const match = mode === 'Online'
+            ? roomType === 'online'
+            : roomType !== 'online';
+
+        opt.hidden   = !match;
+        opt.disabled = !match;
+    });
+
+    const selected = roomSel.options[roomSel.selectedIndex];
+    if (selected?.value && selected?.disabled) {
+        roomSel.value = '';
+        onRoomChange();
+    }
+
+    updateSummary();
+}
+document.addEventListener('DOMContentLoaded', onModeChange);
 </script>
 @endsection

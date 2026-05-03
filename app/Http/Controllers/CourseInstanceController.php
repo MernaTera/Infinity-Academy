@@ -55,9 +55,10 @@ class CourseInstanceController extends Controller
         $branches   = Branch::orderBy('name')->get();
         $rooms      = Room::where('is_active', true)->orderBy('name')->get();
         $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
-
+        $employee   = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+        $userBranch = Branch::find($employee->branch_id);
         return view('student-care.course-instances.create', compact(
-            'templates', 'patches', 'branches', 'rooms', 'breakSlots'
+            'templates', 'patches', 'branches', 'rooms', 'breakSlots','userBranch',
         ));
     }
 
@@ -99,7 +100,7 @@ class CourseInstanceController extends Controller
                     'sublevel_id'            => $data['sublevel_id'] ?? null,
                     'patch_id'               => $data['patch_id'],
                     'teacher_id'             => $data['teacher_id'],
-                    'branch_id'              => $data['branch_id'],
+                    'branch_id'              => $data['branch_id'] ?? null,
                     'room_id'                => $data['room_id'] ?? null,
                     'capacity'               => $data['capacity'],
                     'delivery_mood'          => $data['delivery_mood'],
