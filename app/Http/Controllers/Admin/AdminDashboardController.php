@@ -46,12 +46,12 @@ class AdminDashboardController extends Controller
             ->sum('amount');
 
         // ── Payment methods breakdown ────────────────────────────────
-        $paymentMethods = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
-            ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
-            ->select('payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
-            ->groupBy('payment_method')
+        $paymentMethods = DB::table('deposit_payment')
+            ->when($from, fn($q) => $q->whereBetween('deposit_payment.created_at', [$from, $to]))
+            ->select('method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('method')
             ->get()
-            ->keyBy('payment_method');
+            ->keyBy('method');
 
         $cashRevenue      = $paymentMethods['Cash']?->total ?? 0;
         $instapayRevenue  = $paymentMethods['Instapay']?->total ?? 0;
