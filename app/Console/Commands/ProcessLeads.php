@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
+use App\Services\LeadService;
 
 class ProcessLeads extends Command
 {

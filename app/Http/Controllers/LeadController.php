@@ -47,8 +47,21 @@ class LeadController extends Controller
     */
     public function index()
     {
-        $leads = $this->leadRepository->myLeads($this->currentEmployeeId());
-        return view('leads.index', compact('leads'));
+        $employeeId = $this->currentEmployeeId();
+        $base = Lead::where('owner_cs_id', $employeeId);
+
+        $stats = [
+            'total'      => (clone $base)->count(),
+            'registered' => (clone $base)->where('status', 'Registered')->count(),
+            'call_again' => (clone $base)->where('status', 'Call_Again')->count(),
+            'waiting'    => (clone $base)->where('status', 'Waiting')->count(),
+            'archived' => Lead::where('status', 'Archived')
+                  ->whereNull('owner_cs_id')
+                  ->count(),
+        ];
+
+        $leads = $this->leadRepository->myLeads($employeeId);
+        return view('leads.index', compact('leads', 'stats'));
     }
 
     /*

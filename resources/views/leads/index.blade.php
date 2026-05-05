@@ -531,50 +531,39 @@
 
     {{-- ── STATS ── --}}
     <div class="stats-row">
-        @php
-            $total         = $leads->total();
-            $registered    = $leads->getCollection()->where('status','Registered')->count();
-            $callAgain     = $leads->getCollection()->where('status','Call_Again')->count();
-            $scheduled     = $leads->getCollection()->where('status','Scheduled_Call')->count();
-            $waiting       = $leads->getCollection()->where('status','Waiting')->count();
-            $notInterested = $leads->getCollection()->where('status','Not_Interested')->count();
-            $archived      = $leads->getcollection()->where('status','Archived')->count();
-        @endphp
-
     <div class="stat-card" style="--accent:#1B4FA8;cursor:pointer;"
         onclick="filterByStatus('all')"
         data-filter="all">
         <div class="stat-label">Total</div>
-        <div class="stat-value">{{ $total }}</div>
+        <div class="stat-value">{{ $stats['total'] }}</div>
     </div>
 
     <div class="stat-card" style="--accent:#15803D;cursor:pointer;"
         onclick="filterByStatus('Registered')"
         data-filter="Registered">
         <div class="stat-label">Register</div>
-        <div class="stat-value">{{ $registered }}</div>
+        <div class="stat-value">{{ $stats['registered'] }}</div>
     </div>
 
     <div class="stat-card" style="--accent:#C47010;cursor:pointer;"
         onclick="filterByStatus('Call_Again')"
         data-filter="Call_Again">
         <div class="stat-label">Call Again</div>
-        <div class="stat-value">{{ $callAgain }}</div>
+        <div class="stat-value">{{ $stats['call_again'] }}</div>
     </div>
 
     <div class="stat-card" style="--accent:#7A8A9A;cursor:pointer;"
         onclick="filterByStatus('Waiting')"
         data-filter="Waiting">
         <div class="stat-label">Waiting</div>
-        <div class="stat-value">{{ $waiting }}</div>
+        <div class="stat-value">{{ $stats['waiting'] }}</div>
     </div>
 
 
     <div class="stat-card" style="--accent:#9A8A7A;cursor:pointer;"
-        onclick="filterByStatus('Archived')"
-        data-filter="Archived">
+        onclick="window.location='{{ route('leads.archived') }}'">
         <div class="stat-label">Archived</div>
-        <div class="stat-value">{{ $archived }}</div>
+        <div class="stat-value">{{ $stats['archived'] }}</div>
     </div>
     </div>
 
@@ -778,8 +767,7 @@
                                     </svg>
                                     Edit
                                 </a>
-                                {{-- ✅ بعد --}}
-                                <form action="{{ route('leads.destroy', $lead->lead_id) }}" method="POST"
+                                <!-- <form action="{{ route('leads.destroy', $lead->lead_id) }}" method="POST"
                                     style="display:inline;" class="delete-lead-form">
                                     @csrf
                                     @method('DELETE')
@@ -790,7 +778,7 @@
                                         </svg>
                                         Delete
                                     </button>
-                                </form>
+                                </form> -->
 
                                 <button class="btn-action"
                                         onclick="openHistoryModal({{ $lead->lead_id }})"
