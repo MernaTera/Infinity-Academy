@@ -21,7 +21,9 @@ public function index()
         'registered' => (clone $base)->where('status', 'Registered')->count(),
         'call_again' => (clone $base)->where('status', 'Call_Again')->count(),
         'waiting'    => (clone $base)->where('status', 'Waiting')->count(),
-        'archived'   => (clone $base)->where('status', 'Archived')->count(),
+        'archived' => Lead::where('status', 'Archived')
+                  ->whereNull('owner_cs_id')
+                  ->count(),
         'public'     => Lead::whereNull('owner_cs_id')->where('is_active', true)->count(),
     ];
 

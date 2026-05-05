@@ -277,13 +277,23 @@ class EmployeeController extends Controller
     */
     public function toggle($id)
     {
-        $employee    = Employee::with('user')->findOrFail($id);
-        $newStatus   = $employee->status === 'Active' ? 'Inactive' : 'Active';
+        $employee  = Employee::with('user')->findOrFail($id);
+        $newStatus = $employee->status === 'Active' ? 'Inactive' : 'Active';
+        $user      = $employee->user; 
 
         AuditService::updated('employee', $employee->employee_id, 'status', $employee->status, $newStatus);
-        
+
         $employee->update(['status' => $newStatus]);
-        $employee->user->update(['is_active' => $newStatus === 'Active']);
+
+        if ($user) {
+            $user->update(['is_active' => $newStatus === 'Active']);
+
+            if ($newStatus === 'Inactive') {
+                \DB::table('sessions')
+                    ->where('user_id', $user->id)
+                    ->delete();
+            }
+        }
 
         return back()->with('success', "Employee {$newStatus} successfully.");
     }

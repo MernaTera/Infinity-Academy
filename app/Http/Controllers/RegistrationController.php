@@ -107,7 +107,6 @@ class RegistrationController extends Controller
         }
 
         try {
-            // ✅ مرة واحدة بس
             $enrollment = $this->registrationService->register($request->all());
 
             if ($plan && $plan->requires_admin_approval) {

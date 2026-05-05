@@ -98,15 +98,32 @@ class OutstandingAdminController extends Controller
                     'notes'         => $request->notes,
                 ]);
 
-            } elseif ($request->action === 'extend_due') {
-                $request->validate(['new_due_date' => 'required|date|after:today']);
+        } elseif ($request->action === 'extend_due') {
+            $request->validate(['new_due_date' => 'required|date|after:today']);
 
-                InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)
-                    ->where('status', 'Pending')
-                    ->orderBy('due_date')
-                    ->first()
-                    ?->update(['due_date' => $request->new_due_date]);
-            }
+            InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)
+                ->whereIn('status', ['Pending', 'Overdue'])
+                ->orderBy('due_date')
+                ->first()
+                ?->update([
+                    'due_date' => $request->new_due_date,
+                    'status'   => 'Pending',
+                ]);
+
+            $enrollment->update([
+                'status'             => 'Active',
+                'restriction_flag'   => false,
+                'restriction_reason' => null,
+            ]);
+
+            RestrictionLog::where('enrollment_id', $enrollment->enrollment_id)
+                ->whereNull('released_at')
+                ->update([
+                    'released_at' => now(),
+                    'released_by' => $adminId,
+                    'notes'       => $request->notes ?? 'Admin override — due date extended',
+                ]);
+        }
         });
 
         AuditService::updated(

@@ -329,8 +329,8 @@
                 <select name="payment_method" class="pay-form-control" required>
                     <option value="Cash">Cash</option>
                     <option value="Card">Card</option>
-                    <option value="Transfer">Bank Transfer</option>
-                    <option value="Online">Online</option>
+                    <option value="Transfer">InstaPay</option>
+                    <option value="Online">Vodafove Cash</option>
                 </select>
 
                 <label class="pay-form-label">Notes (optional)</label>

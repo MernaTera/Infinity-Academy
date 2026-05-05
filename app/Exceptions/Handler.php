@@ -16,14 +16,14 @@ class Handler extends ExceptionHandler
 
     public function register(): void
     {
-        $this->reportable(function (Throwable $e) {
-            //
+        $this->renderable(function (TokenMismatchException $e, $request) {
+            return redirect()->route('login')
+                ->with('session_expired', true);
         });
     }
 
     public function render($request, Throwable $e)
     {
-        // 419 — CSRF Token Mismatch = session expired
         if ($e instanceof TokenMismatchException) {
             return redirect()
                 ->route('login')
