@@ -365,6 +365,7 @@ function applyMaterial(data) {
             pricing.testFee = parseFloat(this.value || 0);
             refreshPaymentSummary();
             refreshDepositSection();
+            updatePriceDisplay();
         });
     }
 

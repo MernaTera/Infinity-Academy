@@ -29,70 +29,77 @@ class RegistrationService
     public function register($data)
     {
         return DB::transaction(function () use ($data) {
-
-
+ 
             $this->validateBusiness($data);
             $this->validateTeacherAvailability($data);
             $this->validateNoConflict($data);
             $this->validatePatch($data);
             $this->validatePricing($data);
-
+ 
             $lead = Lead::findOrFail($data['lead_id']);
-
+ 
+            // ── Create Student ────────────────────────────────────────
             $student = Student::create([
-                'full_name' => $lead->full_name,
-                'email' => $lead->email,
-                'birthdate' => $lead->birthdate,
-                'degree' => $lead->degree,
-                'location' => $lead->location,
+                'full_name'     => $lead->full_name,
+                'email'         => $lead->email,
+                'birthdate'     => $lead->birthdate,
+                'degree'        => $lead->degree,
+                'location'      => $lead->location,
                 'global_status' => 'Active',
-                'is_active' => true
+                'is_active'     => true,
             ]);
+ 
             StudentPhone::where('phone_number', $lead->phone)->delete();
             StudentPhone::create([
-                'student_id' => $student->student_id,
+                'student_id'   => $student->student_id,
                 'phone_number' => $lead->phone,
-                'is_primary' => true,
+                'is_primary'   => true,
             ]);
-
-            $patchData = $this->handlePatchSelection($data);
+ 
+            // ── Patch & Pricing ───────────────────────────────────────
+            $patchData    = $this->handlePatchSelection($data);
             $currentPatch = Patch::where('status', 'Active')->first();
+ 
             $availabilities = collect();
-
             if (!empty($data['day']) && !empty($data['time_slot_id'])) {
                 $availabilities = TeacherAvailability::where('day_of_week', $data['day'])
                     ->where('time_slot_id', $data['time_slot_id'])
                     ->get();
             }
-            $pricing = app(\App\Services\PricingService::class)->calculate($data);
-
+ 
+            $pricing        = app(\App\Services\PricingService::class)->calculate($data);
             $formFinalPrice = (float) ($data['final_price'] ?? 0);
             if ($formFinalPrice > 0) {
                 $pricing['final_price'] = $formFinalPrice;
             }
             $data['final_price'] = $pricing['final_price'];
-
+ 
+            // ── Enrollment ────────────────────────────────────────────
             $enrollment = $this->createEnrollment($student, $data, $patchData);
             $this->attachMaterials($enrollment, $data);
             $this->createFinancialRecords($enrollment, $data, $pricing, $currentPatch);
-            $plan = \App\Models\Finance\PaymentPlan::find($data['payment_plan_id']);
-            if ($plan && $plan->requires_admin_approval) {
+ 
+            // ── Admin Approval ────────────────────────────────────────
+            $plan             = PaymentPlan::find($data['payment_plan_id']);
+            $requiresApproval = $plan && $plan->requires_admin_approval;
+ 
+            if ($requiresApproval) {
                 \App\Models\Finance\InstallmentApprovalLog::create([
                     'enrollment_id'    => $enrollment->enrollment_id,
                     'payment_plan_id'  => $data['payment_plan_id'],
                     'request_by_cs_id' => auth()->user()?->employee?->employee_id,
                     'status'           => 'Pending',
                 ]);
-            
-                // Notify all admin users
+ 
+                // Notify all admins
                 $admins = \App\Models\Auth\User::whereHas('role', fn($q) =>
                     $q->where('role_name', 'Admin')
                 )->get();
-            
+ 
                 foreach ($admins as $admin) {
-                    $adminEmployee = \App\Models\HR\Employee::where('user_id', $admin->id)->first();
+                    $adminEmployee = Employee::where('user_id', $admin->id)->first();
                     if ($adminEmployee) {
-                        \Illuminate\Support\Facades\DB::table('user_notification')->insert([
+                        DB::table('user_notification')->insert([
                             'employee_id'         => $adminEmployee->employee_id,
                             'title'               => 'New Installment Approval Request',
                             'message'             => 'CS ' . (auth()->user()->name ?? '') . ' submitted an installment plan request for student ' . ($lead->full_name ?? '') . '.',
@@ -105,65 +112,48 @@ class RegistrationService
                     }
                 }
             }
-            $availableTeachers = [];
-
-            foreach ($availabilities as $availability) {
-
-                $isBusy = CourseInstance::where('teacher_id', $availability->teacher_id)
-                    ->where('patch_id', $currentPatch->patch_id)
-                    ->whereHas('schedules', function ($q) use ($data) {
-                        $q->where('day_of_week', $data['day'])
-                        ->where('time_slot_id', $data['time_slot_id']);
-                    })
-                    ->exists();
-
-                if (!$isBusy) {
-                    $availableTeachers[] = $availability->teacher;
-                }
-            }
-
+ 
+            // ── Waiting List ──────────────────────────────────────────
             $preferredTypeMap = [
                 'current' => 'Current_Patch',
                 'next'    => 'Next_Patch',
                 'custom'  => 'Specific_Date',
             ];
-
-            $preferredType = $preferredTypeMap[$data['patch_option']] ?? null;
+ 
+            $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
             $requestedPatchId = null;
-
+ 
             if ($data['patch_option'] !== 'custom') {
                 $requestedPatchId = $patchData['patch_id'] ?? $data['patch_id'] ?? null;
             }
-
+ 
             $waiting = WaitingList::create([
-                'enrollment_id' => $enrollment->enrollment_id,
-                'requested_patch_id' => $requestedPatchId,
-                'preferred_type' => $preferredType,
+                'enrollment_id'           => $enrollment->enrollment_id,
+                'requested_patch_id'      => $requestedPatchId,
+                'preferred_type'          => $preferredType,
                 'preferred_delivery_type' => $enrollment->enrollment_type,
                 'preferred_delivery_mood' => $enrollment->delivery_mood,
-
-                'preferred_start_date' => $preferredType === 'Specific_Date'
+                'preferred_start_date'    => $preferredType === 'Specific_Date'
                     ? ($patchData['date'] ?? $data['custom_date'] ?? null)
                     : null,
-
-                'status' => 'Active',
-
-                'notes' => $data['notes'] ?? null,
-
+                'status'           => 'Active',
+                'notes'            => $data['notes'] ?? null,
                 'created_by_cs_id' => auth()->user()?->employee?->employee_id,
             ]);
             event(new WaitingListUpdated($waiting));
-
+ 
+            // ── Update Lead ───────────────────────────────────────────
+            // ✅ لو requires_admin_approval → ابقى Waiting لحد ما الادمن يعمل approve
+            $leadStatus = $requiresApproval ? 'Waiting' : 'Registered';
+ 
             $lead->update([
-                'status' => 'Registered',
-                'student_id' => $student->student_id
+                'status'     => $leadStatus,
+                'student_id' => $student->student_id,
             ]);
-
-            
+ 
             return $enrollment;
         });
     }
-
     /*
     |------------------------------------------------------------------
     | Patch Logic

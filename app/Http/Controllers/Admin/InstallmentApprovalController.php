@@ -10,6 +10,7 @@ use App\Models\Finance\RevenueSplit;
 use App\Models\Enrollment\Enrollment;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
+use App\Models\Leads\Lead;
 use Illuminate\Support\Facades\DB;
 
 class InstallmentApprovalController extends Controller
@@ -92,6 +93,8 @@ class InstallmentApprovalController extends Controller
                     'status'             => 'Pending',
                 ]);
             }
+            $lead = Lead::where('student_id', $enrollment->student_id)->first();
+$lead?->update(['status' => 'Registered']);
 
             $log->update([
                 'status'               => 'Approved',

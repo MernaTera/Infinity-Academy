@@ -174,9 +174,12 @@
             <div class="modal-body">
                 <div style="display:flex;flex-direction:column;gap:5px">
                     <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Rejection Reason</label>
-                    <textarea name="reason" rows="3"
+                    <textarea name="reason" rows="3" required minlength="2"
                         style="width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;resize:none;box-sizing:border-box"
                         placeholder="Explain the reason..."></textarea>
+                        @if($errors->has('reason'))
+                        <div style="font-size:11px;color:#DC2626;margin-top:4px;">{{ $errors->first('reason') }}</div>
+                        @endif
                 </div>
             </div>
             <div class="modal-footer">
