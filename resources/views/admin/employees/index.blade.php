@@ -18,7 +18,7 @@
 .btn-primary:hover{color:#fff;text-decoration:none}
 .btn-primary span,.btn-primary svg{position:relative;z-index:1}
 
-.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+.kpi-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-bottom:24px}
 .kpi-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:6px;padding:14px 16px;position:relative;overflow:hidden;cursor:pointer;transition:all 0.2s;text-decoration:none;display:block}
 .kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(27,79,168,0.1);text-decoration:none}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,#1B4FA8)}
@@ -99,6 +99,12 @@
             <div class="kpi-label">Inactive</div>
             <div class="kpi-val">{{ $stats['inactive'] }}</div>
         </a>
+        <a href="{{ route('admin.employees.index', ['role'=>'Admin']) }}" 
+            class="kpi-card {{ request('role')==='Admin' ? 'active-filter' : '' }}" 
+            style="--kc:#C47010">
+            <div class="kpi-label">Admin</div>
+            <div class="kpi-val">{{ $stats['admin'] }}</div>
+        </a>
         <a href="{{ route('admin.employees.index', ['role'=>'Customer Service']) }}" class="kpi-card {{ request('role')==='Customer Service' ? 'active-filter' : '' }}" style="--kc:#1B4FA8">
             <div class="kpi-label">Customer Service</div>
             <div class="kpi-val">{{ $stats['cs'] }}</div>
@@ -111,6 +117,7 @@
             <div class="kpi-label">Student Care</div>
             <div class="kpi-val">{{ $stats['sc'] }}</div>
         </a>
+
     </div>
 
     {{-- Toolbar --}}

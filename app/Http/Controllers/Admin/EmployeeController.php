@@ -48,6 +48,8 @@ class EmployeeController extends Controller
             'cs'       => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))->count(),
             'teachers' => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Teacher'))->count(),
             'sc'       => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Student Care'))->count(),
+            'admin'    => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))->count(), 
+
         ];
 
         return view('admin.employees.index', compact('employees', 'roles', 'stats', 'roleFilter', 'statusFilter'));
