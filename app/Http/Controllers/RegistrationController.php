@@ -107,6 +107,12 @@ class RegistrationController extends Controller
         }
 
         try {
+            $lead = Lead::find($request->lead_id);
+            $lead->update([
+                'interested_course_template_id' => $request->course_template_id,
+                'interested_level_id'           => $request->level_id ?: null,
+                'interested_sublevel_id'        => $request->sublevel_id ?: null,
+            ]);
             $enrollment = $this->registrationService->register($request->all());
 
             if ($plan && $plan->requires_admin_approval) {
