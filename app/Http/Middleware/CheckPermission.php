@@ -23,7 +23,7 @@ class CheckPermission
                 $user->isSC()      => '/student-care/dashboard',
                 $user->isTeacher() => '/teacher/dashboard',
                 $user->isCS()      => '/dashboard',
-                default            => '/',
+                default            =>  route('login'),
             };
             abort(403, 'Forbidden');
         }
