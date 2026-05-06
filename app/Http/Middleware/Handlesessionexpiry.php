@@ -19,7 +19,7 @@ class HandleSessionExpiry
         if (!$request->is('login', 'logout', 'forgot-password', 'reset-password*')) {
 
             // If the route needs auth but user is not authenticated
-            if (!Auth::check() && $request->session()->has('_previous')) {
+            if (!Auth::check() && !$request->routeIs('login') && $request->session()->has('_previous')) {
                 return redirect()->route('login')
                     ->with('session_expired', true);
             }

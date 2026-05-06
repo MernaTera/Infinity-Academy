@@ -51,6 +51,8 @@ class AuthenticatedSessionController extends Controller
         }
 
         // 4. Attempt login
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
             $user->recordFailedLogin();
 
