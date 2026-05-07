@@ -22,6 +22,7 @@ use App\Models\Academic\Sublevel;
 use App\Models\Student\StudentPhone;
 use App\Models\Finance\FinancialTransaction;
 use App\Models\Finance\RevenueSplit;
+use App\Models\Finance\TestFeeSetting;
 use App\Models\HR\Employee;
 
 class RegistrationService
@@ -79,6 +80,22 @@ class RegistrationService
             $this->attachMaterials($enrollment, $data);
             $this->createFinancialRecords($enrollment, $data, $pricing, $currentPatch);
  
+            // ── Placement Test ─────────────────────────────────────
+            $testScore = $data['test_score'] ?? null;
+            $testFee   = floatval($data['test_fee'] ?? 0);
+
+            if ($testScore !== null && $testScore !== '' && $testFee > 0) {
+                $test = \App\Models\Enrollment\PlacementTest::create([
+                    'student_id'       => $student->student_id,
+                    'score'            => $testScore,
+                    'test_fee'         => $testFee,
+                    'fee_paid'         => true,
+                    'created_by_cs_id' => auth()->user()?->employee?->employee_id,
+                ]);
+                
+                $enrollment->update(['placement_test_id' => $test->test_id]);
+            }
+
             // ── Admin Approval ────────────────────────────────────────
             $plan             = PaymentPlan::find($data['payment_plan_id']);
             $requiresApproval = $plan && $plan->requires_admin_approval;

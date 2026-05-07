@@ -15,6 +15,7 @@ use App\Models\Finance\PrivateBundle;
 use App\Services\PatchService;
 use App\Services\PricingService;
 use App\Models\Academic\TimeSlot;
+use App\Models\Finance\TestFeeSetting;
 use Illuminate\Support\Facades\DB;
 
 class RegistrationController extends Controller
@@ -43,6 +44,8 @@ class RegistrationController extends Controller
         $paymentPlans = PaymentPlan::where('is_active', true)->get();
         $bundles      = PrivateBundle::all();
         $timeSlots    = TimeSlot::all();
+        $testFees = TestFeeSetting::active()->orderBy('fee')->get();
+
 
         $levels = $lead->interested_course_template_id
             ? Level::where('course_template_id', $lead->interested_course_template_id)->get()
@@ -67,6 +70,7 @@ class RegistrationController extends Controller
             'paymentPlans',
             'bundles',
             'timeSlots',
+            'testFees',
         ));
     }
 

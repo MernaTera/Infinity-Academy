@@ -31,6 +31,7 @@ use App\Http\Controllers\Admin\PrivateBundleController;
 use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AdminRefundController;
+use App\Http\Controllers\Admin\TestFeeAdminController;
 
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
@@ -253,7 +254,12 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::put('/materials/{id}',          [MaterialController::class, 'update'])->name('materials.update');
         Route::patch('/materials/{id}/toggle', [MaterialController::class, 'toggle'])->name('materials.toggle');
 
-
+        //Test Fees
+        Route::get('/test-fees',           [TestFeeAdminController::class, 'index'])->name('test-fees.index');
+        Route::post('/test-fees',          [TestFeeAdminController::class, 'store'])->name('test-fees.store');
+        Route::patch('/test-fees/{id}',    [TestFeeAdminController::class, 'update'])->name('test-fees.update');
+        Route::delete('/test-fees/{id}',   [TestFeeAdminController::class, 'destroy'])->name('test-fees.destroy');
+        
         // Patches & Time
         Route::get('/patches',                      [PatchAdminController::class, 'index'])->name('patches.index');
         Route::patch('/patches/{id}/status',        [PatchAdminController::class, 'updateStatus'])->name('patches.status');

@@ -226,7 +226,7 @@
         position:static!important;
         width:100%!important;
         font-family:'DM Sans',sans-serif!important;
-        zoom:1.0;                        
+        zoom:0.90;                        
     }
 
     #inf-print-area .inf-modal{
@@ -415,31 +415,31 @@
 function infRow(key,val,cls=''){return`<div class="inf-row"><span class="inf-key">${key}</span><span class="inf-val ${cls}">${val}</span></div>`;}
 function fmtLE(n){return parseFloat(n||0).toLocaleString('en-EG',{minimumFractionDigits:2,maximumFractionDigits:2})+' LE';}
 
-const depositSection = document.getElementById('deposit_section');
-if (depositSection && depositSection.style.display !== 'none') {
-    const methods = [...document.querySelectorAll('.payment-method-row')].map(row => {
-        const method = row.querySelector('.method-select')?.value || '—';
-        const amount = parseFloat(row.querySelector('.method-amount')?.value || 0);
-        return { method, amount };
-    }).filter(m => m.amount > 0);
+// const depositSection = document.getElementById('deposit_section');
+// if (depositSection && depositSection.style.display !== 'none') {
+//     const methods = [...document.querySelectorAll('.payment-method-row')].map(row => {
+//         const method = row.querySelector('.method-select')?.value || '—';
+//         const amount = parseFloat(row.querySelector('.method-amount')?.value || 0);
+//         return { method, amount };
+//     }).filter(m => m.amount > 0);
 
-    if (methods.length) {
-        let methodsHTML = `<div style="margin-top:14px;"><div class="inf-sec-label" style="margin-bottom:10px;">Deposit Payment Methods</div>`;
-        methods.forEach(m => {
-            methodsHTML += infRow(
-                m.method.replace('_', ' '),
-                fmtLE(m.amount),
-                'green'
-            );
-        });
-        const totalPaid = methods.reduce((s, m) => s + m.amount, 0);
-        methodsHTML += `<div style="height:1px;background:rgba(27,79,168,0.07);margin:6px 0;"></div>`;
-        methodsHTML += infRow('Total Paid Now', fmtLE(totalPaid), 'green');
-        methodsHTML += '</div>';
+//     if (methods.length) {
+//         let methodsHTML = `<div style="margin-top:14px;"><div class="inf-sec-label" style="margin-bottom:10px;">Deposit Payment Methods</div>`;
+//         methods.forEach(m => {
+//             methodsHTML += infRow(
+//                 m.method.replace('_', ' '),
+//                 fmtLE(m.amount),
+//                 'green'
+//             );
+//         });
+//         const totalPaid = methods.reduce((s, m) => s + m.amount, 0);
+//         methodsHTML += `<div style="height:1px;background:rgba(27,79,168,0.07);margin:6px 0;"></div>`;
+//         methodsHTML += infRow('Total Paid Now', fmtLE(totalPaid), 'green');
+//         methodsHTML += '</div>';
 
-        document.getElementById('inv_payment').innerHTML += methodsHTML;
-    }
-}
+//         document.getElementById('inv_payment').innerHTML += methodsHTML;
+//     }
+// }
 window.infOpenModal = function() {
     document.getElementById('invoiceModal').classList.add('show');
     document.body.style.overflow = 'hidden';
@@ -519,16 +519,26 @@ window.buildInvoice = function() {
     const typeInput    = document.querySelector('input[name="type"]:checked');
     const modeEl       = document.querySelector('[name="mode"]');
     const patchEl      = document.getElementById('patch_select');
+    const testScore = document.getElementById('test_score_input')?.value;
+    const testFeeSel = document.getElementById('test_fee_select');
+    const testName  = testFeeSel?.options[testFeeSel.selectedIndex]?.text || 'Placement Test';
+
+    if (testScore && testScore !== '') {
+        document.getElementById('inv_student').innerHTML +=
+            infRow('Test Type', testName) +
+            infRow('Test Score', testScore + ' / 100', 'blue');
+    }
 
     document.getElementById('inv_ref').textContent  = 'INV-' + Date.now().toString().slice(-6);
     document.getElementById('inv_date').textContent = new Date().toLocaleDateString('en-EG', {day:'2-digit',month:'short',year:'numeric'});
+
 
     document.getElementById('inv_student').innerHTML =
         infRow('Full Name', document.getElementById('student_name')?.value || '—') +
         infRow('Phone',     document.getElementById('student_phone')?.value || '—') +
         infRow('Degree',   '{{ $lead->degree ?? "—" }}') +
-        infRow('Location', '{{ $lead->location ?? "—" }}');
-        infRow('Registered By', document.getElementById('cs_name_hidden')?.value || '—')
+        infRow('Location', '{{ $lead->location ?? "—" }}') +
+        infRow('Registered By', document.getElementById('cs_name_hidden')?.value || '—', 'blue');
 
     const courseText = courseEl?.options[courseEl.selectedIndex]?.text || '—';
     const levelText  = levelEl?.value ? (levelEl.options[levelEl.selectedIndex]?.text || '—') : '—';
@@ -597,6 +607,29 @@ window.buildInvoice = function() {
             payHTML += `<tr><td style="color:#AAB8C8;">${i}</td><td>${fmtLE(amt)}</td><td>${d.toLocaleDateString('en-EG',{day:'2-digit',month:'short',year:'numeric'})}</td><td><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#AAB8C8;background:rgba(122,138,154,0.1);padding:3px 8px;border-radius:3px;">Pending</span></td></tr>`;
         }
         payHTML += `</tbody></table></div>`;
+    }
+
+    const depositSec = document.getElementById('deposit_section');
+    if (depositSec && depositSec.style.display !== 'none') {
+        const methods = [...document.querySelectorAll('.payment-method-row')]
+            .map(row => ({
+                method: row.querySelector('.method-select')?.value || '—',
+                amount: parseFloat(row.querySelector('.method-amount')?.value || 0)
+            }))
+            .filter(m => m.amount > 0);
+
+        if (methods.length) {
+            payHTML += `<div style="margin-top:16px;">
+                <div class="inf-sec-label" style="margin-bottom:10px;">Deposit Payment Methods</div>`;
+            methods.forEach(m => {
+                const label = m.method.replace('_', ' ');
+                payHTML += infRow(label, fmtLE(m.amount), 'green');
+            });
+            const totalPaid = methods.reduce((s, m) => s + m.amount, 0);
+            payHTML += `<div style="height:1px;background:rgba(27,79,168,0.07);margin:6px 0;"></div>`;
+            payHTML += infRow('Total Paid Now', fmtLE(totalPaid), 'green');
+            payHTML += `</div>`;
+        }
     }
     document.getElementById('inv_payment').innerHTML = payHTML;
     document.getElementById('final_price_hidden').value = courseAmt;

@@ -561,6 +561,23 @@ function applyMaterial(data) {
             });
         });
     }
+    
+    // ─────────────────────────────────────────
+    // Test Fees
+    // ─────────────────────────────────────────
+    window.onTestFeeChange = function() {
+        const sel = document.getElementById('test_fee_select');
+        const opt = sel.options[sel.selectedIndex];
+        const fee = opt?.dataset.fee || 0;
+        
+        document.getElementById('test_fee_input').value         = fee;
+        document.getElementById('test_fee_setting_id').value    = sel.value;
+        
+        pricing.testFee = parseFloat(fee);
+        refreshPaymentSummary();
+        refreshDepositSection();
+        updatePriceDisplay();
+    }
 
     // ─────────────────────────────────────────
     // Deposit payment methods
@@ -651,6 +668,12 @@ function applyMaterial(data) {
     // Init
     // ─────────────────────────────────────────
     setTimeout(() => {
+        const oldTestFee = parseFloat(document.getElementById('test_fee_input')?.value || 0);
+        if (oldTestFee > 0) {
+            pricing.testFee = oldTestFee;
+            refreshPaymentSummary();
+            refreshDepositSection();
+        }
         loadPatch();
         calculatePrice();
         loadMaterial();
