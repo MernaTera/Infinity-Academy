@@ -218,6 +218,11 @@ class RegistrationService
     {
         
         $status = $this->determineStatus($data, $patchData);
+        $csEmployee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+        $currentPatch = \App\Models\Academic\Patch::where('status', 'Active')->first();
+        $branchId = $csEmployee?->branch_id
+            ?? $currentPatch?->branch_id
+            ?? \App\Models\Core\Branch::first()?->branch_id;
 
 
         return Enrollment::create([
@@ -231,6 +236,7 @@ class RegistrationService
             'sublevel_id' => $data['sublevel_id'] ?? null,  
 
             'patch_id' => $data['patch_id'] ?? null,
+            'branch_id'          => $branchId, 
             'teacher_id' => $data['teacher_id'] ?? null,
 
             'enrollment_type' => ucfirst($data['type']),
