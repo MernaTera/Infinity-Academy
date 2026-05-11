@@ -36,9 +36,9 @@ class RegistrationController extends Controller
     {
         $lead = Lead::findOrFail($lead_id);
 
-        if ($lead->status === 'Registered' && !request()->query('renew')) {
-            return back()->with('error', 'This lead is already registered.');
-        }
+        // if ($lead->status === 'Registered' && !request()->query('renew')) {
+        //     return back()->with('error', 'This lead is already registered.');
+        // }
 
         $courses      = CourseTemplate::where('is_active', true)->get();
         $paymentPlans = PaymentPlan::where('is_active', true)->get();

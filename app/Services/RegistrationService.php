@@ -258,9 +258,9 @@ class RegistrationService
     {
         $lead = \App\Models\Leads\Lead::find($data['lead_id']);
 
-        if ($lead->status === 'Registered') {
-            throw new \Exception('Lead already registered');
-        }
+        // if ($lead->status === 'Registered') {
+        //     throw new \Exception('Lead already registered');
+        // }
 
         if ($data['type'] === 'group') {
 
