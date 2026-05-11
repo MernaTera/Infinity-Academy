@@ -108,6 +108,7 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::post('/registration/store',              [RegistrationController::class, 'store'])->name('registration.store');
         Route::get('/registration/check-status/{enrollmentId}', [RegistrationController::class, 'checkApprovalStatus'])->name('registration.check-status');
         Route::get('/registration/pending/{enrollmentId}', [RegistrationController::class, 'pending'])->name('registration.pending');
+        Route::get('/near-completion', [StudentCareController::class, 'nearCompletion'])->name('near-completion');
 
         // AJAX helpers used inside the registration form
         Route::get('/patch-options/{courseId}',         [RegistrationController::class, 'getPatchOptions']);

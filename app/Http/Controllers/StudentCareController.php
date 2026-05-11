@@ -281,4 +281,48 @@ class StudentCareController extends Controller
         ));
     }
 
+    public function nearCompletion()
+    {
+        $nearCompletionPrivate = Enrollment::where('status', 'Active')
+            ->where('enrollment_type', 'Private')
+            ->whereNotNull('hours_remaining')
+            ->where('hours_remaining', '<=', 4)
+            ->with([
+                'student.phones',
+                'student.lead',
+                'courseTemplate',
+                'level',
+                'privateBundle',
+                'teacher',
+            ])
+            ->orderBy('hours_remaining')
+            ->get();
+
+        $nearCompletionGroup = Enrollment::where('status', 'Active')
+            ->where('enrollment_type', 'Group')
+            ->whereHas('courseInstance', fn($q) => $q->where('status', 'Active'))
+            ->with([
+                'student.phones',
+                'student.lead',
+                'courseInstance.courseTemplate',
+                'courseInstance.level',
+                'courseInstance.sessions',
+            ])
+            ->get()
+            ->filter(function ($e) {
+                $total     = $e->courseInstance?->sessions?->count() ?? 0;
+                $completed = $e->courseInstance?->sessions?->where('status', 'Completed')->count() ?? 0;
+                $remaining = $total - $completed;
+                return $remaining <= 2 && $total > 0;
+            })
+            ->values();
+
+        $privateCount = $nearCompletionPrivate->count();
+        $groupCount   = $nearCompletionGroup->count();
+
+        return view('leads.near-completion', compact(
+            'nearCompletionPrivate', 'nearCompletionGroup',
+            'privateCount', 'groupCount'
+        ));
+}
 }

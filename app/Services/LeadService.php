@@ -173,6 +173,7 @@ class LeadService
     public function releaseExpiredLeads()
     {
         $leads = Lead::whereNotNull('owner_cs_id')
+            ->whereNotIn('status', ['Registered', 'Archived'])
             ->where('updated_at', '<=', now()->subDays(4))
             ->get();
 

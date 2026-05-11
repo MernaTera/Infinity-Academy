@@ -170,4 +170,9 @@ class Student extends Model
             ->first();
     }
 
+    public function lead()
+    {
+        return $this->hasOne(\App\Models\Leads\Lead::class, 'student_id');
+    }
+
 }

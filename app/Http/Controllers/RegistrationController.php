@@ -36,7 +36,7 @@ class RegistrationController extends Controller
     {
         $lead = Lead::findOrFail($lead_id);
 
-        if ($lead->status === 'Registered') {
+        if ($lead->status === 'Registered' && !request()->query('renew')) {
             return back()->with('error', 'This lead is already registered.');
         }
 

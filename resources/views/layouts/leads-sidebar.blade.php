@@ -267,6 +267,15 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"/></svg>
                     <span class="sl-link-text">Refunds</span>
                 </a>
+                <a href="{{ route('near-completion') }}"
+                class="sl-link {{ request()->routeIs('near-completion') ? 'active' : '' }}"
+                data-label="Near Completion">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                    <span class="sl-link-text">Near Completion</span>
+                </a>
             </div>
         </div>
         @endcando
