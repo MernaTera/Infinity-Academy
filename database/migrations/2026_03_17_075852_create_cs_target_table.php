@@ -11,7 +11,8 @@ return new class extends Migration {
             $table->bigIncrements('target_id');
 
             $table->unsignedBigInteger('employee_id');
-            $table->unsignedBigInteger('patch_id');
+            $table->unsignedBigInteger('patch_id')->nullable(); 
+            $table->string('month', 7)->nullable();            
 
             $table->decimal('target_amount', 12, 2)->nullable();
             $table->integer('target_registrations')->nullable();
@@ -22,9 +23,9 @@ return new class extends Migration {
 
             $table->timestamps();
 
-            $table->unique(['employee_id', 'patch_id']);
+            $table->unique(['employee_id', 'month']); 
 
-            $table->foreign('employee_id')
+            $table->foreign('employee_id')           
                   ->references('employee_id')
                   ->on('employee')
                   ->cascadeOnDelete();
@@ -32,7 +33,7 @@ return new class extends Migration {
             $table->foreign('patch_id')
                   ->references('patch_id')
                   ->on('patch')
-                  ->cascadeOnDelete();
+                  ->nullOnDelete();                  
 
             $table->foreign('created_by_admin_id')
                   ->references('employee_id')

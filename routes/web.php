@@ -263,6 +263,7 @@ Route::middleware(['auth', 'permission:hr.view'])
         
         // Patches & Time
         Route::get('/patches',                      [PatchAdminController::class, 'index'])->name('patches.index');
+        Route::post('/patches',                     [PatchAdminController::class, 'store'])->name('patches.store');
         Route::patch('/patches/{id}/status',        [PatchAdminController::class, 'updateStatus'])->name('patches.status');
         Route::post('/patches/time-slots',          [PatchAdminController::class, 'storeTimeSlot'])->name('patches.timeslots.store');
         Route::patch('/patches/time-slots/{id}',    [PatchAdminController::class, 'toggleTimeSlot'])->name('patches.timeslots.toggle');

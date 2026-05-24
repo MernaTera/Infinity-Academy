@@ -85,6 +85,8 @@ class PatchAdminController extends Controller
             'action' => 'required|in:activate,close,lock,unlock',
         ]);
 
+        $old = $patch->status;
+
         match($request->action) {
             'activate' => $patch->update(['status' => 'Active']),
             'close'    => $patch->update(['status' => 'Closed', 'is_locked' => true]),
