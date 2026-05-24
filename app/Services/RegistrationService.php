@@ -12,7 +12,7 @@ use App\Models\Finance\PrivateBundle;
 use App\Models\Academic\Patch;
 use App\Models\Academic\CourseInstance;
 use App\Models\HR\TeacherAvailability;
-use App\Models\PlacementTest;
+use App\Models\Enrollment\PlacementTest;
 use App\Models\Enrollment\Material;
 use App\Models\Enrollment\MaterialAssignment;
 use App\Models\Enrollment\EnrollmentMaterial;
