@@ -101,6 +101,7 @@
     </div>
     @else
 
+
     <div class="levels-grid">
         @foreach($levels as $lv)
         <div class="lv-card">
@@ -116,14 +117,11 @@
                     Edit
                 </button>
                 @if($lv->teachers_count === 0)
-                <form method="POST" action="{{ route('admin.english-levels.destroy', $lv->english_level_id) }}" style="display:inline;"
-                      onsubmit="return confirm('Delete {{ $lv->level_name }}?')">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="btn-sm btn-danger">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
-                        Delete
-                    </button>
-                </form>
+                <button class="btn-sm btn-danger"
+                    onclick="openDeleteModal('{{ route('admin.english-levels.destroy', $lv->english_level_id) }}', '{{ addslashes($lv->level_name) }}')">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                    Delete
+                </button>
                 @else
                 <span style="font-size:9px;color:var(--faint);align-self:center;" title="Has teachers assigned">🔒</span>
                 @endif
@@ -168,11 +166,11 @@
                                 Edit
                             </button>
                             @if($lv->teachers_count === 0)
-                            <form method="POST" action="{{ route('admin.english-levels.destroy', $lv->english_level_id) }}" style="display:inline;"
-                                  onsubmit="return confirm('Delete {{ $lv->level_name }}?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-sm btn-danger">Delete</button>
-                            </form>
+                            <button class="btn-sm btn-danger"
+                                onclick="openDeleteModal('{{ route('admin.english-levels.destroy', $lv->english_level_id) }}', '{{ addslashes($lv->level_name) }}')">
+                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                                Delete
+                            </button>
                             @endif
                         </div>
                     </td>
@@ -198,14 +196,28 @@
         <form method="POST" action="{{ route('admin.english-levels.store') }}">
             @csrf
             <div class="modal-body">
+                @if($errors->any())
+                <div style="display:flex;align-items:flex-start;gap:10px;background:rgba(220,38,38,0.05);border:0.5px solid rgba(220,38,38,0.3);border-radius:6px;padding:12px 14px;margin-bottom:16px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2" style="flex-shrink:0;margin-top:1px;">
+                        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <div>
+                        @foreach($errors->all() as $error)
+                        <p style="font-size:12px;color:#DC2626;margin:0;">{{ $error }}</p>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
                 <div style="display:flex;flex-direction:column;gap:16px;">
                     <div class="form-field">
                         <label class="form-label">Level Name <span style="color:var(--orange);">*</span></label>
-                        <input type="text" name="level_name" class="form-control" placeholder="e.g. A1, B2, C1" required>
+                        <input type="text" name="level_name" class="form-control" placeholder="e.g. A1, B2, C1"
+                               value="{{ old('level_name') }}" required>
                     </div>
                     <div class="form-field">
                         <label class="form-label">Rank <span style="color:var(--orange);">*</span></label>
-                        <input type="number" name="level_rank" class="form-control" placeholder="e.g. 1" min="1" required>
+                        <input type="number" name="level_rank" class="form-control" placeholder="e.g. 1" min="1"
+                               value="{{ old('level_rank') }}" required>
                         <span style="font-size:10px;color:var(--faint);">Lower rank = lower level (1 = beginner)</span>
                     </div>
                 </div>
@@ -237,6 +249,13 @@
         <form id="editForm" method="POST">
             @csrf @method('PUT')
             <div class="modal-body">
+                    @if($errors->any())
+                    <div style="background:var(--red-l);border:1px solid rgba(220,38,38,0.2);border-left:3px solid var(--red);border-radius:4px;padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--red);">
+                        @foreach($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                    @endif
                 <div style="display:flex;flex-direction:column;gap:16px;">
                     <div class="form-field">
                         <label class="form-label">Level Name <span style="color:var(--orange);">*</span></label>
@@ -263,22 +282,77 @@
     </div>
 </div>
 
+{{-- Delete Confirm Modal --}}
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(10,20,40,0.45);backdrop-filter:blur(6px);z-index:1000;align-items:center;justify-content:center;padding:20px;">
+    <div style="width:100%;max-width:380px;background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;box-shadow:0 24px 60px rgba(27,79,168,0.15);position:relative;">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--red),transparent);"></div>
+        <div style="padding:28px 24px 20px;text-align:center;">
+            <div style="width:48px;height:48px;border-radius:50%;background:var(--red-l);border:1px solid rgba(220,38,38,0.2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+            </div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--red);margin-bottom:8px;">Delete Level</div>
+            <div style="font-size:13px;color:var(--muted);line-height:1.6;" id="deleteModalMsg">Are you sure?</div>
+        </div>
+        <div style="padding:0 24px 24px;display:flex;gap:10px;">
+            <button type="button" onclick="closeDeleteModal()"
+                style="flex:1;padding:10px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;">
+                Cancel
+            </button>
+            <form id="deleteModalForm" method="POST" style="flex:1;">
+                @csrf @method('DELETE')
+                <button type="submit"
+                    style="width:100%;padding:10px;background:var(--red);border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;">
+                    Delete
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@if($errors->any())
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('createModal').classList.add('open');
+});
+</script>
+@endif
+
+
 <script>
 ['createModal','editModal'].forEach(id => {
     document.getElementById(id).addEventListener('click', function(e) {
         if (e.target === this) this.classList.remove('open');
     });
 });
+
 document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') ['createModal','editModal'].forEach(id => document.getElementById(id).classList.remove('open'));
+    if (e.key === 'Escape') {
+        ['createModal','editModal'].forEach(id => document.getElementById(id).classList.remove('open'));
+        closeDeleteModal();
+    }
 });
 
 function openEdit(id, name, rank) {
-    document.getElementById('editForm').action  = `/admin/english-levels/${id}`;
-    document.getElementById('edit_name').value  = name;
-    document.getElementById('edit_rank').value  = rank;
+    document.getElementById('editForm').action = `/admin/english-levels/${id}`;
+    document.getElementById('edit_name').value = name;
+    document.getElementById('edit_rank').value = rank;
     document.getElementById('editModal').classList.add('open');
 }
+
+function openDeleteModal(action, levelName) {
+    document.getElementById('deleteModalForm').action = action;
+    document.getElementById('deleteModalMsg').textContent =
+        'This will permanently delete "' + levelName + '". This action cannot be undone.';
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function closeDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) closeDeleteModal();
+});
 </script>
 
 @endsection

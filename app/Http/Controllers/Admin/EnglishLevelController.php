@@ -22,6 +22,9 @@ class EnglishLevelController extends Controller
         $request->validate([
             'level_name' => 'required|string|max:255|unique:english_level,level_name',
             'level_rank' => 'required|integer|min:1|unique:english_level,level_rank',
+        ], [
+            'level_name.unique' => 'This level name already exists.',
+            'level_rank.unique' => 'This rank is already taken — please choose a different rank.',
         ]);
 
         EnglishLevel::create([
