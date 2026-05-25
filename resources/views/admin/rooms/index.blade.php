@@ -111,7 +111,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 
     <div class="page-header">
         <div>
-            <div class="page-eyebrow">Admin Panel — Academic</div>
+            <div class="page-eyebrow">Admin Panel — Academic — {{ $adminBranch?->name ?? '' }}</div>
             <h1 class="page-title">Rooms</h1>
         </div>
         <button onclick="document.getElementById('createModal').classList.add('open')" class="btn-primary">
@@ -146,9 +146,6 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;vertical-align:middle;"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
             Online
         </button>
-        @foreach($branches as $b)
-        <button class="filter-btn" onclick="filterByBranch({{ $b->branch_id }}, this)">{{ $b->name }}</button>
-        @endforeach
     </div>
 
     {{-- Rooms Grid --}}
@@ -264,13 +261,11 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                         <div class="form-field">
-                            <label class="form-label">Branch <span style="color:var(--orange);">*</span></label>
-                            <select name="branch_id" class="form-control" required>
-                                <option value="">— Select Branch —</option>
-                                @foreach($branches as $b)
-                                <option value="{{ $b->branch_id }}">{{ $b->name }}</option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Branch</label>
+                            <input type="text" class="form-control"
+                                value="{{ $adminBranch?->name ?? '—' }}"
+                                readonly disabled
+                                style="background:rgba(248,246,242,0.8);color:#7A8A9A;cursor:default;">
                         </div>
                         <div class="form-field">
                             <label class="form-label">Capacity <span style="color:var(--orange);">*</span></label>
@@ -340,13 +335,11 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
 
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
                         <div class="form-field">
-                            <label class="form-label">Branch <span style="color:var(--orange);">*</span></label>
-                            <select id="edit_branch" name="branch_id" class="form-control" required>
-                                <option value="">— Select Branch —</option>
-                                @foreach($branches as $b)
-                                <option value="{{ $b->branch_id }}">{{ $b->name }}</option>
-                                @endforeach
-                            </select>
+                            <label class="form-label">Branch</label>
+                            <input type="text" class="form-control"
+                                value="{{ $adminBranch?->name ?? '—' }}"
+                                readonly disabled
+                                style="background:rgba(248,246,242,0.8);color:#7A8A9A;cursor:default;">
                         </div>
                         <div class="form-field">
                             <label class="form-label">Capacity <span style="color:var(--orange);">*</span></label>
@@ -407,7 +400,6 @@ document.addEventListener('keydown', e => {
 function openEdit(id, name, branchId, capacity, type) {
     document.getElementById('editForm').action   = `/admin/rooms/${id}`;
     document.getElementById('edit_name').value    = name;
-    document.getElementById('edit_branch').value  = branchId;
     document.getElementById('edit_capacity').value = capacity;
     document.getElementById(type === 'Offline' ? 'e_offline' : 'e_online').checked = true;
     document.getElementById('editModal').classList.add('open');
@@ -425,13 +417,6 @@ function filterRooms(type, btn) {
     });
 }
 
-function filterByBranch(branchId, btn) {
-    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    document.querySelectorAll('.rm-card').forEach(card => {
-        card.style.display = card.dataset.branch == branchId ? '' : 'none';
-    });
-}
 </script>
 
 @endsection
