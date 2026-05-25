@@ -9,18 +9,18 @@ use App\Models\Academic\TimeSlot;
 use App\Models\Academic\BreakSlot;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
-use App\Services\AuditService;
 
 class PatchAdminController extends Controller
 {
+    private function adminEmployeeId(): ?int
+    {
+        return Employee::where('user_id', auth()->id())->value('employee_id');
+    }
+
     public function index()
     {
-        $patches = Patch::with('branch')
-            ->withCount('courseInstances')
-            ->orderByDesc('start_date')
-            ->get();
-
-        $timeSlots = TimeSlot::where('is_active', true)->get();
+        $patches    = Patch::with('branch')->withCount('courseInstances')->orderByDesc('start_date')->get();
+        $timeSlots  = TimeSlot::where('is_active', true)->get();
         $breakSlots = BreakSlot::where('is_active', true)->get();
         $branches   = Branch::all();
 
@@ -36,6 +36,7 @@ class PatchAdminController extends Controller
         ));
     }
 
+    // ── Create ────────────────────────────────────────────────────
     public function store(Request $request)
     {
         $request->validate([
@@ -45,7 +46,6 @@ class PatchAdminController extends Controller
             'end_date'   => 'required|date|after:start_date',
         ]);
 
-        // No overlapping patches in same branch
         $overlap = Patch::where('branch_id', $request->branch_id)
             ->where('status', '!=', 'Closed')
             ->where(function ($q) use ($request) {
@@ -61,8 +61,6 @@ class PatchAdminController extends Controller
             return back()->with('error', 'Overlapping patch exists for this branch in the selected period.');
         }
 
-        $adminId = Employee::where('user_id', auth()->id())->first()?->employee_id;
-
         Patch::create([
             'name'                => $request->name,
             'branch_id'           => $request->branch_id,
@@ -71,21 +69,77 @@ class PatchAdminController extends Controller
             'status'              => 'Upcoming',
             'is_locked'           => false,
             'is_placeholder'      => false,
-            'created_by_admin_id' => $adminId,
+            'created_by_admin_id' => $this->adminEmployeeId(),
         ]);
 
         return back()->with('success', 'Patch created successfully.');
     }
 
-    public function updateStatus(Request $request, $id)
+    // ── Edit ──────────────────────────────────────────────────────
+    public function update(Request $request, $id)
     {
         $patch = Patch::findOrFail($id);
 
+        if ($patch->status === 'Closed') {
+            return back()->with('error', 'Cannot edit a closed patch.');
+        }
+
         $request->validate([
-            'action' => 'required|in:activate,close,lock,unlock',
+            'name'       => 'required|string|max:100|unique:patch,name,' . $id . ',patch_id',
+            'branch_id'  => 'required|exists:branch,branch_id',
+            'start_date' => 'required|date',
+            'end_date'   => 'required|date|after:start_date',
         ]);
 
-        $old = $patch->status;
+        // Check overlap excluding current patch
+        $overlap = Patch::where('branch_id', $request->branch_id)
+            ->where('patch_id', '!=', $id)
+            ->where('status', '!=', 'Closed')
+            ->where(function ($q) use ($request) {
+                $q->whereBetween('start_date', [$request->start_date, $request->end_date])
+                  ->orWhereBetween('end_date', [$request->start_date, $request->end_date])
+                  ->orWhere(function ($q2) use ($request) {
+                      $q2->where('start_date', '<=', $request->start_date)
+                         ->where('end_date', '>=', $request->end_date);
+                  });
+            })->exists();
+
+        if ($overlap) {
+            return back()->with('error', 'Overlapping patch exists for this branch.');
+        }
+
+        $patch->update([
+            'name'       => $request->name,
+            'branch_id'  => $request->branch_id,
+            'start_date' => $request->start_date,
+            'end_date'   => $request->end_date,
+        ]);
+
+        return back()->with('success', 'Patch updated successfully.');
+    }
+
+    // ── Delete ────────────────────────────────────────────────────
+    public function destroy($id)
+    {
+        $patch = Patch::withCount('courseInstances')->findOrFail($id);
+
+        if ($patch->course_instances_count > 0) {
+            return back()->with('error', 'Cannot delete patch with existing course instances.');
+        }
+
+        if ($patch->status === 'Active') {
+            return back()->with('error', 'Cannot delete an active patch.');
+        }
+
+        $patch->delete();
+        return back()->with('success', 'Patch deleted successfully.');
+    }
+
+    // ── Status ────────────────────────────────────────────────────
+    public function updateStatus(Request $request, $id)
+    {
+        $patch = Patch::findOrFail($id);
+        $request->validate(['action' => 'required|in:activate,close,lock,unlock']);
 
         match($request->action) {
             'activate' => $patch->update(['status' => 'Active']),
@@ -94,10 +148,10 @@ class PatchAdminController extends Controller
             'unlock'   => $patch->update(['is_locked' => false]),
         };
 
-        AuditService::updated('patch', $id, 'status', $old, $patch->fresh()->status);
         return back()->with('success', 'Patch updated successfully.');
     }
 
+    // ── Time Slots ────────────────────────────────────────────────
     public function storeTimeSlot(Request $request)
     {
         $request->validate([
@@ -113,7 +167,7 @@ class PatchAdminController extends Controller
             'end_time'            => $request->end_time,
             'slot_type'           => $request->slot_type,
             'is_active'           => true,
-            'created_by_admin_id' => Employee::where('user_id', auth()->id())->first()?->employee_id,
+            'created_by_admin_id' => $this->adminEmployeeId(),
         ]);
 
         return back()->with('success', 'Time slot added.');
@@ -126,6 +180,7 @@ class PatchAdminController extends Controller
         return back()->with('success', 'Time slot updated.');
     }
 
+    // ── Break Slots ───────────────────────────────────────────────
     public function storeBreakSlot(Request $request)
     {
         $request->validate([
@@ -139,7 +194,7 @@ class PatchAdminController extends Controller
             'start_time'          => $request->start_time,
             'end_time'            => $request->end_time,
             'is_active'           => true,
-            'created_by_admin_id' => Employee::where('user_id', auth()->id())->first()?->employee_id,
+            'created_by_admin_id' => $this->adminEmployeeId(),
         ]);
 
         return back()->with('success', 'Break slot added.');

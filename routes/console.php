@@ -18,3 +18,5 @@ Schedule::call(function () {
 Schedule::call(function () {
     app(LeadService::class)->archiveOldLeads();
 })->everyMinute();
+
+Schedule::command('patches:update-statuses')->dailyAt('00:01');

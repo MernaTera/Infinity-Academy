@@ -10,7 +10,7 @@ use App\Models\HR\Employee;
 use App\Models\Core\Branch;
 use App\Models\Enrollment\CsTarget;
 use App\Models\Enrollment\Enrollment;
-use App\Models\Financial\FinancialTransaction;
+use App\Models\Finance\FinancialTransaction;
 use App\Models\Finance\RevenueSplit;
 use App\Models\Enrollment\WaitingList;
 

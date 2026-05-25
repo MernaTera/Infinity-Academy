@@ -179,6 +179,7 @@
                     <div style="padding:0 20px 10px;font-size:10px;color:#AAB8C8;text-align:right">{{ $pct }}% elapsed</div>
                     @endif
                     <div class="pc-footer">
+                        {{-- Activate --}}
                         @if($patch->status === 'Upcoming')
                         <form method="POST" action="{{ route('admin.patches.status', $patch->patch_id) }}" style="display:inline">
                             @csrf @method('PATCH')
@@ -186,6 +187,8 @@
                             <button type="submit" class="btn-sm btn-activate">▶ Activate</button>
                         </form>
                         @endif
+
+                        {{-- Close --}}
                         @if($patch->status === 'Active')
                         <form method="POST" action="{{ route('admin.patches.status', $patch->patch_id) }}" style="display:inline">
                             @csrf @method('PATCH')
@@ -193,6 +196,8 @@
                             <button type="submit" class="btn-sm btn-close">■ Close</button>
                         </form>
                         @endif
+
+                        {{-- Lock / Unlock --}}
                         @if(!$patch->is_locked)
                         <form method="POST" action="{{ route('admin.patches.status', $patch->patch_id) }}" style="display:inline">
                             @csrf @method('PATCH')
@@ -204,6 +209,23 @@
                             @csrf @method('PATCH')
                             <input type="hidden" name="action" value="unlock">
                             <button type="submit" class="btn-sm btn-unlock">🔓 Unlock</button>
+                        </form>
+                        @endif
+
+                        {{-- Edit --}}
+                        @if($patch->status !== 'Closed')
+                        <button onclick="openEditPatch({{ $patch->patch_id }}, '{{ addslashes($patch->name) }}', {{ $patch->branch_id }}, '{{ $patch->start_date->format('Y-m-d') }}', '{{ $patch->end_date->format('Y-m-d') }}')"
+                            class="btn-sm" style="color:#1B4FA8;border-color:rgba(27,79,168,0.2);">
+                            ✎ Edit
+                        </button>
+                        @endif
+
+                        {{-- Delete --}}
+                        @if($patch->status !== 'Active' && $patch->course_instances_count == 0)
+                        <form method="POST" action="{{ route('admin.patches.destroy', $patch->patch_id) }}"
+                            style="display:inline" onsubmit="return confirm('Delete this patch?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn-sm btn-close">✕ Delete</button>
                         </form>
                         @endif
                     </div>
@@ -326,7 +348,7 @@
             <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:3px">Admin Panel</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#1B4FA8">New Patch</div>
         </div>
-        <form method="POST" action="{{ route('admin.patches.index') }}">
+        <form method="POST" action="{{ route('admin.patches.store') }}">
             @csrf
             <div style="padding:20px 24px">
                 <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
@@ -366,6 +388,66 @@
         </form>
     </div>
 </div>
+
+{{-- Edit Patch Modal --}}
+<div id="editPatchModal" style="display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:999;padding:20px;font-family:'DM Sans',sans-serif">
+    <div style="width:100%;max-width:500px;background:#F8F6F2;border:1px solid rgba(27,79,168,0.15);border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(27,79,168,0.18);position:relative">
+        <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1B4FA8,transparent)"></div>
+        <div style="padding:20px 24px 16px;border-bottom:1px solid rgba(27,79,168,0.08)">
+            <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:3px">Admin Panel</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#1B4FA8">Edit Patch</div>
+        </div>
+        <form id="editPatchForm" method="POST">
+            @csrf @method('PUT')
+            <div style="padding:20px 24px">
+                <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+                    <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Name *</label>
+                    <input type="text" name="name" id="edit_patch_name" style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;width:100%;box-sizing:border-box" required>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
+                    <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Branch *</label>
+                    <select name="branch_id" id="edit_patch_branch" style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;width:100%;box-sizing:border-box" required>
+                        @foreach($branches as $b)
+                        <option value="{{ $b->branch_id }}">{{ $b->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+                    <div style="display:flex;flex-direction:column;gap:5px">
+                        <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Start Date *</label>
+                        <input type="date" name="start_date" id="edit_patch_start" style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;width:100%;box-sizing:border-box" required>
+                    </div>
+                    <div style="display:flex;flex-direction:column;gap:5px">
+                        <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">End Date *</label>
+                        <input type="date" name="end_date" id="edit_patch_end" style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;width:100%;box-sizing:border-box" required>
+                    </div>
+                </div>
+            </div>
+            <div style="padding:14px 24px 20px;border-top:1px solid rgba(27,79,168,0.07);display:flex;gap:10px;justify-content:flex-end">
+                <button type="button" onclick="closeEditPatch()" style="padding:9px 20px;background:transparent;border:1px solid rgba(27,79,168,0.15);border-radius:4px;color:#7A8A9A;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;cursor:pointer">Cancel</button>
+                <button type="submit" style="padding:10px 24px;background:#1B4FA8;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditPatch(id, name, branchId, startDate, endDate) {
+    document.getElementById('editPatchForm').action = `/admin/patches/${id}`;
+    document.getElementById('edit_patch_name').value   = name;
+    document.getElementById('edit_patch_branch').value = branchId;
+    document.getElementById('edit_patch_start').value  = startDate;
+    document.getElementById('edit_patch_end').value    = endDate;
+    document.getElementById('editPatchModal').style.display = 'flex';
+}
+function closeEditPatch() {
+    document.getElementById('editPatchModal').style.display = 'none';
+}
+document.getElementById('editPatchModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditPatch();
+});
+</script>
+
 
 <style>
 #newPatchModal.show{display:flex!important}
