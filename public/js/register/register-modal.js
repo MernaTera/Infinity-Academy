@@ -356,6 +356,8 @@ function applyMaterial(data) {
     updatePriceDisplay();
 }
 
+
+
     // ─────────────────────────────────────────
     // Test fee
     // ─────────────────────────────────────────
@@ -368,6 +370,21 @@ function applyMaterial(data) {
             updatePriceDisplay();
         });
     }
+
+    // ─────────────────────────────────────────
+    // Material checkbox toggle
+    // ─────────────────────────────────────────
+    materialCheck?.addEventListener('change', function () {
+        if (this.checked) {
+            pricing.materialPrice = parseFloat(materialPriceHidden?.value || 0);
+            if (materialPriceBlock) materialPriceBlock.style.display = 'block';
+        } else {
+            pricing.materialPrice = 0;
+            if (materialPriceBlock) materialPriceBlock.style.display = 'none';
+        }
+        updatePriceDisplay();
+    });
+
 
     // ─────────────────────────────────────────
     // Level Package
