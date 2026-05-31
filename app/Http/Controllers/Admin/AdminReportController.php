@@ -5,38 +5,49 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Reports\Report;
 use App\Models\HR\Employee;
+use App\Models\HR\Teacher;
 use Illuminate\Http\Request;
 
 class AdminReportController extends Controller
 {
     public function index(Request $request)
     {
-        $filterStatus = $request->query('status', 'Submitted');
+        $filterStatus  = $request->query('status', 'Submitted');
+        $filterTeacher = $request->query('teacher_id', 'all');
 
         $reports = Report::with([
             'enrollment.student',
             'enrollment.courseTemplate',
             'enrollment.level',
             'enrollment.sublevel',
+            'enrollment.courseInstance',
             'teacher.employee',
             'reportScores',
             'approvedBy',
         ])
         ->when($filterStatus !== 'all', fn($q) => $q->where('status', $filterStatus))
+        ->when($filterTeacher !== 'all', fn($q) => $q->where('teacher_id', $filterTeacher))
         ->latest('updated_at')
         ->get();
+
+        // Teachers who have reports
+        $teachers = Teacher::with('employee')
+            ->whereHas('reports')
+            ->get();
 
         $stats = [
             'submitted' => Report::where('status', 'Submitted')->count(),
             'approved'  => Report::where('status', 'Approved')->count(),
             'rejected'  => Report::where('status', 'Rejected')->count(),
             'sent'      => Report::where('status', 'Sent')->count(),
-            'overdue'   => Report::where('status', 'Submitted')
-                ->whereHas('enrollment.courseTemplate', fn($q) => $q)
-                ->count(), // يتحسب لاحقاً لما يكون في end_date على الـ course instance
         ];
 
-        return view('admin.reports.index', compact('reports', 'stats', 'filterStatus'));
+        // Group by teacher → course
+        $grouped = $reports->groupBy(fn($r) => $r->teacher_id);
+
+        return view('admin.reports.index', compact(
+            'reports', 'stats', 'filterStatus', 'filterTeacher', 'teachers', 'grouped'
+        ));
     }
 
     public function show($id)
@@ -46,6 +57,7 @@ class AdminReportController extends Controller
             'enrollment.courseTemplate',
             'enrollment.level',
             'enrollment.sublevel',
+            'enrollment.courseInstance',
             'teacher.employee',
             'reportScores',
             'approvedBy',
@@ -63,10 +75,8 @@ class AdminReportController extends Controller
         }
 
         $adminEmployee = Employee::where('user_id', auth()->id())->first();
-
         $report->approve($adminEmployee?->employee_id);
 
-        // Notify teacher
         \Illuminate\Support\Facades\DB::table('user_notification')->insert([
             'employee_id'         => $report->teacher?->employee_id,
             'title'               => 'Report Approved',
@@ -96,7 +106,6 @@ class AdminReportController extends Controller
         $adminEmployee = Employee::where('user_id', auth()->id())->first();
         $report->reject($adminEmployee?->employee_id, $request->reason);
 
-        // Notify teacher
         \Illuminate\Support\Facades\DB::table('user_notification')->insert([
             'employee_id'         => $report->teacher?->employee_id,
             'title'               => 'Report Rejected',

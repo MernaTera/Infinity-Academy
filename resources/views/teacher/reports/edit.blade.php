@@ -83,11 +83,10 @@
                     ['mcq',          'Final MCQ',          20],
                     ['writing_final','Final Writing Task', 10],
                 ];
-                $existingScores = $report->scores->pluck('student_score','component_name');
-                $fieldMap = [
+                $existingScores = $report->reportScores->pluck('student_score','component_name');                $fieldMap = [
                     'roleplay_1'=>'Roleplay 1','roleplay_2'=>'Roleplay 2',
                     'writing_1'=>'Writing Task 1','writing_2'=>'Writing Task 2',
-                    'presentation'=>'Presentation','mcq'=>'Final MCQ',
+                    'presentation'=>'Presentation / Debate','mcq'=>'Final MCQ',
                     'writing_final'=>'Final Writing Task',
                 ];
                 @endphp
@@ -97,7 +96,7 @@
                     <div class="score-row">
                         <div class="score-name">{{ $label }} <span style="font-size:10px;color:#AAB8C8">· out of {{ $max }}</span></div>
                         <div style="display:flex;align-items:center;gap:6px">
-                            <input type="number" name="{{ $field }}" id="{{ $field }}"
+                            <input type="number" name="scores[{{ $loop->index }}]" id="{{ $field }}"
                                    class="score-input" min="0" max="{{ $max }}"
                                    value="{{ old($field, $existing) }}"
                                    onchange="calcTotal()" oninput="calcTotal()" required>
@@ -121,6 +120,7 @@
                     placeholder="Update your comments...">{{ old('comments', $report->comments) }}</textarea>
 
             </div>
+            <input type="hidden" name="action" value="submit">
             <div class="form-footer">
                 <a href="{{ route('teacher.reports.index') }}" class="btn-cancel">Cancel</a>
                 <button type="submit" class="btn-submit">Resubmit Report</button>
