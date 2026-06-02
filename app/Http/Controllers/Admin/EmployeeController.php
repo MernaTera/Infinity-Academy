@@ -61,7 +61,7 @@ class EmployeeController extends Controller
     */
     public function create()
     {
-        $roles         = Role::all();
+        $roles         = Role::where('role_name', '!=', 'Student')->get();
         $branches      = Branch::all();
         $englishLevels = EnglishLevel::all();
         $patches       = Patch::whereIn('status', ['Active', 'Upcoming'])->get();
