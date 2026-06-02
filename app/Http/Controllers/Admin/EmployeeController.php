@@ -40,7 +40,6 @@ class EmployeeController extends Controller
 
         $roles = Role::where('role_name', '!=', 'Admin')->get();
 
-        // Stats
         $stats = [
             'total'    => Employee::count(),
             'active'   => Employee::where('status', 'Active')->count(),
@@ -84,7 +83,6 @@ class EmployeeController extends Controller
             'role_id'          => 'required|exists:role,role_id',
             'branch_id'        => 'required|exists:branch,branch_id',
             'salary'           => 'nullable|numeric|min:0',
-            // Teacher specific
             'english_level_id' => 'nullable|exists:english_level,english_level_id',
             'contract_type'    => 'nullable|in:PT,FT,OT',
             'max_sessions'     => 'nullable|integer|min:1',
@@ -93,7 +91,6 @@ class EmployeeController extends Controller
 
         DB::transaction(function () use ($request) {
 
-            // Create User
             $user = User::create([
                 'name'      => $request->name,
                 'email'     => $request->email,
@@ -102,7 +99,6 @@ class EmployeeController extends Controller
                 'is_active' => true,
             ]);
 
-            // Create Employee
             $employee = Employee::create([
                 'full_name' => $request->name,
                 'user_id'   => $user->id,
@@ -112,7 +108,6 @@ class EmployeeController extends Controller
                 'hired_at'  => now(),
             ]);
 
-            // If Teacher — create Teacher record + Contract
             $role = Role::find($request->role_id);
             if ($role?->role_name === 'Teacher' && $request->english_level_id) {
 
@@ -129,19 +124,19 @@ class EmployeeController extends Controller
                         'contract_type'        => $request->contract_type,
                         'max_sessions_allowed' => $request->max_sessions ?? 9,
                         'is_active'            => true,
-                        'created_by_admin_id'  => auth()->user()->employee->first()->employee_id,
+                        'created_by_admin_id' => Employee::where('user_id', auth()->id())->value('employee_id'),
+
                     ]);
                 }
             }
 
-            // If CS — create Target
             if ($role?->role_name === 'Customer Service' && $request->target_amount && $request->patch_id) {
                 CsTarget::create([
                     'employee_id'        => $employee->employee_id,
                     'patch_id'           => $request->patch_id,
                     'target_amount'      => $request->target_amount,
                     'is_locked'          => false,
-                    'created_by_admin_id'=> auth()->user()->employee->first()->employee_id,
+                    'created_by_admin_id'=> Employee::where('user_id', auth()->id())->value('employee_id'),
                 ]);
             }
         });
@@ -168,12 +163,10 @@ class EmployeeController extends Controller
         $currentPatch = Patch::active()->latest('start_date')->first();
         $roleName     = $employee->user?->role?->role_name;
 
-        // CS-specific data
         $csData = null;
         if ($roleName === 'Customer Service') {
             $currentMonth = now()->format('Y-m');
 
-            // ✅ target by month
             $target = CsTarget::where('employee_id', $employee->employee_id)
                 ->where('month', $currentMonth)
                 ->first();
@@ -196,7 +189,6 @@ class EmployeeController extends Controller
             ];
         }
 
-        // Teacher-specific data
         $teacherData = null;
         if ($roleName === 'Teacher' && $employee->teacher) {
             $teacherData = [
@@ -261,7 +253,6 @@ class EmployeeController extends Controller
             'status'    => $request->status,
         ]);
 
-        // Reset password if provided
         if ($request->filled('new_password')) {
             $request->validate(['new_password' => 'min:8']);
             $employee->user->update(['password' => Hash::make($request->new_password)]);

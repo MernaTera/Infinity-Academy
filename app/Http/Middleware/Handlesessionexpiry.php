@@ -15,13 +15,21 @@ class HandleSessionExpiry
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip auth/guest routes
         if (!$request->is('login', 'logout', 'forgot-password', 'reset-password*')) {
 
-            // If the route needs auth but user is not authenticated
             if (!Auth::check() && !$request->routeIs('login') && $request->session()->has('_previous')) {
                 return redirect()->route('login')
                     ->with('session_expired', true);
+            }
+
+            if (Auth::check()) {
+                $user = Auth::user();
+                if (!$user->is_active) {
+                    Auth::logout();
+                    $request->session()->invalidate();
+                    $request->session()->regenerateToken();
+                    return redirect()->to(route('login') . '?deactivated=1');
+                }
             }
         }
 
