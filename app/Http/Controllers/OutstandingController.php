@@ -45,12 +45,16 @@ class OutstandingController extends Controller
             'paymentPlan',
         ])->findOrFail($enrollmentId);
 
-        // حساب الـ remaining
-        $paid      = $enrollment->financialTransactions
-            ->whereIn('transaction_type', ['Payment','Installment'])->sum('amount')
-            - $enrollment->financialTransactions
-            ->where('transaction_type', 'Refund')->sum('amount');
-        $remaining = max(0, $enrollment->final_price - $paid);
+        $paid = $enrollment->financialTransactions
+            ->where('transaction_type', 'Payment')
+            ->where('transaction_category', 'Course')
+            ->sum('amount');
+
+        $instPaid = $enrollment->financialTransactions
+            ->where('transaction_type', 'Installment')
+            ->sum('amount');
+
+        $remaining = max(0, $enrollment->final_price - $paid - $instPaid);
 
         if ($request->amount > $remaining) {
             return back()->with('error', 'Amount exceeds remaining balance.');
@@ -85,7 +89,12 @@ class OutstandingController extends Controller
             foreach ($enrollment->installmentSchedules as $inst) {
                 if ($amountLeft <= 0) break;
                 if ($amountLeft >= $inst->amount) {
-                    $inst->update(['status' => 'Paid', 'paid_at' => now()]);
+                    $inst->update([
+                        'status'         => 'Paid',
+                        'paid_at'        => now(),
+                        'transaction_id' => $tx->transaction_id,
+                        'payment_method' => $request->payment_method,
+                    ]);
                     $amountLeft -= $inst->amount;
                 }
             }
@@ -95,10 +104,19 @@ class OutstandingController extends Controller
                 ->whereIn('transaction_type', ['Payment','Installment'])->sum('amount');
             $newRemaining = max(0, $enrollment->final_price - $newPaid);
 
-            if ($newRemaining <= 0) {
-                $enrollment->update(['restriction_flag' => false]);
+            $hasOverdue = $enrollment->installmentSchedules()
+                ->whereIn('status', ['Overdue', 'Pending'])
+                ->where('due_date', '<', now())
+                ->exists();
+
+            if (!$hasOverdue) {
+                $enrollment->update([
+                    'status'           => 'Active',
+                    'restriction_flag' => false,
+                ]);
                 RestrictionLog::where('enrollment_id', $enrollment->enrollment_id)
                     ->whereNull('released_at')
+                    ->where('reason', '!=', 'admin_manual')
                     ->update(['released_at' => now(), 'released_by' => $employee->employee_id]);
             }
         });

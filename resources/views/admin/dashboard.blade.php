@@ -339,7 +339,7 @@ canvas{max-width:100%;display:block;}
 
     {{-- ── PAYMENT METHODS ── --}}
     <span class="sec-label">Payment Method Breakdown</span>
-    @php $pmTotal = $cashRevenue + $instapayRevenue + $vodafoneRevenue + $cardRevenue + $transferRevenue; @endphp
+    @php $pmTotal = $cashRevenue + $transferRevenue + $onlineRevenue + $cardRevenue; @endphp
     <div class="pm-grid">
         <div class="pm-card" style="--pc:#059669;--pi:var(--green-l)">
             <div class="pm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M6 12h.01M18 12h.01"/></svg></div>
@@ -352,18 +352,18 @@ canvas{max-width:100%;display:block;}
         <div class="pm-card" style="--pc:#7F77DD;--pi:var(--purple-l)">
             <div class="pm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#7F77DD" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg></div>
             <div class="pm-name">Instapay</div>
-            <div class="pm-val">{{ number_format($instapayRevenue) }}</div>
-            <div class="pm-sub">{{ $instapayCount }} transactions</div>
-            <div class="pm-bar"><div class="pm-bar-fill" style="width:{{ $pmTotal > 0 ? round($instapayRevenue/$pmTotal*100) : 0 }}%;background:#7F77DD"></div></div>
-            <div style="font-size:9px;color:var(--faint);margin-top:4px;">{{ $pmTotal > 0 ? round($instapayRevenue/$pmTotal*100) : 0 }}% of total</div>
+            <div class="pm-val">{{ number_format($transferRevenue) }}</div>
+            <div class="pm-sub">{{ $transferCount }} transactions</div>
+            <div class="pm-bar"><div class="pm-bar-fill" style="width:{{ $pmTotal > 0 ? round($transferRevenue/$pmTotal*100) : 0 }}%;background:#7F77DD"></div></div>
+            <div style="font-size:9px;color:var(--faint);margin-top:4px;">{{ $pmTotal > 0 ? round($transferRevenue/$pmTotal*100) : 0 }}% of total</div>
         </div>
         <div class="pm-card" style="--pc:#E11D48;--pi:rgba(225,29,72,0.08)">
             <div class="pm-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E11D48" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72"/></svg></div>
             <div class="pm-name">Vodafone Cash</div>
-            <div class="pm-val">{{ number_format($vodafoneRevenue) }}</div>
-            <div class="pm-sub">{{ $vodafoneCount }} transactions</div>
-            <div class="pm-bar"><div class="pm-bar-fill" style="width:{{ $pmTotal > 0 ? round($vodafoneRevenue/$pmTotal*100) : 0 }}%;background:#E11D48"></div></div>
-            <div style="font-size:9px;color:var(--faint);margin-top:4px;">{{ $pmTotal > 0 ? round($vodafoneRevenue/$pmTotal*100) : 0 }}% of total</div>
+            <div class="pm-val">{{ number_format($onlineRevenue) }}</div>
+            <div class="pm-sub">{{ $onlineCount }} transactions</div>
+            <div class="pm-bar"><div class="pm-bar-fill" style="width:{{ $pmTotal > 0 ? round($onlineRevenue/$pmTotal*100) : 0 }}%;background:#E11D48"></div></div>
+            <div style="font-size:9px;color:var(--faint);margin-top:4px;">{{ $pmTotal > 0 ? round($onlineRevenue/$pmTotal*100) : 0 }}% of total</div>
         </div>
     </div>
     @if($cardRevenue > 0 || $transferRevenue > 0)

@@ -328,9 +328,8 @@
                 <label class="pay-form-label">Payment Method <span style="color:#F5911E">*</span></label>
                 <select name="payment_method" class="pay-form-control" required>
                     <option value="Cash">Cash</option>
-                    <option value="Card">Card</option>
                     <option value="Transfer">InstaPay</option>
-                    <option value="Online">Vodafove Cash</option>
+                    <option value="Online">Vodafone Cash</option>
                 </select>
 
                 <label class="pay-form-label">Notes (optional)</label>
