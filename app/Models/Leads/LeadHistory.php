@@ -107,6 +107,11 @@ class LeadHistory extends Model
         return $this->old_status !== $this->new_status;
     }
 
+    public function changedBy()
+    {
+        return $this->belongsTo(\App\Models\HR\Employee::class, 'changed_by');
+    }
+
     public function changeSummary()
     {
         return "{$this->old_status} → {$this->new_status}";

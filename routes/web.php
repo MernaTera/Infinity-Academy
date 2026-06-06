@@ -16,6 +16,7 @@ use App\Http\Controllers\RefundController;
 
 use App\Http\Controllers\Admin\AdminDashboardController;
 use App\Http\Controllers\Admin\EmployeeController;
+use App\Http\Controllers\Admin\AdminStudentController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\CourseAdminController;
 use App\Http\Controllers\Admin\EnglishLevelController;
@@ -223,6 +224,10 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::put('/employees/{id}',          [EmployeeController::class, 'update'])->name('employees.update');
         Route::patch('/employees/{id}/toggle', [EmployeeController::class, 'toggle'])->name('employees.toggle');
         Route::post('/employees/{id}/profile', [EmployeeController::class, 'updateProfile'])->name('employees.update-profile');        
+
+        //Students
+        Route::get('/students',      [AdminStudentController::class, 'index'])->name('students.index');
+        Route::get('/students/{id}', [AdminStudentController::class, 'show'])->name('students.show');
 
         //Teacher
         Route::get('/reports',                    [AdminReportController::class, 'index'])->name('reports.index');
