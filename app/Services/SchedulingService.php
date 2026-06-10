@@ -24,11 +24,7 @@ class SchedulingService
         'mon_thu' => 'Mon & Thu',
     ];
 
-    /*
-    |------------------------------------------------------------------
-    | Teacher Availability
-    |------------------------------------------------------------------
-    */
+
     public function getTeacherAvailablePairs($teacherId): array
     {
         $availability = TeacherAvailability::with('timeSlot')
@@ -55,11 +51,7 @@ class SchedulingService
         return self::PAIR_LABELS[$pair] ?? $pair;
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Validate Schedule
-    |------------------------------------------------------------------
-    */
+
     public function validateSchedule(array $data): void
     {
         $startTime  = Carbon::createFromTimeString($data['start_time']);
@@ -103,16 +95,20 @@ class SchedulingService
         ]);
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Store Multiple Schedules (multi-pair)
-    | الـ controller بيمسح القديم ويستدعي الـ method دي
-    |------------------------------------------------------------------
-    */
-    public function storeMultipleSchedules(int $instanceId, array $pairs, string $startTime, ?int $timeSlotId): array
-    {
+
+    public function storeMultipleSchedules(
+        int $instanceId, 
+        array $pairs, 
+        array|string $startTimes,  // ✅ array أو string
+        array|int|null $timeSlotIds = null
+    ): array {
         $schedules = [];
         foreach ($pairs as $pair) {
+            $startTime  = is_array($startTimes)  ? ($startTimes[$pair]  ?? null) : $startTimes;
+            $timeSlotId = is_array($timeSlotIds) ? ($timeSlotIds[$pair] ?? null) : $timeSlotIds;
+
+            if (!$startTime) continue; // ✅ skip لو مفيش وقت للـ pair دي
+
             $schedules[] = $this->storeSchedule($instanceId, [
                 'day_of_week'  => $pair,
                 'time_slot_id' => $timeSlotId,
@@ -122,12 +118,6 @@ class SchedulingService
         return $schedules;
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Generate Sessions — مع support للـ session_number counter
-    | مش بتمسح — المسح بيكون في الـ controller قبل الـ loop
-    |------------------------------------------------------------------
-    */
     public function generateSessions(
         CourseInstance $instance,
         InstanceSchedule $schedule,
@@ -175,22 +165,13 @@ class SchedulingService
         return $generated;
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Generate Sessions for Multiple Pairs
-    | الـ method الرئيسية لما في أكتر من pair
-    | بتوزع الـ sessions بالتساوي على الـ pairs
-    |------------------------------------------------------------------
-    */
+
     public function generateSessionsMultiPair(CourseInstance $instance, array $schedules): int
     {
-        // امسح القديم
-        CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();
 
         $totalSessions = (int) ceil($instance->total_hours / $instance->session_duration);
         $pairCount     = count($schedules);
 
-        // وزّع الـ sessions على الـ pairs بالتساوي
         $perPair   = (int) floor($totalSessions / $pairCount);
         $remainder = $totalSessions % $pairCount;
 
@@ -198,7 +179,6 @@ class SchedulingService
         $totalGenerated = 0;
 
         foreach ($schedules as $i => $schedule) {
-            // الـ pair الأول بياخد الـ remainder
             $sessionsForThisPair = $perPair + ($i === 0 ? $remainder : 0);
 
             $generated = $this->generateSessions(
@@ -211,17 +191,11 @@ class SchedulingService
             $totalGenerated += $generated;
         }
 
-        // Sort sessions by date and re-number
         $this->renumberSessions($instance->course_instance_id);
 
         return $totalGenerated;
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Re-number sessions by date after multi-pair generation
-    |------------------------------------------------------------------
-    */
     private function renumberSessions(int $instanceId): void
     {
         $sessions = CourseSession::where('course_instance_id', $instanceId)
@@ -242,11 +216,7 @@ class SchedulingService
         }
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Preview — يدعم multi-pair
-    |------------------------------------------------------------------
-    */
+
     public function previewSessions(CourseInstance $instance, string $dayOfWeek, string $startTime): array
     {
         $targetDays    = self::DAY_MAP[$dayOfWeek] ?? [];
@@ -279,11 +249,6 @@ class SchedulingService
         ];
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Preview Multi-Pair
-    |------------------------------------------------------------------
-    */
     public function previewMultiPair(
         string $startDate,
         string $endDate,

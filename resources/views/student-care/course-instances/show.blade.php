@@ -231,7 +231,7 @@
         <div class="overview-grid">
             <div>
                 <div class="ov-label">Teacher</div>
-                <div class="ov-value">{{ $instance->teacher->employee->full_name ?? $instance->teacher->name ?? '—' }}</div>
+                <div class="ov-value">{{ $instance->teacher->full_name ?? $instance->teacher->name ?? '—' }}</div>
             </div>
             <div>
                 <div class="ov-label">Branch</div>
@@ -496,7 +496,8 @@
 <div id="scheduleTab" style="display:none;">
 
     @php
-        $schedule = $instance->instanceSchedules->first();
+        $schedules = $instance->instanceSchedules;
+        $schedule  = $schedules->first();
         $sessions = $instance->sessions->sortBy('session_number');
 
         $pairLabels = [
@@ -544,7 +545,9 @@
                 <div>
                     <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Day Pair</div>
                     <div style="font-size:13px;color:#1A2A4A;font-weight:500">
-                        {{ $pairLabels[$schedule->day_of_week] ?? $schedule->day_of_week }}
+                        @foreach($schedules as $sch)
+                        <div>{{ $pairLabels[$sch->day_of_week] ?? $sch->day_of_week }}</div>
+                        @endforeach
                     </div>
                 </div>
                 <div>

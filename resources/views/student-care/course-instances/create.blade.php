@@ -30,12 +30,12 @@
 .field-input,.field-select{width:100%;padding:10px 12px;border:1.5px solid rgba(27,79,168,0.12);border-radius:5px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
 .field-input:focus,.field-select:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.07);}
 .field-input:disabled,.field-select:disabled{background:#F4F4F4;color:var(--faint);cursor:not-allowed;}
+.field-input[readonly]{background:#F4F4F4;color:var(--faint);}
 .field-input::placeholder{color:var(--faint);}
 .field-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%237A8A9A'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-color:#fff;padding-right:30px;}
 .field-select:disabled{background-image:none;}
 .field-hint{font-size:10px;color:var(--faint);margin-top:3px;}
 .capacity-badge{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;background:var(--blue-l);border:1px solid var(--border);border-radius:4px;font-size:12px;color:var(--blue);margin-top:4px;}
-/* Pair checkboxes - ALL checkboxes */
 .pair-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 .pair-option{position:relative;}
 .pair-option input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0;}
@@ -47,9 +47,9 @@
 .pair-option input:checked + label .pair-name{color:var(--blue);}
 .time-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px;}
 .time-slot-btn{padding:8px 6px;border:1.5px solid var(--border);border-radius:5px;text-align:center;cursor:pointer;transition:all 0.2s;background:var(--card);font-size:11px;font-family:'DM Sans',sans-serif;}
-.time-slot-btn:hover:not(.occupied):not(.break-time){border-color:var(--blue);background:var(--blue-l);}
+.time-slot-btn:hover:not(.occupied):not(.break-time):not(.too-late){border-color:var(--blue);background:var(--blue-l);}
 .time-slot-btn.selected{border-color:var(--blue);background:var(--blue);color:#fff;}
-.time-slot-btn.occupied{background:#FEF2F2;border-color:rgba(220,38,38,0.2);color:var(--red);cursor:not-allowed;opacity:0.7;}
+.time-slot-btn.occupied,.time-slot-btn.too-late{background:#FEF2F2;border-color:rgba(220,38,38,0.2);color:var(--red);cursor:not-allowed;opacity:0.7;}
 .time-slot-btn.break-time{background:#FFFBF0;border-color:rgba(245,145,30,0.2);color:#C47010;cursor:not-allowed;}
 .time-slot-time{font-weight:600;font-size:10px;}
 .time-slot-label{font-size:9px;color:var(--faint);margin-top:2px;}
@@ -134,7 +134,7 @@
                         </div>
                         <div class="field">
                             <label class="field-label">Sublevel</label>
-                            <select name="sublevel_id" id="ci_sublevel" class="field-select" disabled onchange="onSublevelChange()"> 
+                            <select name="sublevel_id" id="ci_sublevel" class="field-select" disabled onchange="onSublevelChange()">
                                 <option value="">— Select Level First —</option>
                             </select>
                         </div>
@@ -256,35 +256,23 @@
                         </div>
                     </div>
 
-                    <div id="timePickerSection" style="display:none;margin-top:20px;">
-                        <span class="sec-label">Session Time <span style="color:var(--orange);">*</span></span>
-                        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
-                            <div class="field" style="flex:1;min-width:160px;">
-                                <label class="field-label">Start Time <span class="req">*</span></label>
-                                <input type="time" name="start_time" id="ci_start_time" class="field-input" step="1800" onchange="onTimeChange()">
-                            </div>
-                            <div style="padding-top:20px;color:var(--faint);">→</div>
-                            <div class="field" style="flex:1;min-width:160px;">
-                                <label class="field-label">End Time</label>
-                                <input type="time" id="ci_end_time" class="field-input" readonly style="background:#F9F9F9;color:var(--faint);">
-                            </div>
-                        </div>
-                        <input type="hidden" name="time_slot_id" id="ci_time_slot_id">
-                        <div id="timeSlotsContainer">
-                            <div style="font-size:11px;color:var(--faint);text-align:center;padding:20px;">Select teacher and day pair to see available times</div>
-                        </div>
-                        <div style="display:flex;gap:14px;margin-top:12px;flex-wrap:wrap;">
-                            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--faint);"><div style="width:10px;height:10px;background:var(--blue);border-radius:2px;"></div> Available</div>
-                            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--faint);"><div style="width:10px;height:10px;background:#FEF2F2;border:1px solid rgba(220,38,38,0.3);border-radius:2px;"></div> Occupied</div>
-                            <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--faint);"><div style="width:10px;height:10px;background:#FFFBF0;border:1px solid rgba(245,145,30,0.3);border-radius:2px;"></div> Break</div>
-                        </div>
+                    {{-- ✅ Empty — JS fills this dynamically per pair --}}
+                    <div id="timePickerSection" style="display:none;margin-top:20px;"></div>
+
+                    {{-- Legend --}}
+                    <div id="slotLegend" style="display:none;display:flex;gap:14px;margin-top:12px;flex-wrap:wrap;">
+                        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--faint);"><div style="width:10px;height:10px;background:var(--blue);border-radius:2px;"></div> Available</div>
+                        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--faint);"><div style="width:10px;height:10px;background:#FEF2F2;border:1px solid rgba(220,38,38,0.3);border-radius:2px;"></div> Occupied / Too Late</div>
+                        <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--faint);"><div style="width:10px;height:10px;background:#FFFBF0;border:1px solid rgba(245,145,30,0.3);border-radius:2px;"></div> Break</div>
                     </div>
 
+                    {{-- Global conflict alert --}}
                     <div class="conflict-alert" id="conflictAlert">
                         <strong>⚠ Schedule Conflict Detected:</strong>
                         <div id="conflictDetails" style="margin-top:6px;"></div>
                     </div>
 
+                    {{-- Preview --}}
                     <div id="previewSection" style="display:none;margin-top:16px;">
                         <div class="preview-card">
                             <div class="prev-title">Session Preview</div>
@@ -330,7 +318,7 @@
 let _breakSlots   = @json($breakSlots ?? []);
 let _previewTimer = null;
 
-const dayMap = { sun_wed:[0,3], sat_tue:[6,2], mon_thu:[1,4] };
+const dayMap     = { sun_wed:[0,3], sat_tue:[6,2], mon_thu:[1,4] };
 const pairLabels = { sun_wed:'Sun & Wed', sat_tue:'Sat & Tue', mon_thu:'Mon & Thu' };
 
 // ── Helpers ──
@@ -351,6 +339,25 @@ function formatDate(dateStr) {
     if (!dateStr) return '—';
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// ── Readonly helper ──
+function setInstanceDefaults(hours, session, capacity) {
+    const fh = document.getElementById('ci_total_hours');
+    const fs = document.getElementById('ci_session_duration');
+    const fc = document.getElementById('ci_capacity');
+    if (hours)    { fh.value = hours;    fh.readOnly = true; }
+    if (session)  { fs.value = session;  fs.readOnly = true; }
+    if (capacity) { fc.value = capacity; fc.readOnly = true; }
+    recalculate();
+    updateSummary();
+}
+function clearInstanceDefaults() {
+    ['ci_total_hours','ci_session_duration','ci_capacity'].forEach(id => {
+        const el = document.getElementById(id);
+        el.readOnly = false;
+        el.value = '';
+    });
 }
 
 // ── Course change ──
@@ -382,9 +389,9 @@ async function onCourseChange() {
         } else {
             lvl.innerHTML = '<option value="">— No Level (optional) —</option>';
             data.forEach(l => {
-                lvl.innerHTML += `<option value="${l.level_id}" 
-                    data-hours="${l.total_hours??''}" 
-                    data-session="${l.default_session_duration??''}" 
+                lvl.innerHTML += `<option value="${l.level_id}"
+                    data-hours="${l.total_hours??''}"
+                    data-session="${l.default_session_duration??''}"
                     data-capacity="${l.max_capacity??''}">${l.name}</option>`;
             });
             lvl.disabled = false;
@@ -421,8 +428,8 @@ async function onLevelChange() {
         } else {
             sub.innerHTML = '<option value="">— No Sublevel (optional) —</option>';
             data.forEach(s => {
-                sub.innerHTML += `<option value="${s.sublevel_id}" 
-                    data-hours="${s.total_hours??''}" 
+                sub.innerHTML += `<option value="${s.sublevel_id}"
+                    data-hours="${s.total_hours??''}"
                     data-session="${s.default_session_duration??''}"
                     data-capacity="${s.max_capacity??''}">${s.name}</option>`;
             });
@@ -430,11 +437,11 @@ async function onLevelChange() {
         }
     } catch { resetSelect('ci_sublevel', '— Error —', true); }
 }
-// ── Sublevel change ── 
+
+// ── Sublevel change ──
 function onSublevelChange() {
     const sub = document.getElementById('ci_sublevel');
     const opt = sub.options[sub.selectedIndex];
-
     if (sub.value && opt) {
         setInstanceDefaults(opt.dataset.hours, opt.dataset.session, opt.dataset.capacity);
     } else {
@@ -442,6 +449,7 @@ function onSublevelChange() {
         setInstanceDefaults(lvlOpt?.dataset.hours, lvlOpt?.dataset.session, lvlOpt?.dataset.capacity);
     }
 }
+
 // ── Load teachers ──
 async function loadTeachers(englishLevelId) {
     setLoading('ci_teacher');
@@ -467,8 +475,8 @@ function onTeacherChange() {
     const name = sel.options[sel.selectedIndex]?.text || '—';
     document.getElementById('sum-teacher').textContent = name;
     updateSummary();
-    const pairs = getCheckedPairs();
-    if (pairs.length) renderTimeSlots(pairs[0]);
+    // ✅ Reload ALL checked pairs
+    getCheckedPairs().forEach(pair => renderTimeSlots(pair));
 }
 
 // ── Room change ──
@@ -480,14 +488,10 @@ function onRoomChange() {
     if (cap && sel.value) {
         capInput.value    = cap;
         capInput.readOnly = true;
-        capInput.style.background = '#F4F4F4';
-        capInput.style.color = 'var(--faint)';
         document.getElementById('capacityHint').style.display = 'flex';
         document.getElementById('capacityText').textContent   = `Room capacity: ${cap} students`;
     } else {
         capInput.readOnly = false;
-        capInput.style.background = '';
-        capInput.style.color = '';
         capInput.value    = '';
         document.getElementById('capacityHint').style.display = 'none';
     }
@@ -498,26 +502,79 @@ function onRoomChange() {
 function onStartDateChange() {
     updateSummary();
     recalculate();
-    const pairs = getCheckedPairs();
-    if (pairs.length) renderTimeSlots(pairs[0]);
+    // ✅ Reload ALL checked pairs
+    getCheckedPairs().forEach(pair => renderTimeSlots(pair));
 }
 
 // ── Pair change ──
 function onPairChange() {
-    const pairs = getCheckedPairs();
+    const pairs   = getCheckedPairs();
+    const section = document.getElementById('timePickerSection');
+
     document.getElementById('sum-days').textContent = pairs.map(p => pairLabels[p]).join(' + ') || '—';
-    document.getElementById('timePickerSection').style.display = pairs.length ? 'block' : 'none';
-    if (pairs.length) renderTimeSlots(pairs[0]);
+
+    // ✅ Rebuild time pickers for each checked pair
+    section.innerHTML = '';
+    if (!pairs.length) {
+        section.style.display = 'none';
+        document.getElementById('slotLegend').style.display = 'none';
+        return;
+    }
+    section.style.display = 'block';
+    document.getElementById('slotLegend').style.display = 'flex';
+
+    pairs.forEach(pair => {
+        const div = document.createElement('div');
+        div.id    = `timepicker_${pair}`;
+        div.style.cssText = 'margin-bottom:20px;padding:16px;background:rgba(27,79,168,0.02);border:1px solid var(--border);border-radius:8px;';
+        div.innerHTML = `
+            <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(245,145,30,0.15);">
+                ${pairLabels[pair]}
+            </div>
+            <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+                <div class="field" style="flex:1;min-width:160px;">
+                    <label class="field-label">Start Time <span class="req">*</span></label>
+                    <input type="time"
+                           name="start_times[${pair}]"
+                           id="ci_start_time_${pair}"
+                           class="field-input"
+                           step="1800"
+                           onchange="onTimeChange('${pair}')">
+                </div>
+                <div style="padding-top:20px;color:var(--faint);">→</div>
+                <div class="field" style="flex:1;min-width:160px;">
+                    <label class="field-label">End Time</label>
+                    <input type="time" id="ci_end_time_${pair}" class="field-input" readonly
+                           style="background:#F9F9F9;color:var(--faint);">
+                </div>
+            </div>
+            <input type="hidden" name="time_slot_ids[${pair}]" id="ci_time_slot_id_${pair}">
+            <div id="timeSlotsContainer_${pair}">
+                <div style="font-size:11px;color:var(--faint);text-align:center;padding:20px;">
+                    Select teacher to see available times
+                </div>
+            </div>
+            <div class="conflict-alert" id="conflictAlert_${pair}">
+                <strong>⚠ Conflict (${pairLabels[pair]}):</strong>
+                <div id="conflictDetails_${pair}" style="margin-top:6px;"></div>
+            </div>`;
+        section.appendChild(div);
+        renderTimeSlots(pair);
+    });
+
     recalculate();
     updateSummary();
 }
 
-// ── Render time slots ──
+// ── Render time slots — ✅ single innerHTML, with out-of-range check ──
 async function renderTimeSlots(pair) {
-    const container = document.getElementById('timeSlotsContainer');
-    const teacherId = document.getElementById('ci_teacher').value;
-    const startDate = document.getElementById('ci_start_date').value;
-    const endDate   = document.getElementById('ci_end_date').value;
+    const container = document.getElementById(`timeSlotsContainer_${pair}`);
+    if (!container) return;
+
+    const teacherId  = document.getElementById('ci_teacher').value;
+    const startDate  = document.getElementById('ci_start_date').value;
+    const endDate    = document.getElementById('ci_end_date').value;
+    const sessionDur = parseFloat(document.getElementById('ci_session_duration').value) || 0;
 
     container.innerHTML = '<div style="font-size:11px;color:var(--faint);padding:12px;">Loading slots...</div>';
 
@@ -534,12 +591,30 @@ async function renderTimeSlots(pair) {
         if (res.ok) occupied = await res.json();
     } catch {}
 
+    // ✅ Single innerHTML with out-of-range check
     container.innerHTML = '<div class="time-grid">' + slots.map(slot => {
         const isBreak    = isBreakTime(slot.start);
         const isOccupied = occupied.includes(slot.start);
-        const cls        = 'time-slot-btn' + (isBreak ? ' break-time' : '') + (isOccupied ? ' occupied' : '');
-        const label      = isBreak ? 'Break' : (isOccupied ? 'Occupied' : 'Available');
-        const click      = (!isBreak && !isOccupied) ? `onclick="selectTimeSlot(this,'${slot.start}','${slot.slot_id||''}')"` : '';
+
+        let isOutOfRange = false;
+        if (sessionDur && slot.end) {
+            const [sh, sm] = slot.start.split(':').map(Number);
+            const sessionEndMins = sh * 60 + sm + sessionDur * 60;
+            const [eh, em] = slot.end.split(':').map(Number);
+            isOutOfRange = sessionEndMins > (eh * 60 + em);
+        }
+
+        const cls   = 'time-slot-btn'
+            + (isBreak      ? ' break-time' : '')
+            + (isOccupied   ? ' occupied'   : '')
+            + (isOutOfRange ? ' too-late'   : '');
+
+        const label = isBreak ? 'Break' : isOccupied ? 'Occupied' : isOutOfRange ? 'Too Late' : 'Available';
+
+        const click = (!isBreak && !isOccupied && !isOutOfRange)
+            ? `onclick="selectTimeSlot(this,'${slot.start}','${slot.slot_id||''}','${pair}')"`
+            : '';
+
         return `<div class="${cls}" ${click} data-start="${slot.start}">
             <div class="time-slot-time">${slot.start}</div>
             <div class="time-slot-label">${label}</div>
@@ -549,9 +624,9 @@ async function renderTimeSlots(pair) {
 
 function generateGenericSlots() {
     const slots = [];
-    for (let h = 10; h < 21; h++) {
-        slots.push({ start:`${String(h).padStart(2,'0')}:00`, slot_id:null });
-        slots.push({ start:`${String(h).padStart(2,'0')}:30`, slot_id:null });
+    for (let h = 9; h < 21; h++) {
+        slots.push({ start:`${String(h).padStart(2,'0')}:00`, end:'21:00', slot_id:null });
+        slots.push({ start:`${String(h).padStart(2,'0')}:30`, end:'21:00', slot_id:null });
     }
     return slots;
 }
@@ -560,24 +635,33 @@ function isBreakTime(t) {
     return (_breakSlots||[]).some(b => t >= b.start_time.slice(0,5) && t < b.end_time.slice(0,5));
 }
 
-function selectTimeSlot(el, startTime, slotId) {
-    document.querySelectorAll('.time-slot-btn').forEach(b => b.classList.remove('selected'));
+function selectTimeSlot(el, startTime, slotId, pair) {
+    // ✅ Clear selection only within this pair's container
+    document.querySelectorAll(`#timeSlotsContainer_${pair} .time-slot-btn`)
+        .forEach(b => b.classList.remove('selected'));
     el.classList.add('selected');
-    document.getElementById('ci_start_time').value   = startTime;
-    document.getElementById('ci_time_slot_id').value = slotId;
-    onTimeChange();
+    document.getElementById(`ci_start_time_${pair}`).value   = startTime;
+    document.getElementById(`ci_time_slot_id_${pair}`).value = slotId;
+    onTimeChange(pair);
 }
 
-// ── Time change ──
-function onTimeChange() {
-    const startTime = document.getElementById('ci_start_time').value;
+// ── ✅ onTimeChange — only one version, takes pair parameter ──
+function onTimeChange(pair) {
+    const startTime = document.getElementById(`ci_start_time_${pair}`)?.value;
     const dur       = parseFloat(document.getElementById('ci_session_duration').value) || 0;
     if (startTime && dur) {
         const [h,m] = startTime.split(':').map(Number);
         const total = h*60 + m + dur*60;
         const et    = `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
-        document.getElementById('ci_end_time').value    = et;
-        document.getElementById('sum-time').textContent = `${startTime} → ${et}`;
+        document.getElementById(`ci_end_time_${pair}`).value = et;
+
+        // Update summary time — show all pairs that have a time selected
+        const pairs = getCheckedPairs();
+        const times = pairs.map(p => {
+            const st = document.getElementById(`ci_start_time_${p}`)?.value;
+            return st ? `${pairLabels[p]}: ${st}` : null;
+        }).filter(Boolean);
+        document.getElementById('sum-time').textContent = times.join(' | ') || '—';
     }
     triggerPreview();
     updateSummary();
@@ -590,10 +674,10 @@ function recalculate() {
 
     if (totalHours && sessionDur) {
         const sessions = Math.ceil(totalHours / sessionDur);
-        document.getElementById('sessionsCount').textContent = sessions;
+        document.getElementById('sessionsCount').textContent  = sessions;
         document.getElementById('sessionsInfo').style.display = 'block';
-        document.getElementById('sum-sessions').textContent  = sessions + ' sessions';
-        document.getElementById('sum-hours').textContent     = totalHours + ' hrs';
+        document.getElementById('sum-sessions').textContent   = sessions + ' sessions';
+        document.getElementById('sum-hours').textContent      = totalHours + ' hrs';
 
         const pairs     = getCheckedPairs();
         const startDate = document.getElementById('ci_start_date').value;
@@ -603,11 +687,13 @@ function recalculate() {
             document.getElementById('sum-end').textContent  = formatDate(endDate);
             document.getElementById('prev-end').textContent = formatDate(endDate);
         }
+
+        // ✅ Re-render slots to update Too Late status with new session duration
+        pairs.forEach(pair => renderTimeSlots(pair));
     } else {
         document.getElementById('sessionsInfo').style.display = 'none';
     }
 
-    onTimeChange();
     triggerPreview();
     updateSummary();
 }
@@ -631,12 +717,18 @@ function triggerPreview() {
     clearTimeout(_previewTimer);
     _previewTimer = setTimeout(fetchPreview, 500);
 }
+
 async function fetchPreview() {
     const pairs      = getCheckedPairs();
     const startDate  = document.getElementById('ci_start_date').value;
-    const startTime  = document.getElementById('ci_start_time').value;
     const totalHours = parseFloat(document.getElementById('ci_total_hours').value) || 0;
     const sessionDur = parseFloat(document.getElementById('ci_session_duration').value) || 0;
+
+    // ✅ Get first pair that has a time selected
+    const firstPairWithTime = pairs.find(p => document.getElementById(`ci_start_time_${p}`)?.value);
+    const startTime = firstPairWithTime
+        ? document.getElementById(`ci_start_time_${firstPairWithTime}`).value
+        : null;
 
     if (!startDate || !pairs.length || !startTime || !totalHours || !sessionDur) {
         document.getElementById('previewSection').style.display = 'none';
@@ -656,21 +748,31 @@ async function fetchPreview() {
     document.getElementById('prev-end').textContent      = formatDate(endDate);
     document.getElementById('previewSection').style.display = 'block';
 
+    // Check conflicts
     const teacherId = document.getElementById('ci_teacher').value;
-    if (teacherId && startDate && pairs.length) {
+    if (teacherId && startDate && pairs.length && startTime) {
         try {
             const res = await fetch('/student-care/check-conflicts', {
                 method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                body: JSON.stringify({ teacher_id:teacherId, start_date:startDate, end_date:endDate, day_of_week:pairs, start_time:startTime, session_duration:sessionDur }),
+                body: JSON.stringify({
+                    teacher_id:      teacherId,
+                    start_date:      startDate,
+                    end_date:        endDate,
+                    day_of_week:     pairs,
+                    start_time:      startTime,
+                    session_duration:sessionDur,
+                }),
             });
             if (res.ok) {
-                const data = await res.json();
+                const data  = await res.json();
                 const alert = document.getElementById('conflictAlert');
                 if (data.conflicts?.length) {
                     document.getElementById('conflictDetails').innerHTML = data.conflicts.map(c => `<div>• ${c}</div>`).join('');
                     alert.classList.add('show');
-                } else { alert.classList.remove('show'); }
+                } else {
+                    alert.classList.remove('show');
+                }
             }
         } catch {}
     }
@@ -682,58 +784,31 @@ function updateSummary() {
     const type     = document.querySelector('[name="type"]');
     const mode     = document.querySelector('[name="delivery_mood"]');
     const capacity = document.getElementById('ci_capacity').value;
-    document.getElementById('sum-course').textContent   = course.options[course.selectedIndex]?.text?.split('(')[0].trim() || '—';
+    document.getElementById('sum-course').textContent   = course.options[course.selectedIndex]?.text?.trim() || '—';
     document.getElementById('sum-type').textContent     = type?.value || '—';
     document.getElementById('sum-mode').textContent     = mode?.value || '—';
     document.getElementById('sum-capacity').textContent = capacity ? `${capacity} students` : '—';
     document.getElementById('sum-start').textContent    = formatDate(document.getElementById('ci_start_date').value);
     document.getElementById('sum-end').textContent      = formatDate(document.getElementById('ci_end_date').value);
+    const hours = document.getElementById('ci_total_hours').value;
+    if (hours) document.getElementById('sum-hours').textContent = hours + ' hrs';
 }
 
 function onModeChange() {
-    const mode = document.querySelector('[name="delivery_mood"]').value;
+    const mode    = document.querySelector('[name="delivery_mood"]').value;
     const roomSel = document.getElementById('ci_room');
-
     [...roomSel.options].forEach(opt => {
         if (!opt.value) return;
         const roomType = opt.dataset.type?.toLowerCase() || '';
-        const match = mode === 'Online'
-            ? roomType === 'online'
-            : roomType !== 'online';
-
+        const match    = mode === 'Online' ? roomType === 'online' : roomType !== 'online';
         opt.hidden   = !match;
         opt.disabled = !match;
     });
-
     const selected = roomSel.options[roomSel.selectedIndex];
-    if (selected?.value && selected?.disabled) {
-        roomSel.value = '';
-        onRoomChange();
-    }
-
-    updateSummary();
-}
-// ── Readonly helper ──
-function setInstanceDefaults(hours, session, capacity) {
-    const fh = document.getElementById('ci_total_hours');
-    const fs = document.getElementById('ci_session_duration');
-    const fc = document.getElementById('ci_capacity');
-
-    if (hours)    { fh.value = hours;    fh.readOnly = true; fh.style.background='#F4F4F4'; fh.style.color='var(--faint)'; }
-    if (session)  { fs.value = session;  fs.readOnly = true; fs.style.background='#F4F4F4'; fs.style.color='var(--faint)'; }
-    if (capacity) { fc.value = capacity; fc.readOnly = true; fc.style.background='#F4F4F4'; fc.style.color='var(--faint)'; }
-    recalculate();
+    if (selected?.value && selected?.disabled) { roomSel.value = ''; onRoomChange(); }
     updateSummary();
 }
 
-function clearInstanceDefaults() {
-    ['ci_total_hours','ci_session_duration','ci_capacity'].forEach(id => {
-        const el = document.getElementById(id);
-        el.readOnly = false;
-        el.style.background = '';
-        el.style.color = '';
-    });
-}
 document.addEventListener('DOMContentLoaded', onModeChange);
 </script>
 @endsection

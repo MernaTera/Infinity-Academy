@@ -25,9 +25,6 @@ class CourseInstanceController extends Controller
         $this->schedulingService = $schedulingService;
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Index
-    // ────────────────────────────────────────────────────────────
     public function index()
     {
         $instances = CourseInstance::with([
@@ -45,26 +42,21 @@ class CourseInstanceController extends Controller
         ));
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Create page
-    // ────────────────────────────────────────────────────────────
     public function create()
     {
         $templates  = CourseTemplate::orderBy('name')->get();
-        $patches    = Patch::whereIn('status', ['Active', 'Upcoming'])->get();
+        $patches    = Patch::whereIn('status', ['Active', 'Upcoming'])->orderBy('start_date')->get();
         $branches   = Branch::orderBy('name')->get();
         $rooms      = Room::where('is_active', true)->orderBy('name')->get();
         $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
         $employee   = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
         $userBranch = Branch::find($employee->branch_id);
+
         return view('student-care.course-instances.create', compact(
-            'templates', 'patches', 'branches', 'rooms', 'breakSlots','userBranch',
+            'templates', 'patches', 'branches', 'rooms', 'breakSlots', 'userBranch',
         ));
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Store Instance + Schedule + Sessions (ONE form)
-    // ────────────────────────────────────────────────────────────
     public function storeInstance(Request $request)
     {
         $data = $request->validate([
@@ -84,8 +76,10 @@ class CourseInstanceController extends Controller
             'end_date'           => 'required|date|after:start_date',
             'day_of_week'        => 'required|array|min:1',
             'day_of_week.*'      => 'in:sun_wed,sat_tue,mon_thu',
-            'start_time'         => 'required|date_format:H:i',
-            'time_slot_id'       => 'nullable|exists:time_slot,time_slot_id',
+            'start_times'        => 'required|array',
+            'start_times.*'      => 'required|date_format:H:i',
+            'time_slot_ids'      => 'nullable|array',
+            'time_slot_ids.*'    => 'nullable|exists:time_slot,time_slot_id',
         ]);
 
         $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id');
@@ -93,7 +87,6 @@ class CourseInstanceController extends Controller
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use ($data, $employeeId) {
 
-                // 1) Create instance
                 $instance = CourseInstance::create([
                     'course_template_id'     => $data['course_template_id'],
                     'level_id'               => $data['level_id'] ?? null,
@@ -113,31 +106,33 @@ class CourseInstanceController extends Controller
                     'created_by_employee_id' => $employeeId,
                 ]);
 
-                // 2) Validate time vs slot
-                if (!empty($data['time_slot_id'])) {
-                    $slot = TimeSlot::find($data['time_slot_id']);
+                // Validate each pair's time against its time slot
+                foreach ($data['day_of_week'] as $pair) {
+                    $startTime  = $data['start_times'][$pair] ?? null;
+                    $timeSlotId = $data['time_slot_ids'][$pair] ?? null;
+                    if (!$startTime || !$timeSlotId) continue;
+
+                    $slot = TimeSlot::find($timeSlotId);
                     if ($slot) {
                         $this->schedulingService->validateSchedule([
-                            'start_time'       => $data['start_time'],
+                            'start_time'       => $startTime,
                             'session_duration' => $data['session_duration'],
                             'time_slot'        => $slot,
                         ]);
                     }
                 }
 
-                // 3) Clear old (safety for re-runs)
+                // Clear old (safety)
                 \App\Models\Academic\InstanceSchedule::where('course_instance_id', $instance->course_instance_id)->delete();
                 \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();
 
-                // 4) Store schedule per pair
                 $schedules = $this->schedulingService->storeMultipleSchedules(
                     $instance->course_instance_id,
                     $data['day_of_week'],
-                    $data['start_time'],
-                    $data['time_slot_id'] ?? null
+                    $data['start_times'],
+                    $data['time_slot_ids'] ?? null
                 );
 
-                // 5) Generate sessions distributed across all pairs
                 $this->schedulingService->generateSessionsMultiPair($instance, $schedules);
             });
 
@@ -149,9 +144,6 @@ class CourseInstanceController extends Controller
             ->with('success', 'Course instance created successfully with schedule and sessions.');
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Show
-    // ────────────────────────────────────────────────────────────
     public function show($id)
     {
         $instance = CourseInstance::with([
@@ -166,9 +158,6 @@ class CourseInstanceController extends Controller
         return view('student-care.course-instances.show', compact('instance'));
     }
 
-    // ────────────────────────────────────────────────────────────
-    // AJAX: Teachers
-    // ────────────────────────────────────────────────────────────
     public function getTeachersByCourse($courseId)
     {
         $course = CourseTemplate::find($courseId);
@@ -189,9 +178,6 @@ class CourseInstanceController extends Controller
         );
     }
 
-    // ────────────────────────────────────────────────────────────
-    // AJAX: Schedule data (for old schedule modal)
-    // ────────────────────────────────────────────────────────────
     public function getScheduleData($id)
     {
         $instance = CourseInstance::with('teacher')->findOrFail($id);
@@ -208,9 +194,7 @@ class CourseInstanceController extends Controller
         ]);
     }
 
-    // ────────────────────────────────────────────────────────────
-    // AJAX: Time slots for pair
-    // ────────────────────────────────────────────────────────────
+    // ✅ FIXED: removed premature $slots[] before loop, added 'end' to each slot
     public function getTimeSlotsForPair(Request $request)
     {
         $teacherId = $request->query('teacher_id');
@@ -229,9 +213,8 @@ class CourseInstanceController extends Controller
         $slotStart  = \Carbon\Carbon::createFromTimeString($slot->start_time);
         $slotEnd    = \Carbon\Carbon::createFromTimeString($slot->end_time);
         $breakSlots = BreakSlot::where('is_active', true)->get();
-
-        $slots   = [];
-        $current = $slotStart->copy();
+        $slots      = [];
+        $current    = $slotStart->copy();
 
         while ($current->lt($slotEnd)) {
             $timeStr = $current->format('H:i');
@@ -241,16 +224,18 @@ class CourseInstanceController extends Controller
                 $bEnd   = \Carbon\Carbon::createFromTimeString($b->end_time);
                 if ($current->gte($bStart) && $current->lt($bEnd)) { $isBreak = true; break; }
             }
-            $slots[] = ['start' => $timeStr, 'slot_id' => $slot->time_slot_id, 'is_break' => $isBreak];
+            $slots[] = [
+                'start'    => $timeStr,
+                'end'      => $slotEnd->format('H:i'), // ✅ slot end for out-of-range check
+                'slot_id'  => $slot->time_slot_id,
+                'is_break' => $isBreak,
+            ];
             $current->addMinutes(30);
         }
 
         return response()->json($slots);
     }
 
-    // ────────────────────────────────────────────────────────────
-    // AJAX: Occupied slots
-    // ────────────────────────────────────────────────────────────
     public function getOccupiedSlots(Request $request)
     {
         $teacherId = $request->query('teacher_id');
@@ -271,9 +256,6 @@ class CourseInstanceController extends Controller
         return response()->json($occupied);
     }
 
-    // ────────────────────────────────────────────────────────────
-    // AJAX: Check conflicts
-    // ────────────────────────────────────────────────────────────
     public function checkConflicts(Request $request)
     {
         $teacherId  = $request->teacher_id;
@@ -287,7 +269,7 @@ class CourseInstanceController extends Controller
             return response()->json(['conflicts' => []]);
         }
 
-        $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+        $dayMap        = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
         $allTargetDays = array_merge(...array_map(fn($p) => $dayMap[$p] ?? [], $pairs));
         $newStart      = \Carbon\Carbon::createFromTimeString($startTime);
         $newEnd        = $newStart->copy()->addHours($sessionDur);
@@ -315,9 +297,6 @@ class CourseInstanceController extends Controller
         return response()->json(['conflicts' => array_values(array_unique($conflicts))]);
     }
 
-    // ────────────────────────────────────────────────────────────
-    // AJAX: Preview (old modal)
-    // ────────────────────────────────────────────────────────────
     public function previewSchedule(Request $request, $id)
     {
         $instance = CourseInstance::findOrFail($id);
@@ -331,9 +310,6 @@ class CourseInstanceController extends Controller
         ));
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Store Schedule (old modal — kept for backward compat)
-    // ────────────────────────────────────────────────────────────
     public function storeSchedule(Request $request, $id)
     {
         $instance = CourseInstance::findOrFail($id);
@@ -352,7 +328,6 @@ class CourseInstanceController extends Controller
             'time_slot'        => $slot,
         ]);
 
-        // Clear old
         \App\Models\Academic\InstanceSchedule::where('course_instance_id', $instance->course_instance_id)->delete();
         \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();
 
@@ -370,9 +345,6 @@ class CourseInstanceController extends Controller
         return back()->with('success', "Schedule saved — {$count} sessions generated.");
     }
 
-    // ────────────────────────────────────────────────────────────
-    // Postpone enrollment
-    // ────────────────────────────────────────────────────────────
     public function postponeEnrollment(Request $request, $enrollmentId)
     {
         $enrollment = \App\Models\Enrollment\Enrollment::findOrFail($enrollmentId);
