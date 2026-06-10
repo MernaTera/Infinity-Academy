@@ -58,7 +58,7 @@ class RefundController extends Controller
             'processed'=> $myRequests->where('status', 'Processed')->count(),
         ];
 
-        return view('student-care.refunds.index', compact(
+        return view('leads.partials.refunds.index', compact(
             'eligibleEnrollments', 'myRequests', 'stats'
         ));
     }

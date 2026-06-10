@@ -1,4 +1,4 @@
-@extends('student-care.layouts.app')
+@extends('layouts.leads')
 @section('title', 'Refund Requests')
 
 @section('content')
@@ -224,7 +224,7 @@
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
         </div>
-        <form method="POST" action="{{ route('student-care.refunds.store') }}">
+        <form method="POST" action="{{ route('refunds.store') }}">
             @csrf
             <input type="hidden" name="enrollment_id" id="modal_enrollment_id">
             <div class="modal-body">

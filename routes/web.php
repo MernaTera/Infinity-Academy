@@ -110,6 +110,9 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::get('/registration/check-status/{enrollmentId}', [RegistrationController::class, 'checkApprovalStatus'])->name('registration.check-status');
         Route::get('/registration/pending/{enrollmentId}', [RegistrationController::class, 'pending'])->name('registration.pending');
         Route::get('/near-completion', [StudentCareController::class, 'nearCompletion'])->name('near-completion');
+        
+        Route::get('/refunds',  [RefundController::class, 'index'])->name('refunds.index');
+        Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
 
         // AJAX helpers used inside the registration form
         Route::get('/patch-options/{courseId}',         [RegistrationController::class, 'getPatchOptions']);
@@ -179,8 +182,6 @@ Route::middleware(['auth', 'permission:enrollment.view'])
         Route::get('/levels/{courseId}',   fn($id) => \App\Models\Academic\Level::where('course_template_id', $id)->get());
         Route::get('/sublevels/{levelId}', fn($id) => \App\Models\Academic\Sublevel::where('level_id', $id)->get());
 
-        Route::get('/refunds',  [RefundController::class, 'index'])->name('refunds.index');
-        Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
     });
 
 Route::middleware(['auth', 'permission:enrollment.create'])
