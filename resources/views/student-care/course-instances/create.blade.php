@@ -114,7 +114,13 @@
                             <select name="course_template_id" id="ci_course" class="field-select" required onchange="onCourseChange()">
                                 <option value="">— Select Course —</option>
                                 @foreach($templates as $t)
-                                <option value="{{ $t->course_template_id }}" data-english-level="{{ $t->english_level_id ?? '' }}">{{ $t->name }}</option>
+                                <option value="{{ $t->course_template_id }}"
+                                    data-english-level="{{ $t->english_level_id ?? '' }}"
+                                    data-hours="{{ $t->total_hours ?? '' }}"
+                                    data-session="{{ $t->default_session_duration ?? '' }}"
+                                    data-capacity="{{ $t->max_capacity ?? '' }}">
+                                    {{ $t->name }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -128,7 +134,7 @@
                         </div>
                         <div class="field">
                             <label class="field-label">Sublevel</label>
-                            <select name="sublevel_id" id="ci_sublevel" class="field-select" disabled>
+                            <select name="sublevel_id" id="ci_sublevel" class="field-select" disabled onchange="onSublevelChange()"> 
                                 <option value="">— Select Level First —</option>
                             </select>
                         </div>
@@ -351,13 +357,20 @@ function formatDate(dateStr) {
 async function onCourseChange() {
     const sel      = document.getElementById('ci_course');
     const courseId = sel.value;
-    const engLevel = sel.options[sel.selectedIndex]?.dataset.englishLevel || '';
+    const opt      = sel.options[sel.selectedIndex];
+    const engLevel = opt?.dataset.englishLevel || '';
 
     resetSelect('ci_level',   '— Select Level (optional) —', true);
     resetSelect('ci_sublevel','— Select Level First —', true);
     resetSelect('ci_teacher', '— Select Course First —', true);
+    clearInstanceDefaults();
     updateSummary();
     if (!courseId) return;
+
+    const h = opt?.dataset.hours;
+    const s = opt?.dataset.session;
+    const c = opt?.dataset.capacity;
+    if (h || s || c) setInstanceDefaults(h, s, c);
 
     try {
         setLoading('ci_level');
@@ -369,7 +382,10 @@ async function onCourseChange() {
         } else {
             lvl.innerHTML = '<option value="">— No Level (optional) —</option>';
             data.forEach(l => {
-                lvl.innerHTML += `<option value="${l.level_id}" data-hours="${l.total_hours??''}" data-session="${l.default_session_duration??''}" data-capacity="${l.max_capacity??''}">${l.name}</option>`;
+                lvl.innerHTML += `<option value="${l.level_id}" 
+                    data-hours="${l.total_hours??''}" 
+                    data-session="${l.default_session_duration??''}" 
+                    data-capacity="${l.max_capacity??''}">${l.name}</option>`;
             });
             lvl.disabled = false;
         }
@@ -387,12 +403,12 @@ async function onLevelChange() {
     resetSelect('ci_sublevel', '— Select Sublevel (optional) —', true);
 
     if (levelId && opt) {
-        if (opt.dataset.hours)    document.getElementById('ci_total_hours').value      = opt.dataset.hours;
-        if (opt.dataset.session)  document.getElementById('ci_session_duration').value = opt.dataset.session;
-        if (opt.dataset.capacity) document.getElementById('ci_capacity').value          = opt.dataset.capacity;
-        recalculate();
-        updateSummary();
+        setInstanceDefaults(opt.dataset.hours, opt.dataset.session, opt.dataset.capacity);
+    } else {
+        const courseOpt = document.getElementById('ci_course').options[document.getElementById('ci_course').selectedIndex];
+        setInstanceDefaults(courseOpt?.dataset.hours, courseOpt?.dataset.session, courseOpt?.dataset.capacity);
     }
+
     if (!levelId) return;
 
     try {
@@ -405,13 +421,27 @@ async function onLevelChange() {
         } else {
             sub.innerHTML = '<option value="">— No Sublevel (optional) —</option>';
             data.forEach(s => {
-                sub.innerHTML += `<option value="${s.sublevel_id}" data-hours="${s.total_hours??''}" data-session="${s.default_session_duration??''}">${s.name}</option>`;
+                sub.innerHTML += `<option value="${s.sublevel_id}" 
+                    data-hours="${s.total_hours??''}" 
+                    data-session="${s.default_session_duration??''}"
+                    data-capacity="${s.max_capacity??''}">${s.name}</option>`;
             });
             sub.disabled = false;
         }
     } catch { resetSelect('ci_sublevel', '— Error —', true); }
 }
+// ── Sublevel change ── 
+function onSublevelChange() {
+    const sub = document.getElementById('ci_sublevel');
+    const opt = sub.options[sub.selectedIndex];
 
+    if (sub.value && opt) {
+        setInstanceDefaults(opt.dataset.hours, opt.dataset.session, opt.dataset.capacity);
+    } else {
+        const lvlOpt = document.getElementById('ci_level').options[document.getElementById('ci_level').selectedIndex];
+        setInstanceDefaults(lvlOpt?.dataset.hours, lvlOpt?.dataset.session, lvlOpt?.dataset.capacity);
+    }
+}
 // ── Load teachers ──
 async function loadTeachers(englishLevelId) {
     setLoading('ci_teacher');
@@ -682,6 +712,27 @@ function onModeChange() {
     }
 
     updateSummary();
+}
+// ── Readonly helper ──
+function setInstanceDefaults(hours, session, capacity) {
+    const fh = document.getElementById('ci_total_hours');
+    const fs = document.getElementById('ci_session_duration');
+    const fc = document.getElementById('ci_capacity');
+
+    if (hours)    { fh.value = hours;    fh.readOnly = true; fh.style.background='#F4F4F4'; fh.style.color='var(--faint)'; }
+    if (session)  { fs.value = session;  fs.readOnly = true; fs.style.background='#F4F4F4'; fs.style.color='var(--faint)'; }
+    if (capacity) { fc.value = capacity; fc.readOnly = true; fc.style.background='#F4F4F4'; fc.style.color='var(--faint)'; }
+    recalculate();
+    updateSummary();
+}
+
+function clearInstanceDefaults() {
+    ['ci_total_hours','ci_session_duration','ci_capacity'].forEach(id => {
+        const el = document.getElementById(id);
+        el.readOnly = false;
+        el.style.background = '';
+        el.style.color = '';
+    });
 }
 document.addEventListener('DOMContentLoaded', onModeChange);
 </script>
