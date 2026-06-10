@@ -96,7 +96,7 @@ class RegistrationController extends Controller
         $finalPrice    = (float) $request->final_price;
         $materialPrice = (float) $request->material_price;
         $testFee       = (float) $request->test_fee;
-
+        
         if ($plan && $plan->deposit_percentage > 0 && $finalPrice > 0) {
             $depositOnCourse = round($finalPrice * $plan->deposit_percentage / 100, 2);
             $requiredDeposit = round($depositOnCourse + $materialPrice + $testFee, 2);

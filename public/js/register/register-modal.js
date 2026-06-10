@@ -295,6 +295,7 @@ function applyMaterial(data) {
         pricing.materialPrice = 0;
         if (materialCheck)      materialCheck.checked = false;
         if (materialPriceBlock) materialPriceBlock.style.display = 'none';
+        if (materialPriceHidden) materialPriceHidden.value = 0;
         updatePriceDisplay();
         return;
     }
@@ -380,6 +381,7 @@ function applyMaterial(data) {
             if (materialPriceBlock) materialPriceBlock.style.display = 'block';
         } else {
             pricing.materialPrice = 0;
+            if (materialPriceHidden) materialPriceHidden.value = 0; 
             if (materialPriceBlock) materialPriceBlock.style.display = 'none';
         }
         updatePriceDisplay();

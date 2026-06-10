@@ -82,11 +82,16 @@ class CourseAdminController extends Controller
                 // Sublevels
                 foreach ($lvl['sublevels'] ?? [] as $j => $sub) {
                     Sublevel::create([
-                        'level_id'    => $level->level_id,
-                        'name'        => $sub['name'],
-                        'price'       => $sub['price'] ?? $lvl['price'],
-                        'level_order' => $j + 1,
-                        'is_active'   => true,
+                        'level_id'                => $level->level_id,
+                        'name'                    => $sub['name'],
+                        'price'                   => $sub['price'] ?? $lvl['price'],
+                        'sublevel_order'          => $j + 1,
+                        'total_hours'             => $sub['total_hours'] ?? $lvl['total_hours'],
+                        'default_session_duration'=> $sub['default_session_duration'] ?? $lvl['default_session_duration'],
+                        'max_capacity'            => $sub['max_capacity'] ?? $lvl['max_capacity'],
+                        'teacher_min_level'       => $sub['teacher_level'] ?? $lvl['teacher_level'] ?? null,
+                        'created_by_admin_id'     => $adminEmployeeId,
+                        'is_active'               => true,
                     ]);
                 }
             }
