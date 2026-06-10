@@ -40,6 +40,7 @@
 /* Sublevel --*/
 .sublevel-builder{margin-top:12px;padding-top:12px;border-top:1px solid rgba(27,79,168,0.08)}
 .sublevel-row{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-bottom:8px}
+.sublevel-block{background:#fff;border:1px solid rgba(27,79,168,0.08);border-radius:4px;padding:14px 16px;margin-bottom:10px}
 .btn-add-sub{background:none;border:1px dashed rgba(27,79,168,0.25);border-radius:3px;color:#1B4FA8;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;cursor:pointer;width:100%;transition:all 0.2s;font-family:'DM Sans',sans-serif}
 .btn-add-sub:hover{border-color:#1B4FA8;background:rgba(27,79,168,0.03)}
 
@@ -100,6 +101,21 @@
                             <option value="{{ $lvl->english_level_id }}">{{ $lvl->level_name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Total Hours</label>
+                        <input type="number" step="0.5" name="total_hours" class="form-control"
+                            value="{{ old('total_hours') }}" placeholder="e.g. 24 — used if no levels">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Session Duration (hrs)</label>
+                        <input type="number" step="0.5" name="default_session_duration" class="form-control"
+                            value="{{ old('default_session_duration') }}" placeholder="e.g. 2">
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Max Capacity</label>
+                        <input type="number" name="max_capacity" class="form-control"
+                            value="{{ old('max_capacity') }}" placeholder="e.g. 8">
                     </div>
                 </div>
 
@@ -182,18 +198,48 @@ function addSublevel(levelIdx) {
     const j = subCounts[levelIdx]++;
     const container = document.getElementById(`subs_${levelIdx}`);
     const row = document.createElement('div');
-    row.className = 'sublevel-row';
+    row.className = 'sublevel-block';
     row.id = `sub_${levelIdx}_${j}`;
     row.innerHTML = `
-        <div class="form-field">
-            <label class="form-label">Name</label>
-            <input type="text" name="levels[${levelIdx}][sublevels][${j}][name]" class="form-control-sm" placeholder="e.g. A1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#1B4FA8">Sublevel ${j+1}</span>
+            <button type="button" class="btn-remove" onclick="document.getElementById('sub_${levelIdx}_${j}').remove()">✕ Remove</button>
         </div>
-        <div class="form-field">
-            <label class="form-label">Price (LE)</label>
-            <input type="number" name="levels[${levelIdx}][sublevels][${j}][price]" class="form-control-sm" placeholder="Optional">
+        <div class="level-grid">
+            <div class="form-field">
+                <label class="form-label">Name</label>
+                <input type="text" name="levels[${levelIdx}][sublevels][${j}][name]"
+                       class="form-control-sm" placeholder="e.g. A1">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Price (LE)</label>
+                <input type="number" name="levels[${levelIdx}][sublevels][${j}][price]"
+                       class="form-control-sm" placeholder="e.g. 500 ">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Total Hours</label>
+                <input type="number" step="0.5" name="levels[${levelIdx}][sublevels][${j}][total_hours]"
+                       class="form-control-sm" placeholder="e.g. 5">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Session Duration (hrs)</label>
+                <input type="number" step="0.5" name="levels[${levelIdx}][sublevels][${j}][default_session_duration]"
+                       class="form-control-sm" placeholder="e.g. 2">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Max Capacity</label>
+                <input type="number" name="levels[${levelIdx}][sublevels][${j}][max_capacity]"
+                       class="form-control-sm" placeholder="e.g. 20">
+            </div>
+            <div class="form-field">
+                <label class="form-label">Min Teacher Level</label>
+                <select name="levels[${levelIdx}][sublevels][${j}][teacher_level]" class="form-control-sm">
+                    <option value="">— Select —</option>
+                    ${englishLevels.map(l => `<option value="${l.english_level_id}">${l.level_name}</option>`).join('')}
+                </select>
+            </div>
         </div>
-        <button type="button" class="btn-remove" onclick="document.getElementById('sub_${levelIdx}_${j}').remove()" style="margin-top:18px">✕</button>`;
+        <div style="height:1px;background:rgba(27,79,168,0.06);margin:12px 0"></div>`;
     container.appendChild(row);
 }
 

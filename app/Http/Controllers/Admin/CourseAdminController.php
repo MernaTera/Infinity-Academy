@@ -42,6 +42,10 @@ class CourseAdminController extends Controller
             'name'             => 'required|string|max:255',
             'price'            => 'nullable|numeric|min:0',
             'english_level_id' => 'nullable|exists:english_level,english_level_id',
+            'total_hours'              => 'nullable|numeric|min:1',
+            'default_session_duration' => 'nullable|numeric|min:0.5',
+            'max_capacity'             => 'nullable|integer|min:1',
+            
             // Levels
             'levels'                           => 'nullable|array',
             'levels.*.name'                    => 'required|string',
@@ -59,6 +63,9 @@ class CourseAdminController extends Controller
                 'name'             => $request->name,
                 'price'            => $request->price,
                 'english_level_id' => $request->english_level_id,
+                'total_hours'              => $request->total_hours,              
+                'default_session_duration' => $request->default_session_duration, 
+                'max_capacity'             => $request->max_capacity,  
                 'is_active'        => true,
                 'created_by_admin_id' => $adminEmployeeId,
             ]);
