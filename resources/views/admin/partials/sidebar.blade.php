@@ -25,7 +25,6 @@
     top: 62px;
     height: calc(100vh - 62px);
     display: flex;
-    flex-direction: column;
     overflow: hidden;
     transition: width var(--sb-transition);
     z-index: 40;

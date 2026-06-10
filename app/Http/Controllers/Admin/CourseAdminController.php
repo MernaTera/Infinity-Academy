@@ -82,11 +82,16 @@ class CourseAdminController extends Controller
                 // Sublevels
                 foreach ($lvl['sublevels'] ?? [] as $j => $sub) {
                     Sublevel::create([
-                        'level_id'    => $level->level_id,
-                        'name'        => $sub['name'],
-                        'price'       => $sub['price'] ?? $lvl['price'],
-                        'level_order' => $j + 1,
-                        'is_active'   => true,
+                        'level_id'                => $level->level_id,
+                        'name'                    => $sub['name'],
+                        'price'                   => $sub['price'] ?? $lvl['price'],
+                        'sublevel_order'          => $j + 1,
+                        'total_hours'             => $sub['total_hours'] ?? $lvl['total_hours'],
+                        'default_session_duration'=> $sub['default_session_duration'] ?? $lvl['default_session_duration'],
+                        'max_capacity'            => $sub['max_capacity'] ?? $lvl['max_capacity'],
+                        'teacher_min_level'       => $sub['teacher_level'] ?? $lvl['teacher_level'] ?? null,
+                        'created_by_admin_id'     => $adminEmployeeId,
+                        'is_active'               => true,
                     ]);
                 }
             }
@@ -132,10 +137,15 @@ class CourseAdminController extends Controller
             return back()->with('error', 'Cannot archive course with active instances.');
         }
 
-        $course->update(['is_active' => !$course->is_active]);
-        $old = $course->is_active;
-        AuditService::updated('course_template', $id, 'is_active', $old ? 'Active' : 'Archived', $old ? 'Archived' : 'Active');
-        $msg = $course->is_active ? 'Course restored.' : 'Course archived.';
+        $old = $course->is_active; 
+        $course->update(['is_active' => !$old]);
+
+        AuditService::updated('course_template', $id, 'is_active', 
+            $old ? 'Active' : 'Archived', 
+            $old ? 'Archived' : 'Active'
+        );
+
+        $msg = $old ? 'Course archived.' : 'Course restored.';
         return back()->with('success', $msg);
     }
 }
