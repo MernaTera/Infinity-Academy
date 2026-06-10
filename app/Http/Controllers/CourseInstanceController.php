@@ -81,8 +81,32 @@ class CourseInstanceController extends Controller
             'time_slot_ids'      => 'nullable|array',
             'time_slot_ids.*'    => 'nullable|exists:time_slot,time_slot_id',
         ]);
-
+        
+        $patch = Patch::findOrFail($data['patch_id']);
+        if ($data['start_date'] < $patch->start_date || $data['start_date'] > $patch->end_date) {
+            return back()->withInput()->withErrors([
+                'start_date' => "Start date must be within the selected patch ({$patch->start_date} → {$patch->end_date})."
+            ]);
+        }
+        if ($data['end_date'] > $patch->end_date) {
+            return back()->withInput()->withErrors([
+                'end_date' => "End date ({$data['end_date']}) exceeds the patch end date ({$patch->end_date})."
+            ]);
+        }
         $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id');
+
+        if (!empty($data['room_id'])) {
+            $roomConflict = CourseInstance::where('room_id', $data['room_id'])
+                ->where('patch_id', $data['patch_id'])
+                ->whereIn('status', ['Active', 'Upcoming'])
+                ->exists();
+
+            if ($roomConflict) {
+                return back()->withInput()->withErrors([
+                    'room_id' => 'This room is already assigned to another course in the same patch.'
+                ]);
+            }
+        }
 
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use ($data, $employeeId) {

@@ -150,7 +150,11 @@
                             <select name="patch_id" class="field-select" required onchange="updateSummary()">
                                 <option value="">— Select Patch —</option>
                                 @foreach($patches as $p)
-                                <option value="{{ $p->patch_id }}">{{ $p->name }} ({{ $p->status }})</option>
+                                <option value="{{ $p->patch_id }}" 
+                                    data-start="{{ $p->start_date }}" 
+                                    data-end="{{ $p->end_date }}">
+                                    {{ $p->name }} ({{ $p->status }})
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -724,7 +728,6 @@ async function fetchPreview() {
     const totalHours = parseFloat(document.getElementById('ci_total_hours').value) || 0;
     const sessionDur = parseFloat(document.getElementById('ci_session_duration').value) || 0;
 
-    // ✅ Get first pair that has a time selected
     const firstPairWithTime = pairs.find(p => document.getElementById(`ci_start_time_${p}`)?.value);
     const startTime = firstPairWithTime
         ? document.getElementById(`ci_start_time_${firstPairWithTime}`).value
@@ -748,7 +751,6 @@ async function fetchPreview() {
     document.getElementById('prev-end').textContent      = formatDate(endDate);
     document.getElementById('previewSection').style.display = 'block';
 
-    // Check conflicts
     const teacherId = document.getElementById('ci_teacher').value;
     if (teacherId && startDate && pairs.length && startTime) {
         try {
@@ -756,23 +758,27 @@ async function fetchPreview() {
                 method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
                 body: JSON.stringify({
-                    teacher_id:      teacherId,
-                    start_date:      startDate,
-                    end_date:        endDate,
-                    day_of_week:     pairs,
-                    start_time:      startTime,
-                    session_duration:sessionDur,
+                    teacher_id:       teacherId,
+                    start_date:       startDate,
+                    end_date:         endDate,
+                    day_of_week:      pairs,
+                    start_time:       startTime,
+                    session_duration: sessionDur,
                 }),
             });
             if (res.ok) {
-                const data  = await res.json();
-                const alert = document.getElementById('conflictAlert');
-                if (data.conflicts?.length) {
-                    document.getElementById('conflictDetails').innerHTML = data.conflicts.map(c => `<div>• ${c}</div>`).join('');
-                    alert.classList.add('show');
-                } else {
-                    alert.classList.remove('show');
-                }
+                const data = await res.json();
+                pairs.forEach(p => {
+                    const alert   = document.getElementById(`conflictAlert_${p}`);
+                    const details = document.getElementById(`conflictDetails_${p}`);
+                    if (!alert || !details) return;
+                    if (data.conflicts?.length) {
+                        details.innerHTML = data.conflicts.map(c => `<div>• ${c}</div>`).join('');
+                        alert.classList.add('show');
+                    } else {
+                        alert.classList.remove('show');
+                    }
+                });
             }
         } catch {}
     }
@@ -792,8 +798,8 @@ function updateSummary() {
     document.getElementById('sum-end').textContent      = formatDate(document.getElementById('ci_end_date').value);
     const hours = document.getElementById('ci_total_hours').value;
     if (hours) document.getElementById('sum-hours').textContent = hours + ' hrs';
-}
 
+}
 function onModeChange() {
     const mode    = document.querySelector('[name="delivery_mood"]').value;
     const roomSel = document.getElementById('ci_room');
@@ -810,5 +816,22 @@ function onModeChange() {
 }
 
 document.addEventListener('DOMContentLoaded', onModeChange);
+
+    document.querySelector('[name="patch_id"]').addEventListener('change', function() {
+        const opt   = this.options[this.selectedIndex];
+        const start = opt?.dataset.start;
+        const end   = opt?.dataset.end;
+        const input = document.getElementById('ci_start_date');
+        if (start && end && this.value) {
+            input.min   = start;
+            input.max   = end;
+            input.value = start;
+            onStartDateChange();
+        } else {
+            input.min   = '';
+            input.max   = '';
+        }
+        updateSummary();
+    });
 </script>
 @endsection
