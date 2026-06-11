@@ -95,10 +95,19 @@ class OutstandingController extends Controller
                 ->whereIn('transaction_type', ['Payment','Installment'])->sum('amount');
             $newRemaining = max(0, $enrollment->final_price - $newPaid);
 
-            if ($newRemaining <= 0) {
-                $enrollment->update(['restriction_flag' => false]);
+            $hasOverdue = $enrollment->installmentSchedules()
+                ->whereIn('status', ['Overdue', 'Pending'])
+                ->where('due_date', '<', now())
+                ->exists();
+
+            if (!$hasOverdue) {
+                $enrollment->update([
+                    'status'           => 'Active',
+                    'restriction_flag' => false,
+                ]);
                 RestrictionLog::where('enrollment_id', $enrollment->enrollment_id)
                     ->whereNull('released_at')
+                    ->where('reason', '!=', 'admin_manual')
                     ->update(['released_at' => now(), 'released_by' => $employee->employee_id]);
             }
         });
