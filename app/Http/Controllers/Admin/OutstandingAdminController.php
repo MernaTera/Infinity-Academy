@@ -28,15 +28,31 @@ class OutstandingAdminController extends Controller
         ->whereIn('status', ['Active', 'Restricted'])
         ->get();
 
-        // فلترة الـ enrollments اللي فيها balance متبقي
         $enrollments = $allEnrollments->filter(function ($e) {
-            $paid     = $e->financialTransactions
-                ->whereIn('transaction_type', ['Payment', 'Installment'])
-                ->sum('amount');
-            $refunded = $e->financialTransactions
+            $totalFees = (float) $e->final_price
+                + (float) $e->financialTransactions->where('transaction_category', 'Material')->sum('amount')
+                + (float) $e->financialTransactions->where('transaction_category', 'Test')->sum('amount');
+
+            $paidInstallmentIds = $e->installmentSchedules
+                ->where('status', 'Paid')
+                ->pluck('transaction_id')
+                ->filter()
+                ->toArray();
+
+            $paid = (float) $e->financialTransactions
+                    ->where('transaction_type', 'Payment')
+                    ->sum('amount')
+                + (float) $e->financialTransactions
+                    ->where('transaction_type', 'Installment')
+                    ->whereIn('transaction_id', $paidInstallmentIds)
+                    ->sum('amount');
+
+            $refunded = (float) $e->financialTransactions
                 ->where('transaction_type', 'Refund')
                 ->sum('amount');
-            $balance  = $e->final_price - ($paid - $refunded);
+
+            $balance              = $totalFees - ($paid - $refunded);
+            $e->total_fees        = $totalFees;
             $e->remaining_balance = $balance;
             $e->total_paid        = $paid - $refunded;
             return $balance > 0;
@@ -64,6 +80,7 @@ class OutstandingAdminController extends Controller
             'notes'  => 'nullable|string',
         ]);
 
+        $oldStatus = $enrollment->status;
         DB::transaction(function () use ($request, $enrollment, $adminId) {
 
             if ($request->action === 'lift') {
@@ -126,11 +143,8 @@ class OutstandingAdminController extends Controller
         }
         });
 
-        AuditService::updated(
-            'enrollment',
-            $id,
-            'status',
-            $enrollment->status,
+        AuditService::updated('enrollment', $id, 'status',
+            $oldStatus,
             $request->action === 'lift' ? 'Active' : 'Restricted'
         );
         

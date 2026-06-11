@@ -155,14 +155,11 @@
                 <tbody>
                     @forelse($enrollments as $enrollment)
                     @php
-                        $paid     = $enrollment->financialTransactions()
-                            ->whereIn('transaction_type', ['Payment','Installment'])->sum('amount');
-                        $refunded = $enrollment->financialTransactions()
-                            ->where('transaction_type','Refund')->sum('amount');
-                        $remaining= $enrollment->final_price - ($paid - $refunded);
-                        $nextDue  = $enrollment->installmentSchedules
+                        $paid        = $enrollment->total_paid;
+                        $remaining   = $enrollment->remaining_balance;
+                        $nextDue     = $enrollment->installmentSchedules
                             ->where('status','Pending')->sortBy('due_date')->first();
-                        $overdueDue = $enrollment->installmentSchedules
+                        $overdueDue  = $enrollment->installmentSchedules
                             ->where('status','Overdue')->first();
                         $daysOverdue = $overdueDue
                             ? \Carbon\Carbon::parse($overdueDue->due_date)->diffInDays(now())
@@ -180,8 +177,8 @@
                         <td style="font-size:11px;color:#7A8A9A">
                             {{ $enrollment->createdByCs?->employee?->full_name ?? $enrollment->createdByCs?->full_name ?? '—' }}
                         </td>
-                        <td style="font-family:monospace;font-size:12px">{{ number_format($enrollment->final_price) }}</td>
-                        <td style="font-family:monospace;font-size:12px;color:#059669">{{ number_format($paid - $refunded) }}</td>
+                        <td style="font-family:monospace;font-size:12px">{{ number_format($enrollment->total_fees) }}</td>
+                        <td style="font-family:monospace;font-size:12px;color:#059669">{{ number_format($paid) }}</td>
                         <td>
                             <div class="balance-val" style="color:{{ $remaining > 5000 ? '#DC2626' : '#C47010' }}">
                                 {{ number_format($remaining) }}

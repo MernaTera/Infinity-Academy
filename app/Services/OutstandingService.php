@@ -45,7 +45,7 @@ class OutstandingService
         return $enrollments->map(function ($e) {
 
             $paid      = $this->getPaid($e);
-            $total     = (float) $e->final_price;
+            $total     = $this->getTotal($e); 
             $remaining = max(0, $total - $paid);
 
             $nextInstallment = $e->installmentSchedules
@@ -113,16 +113,34 @@ class OutstandingService
 
     private function getPaid(Enrollment $enrollment): float
     {
+        $paidInstallmentIds = $enrollment->installmentSchedules
+            ->where('status', 'Paid')
+            ->pluck('transaction_id')
+            ->filter()
+            ->toArray();
+
         return (float) $enrollment->financialTransactions
-            ->whereIn('transaction_type', ['Payment', 'Installment'])
-            ->sum('amount')
+                ->where('transaction_type', 'Payment')
+                ->sum('amount') // ✅ كل categories
+            + (float) $enrollment->financialTransactions
+                ->where('transaction_type', 'Installment')
+                ->whereIn('transaction_id', $paidInstallmentIds)
+                ->sum('amount')
             - (float) $enrollment->financialTransactions
-            ->where('transaction_type', 'Refund')
-            ->sum('amount');
+                ->where('transaction_type', 'Refund')
+                ->sum('amount');
+    }
+
+    private function getTotal(Enrollment $enrollment): float
+    {
+        return (float) $enrollment->final_price
+            + (float) $enrollment->financialTransactions->where('transaction_category', 'Material')->sum('amount')
+            + (float) $enrollment->financialTransactions->where('transaction_category', 'Test')->sum('amount');
     }
 
     private function getRemaining(Enrollment $enrollment): float
     {
-        return max(0, (float) $enrollment->final_price - $this->getPaid($enrollment));
+        return max(0, $this->getTotal($enrollment) - $this->getPaid($enrollment));
     }
+
 }

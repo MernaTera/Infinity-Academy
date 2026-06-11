@@ -45,11 +45,21 @@ class OutstandingController extends Controller
             'paymentPlan',
         ])->findOrFail($enrollmentId);
 
-        // حساب الـ remaining
-        $paid      = $enrollment->financialTransactions
-            ->whereIn('transaction_type', ['Payment','Installment'])->sum('amount')
-            - $enrollment->financialTransactions
-            ->where('transaction_type', 'Refund')->sum('amount');
+        $paidInstallmentIds = $enrollment->installmentSchedules
+            ->where('status', 'Paid')
+            ->pluck('transaction_id')
+            ->filter()
+            ->toArray();
+
+        $paid = (float) $enrollment->financialTransactions
+                ->where('transaction_type', 'Payment')
+                ->where('transaction_category', 'Course')
+                ->sum('amount')
+            + (float) $enrollment->financialTransactions
+                ->where('transaction_type', 'Installment')
+                ->whereIn('transaction_id', $paidInstallmentIds)
+                ->sum('amount');
+
         $remaining = max(0, $enrollment->final_price - $paid);
 
         if ($request->amount > $remaining) {
@@ -85,14 +95,28 @@ class OutstandingController extends Controller
             foreach ($enrollment->installmentSchedules as $inst) {
                 if ($amountLeft <= 0) break;
                 if ($amountLeft >= $inst->amount) {
-                    $inst->update(['status' => 'Paid', 'paid_at' => now()]);
+                    $inst->update([
+                        'status'         => 'Paid',
+                        'paid_at'        => now(),
+                        'transaction_id' => $tx->transaction_id,
+                    ]);
                     $amountLeft -= $inst->amount;
                 }
             }
 
 
-            $newPaid = FinancialTransaction::where('enrollment_id', $enrollment->enrollment_id)
-                ->whereIn('transaction_type', ['Payment','Installment'])->sum('amount');
+            $paidIds = $enrollment->installmentSchedules()->where('status', 'Paid')
+                ->pluck('transaction_id')->filter()->toArray();
+
+            $newPaid = (float) FinancialTransaction::where('enrollment_id', $enrollment->enrollment_id)
+                    ->where('transaction_type', 'Payment')
+                    ->where('transaction_category', 'Course')
+                    ->sum('amount')
+                + (float) FinancialTransaction::where('enrollment_id', $enrollment->enrollment_id)
+                    ->where('transaction_type', 'Installment')
+                    ->whereIn('transaction_id', $paidIds)
+                    ->sum('amount');
+
             $newRemaining = max(0, $enrollment->final_price - $newPaid);
 
             $hasOverdue = $enrollment->installmentSchedules()
