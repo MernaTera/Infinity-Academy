@@ -48,6 +48,12 @@ class OutstandingService
             $total     = $this->getTotal($e); 
             $remaining = max(0, $total - $paid);
 
+            $paidInstallmentIds = $e->installmentSchedules
+                ->where('status', 'Paid')
+                ->pluck('transaction_id')
+                ->filter()
+                ->toArray();
+
             $nextInstallment = $e->installmentSchedules
                 ->whereIn('status', ['Pending', 'Overdue'])
                 ->sortBy('due_date')
@@ -87,13 +93,16 @@ class OutstandingService
                     'paid_at'  => $i->paid_at?->format('d M Y'),
                 ])->toArray(),
                 'transactions' => $e->financialTransactions
-                ->whereIn('transaction_type', ['Payment','Installment','Refund'])
-                ->map(fn($t) => [
-                    'type'   => $t->transaction_type,
-                    'amount' => $t->amount,
-                    'method' => $t->payment_method,
-                    'date'   => $t->created_at?->format('d M Y'),
-                ])->toArray(),
+                    ->filter(fn($t) =>
+                        in_array($t->transaction_type, ['Payment', 'Refund']) ||
+                        ($t->transaction_type === 'Installment' && in_array($t->transaction_id, $paidInstallmentIds))
+                    )
+                    ->map(fn($t) => [
+                        'type'   => $t->transaction_type,
+                        'amount' => $t->amount,
+                        'method' => $t->payment_method,
+                        'date'   => $t->created_at?->format('d M Y'),
+                    ])->toArray(),
             ];
         })->values();
     }
