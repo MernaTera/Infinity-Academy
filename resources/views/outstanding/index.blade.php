@@ -402,7 +402,7 @@ function openPayModal(enrollmentId, studentName, remaining, nextAmount, nextDate
     document.getElementById('modal-installment-date').textContent   = 'Due: ' + nextDate;
     document.getElementById('modal-amount').value                = nextAmount;
     document.getElementById('payForm').action = `/outstanding/${enrollmentId}/pay`;
-    document.getElementById('payModal').style.display = 'flex';
+    document.getElementById('payModal').classList.add('show');
 }
 
 function closePayModal() {
