@@ -275,7 +275,7 @@
                                 <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#7A8A9A;margin:14px 0 8px">Payment History</div>
                                 <table class="inst-table">
                                     <thead>
-                                        <tr><th>Type</th><th>Amount</th><th>Method</th><th>Date</th></tr>
+                                        <tr><th>Type</th><th>Amount</th><th>Method</th><th>Notes</th><th>Date</th></tr>
                                     </thead>
                                     <tbody>
                                         @foreach($row['transactions'] as $tx)
@@ -288,6 +288,7 @@
                                                 {{ $tx['type']==='Refund' ? '-' : '+' }}{{ number_format($tx['amount']) }} LE
                                             </td>
                                             <td style="color:#AAB8C8">{{ $tx['method'] }}</td>
+                                            <td style="font-size:11px;color:#7A8A9A">{{ $tx['notes'] ?? '—' }}</td>
                                             <td style="font-size:11px;color:#AAB8C8">{{ $tx['date'] }}</td>
                                         </tr>
                                         @endforeach

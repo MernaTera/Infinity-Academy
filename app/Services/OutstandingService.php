@@ -103,6 +103,7 @@ class OutstandingService
                         'category' => $t->transaction_category,
                         'amount' => $t->amount,
                         'method' => $t->payment_method,
+                        'notes'    => $t->notes, 
                         'date'   => $t->created_at?->format('d M Y'),
                     ])->toArray(),
             ];
