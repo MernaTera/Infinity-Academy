@@ -48,16 +48,16 @@ class OutstandingService
             $total     = $this->getTotal($e); 
             $remaining = max(0, $total - $paid);
 
-            $paidInstallmentIds = $e->installmentSchedules
-                ->where('status', 'Paid')
-                ->pluck('transaction_id')
-                ->filter()
-                ->toArray();
-
             $nextInstallment = $e->installmentSchedules
                 ->whereIn('status', ['Pending', 'Overdue'])
                 ->sortBy('due_date')
                 ->first();
+
+            $scheduledPendingIds = $e->installmentSchedules
+                ->whereIn('status', ['Pending', 'Overdue'])
+                ->pluck('transaction_id')
+                ->filter()
+                ->toArray();
 
             $activeRestriction = $e->restrictionLogs->first();
             $isRestricted      = $e->restriction_flag || $activeRestriction;
@@ -95,7 +95,7 @@ class OutstandingService
                 'transactions' => $e->financialTransactions
                     ->filter(fn($t) =>
                         in_array($t->transaction_type, ['Payment', 'Refund']) ||
-                        ($t->transaction_type === 'Installment' && in_array($t->transaction_id, $paidInstallmentIds))
+                        ($t->transaction_type === 'Installment' && !in_array($t->transaction_id, $scheduledPendingIds))
                     )
                     ->map(fn($t) => [
                         'type'   => $t->transaction_type,

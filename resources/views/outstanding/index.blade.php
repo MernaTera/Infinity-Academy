@@ -221,10 +221,13 @@
                             @endif
                         </td>
                         <td onclick="event.stopPropagation()">
-                            <button class="btn-pay"
-                                onclick="openPayModal({{ $row['enrollment_id'] }}, '{{ addslashes($row['student_name']) }}', {{ $row['remaining'] }})">
-                                <span>Record Payment</span>
-                            </button>
+                            <button class="btn-pay" onclick="openPayModal(
+                                {{ $row['enrollment_id'] }},
+                                '{{ addslashes($row['student_name']) }}',
+                                {{ $row['remaining'] }},
+                                {{ $row['next_due_amount'] ?? 0 }},
+                                '{{ $row['next_due_date'] ?? '—' }}'
+                            )">Record Payment</button>
                         </td>
                     </tr>
 
@@ -319,20 +322,21 @@
             <div class="remaining-hint">
                 Remaining balance: <strong id="modal-remaining">0</strong> LE
             </div>
+            <div style="background:rgba(27,79,168,0.04);border:1px solid rgba(27,79,168,0.1);border-radius:4px;padding:12px 16px;margin-bottom:14px">
+                <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:4px">Next Installment</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:#1B4FA8;letter-spacing:2px" id="modal-installment-amount">—</div>
+                <div style="font-size:9px;color:#AAB8C8;margin-top:2px" id="modal-installment-date">—</div>
+            </div>
             <form id="payForm" method="POST">
                 @csrf
-                <label class="pay-form-label">Amount Paid (LE) <span style="color:#F5911E">*</span></label>
-                <input type="number" name="amount" id="modal-amount" class="pay-form-control"
-                    placeholder="Enter amount..." min="1" step="0.01" required>
-
+                <input type="hidden" name="amount" id="modal-amount">
                 <label class="pay-form-label">Payment Method <span style="color:#F5911E">*</span></label>
                 <select name="payment_method" class="pay-form-control" required>
                     <option value="Cash">Cash</option>
                     <option value="Card">Card</option>
                     <option value="Transfer">InstaPay</option>
-                    <option value="Online">Vodafove Cash</option>
+                    <option value="Online">Vodafone Cash</option>
                 </select>
-
                 <label class="pay-form-label">Notes (optional)</label>
                 <input type="text" name="notes" class="pay-form-control" placeholder="Any notes...">
             </form>
@@ -388,13 +392,14 @@ function toggleExpand(id) {
 }
 
 // ── Pay Modal ───────────────────────────
-function openPayModal(enrollmentId, studentName, remaining) {
-    document.getElementById('modal-student-name').textContent = studentName;
-    document.getElementById('modal-remaining').textContent    = remaining.toLocaleString('en-EG');
-    document.getElementById('modal-amount').max               = remaining;
-    document.getElementById('modal-amount').value             = '';
-    document.getElementById('payForm').action = '/outstanding/' + enrollmentId + '/pay';
-    document.getElementById('payModal').classList.add('show');
+function openPayModal(enrollmentId, studentName, remaining, nextAmount, nextDate) {
+    document.getElementById('modal-student-name').textContent    = studentName;
+    document.getElementById('modal-remaining').textContent       = remaining;
+    document.getElementById('modal-installment-amount').textContent = nextAmount + ' LE';
+    document.getElementById('modal-installment-date').textContent   = 'Due: ' + nextDate;
+    document.getElementById('modal-amount').value                = nextAmount;
+    document.getElementById('payForm').action = `/outstanding/${enrollmentId}/pay`;
+    document.getElementById('payModal').style.display = 'flex';
 }
 
 function closePayModal() {
