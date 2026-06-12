@@ -85,7 +85,7 @@ class OutstandingController extends Controller
                 'transaction_id'   => $tx->transaction_id,
                 'employee_id'      => $enrollment->created_by_cs_id,
                 'branch_id'        => $employee->branch_id,
-                'patch_id'         => $enrollment->patch_id,
+                'patch_id' => $enrollment->patch_id ?? \App\Models\Academic\Patch::where('status', 'Active')->value('patch_id'),
                 'amount_allocated' => $request->amount,
                 'allocation_type'  => 'Direct',
             ]);

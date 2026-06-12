@@ -17,15 +17,17 @@ class OutstandingAdminController extends Controller
     {
         $allEnrollments = Enrollment::with([
             'student',
+            'courseTemplate',  
+            'patch',           
             'courseInstance.courseTemplate',
             'courseInstance.patch',
             'createdByCs',
-            'paymentPlan',
+            'paymentPlan',     
             'installmentSchedules' => fn($q) => $q->orderBy('due_date'),
             'restrictionLogs'      => fn($q) => $q->whereNull('released_at'),
             'financialTransactions',
         ])
-        ->whereIn('status', ['Active', 'Restricted'])
+        ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
         ->get();
 
         $enrollments = $allEnrollments->filter(function ($e) {
@@ -53,16 +55,16 @@ class OutstandingAdminController extends Controller
 
             $balance              = $totalFees - ($paid - $refunded);
             $e->total_fees        = $totalFees;
-            $e->remaining_balance = $balance;
+            $e->remaining_balance = max(0, $balance < 0.01 ? 0 : $balance);
             $e->total_paid        = $paid - $refunded;
-            return $balance > 0;
+           return $e;
         });
-
+        $withBalance = $enrollments->filter(fn($e) => $e->remaining_balance > 0);
         $stats = [
-            'total_outstanding' => $enrollments->sum('remaining_balance'),
-            'count'             => $enrollments->count(),
-            'restricted'        => $enrollments->where('status', 'Restricted')->count(),
-            'overdue'           => $enrollments->filter(fn($e) =>
+            'total_outstanding' => $withBalance->sum('remaining_balance'),
+            'count'             => $withBalance->count(),
+            'restricted'        => $withBalance->where('status', 'Restricted')->count(),
+            'overdue'           => $withBalance->filter(fn($e) =>
                 $e->installmentSchedules->where('status', 'Overdue')->isNotEmpty()
             )->count(),
         ];

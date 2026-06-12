@@ -33,10 +33,10 @@ class OutstandingService
                 'createdByCs',
             ])
             ->where('created_by_cs_id', $employee->employee_id)
-            ->whereIn('status', ['Active', 'Restricted'])
+            ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
             ->whereNotNull('final_price')
             ->get()
-            ->filter(fn($e) => $this->getRemaining($e) > 0); 
+            ->filter(fn($e) => $this->getRemaining($e) >= 0); 
     }
 
 
@@ -80,6 +80,7 @@ class OutstandingService
                 'total'            => $total,
                 'paid'             => $paid,
                 'remaining'        => $remaining,
+                'is_finished'     => $remaining == 0,
                 'next_due_date'    => $nextInstallment?->due_date?->format('d M Y'),
                 'next_due_amount'  => $nextInstallment?->amount,
                 'is_restricted'    => $isRestricted,
@@ -121,6 +122,7 @@ class OutstandingService
             'total_students'    => $rows->count(),
             'restricted_count'  => $rows->where('is_restricted', true)->count(),
             'overdue_count'     => $rows->whereNotNull('days_overdue')->count(),
+            'finished_count'    => $rows->where('is_finished', true)->count(), 
         ];
     }
 
