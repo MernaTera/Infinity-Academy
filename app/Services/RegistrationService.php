@@ -39,7 +39,6 @@ class RegistrationService
  
             $lead = Lead::findOrFail($data['lead_id']);
  
-            // ── Create Student ────────────────────────────────────────
             $student = Student::create([
                 'full_name'     => $lead->full_name,
                 'email'         => $lead->email,
@@ -57,7 +56,6 @@ class RegistrationService
                 'is_primary'   => true,
             ]);
  
-            // ── Patch & Pricing ───────────────────────────────────────
             $patchData    = $this->handlePatchSelection($data);
             $currentPatch = Patch::where('status', 'Active')->first();
  
@@ -75,12 +73,10 @@ class RegistrationService
             }
             $data['final_price'] = $pricing['final_price'];
  
-            // ── Enrollment ────────────────────────────────────────────
             $enrollment = $this->createEnrollment($student, $data, $patchData);
             $this->attachMaterials($enrollment, $data);
             $this->createFinancialRecords($enrollment, $data, $pricing, $currentPatch);
  
-            // ── Placement Test ─────────────────────────────────────
             $testScore = $data['test_score'] ?? null;
             $testFee   = floatval($data['test_fee'] ?? 0);
 
@@ -96,7 +92,6 @@ class RegistrationService
                 $enrollment->update(['placement_test_id' => $test->test_id]);
             }
 
-            // ── Admin Approval ────────────────────────────────────────
             $plan             = PaymentPlan::find($data['payment_plan_id']);
             $requiresApproval = $plan && $plan->requires_admin_approval;
  
@@ -108,7 +103,6 @@ class RegistrationService
                     'status'           => 'Pending',
                 ]);
  
-                // Notify all admins
                 $admins = \App\Models\Auth\User::whereHas('role', fn($q) =>
                     $q->where('role_name', 'Admin')
                 )->get();
@@ -130,7 +124,6 @@ class RegistrationService
                 }
             }
  
-            // ── Waiting List ──────────────────────────────────────────
             $preferredTypeMap = [
                 'current' => 'Current_Patch',
                 'next'    => 'Next_Patch',
@@ -159,8 +152,6 @@ class RegistrationService
             ]);
             event(new WaitingListUpdated($waiting));
  
-            // ── Update Lead ───────────────────────────────────────────
-            // ✅ لو requires_admin_approval → ابقى Waiting لحد ما الادمن يعمل approve
             $leadStatus = $requiresApproval ? 'Waiting' : 'Registered';
  
             $lead->update([

@@ -95,12 +95,20 @@ class OutstandingController extends Controller
             foreach ($enrollment->installmentSchedules as $inst) {
                 if ($amountLeft <= 0) break;
                 if ($amountLeft >= $inst->amount) {
+                    $oldTxId = $inst->transaction_id;
+
                     $inst->update([
                         'status'         => 'Paid',
                         'paid_at'        => now(),
                         'transaction_id' => $tx->transaction_id,
                     ]);
                     $amountLeft -= $inst->amount;
+
+                    if ($oldTxId && $oldTxId !== $tx->transaction_id) {
+                        FinancialTransaction::where('transaction_id', $oldTxId)
+                            ->where('transaction_type', 'Installment')
+                            ->delete();
+                    }
                 }
             }
 
