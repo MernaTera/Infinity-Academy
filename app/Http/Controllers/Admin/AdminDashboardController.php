@@ -46,22 +46,39 @@ class AdminDashboardController extends Controller
             ->sum('amount');
 
         // ── Payment methods breakdown ────────────────────────────────
-        $paymentMethods = DB::table('deposit_payment')
-            ->when($from, fn($q) => $q->whereBetween('deposit_payment.created_at', [$from, $to]))
-            ->select('method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
-            ->groupBy('method')
-            ->get()
-            ->keyBy('method');
+$ftMethods = DB::table('financial_transaction')
+    ->whereIn('transaction_type', ['Payment', 'Installment'])
+    ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
+    ->select('payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+    ->groupBy('payment_method')
+    ->get()->keyBy('payment_method');
 
-        $cashRevenue      = $paymentMethods['Cash']?->total ?? 0;
-        $instapayRevenue  = $paymentMethods['Instapay']?->total ?? 0;
-        $vodafoneRevenue  = $paymentMethods['Vodafone_Cash']?->total ?? 0;
-        $cardRevenue      = $paymentMethods['Card']?->total ?? 0;
-        $transferRevenue  = $paymentMethods['Transfer']?->total ?? 0;
+// من deposit_payment
+$dpMethods = DB::table('deposit_payment')
+    ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
+    ->select('method as payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+    ->groupBy('method')
+    ->get()->keyBy('payment_method');
 
-        $cashCount     = $paymentMethods['Cash']?->count ?? 0;
-        $instapayCount = $paymentMethods['Instapay']?->count ?? 0;
-        $vodafoneCount = $paymentMethods['Vodafone_Cash']?->count ?? 0;
+// Cash = Cash من الاتنين
+$cashRevenue  = ($ftMethods['Cash']?->total  ?? 0) + ($dpMethods['Cash']?->total  ?? 0);
+$cashCount    = ($ftMethods['Cash']?->count  ?? 0) + ($dpMethods['Cash']?->count  ?? 0);
+
+// InstaPay = Transfer(ft) + Instapay(dp)
+$instapayRevenue = ($ftMethods['Transfer']?->total  ?? 0) + ($dpMethods['Instapay']?->total  ?? 0);
+$instapayCount   = ($ftMethods['Transfer']?->count  ?? 0) + ($dpMethods['Instapay']?->count  ?? 0);
+
+// Vodafone = Online(ft) + Vodafone_Cash(dp)
+$vodafoneRevenue = ($ftMethods['Online']?->total       ?? 0) + ($dpMethods['Vodafone_Cash']?->total  ?? 0);
+$vodafoneCount   = ($ftMethods['Online']?->count       ?? 0) + ($dpMethods['Vodafone_Cash']?->count  ?? 0);
+
+// Card = Card من الاتنين
+$cardRevenue  = ($ftMethods['Card']?->total  ?? 0) + ($dpMethods['Card']?->total  ?? 0);
+
+$transferRevenue = $instapayRevenue; // alias للـ blade
+$onlineRevenue   = $vodafoneRevenue; // alias للـ blade
+
+$paymentMethods = collect(); // مش محتاجاه بعد كده
 
         // ── Revenue trend (last 7 days) ──────────────────────────────
         $revenueTrend = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
@@ -229,7 +246,7 @@ class AdminDashboardController extends Controller
             'totalOutstanding', 'periodEnrollments',
             // Payment methods
             'cashRevenue', 'instapayRevenue', 'vodafoneRevenue', 'cardRevenue', 'transferRevenue',
-            'cashCount', 'instapayCount', 'vodafoneCount', 'paymentMethods',
+            'cashCount', 'instapayCount', 'vodafoneCount',
             // Trends
             'trendDays', 'trendValues', 'enrollDays', 'enrollValues',
             // Installments
