@@ -280,7 +280,10 @@
                                     <tbody>
                                         @foreach($row['transactions'] as $tx)
                                         <tr>
-                                            <td style="text-transform:capitalize">{{ $tx['type'] }}</td>
+                                            <td style="text-transform:capitalize">
+                                                {{ $tx['type'] }} 
+                                                <span style="font-size:9px;color:#AAB8C8;letter-spacing:1px">({{ $tx['category'] }})</span>
+                                            </td>
                                             <td style="font-family:monospace;color:{{ $tx['type']==='Refund' ? '#DC2626' : '#059669' }}">
                                                 {{ $tx['type']==='Refund' ? '-' : '+' }}{{ number_format($tx['amount']) }} LE
                                             </td>

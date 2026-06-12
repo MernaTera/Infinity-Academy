@@ -58,6 +58,7 @@ class OutstandingService
                 ->pluck('transaction_id')
                 ->filter()
                 ->toArray();
+                
 
             $activeRestriction = $e->restrictionLogs->first();
             $isRestricted      = $e->restriction_flag || $activeRestriction;
@@ -98,7 +99,8 @@ class OutstandingService
                         ($t->transaction_type === 'Installment' && !in_array($t->transaction_id, $scheduledPendingIds))
                     )
                     ->map(fn($t) => [
-                        'type'   => $t->transaction_type,
+                        'type'     => $t->transaction_type,
+                        'category' => $t->transaction_category,
                         'amount' => $t->amount,
                         'method' => $t->payment_method,
                         'date'   => $t->created_at?->format('d M Y'),
