@@ -22,108 +22,135 @@ class AdminDashboardController extends Controller
 {
     public function index(Request $request)
     {
-        // ── Period filter ───────────────────────────────────────────
-        $period = $request->query('period', 'patch'); // day | week | month | patch | all
+        $period = $request->query('period', 'patch');
 
         $currentPatch  = Patch::where('status', 'Active')->latest('start_date')->first();
         $upcomingPatch = Patch::where('status', 'Upcoming')->latest('start_date')->first();
 
         [$from, $to] = $this->periodRange($period, $currentPatch);
 
-        // ── Revenue by period ────────────────────────────────────────
-        $revenueQuery = fn() => FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
-            ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]));
+        // ── Helper closures ───────────────────────────────────────────
+        // Apply period to a financial_transaction query (uses patch_id for patch period)
+        $applyFtPeriod = function ($q) use ($period, $currentPatch, $from, $to) {
+            if ($period === 'patch' && $currentPatch) {
+                return $q->where('patch_id', $currentPatch->patch_id);
+            }
+            if ($from) {
+                return $q->whereBetween('created_at', [$from, $to]);
+            }
+            return $q;
+        };
 
+        // Apply period to a date-based query (created_at only)
+        $applyDatePeriod = function ($q) use ($from, $to) {
+            if ($from) {
+                return $q->whereBetween('created_at', [$from, $to]);
+            }
+            return $q;
+        };
+
+        // ── Revenue ───────────────────────────────────────────────────
         $patchRevenue = $currentPatch
             ? FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
                 ->where('patch_id', $currentPatch->patch_id)->sum('amount')
             : 0;
 
-        $periodRevenue = $revenueQuery()->sum('amount');
-        $totalRevenue  = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])->sum('amount');
-        $totalRefunded = FinancialTransaction::where('transaction_type', 'Refund')
-            ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
-            ->sum('amount');
+        $periodRevenue = $applyFtPeriod(
+            FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
+        )->sum('amount');
 
-        // ── Payment methods breakdown ────────────────────────────────
-$ftMethods = DB::table('financial_transaction')
-    ->whereIn('transaction_type', ['Payment', 'Installment'])
-    ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
-    ->select('payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
-    ->groupBy('payment_method')
-    ->get()->keyBy('payment_method');
+        $totalRevenue = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])->sum('amount');
 
-// من deposit_payment
-$dpMethods = DB::table('deposit_payment')
-    ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
-    ->select('method as payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
-    ->groupBy('method')
-    ->get()->keyBy('payment_method');
+        $totalRefunded = $applyFtPeriod(
+            FinancialTransaction::where('transaction_type', 'Refund')
+        )->sum('amount');
 
-// Cash = Cash من الاتنين
-$cashRevenue  = ($ftMethods['Cash']?->total  ?? 0) + ($dpMethods['Cash']?->total  ?? 0);
-$cashCount    = ($ftMethods['Cash']?->count  ?? 0) + ($dpMethods['Cash']?->count  ?? 0);
+        // ── Payment methods breakdown ─────────────────────────────────
+        // financial_transaction — filter by patch_id for patch period
+        $ftMethods = $applyFtPeriod(
+            DB::table('financial_transaction')
+                ->whereIn('transaction_type', ['Payment', 'Installment'])
+        )
+        ->select('payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+        ->groupBy('payment_method')
+        ->get()->keyBy('payment_method');
 
-// InstaPay = Transfer(ft) + Instapay(dp)
-$instapayRevenue = ($ftMethods['Transfer']?->total  ?? 0) + ($dpMethods['Instapay']?->total  ?? 0);
-$instapayCount   = ($ftMethods['Transfer']?->count  ?? 0) + ($dpMethods['Instapay']?->count  ?? 0);
+        // deposit_payment — no patch_id, use date range only
+        $dpMethods = $applyDatePeriod(DB::table('deposit_payment'))
+            ->select('method as payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+            ->groupBy('method')
+            ->get()->keyBy('payment_method');
 
-// Vodafone = Online(ft) + Vodafone_Cash(dp)
-$vodafoneRevenue = ($ftMethods['Online']?->total       ?? 0) + ($dpMethods['Vodafone_Cash']?->total  ?? 0);
-$vodafoneCount   = ($ftMethods['Online']?->count       ?? 0) + ($dpMethods['Vodafone_Cash']?->count  ?? 0);
+        // Cash
+        $cashRevenue = ($ftMethods['Cash']?->total  ?? 0) + ($dpMethods['Cash']?->total  ?? 0);
+        $cashCount   = ($ftMethods['Cash']?->count  ?? 0) + ($dpMethods['Cash']?->count  ?? 0);
 
-// Card = Card من الاتنين
-$cardRevenue  = ($ftMethods['Card']?->total  ?? 0) + ($dpMethods['Card']?->total  ?? 0);
+        // InstaPay = Transfer(ft) + Instapay(dp)
+        $instapayRevenue = ($ftMethods['Transfer']?->total  ?? 0) + ($dpMethods['Instapay']?->total  ?? 0);
+        $instapayCount   = ($ftMethods['Transfer']?->count  ?? 0) + ($dpMethods['Instapay']?->count  ?? 0);
 
-$transferRevenue = $instapayRevenue; // alias للـ blade
-$onlineRevenue   = $vodafoneRevenue; // alias للـ blade
+        // Vodafone Cash = Online(ft) + Vodafone_Cash(dp)
+        $vodafoneRevenue = ($ftMethods['Online']?->total         ?? 0) + ($dpMethods['Vodafone_Cash']?->total  ?? 0);
+        $vodafoneCount   = ($ftMethods['Online']?->count         ?? 0) + ($dpMethods['Vodafone_Cash']?->count  ?? 0);
 
-$paymentMethods = collect(); // مش محتاجاه بعد كده
+        // Card
+        $cardRevenue = ($ftMethods['Card']?->total  ?? 0) + ($dpMethods['Card']?->total  ?? 0);
+        $cardCount   = ($ftMethods['Card']?->count  ?? 0) + ($dpMethods['Card']?->count  ?? 0);
 
-        // ── Revenue trend (last 7 days) ──────────────────────────────
+        // ── Revenue trend (last 7 days — always all-time trend) ───────
         $revenueTrend = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
             ->where('created_at', '>=', now()->subDays(6)->startOfDay())
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(amount) as total'))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->keyBy('date');
+            ->groupBy('date')->orderBy('date')->get()->keyBy('date');
 
-        $trendDays   = [];
-        $trendValues = [];
+        $trendDays = []; $trendValues = [];
         for ($i = 6; $i >= 0; $i--) {
             $d = now()->subDays($i)->format('Y-m-d');
             $trendDays[]   = now()->subDays($i)->format('d M');
             $trendValues[] = $revenueTrend[$d]?->total ?? 0;
         }
 
-        // ── Enrollments by period ────────────────────────────────────
-        $periodEnrollments = Enrollment::when($from, fn($q) =>
-            $q->whereBetween('created_at', [$from, $to])
-        )->count();
+        // ── Enrollments by period ─────────────────────────────────────
+        $periodEnrollments = Enrollment::when($period === 'patch' && $currentPatch,
+                fn($q) => $q->where('patch_id', $currentPatch->patch_id))
+            ->when($period !== 'patch' && $from,
+                fn($q) => $q->whereBetween('created_at', [$from, $to]))
+            ->count();
 
-        // ── Outstanding ──────────────────────────────────────────────
-        $allActiveEnrollments = Enrollment::with('financialTransactions')
-            ->whereIn('status', ['Active', 'Restricted'])->get();
+        // ── Outstanding — accurate calculation ────────────────────────
+        $allActiveEnrollments = Enrollment::with([
+            'financialTransactions',
+            'installmentSchedules',
+        ])->whereIn('status', ['Active', 'Restricted', 'Waiting'])
+          ->whereNotNull('final_price')
+          ->get();
 
         $totalOutstanding = $allActiveEnrollments->sum(function ($e) {
-            $paid     = $e->financialTransactions->whereIn('transaction_type', ['Payment','Installment'])->sum('amount');
-            $refunded = $e->financialTransactions->where('transaction_type','Refund')->sum('amount');
-            return max(0, $e->final_price - ($paid - $refunded));
+            $totalFees = (float) $e->final_price
+                + (float) $e->financialTransactions->where('transaction_category', 'Material')->sum('amount')
+                + (float) $e->financialTransactions->where('transaction_category', 'Test')->sum('amount');
+
+            $paidInstIds = $e->installmentSchedules
+                ->where('status', 'Paid')
+                ->pluck('transaction_id')->filter()->toArray();
+
+            $paid = (float) $e->financialTransactions->where('transaction_type', 'Payment')->sum('amount')
+                  + (float) $e->financialTransactions->where('transaction_type', 'Installment')
+                        ->whereIn('transaction_id', $paidInstIds)->sum('amount')
+                  - (float) $e->financialTransactions->where('transaction_type', 'Refund')->sum('amount');
+
+            $remaining = $totalFees - $paid;
+            return $remaining < 0.01 ? 0 : $remaining;
         });
 
-        // ── Installments ─────────────────────────────────────────────
+        // ── Installments ──────────────────────────────────────────────
         $pendingInstallments = InstallmentSchedule::where('status', 'Pending')->count();
         $overdueInstallments = InstallmentSchedule::where('status', 'Overdue')->count();
         $pendingApprovals    = \App\Models\Finance\InstallmentApprovalLog::where('status', 'Pending')->count();
+        $pendingRefunds      = RefundRequest::where('status', 'Pending')->count();
+        $pendingReports      = Report::where('status', 'Submitted')->count();
 
-        // ── Refunds ──────────────────────────────────────────────────
-        $pendingRefunds  = RefundRequest::where('status', 'Pending')->count();
-
-        // ── Reports ──────────────────────────────────────────────────
-        $pendingReports  = Report::where('status', 'Submitted')->count();
-
-        // ── Academic ─────────────────────────────────────────────────
+        // ── Academic ──────────────────────────────────────────────────
         $activeCourses      = CourseInstance::where('status', 'Active')->count();
         $upcomingCourses    = CourseInstance::where('status', 'Upcoming')->count();
         $completedCourses   = CourseInstance::where('status', 'Completed')
@@ -132,29 +159,23 @@ $paymentMethods = collect(); // مش محتاجاه بعد كده
         $restrictedStudents = Enrollment::where('status', 'Restricted')->count();
         $waitingList        = WaitingList::where('status', 'Active')->count();
 
-        // ── Capacity utilisation ─────────────────────────────────────
-        $instances = CourseInstance::where('status', 'Active')->withCount('enrollments')->get();
+        $instances   = CourseInstance::where('status', 'Active')->withCount('enrollments')->get();
         $avgCapacity = $instances->count() > 0
-            ? round($instances->avg(fn($i) =>
-                $i->capacity > 0 ? ($i->enrollments_count / $i->capacity * 100) : 0))
+            ? round($instances->avg(fn($i) => $i->capacity > 0 ? ($i->enrollments_count / $i->capacity * 100) : 0))
             : 0;
 
-        // ── CS Performance ───────────────────────────────────────────
-        $csEmployees = Employee::whereHas('user.role', fn($q) =>
-            $q->where('role_name', 'Customer Service'))
+        // ── CS Performance ────────────────────────────────────────────
+        $csEmployees = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
             ->where('status', 'Active')
             ->get()
             ->map(function ($emp) use ($currentPatch, $from, $to, $period) {
-                // Revenue in selected period
                 $revQ = RevenueSplit::where('employee_id', $emp->employee_id);
-                if ($period === 'patch' && $currentPatch) {
+                if ($period === 'patch' && $currentPatch)
                     $revQ->where('patch_id', $currentPatch->patch_id);
-                } elseif ($from) {
+                elseif ($from)
                     $revQ->whereBetween('created_at', [$from, $to]);
-                }
                 $revenue = $revQ->sum('amount_allocated');
 
-                // Target
                 $target = 0;
                 if ($period === 'patch' && $currentPatch) {
                     $target = \App\Models\Enrollment\CsTarget::where('employee_id', $emp->employee_id)
@@ -164,16 +185,18 @@ $paymentMethods = collect(); // مش محتاجاه بعد كده
                         ->where('month', now()->format('Y-m'))->value('target_amount') ?? 0;
                 }
 
-                // Registrations
                 $regQ = Enrollment::where('created_by_cs_id', $emp->employee_id);
-                if ($from) $regQ->whereBetween('created_at', [$from, $to]);
+                if ($period === 'patch' && $currentPatch)
+                    $regQ->where('patch_id', $currentPatch->patch_id);
+                elseif ($from)
+                    $regQ->whereBetween('created_at', [$from, $to]);
                 $registrations = $regQ->count();
 
-                $emp->patch_revenue  = $revenue;
-                $emp->target         = $target;
-                $emp->achievement    = $target > 0 ? round($revenue / $target * 100) : 0;
-                $emp->registrations  = $registrations;
-                $emp->leads_count    = Lead::where('owner_cs_id', $emp->employee_id)->count();
+                $emp->patch_revenue = $revenue;
+                $emp->target        = $target;
+                $emp->achievement   = $target > 0 ? round($revenue / $target * 100) : 0;
+                $emp->registrations = $registrations;
+                $emp->leads_count   = Lead::where('owner_cs_id', $emp->employee_id)->count();
                 return $emp;
             })
             ->sortByDesc('patch_revenue');
@@ -182,88 +205,83 @@ $paymentMethods = collect(); // مش محتاجاه بعد كده
         $totalAchieved = $csEmployees->sum('patch_revenue');
         $targetPct     = $totalTarget > 0 ? round($totalAchieved / $totalTarget * 100) : 0;
 
-        // ── HR ───────────────────────────────────────────────────────
+        // ── HR ────────────────────────────────────────────────────────
         $totalEmployees = Employee::where('status', 'Active')->count();
-        $totalTeachers  = Employee::whereHas('user.role', fn($q) =>
-            $q->where('role_name', 'Teacher'))->where('status', 'Active')->count();
+        $totalTeachers  = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Teacher'))
+            ->where('status', 'Active')->count();
 
-        // ── Revenue by course ────────────────────────────────────────
-        $revenueByCourse = FinancialTransaction::query()
-            ->whereIn('financial_transaction.transaction_type', ['Payment', 'Installment'])
-            ->when($from, fn($q) => $q->whereBetween('financial_transaction.created_at', [$from, $to]))
-            ->join('enrollment', 'financial_transaction.enrollment_id', '=', 'enrollment.enrollment_id')
-            ->join('course_instance', 'enrollment.course_instance_id', '=', 'course_instance.course_instance_id')
-            ->join('course_template', 'course_instance.course_template_id', '=', 'course_template.course_template_id')
-            ->select('course_template.name', DB::raw('SUM(financial_transaction.amount) as total'), DB::raw('COUNT(*) as count'))
-            ->groupBy('course_template.name')
+        // ── Revenue by course — handles null course_instance_id ───────
+        $revenueByCourse = DB::table('financial_transaction as ft')
+            ->join('enrollment as e', 'ft.enrollment_id', '=', 'e.enrollment_id')
+            ->leftJoin('course_instance as ci', 'e.course_instance_id', '=', 'ci.course_instance_id')
+            ->leftJoin('course_template as ct1', 'ci.course_template_id', '=', 'ct1.course_template_id')
+            ->leftJoin('course_template as ct2', 'e.course_template_id', '=', 'ct2.course_template_id')
+            ->whereIn('ft.transaction_type', ['Payment', 'Installment'])
+            ->when($period === 'patch' && $currentPatch, fn($q) => $q->where('ft.patch_id', $currentPatch->patch_id))
+            ->when($period !== 'patch' && $from, fn($q) => $q->whereBetween('ft.created_at', [$from, $to]))
+            ->select(
+                DB::raw('COALESCE(ct1.name, ct2.name) as name'),
+                DB::raw('SUM(ft.amount) as total'),
+                DB::raw('COUNT(*) as count')
+            )
+            ->groupBy(DB::raw('COALESCE(ct1.name, ct2.name)'))
+            ->having('name', '!=', null)
             ->orderByDesc('total')
             ->limit(6)
             ->get();
 
-        // ── Revenue by branch ────────────────────────────────────────
-        $revenueByBranch = FinancialTransaction::query()
-            ->whereIn('transaction_type', ['Payment', 'Installment'])
-            ->when($from, fn($q) => $q->whereBetween('financial_transaction.created_at', [$from, $to]))
-            ->join('branch', 'financial_transaction.branch_id', '=', 'branch.branch_id')
-            ->select('branch.name', DB::raw('SUM(financial_transaction.amount) as total'))
+        // ── Revenue by branch ─────────────────────────────────────────
+        $revenueByBranch = DB::table('financial_transaction as ft')
+            ->join('branch', 'ft.branch_id', '=', 'branch.branch_id')
+            ->whereIn('ft.transaction_type', ['Payment', 'Installment'])
+            ->when($period === 'patch' && $currentPatch, fn($q) => $q->where('ft.patch_id', $currentPatch->patch_id))
+            ->when($period !== 'patch' && $from, fn($q) => $q->whereBetween('ft.created_at', [$from, $to]))
+            ->select('branch.name', DB::raw('SUM(ft.amount) as total'))
             ->groupBy('branch.name')
             ->orderByDesc('total')
             ->get();
 
-        // ── Enrollments per day (last 14 days) ──────────────────────
+        // ── Enrollment trend (last 14 days — always) ──────────────────
         $enrollTrend = Enrollment::where('created_at', '>=', now()->subDays(13)->startOfDay())
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as total'))
-            ->groupBy('date')
-            ->orderBy('date')
-            ->get()
-            ->keyBy('date');
+            ->groupBy('date')->orderBy('date')->get()->keyBy('date');
 
-        $enrollDays   = [];
-        $enrollValues = [];
+        $enrollDays = []; $enrollValues = [];
         for ($i = 13; $i >= 0; $i--) {
             $d = now()->subDays($i)->format('Y-m-d');
             $enrollDays[]   = now()->subDays($i)->format('d M');
             $enrollValues[] = $enrollTrend[$d]?->total ?? 0;
         }
 
-        // ── Recent Enrollments ───────────────────────────────────────
-        $recentEnrollments = Enrollment::with([
-            'student', 'courseInstance.courseTemplate', 'createdByCs'
-        ])->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
-          ->latest()->limit(10)->get();
+        // ── Recent Enrollments ────────────────────────────────────────
+        $recentEnrollments = Enrollment::with(['student', 'courseTemplate', 'courseInstance.courseTemplate', 'createdByCs'])
+            ->when($period === 'patch' && $currentPatch, fn($q) => $q->where('patch_id', $currentPatch->patch_id))
+            ->when($period !== 'patch' && $from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
+            ->latest()->limit(10)->get();
 
-        // ── Leads stats ──────────────────────────────────────────────
-        $totalLeads      = Lead::when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))->count();
-        $convertedLeads  = Lead::where('status', 'Registered')
+        // ── Leads stats ───────────────────────────────────────────────
+        $totalLeads = Lead::when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))->count();
+        $convertedLeads = Lead::where('status', 'Registered')
             ->when($from, fn($q) => $q->whereBetween('updated_at', [$from, $to]))->count();
-        $conversionRate  = $totalLeads > 0 ? round($convertedLeads / $totalLeads * 100) : 0;
+        $conversionRate = $totalLeads > 0 ? round($convertedLeads / $totalLeads * 100) : 0;
 
         return view('admin.dashboard', compact(
-            // Core
             'currentPatch', 'upcomingPatch', 'period',
-            // Revenue
             'patchRevenue', 'periodRevenue', 'totalRevenue', 'totalRefunded',
             'totalOutstanding', 'periodEnrollments',
-            // Payment methods
-            'cashRevenue', 'instapayRevenue', 'vodafoneRevenue', 'cardRevenue', 'transferRevenue',
-            'cashCount', 'instapayCount', 'vodafoneCount',
-            // Trends
+            'cashRevenue', 'cashCount',
+            'instapayRevenue', 'instapayCount',
+            'vodafoneRevenue', 'vodafoneCount',
+            'cardRevenue', 'cardCount',
             'trendDays', 'trendValues', 'enrollDays', 'enrollValues',
-            // Installments
             'pendingInstallments', 'overdueInstallments', 'pendingApprovals',
             'pendingRefunds', 'pendingReports',
-            // Academic
             'activeCourses', 'upcomingCourses', 'completedCourses',
             'totalStudents', 'restrictedStudents', 'waitingList', 'avgCapacity',
-            // CS
             'csEmployees', 'totalTarget', 'totalAchieved', 'targetPct',
-            // HR
             'totalEmployees', 'totalTeachers',
-            // Charts
             'revenueByCourse', 'revenueByBranch',
-            // Enrollments
             'recentEnrollments',
-            // Leads
             'totalLeads', 'convertedLeads', 'conversionRate',
         ));
     }
@@ -277,7 +295,7 @@ $paymentMethods = collect(); // مش محتاجاه بعد كده
             'patch' => $patch
                 ? [Carbon::parse($patch->start_date)->startOfDay(), Carbon::parse($patch->end_date)->endOfDay()]
                 : [null, null],
-            default => [null, null], // all time
+            default => [null, null],
         };
     }
 }
