@@ -300,6 +300,11 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
             <span class="sl-txt">Audit Logs</span>
         </a>
+        <a href="{{ route('admin.branches.index') }}" data-tip="Branches"
+        class="sl {{ request()->routeIs('admin.branches.*') ? 'active' : '' }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            <span class="sl-txt">Branches</span>
+        </a>
     </div>
 
 </nav>

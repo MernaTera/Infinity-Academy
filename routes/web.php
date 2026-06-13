@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AdminRefundController;
 use App\Http\Controllers\Admin\TestFeeAdminController;
 use App\Http\Controllers\Admin\ContractTypeAdminController;
+use App\Http\Controllers\Admin\BranchAdminController;
 
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
@@ -338,6 +339,13 @@ Route::middleware(['auth', 'permission:hr.view'])
 
         // Audit
         Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
+
+        //Branches
+        Route::get('/branches',                [BranchAdminController::class, 'index'])->name('branches.index');
+        Route::post('/branches',               [BranchAdminController::class, 'store'])->name('branches.store');
+        Route::put('/branches/{id}',           [BranchAdminController::class, 'update'])->name('branches.update');
+        Route::patch('/branches/{id}/toggle',  [BranchAdminController::class, 'toggle'])->name('branches.toggle');
+        Route::delete('/branches/{id}',        [BranchAdminController::class, 'destroy'])->name('branches.destroy');
     });
 
 // ─────────────────────────────────────────────────────────────────
