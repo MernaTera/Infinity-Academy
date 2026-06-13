@@ -603,8 +603,7 @@ window.buildInvoice = function() {
         const amt = remaining / installments;
         payHTML += `<div style="margin-top:16px;"><div class="inf-sec-label" style="margin-bottom:10px;">Installment Schedule</div><table class="inf-inst-table"><thead><tr><th>#</th><th>Amount</th><th>Estimated Due</th><th>Status</th></tr></thead><tbody>`;
         for (let i = 1; i <= installments; i++) {
-            const d = new Date(); d.setDate(d.getDate() + grace * i);
-            payHTML += `<tr><td style="color:#AAB8C8;">${i}</td><td>${fmtLE(amt)}</td><td>${d.toLocaleDateString('en-EG',{day:'2-digit',month:'short',year:'numeric'})}</td><td><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#AAB8C8;background:rgba(122,138,154,0.1);padding:3px 8px;border-radius:3px;">Pending</span></td></tr>`;
+            payHTML += `<tr><td style="color:#AAB8C8;">${i}</td><td>${fmtLE(amt)}</td><td style="color:#AAB8C8;font-size:11px;">Upon course assignment</td><td><span style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#AAB8C8;background:rgba(122,138,154,0.1);padding:3px 8px;border-radius:3px;">Pending</span></td></tr>`;
         }
         payHTML += `</tbody></table></div>`;
     }

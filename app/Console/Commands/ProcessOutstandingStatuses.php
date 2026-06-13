@@ -14,11 +14,23 @@ class ProcessOutstandingStatuses extends Command
 
     public function handle(): void
     {
-        $updated = InstallmentSchedule::where('status', 'Pending')
-            ->where('due_date', '<', today())
-            ->update(['status' => 'Overdue']);
+        $pendingSchedules = InstallmentSchedule::with(['enrollment.paymentPlan'])
+            ->where('status', 'Pending')
+            ->whereNotNull('due_date')
+            ->get();
 
-        $this->info("Marked Overdue: {$updated} installments.");
+        $markedOverdue = 0;
+        foreach ($pendingSchedules as $schedule) {
+            $grace   = $schedule->enrollment?->paymentPlan?->grace_period_days ?? 0;
+            $dueDate = \Carbon\Carbon::parse($schedule->due_date)->addDays($grace);
+
+            if (today()->gt($dueDate)) {
+                $schedule->update(['status' => 'Overdue']);
+                $markedOverdue++;
+            }
+        }
+
+        $this->info("Marked Overdue: {$markedOverdue} installments.");
 
         $overdueEnrollmentIds = InstallmentSchedule::where('status', 'Overdue')
             ->pluck('enrollment_id')
@@ -40,7 +52,7 @@ class ProcessOutstandingStatuses extends Command
             RestrictionLog::create([
                 'enrollment_id' => $enrollmentId,
                 'triggered_by'  => 'System',
-                'reason'        => 'installment_violation', 
+                'reason'        => 'installment_violation',
                 'triggered_at'  => now(),
             ]);
 

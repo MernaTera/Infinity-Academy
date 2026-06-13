@@ -65,8 +65,24 @@ class StudentCareController extends Controller
 
         $waiting->enrollment->update([
             'course_instance_id' => $instance->course_instance_id,
-            'status' => 'Active'
+            'status'             => 'Active',
         ]);
+
+        $sessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+            ->orderBy('session_number')
+            ->get();
+
+        $schedules = \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $waiting->enrollment->enrollment_id)
+            ->where('status', 'Pending')
+            ->orderBy('installment_number')
+            ->get();
+
+        foreach ($schedules as $i => $schedule) {
+            $session = $sessions[$i] ?? null;
+            if ($session) {
+                $schedule->update(['due_date' => $session->session_date]);
+            }
+        }
 
         $waiting->update([
             'status' => 'Assigned'

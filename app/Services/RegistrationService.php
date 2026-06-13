@@ -522,12 +522,21 @@ class RegistrationService
         }
         $plan = PaymentPlan::find($data['payment_plan_id']);
         if ($plan && $plan->installment_count > 0) {
-            $remaining   = $pricing['final_price'] - $depositAmount;
-            $instAmount  = round($remaining / $plan->installment_count, 2);
-            $grace       = $plan->grace_period_days ?? 7;
+            if ($plan->requires_admin_approval) {
+                return;
+            }
+            $remaining  = $pricing['final_price'] - $depositAmount;
+            $instAmount = round($remaining / $plan->installment_count, 2);
+
+            $existingSchedules = \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->get();
+            foreach ($existingSchedules as $sched) {
+                FinancialTransaction::where('transaction_id', $sched->transaction_id)
+                    ->where('transaction_type', 'Installment')
+                    ->delete();
+            }
+            \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->delete();
 
             for ($i = 1; $i <= $plan->installment_count; $i++) {
-                $dueDate = now()->addDays($grace * $i);
 
                 $instTx = FinancialTransaction::create([
                     'enrollment_id'          => $enrollment->enrollment_id,
@@ -544,7 +553,7 @@ class RegistrationService
                     'enrollment_id'      => $enrollment->enrollment_id,
                     'transaction_id'     => $instTx->transaction_id,
                     'installment_number' => $i,
-                    'due_date'           => $dueDate,
+                    'due_date'           => null,
                     'amount'             => $instAmount,
                     'status'             => 'Pending',
                 ]);

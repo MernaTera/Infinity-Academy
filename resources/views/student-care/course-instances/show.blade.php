@@ -364,7 +364,20 @@
                             </span>
                         </td>
                         <td>
+                        @php
+                            $insts   = $enrollment->installmentSchedules ?? collect();
+                            $allPaid = $insts->count() > 0 && $insts->every(fn($i) => $i->status === 'Paid');
+                            $overdue = $insts->where('status','Overdue')->count() > 0;
+                        @endphp
+                        @if($insts->count() === 0)
+                            <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#1B4FA8;">Full Cash</span>
+                        @elseif($allPaid)
+                            <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#059669;">Settled</span>
+                        @elseif($overdue)
+                            <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#DC2626;">Overdue</span>
+                        @else
                             <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#C47010;">Pending</span>
+                        @endif
                         </td>
 
                         {{-- ✅ Actions Column --}}

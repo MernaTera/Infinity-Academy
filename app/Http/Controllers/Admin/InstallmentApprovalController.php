@@ -67,7 +67,7 @@ class InstallmentApprovalController extends Controller
             // ── Activate enrollment ───────────────────────────────────
             $enrollment->update(['status' => 'Active']);
 
-            // ── Create installment schedule ───────────────────────────
+            // ── Calculate installment amount ──────────────────────────
             $remaining      = $enrollment->final_price * (1 - $plan->deposit_percentage / 100);
             $installmentAmt = $plan->installment_count > 0
                 ? round($remaining / $plan->installment_count, 2)
@@ -77,8 +77,17 @@ class InstallmentApprovalController extends Controller
             $branchId     = $adminEmployee?->branch_id ?? $currentPatch?->branch_id;
             $patchId      = $enrollment->patch_id ?? $currentPatch?->patch_id;
 
+            // ── Cleanup any orphaned installments ─────────────────────
+            $existingSchedules = InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->get();
+            foreach ($existingSchedules as $sched) {
+                FinancialTransaction::where('transaction_id', $sched->transaction_id)
+                    ->where('transaction_type', 'Installment')
+                    ->delete();
+            }
+            InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->delete();
+
+            // ── Create installment schedule ───────────────────────────
             for ($i = 1; $i <= $plan->installment_count; $i++) {
-                $dueDate = now()->addDays($plan->grace_period_days * $i);
 
                 $tx = FinancialTransaction::create([
                     'enrollment_id'          => $enrollment->enrollment_id,
@@ -95,7 +104,7 @@ class InstallmentApprovalController extends Controller
                     'enrollment_id'      => $enrollment->enrollment_id,
                     'transaction_id'     => $tx->transaction_id,
                     'installment_number' => $i,
-                    'due_date'           => $dueDate,
+                    'due_date'           => null, // ✅ يتحدد لما SC تحط الطالب في course
                     'amount'             => $installmentAmt,
                     'status'             => 'Pending',
                 ]);
@@ -153,7 +162,7 @@ class InstallmentApprovalController extends Controller
             $enrollment    = $log->enrollment;
             $enrollmentId  = $enrollment->enrollment_id;
 
-            // ── 1. حذف الـ financial records فقط ─────────────────────
+            // ── 1. حذف الـ financial records ─────────────────────────
             $txIds = FinancialTransaction::where('enrollment_id', $enrollmentId)
                 ->pluck('transaction_id');
             RevenueSplit::whereIn('transaction_id', $txIds)->delete();
@@ -171,7 +180,6 @@ class InstallmentApprovalController extends Controller
             }
 
             // ── 4. الـ enrollment يفضل موجود بـ Cancelled ─────────────
-            // ✅ مش بنمسحه عشان الـ log يفضل يلاقيه
             $enrollment->update(['status' => 'Cancelled']);
 
             // ── 5. Lead يرجع Waiting ──────────────────────────────────

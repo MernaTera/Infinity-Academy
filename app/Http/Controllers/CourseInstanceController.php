@@ -130,7 +130,6 @@ class CourseInstanceController extends Controller
                     'created_by_employee_id' => $employeeId,
                 ]);
 
-                // Validate each pair's time against its time slot
                 foreach ($data['day_of_week'] as $pair) {
                     $startTime  = $data['start_times'][$pair] ?? null;
                     $timeSlotId = $data['time_slot_ids'][$pair] ?? null;
@@ -146,7 +145,6 @@ class CourseInstanceController extends Controller
                     }
                 }
 
-                // Clear old (safety)
                 \App\Models\Academic\InstanceSchedule::where('course_instance_id', $instance->course_instance_id)->delete();
                 \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();
 
@@ -174,6 +172,7 @@ class CourseInstanceController extends Controller
             'courseTemplate','level','sublevel','teacher.employee',
             'branch','patch','room',
             'enrollments.student.phones',
+            'enrollments.installmentSchedules',
             'sessions',
             'instanceSchedules.timeSlot',
             'enrollments.activePostponement',

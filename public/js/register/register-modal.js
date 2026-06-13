@@ -222,8 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (installments > 0 && tbody) {
             const amt = remaining / installments;
             for (let i = 1; i <= installments; i++) {
-                const due = new Date(); due.setDate(due.getDate() + grace * i);
-                tbody.innerHTML += `<tr><td>${i}</td><td>${fmt(amt)}</td><td>${due.toISOString().split('T')[0]}</td></tr>`;
+                tbody.innerHTML += `<tr><td>${i}</td><td>${fmt(amt)}</td><td style="color:#AAB8C8;font-size:11px;">Upon course assignment</td></tr>`;
             }
             if (table) table.style.display = 'table';
             if (label) label.style.display = 'block';
