@@ -30,7 +30,7 @@ use App\Models\HR\Teacher;
 class ContractType extends Model
 {
 	protected $table = 'contract_type';
-	protected $primaryKey = 'contract_id';
+	protected $primaryKey = 'contract_type_id';
 	public $timestamps = true;
 
 	protected $casts = [
@@ -46,6 +46,7 @@ class ContractType extends Model
 		'teacher_id',
 		'patch_id',
 		'contract_type',
+		'name',
 		'max_sessions_allowed',
 		'is_active',
 		'created_by_admin_id'

@@ -52,6 +52,7 @@ use Database\Seeders\HR\EmployeeSeeder;
 use Database\Seeders\HR\TeacherSeeder;
 use Database\Seeders\HR\TeacherAvailabilitySeeder;
 use Database\Seeders\HR\ContractTypeSeeder;
+use Database\Seeders\HR\TeacherContractSeeder;
 
 use Database\Seeders\Attendance\AttendanceSeeder;
 
@@ -89,6 +90,7 @@ class DatabaseSeeder extends Seeder
             EmployeeSeeder::class,
             EnglishLevelSeeder::class,
             TeacherSeeder::class,
+            TeacherContractSeeder::class,
         ]);
 
         //  ACADEMIC 

@@ -65,8 +65,9 @@ class EmployeeController extends Controller
         $branches      = Branch::all();
         $englishLevels = EnglishLevel::all();
         $patches       = Patch::whereIn('status', ['Active', 'Upcoming'])->get();
+        $contractTypes = \App\Models\HR\ContractType::where('is_active', true)->get();
 
-        return view('admin.employees.create', compact('roles', 'branches', 'englishLevels', 'patches'));
+        return view('admin.employees.create', compact('roles', 'branches', 'englishLevels', 'patches', 'contractTypes'));
     }
 
     /*

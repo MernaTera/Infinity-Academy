@@ -7,32 +7,29 @@ use App\Models\HR\ContractType;
 use App\Models\HR\Teacher;
 use App\Models\Academic\Patch;
 use App\Models\HR\Employee;
+use App\Models\HR\TeacherContract;
 
 class ContractTypeSeeder extends Seeder
 {
     public function run(): void
     {
-        $teachers = Teacher::all();
-        $patches = Patch::all();
         $admin = Employee::first();
 
-        $types = ['PT', 'FT', 'OT'];
+        $types = [
+            ['name' => 'Part Time',  'max_sessions_allowed' => 8],
+            ['name' => 'Full Time',  'max_sessions_allowed' => 9],
+            ['name' => 'Overtime',   'max_sessions_allowed' => 15],
+        ];
 
-        $data = [];
-
-        foreach ($teachers as $teacher) {
-            foreach ($patches as $patch) {
-
-                $data[] = [
-                    'teacher_id' => $teacher->teacher_id,
-                    'patch_id' => $patch->patch_id,
-                    'contract_type' => $types[array_rand($types)],
-                    'max_sessions_allowed' => rand(10, 30),
-                    'created_by_admin_id' => $admin->employee_id,
-                ];
-            }
+        foreach ($types as $type) {
+            ContractType::create([
+                'name'                 => $type['name'],
+                'max_sessions_allowed' => $type['max_sessions_allowed'],
+                'is_active'            => true,
+                'created_by_admin_id'  => $admin->employee_id,
+            ]);
         }
 
-        ContractType::insert($data);
+
     }
 }

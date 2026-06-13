@@ -33,6 +33,7 @@ use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AdminRefundController;
 use App\Http\Controllers\Admin\TestFeeAdminController;
+use App\Http\Controllers\Admin\ContractTypeAdminController;
 
 use App\Http\Controllers\Teacher\TeacherController;
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
@@ -284,6 +285,12 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::put('/rooms/{id}',          [RoomController::class, 'update'])->name('rooms.update');
         Route::patch('/rooms/{id}/toggle', [RoomController::class, 'toggle'])->name('rooms.toggle');
         Route::delete('/rooms/{id}',       [RoomController::class, 'destroy'])->name('rooms.destroy');
+
+        // Contract Types
+        Route::get('/contract-types',              [ContractTypeAdminController::class, 'index'])->name('contract-types.index');
+        Route::post('/contract-types',             [ContractTypeAdminController::class, 'store'])->name('contract-types.store');
+        Route::put('/contract-types/{id}',         [ContractTypeAdminController::class, 'update'])->name('contract-types.update');
+        Route::patch('/contract-types/{id}/toggle',[ContractTypeAdminController::class, 'toggle'])->name('contract-types.toggle');
 
         // Payment Policy
         Route::get('/payment-policy',              [PaymentPolicyController::class, 'index'])->name('payment-policy.index');

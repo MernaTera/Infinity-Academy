@@ -126,16 +126,25 @@
                         </div>
                         <div class="form-field">
                             <label class="form-label">Contract Type</label>
-                            <select name="contract_type" class="form-control">
-                                <option value="">— Select —</option>
-                                <option value="PT">Part-Time (&lt; 9 sessions)</option>
-                                <option value="FT">Full-Time (= 9 sessions)</option>
-                                <option value="OT">Overtime (&gt; 9 sessions)</option>
+                            <select name="contract_type_id" class="form-control" id="contractTypeSelect"
+                                    onchange="fillMaxSessions()">
+                                <option value="" data-max="">— Select —</option>
+                                @foreach($contractTypes as $ct)
+                                <option value="{{ $ct->contract_type_id }}"
+                                        data-max="{{ $ct->max_sessions_allowed }}">
+                                    {{ $ct->name }} (max {{ $ct->max_sessions_allowed }} sessions)
+                                </option>
+                                @endforeach
                             </select>
                         </div>
                         <div class="form-field">
                             <label class="form-label">Max Sessions / Patch</label>
-                            <input type="number" name="max_sessions" class="form-control" placeholder="e.g. 9" min="1">
+                            <input type="number" name="max_sessions" id="maxSessionsInput" readonly
+                                class="form-control" placeholder="e.g. 9" min="1"
+                                style="background:rgba(27,79,168,0.03)">
+                            <span style="font-size:10px;color:#AAB8C8;margin-top:3px">
+                                This is the maximum number of sessions this teacher can teach in a patch. It should be less than or equal to the max sessions defined in the selected contract type.
+                            </span>
                         </div>
                         <div class="form-field">
                             <label class="form-label">Assign to Patch</label>
@@ -185,6 +194,12 @@ function onRoleChange() {
     const roleName = sel.options[sel.selectedIndex]?.dataset.name ?? '';
     document.getElementById('teacherSection').style.display = roleName === 'Teacher' ? 'block' : 'none';
     document.getElementById('csSection').style.display      = roleName === 'Customer Service' ? 'block' : 'none';
+}
+function fillMaxSessions() {
+    const sel = document.getElementById('contractTypeSelect');
+    const max = sel.options[sel.selectedIndex]?.dataset.max ?? '';
+    const input = document.getElementById('maxSessionsInput');
+    input.value = max;
 }
 // Init on load
 onRoleChange();
