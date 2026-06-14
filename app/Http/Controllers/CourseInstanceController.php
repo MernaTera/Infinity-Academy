@@ -96,15 +96,39 @@ class CourseInstanceController extends Controller
         $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id');
 
         if (!empty($data['room_id'])) {
-            $roomConflict = CourseInstance::where('room_id', $data['room_id'])
-                ->where('patch_id', $data['patch_id'])
-                ->whereIn('status', ['Active', 'Upcoming'])
-                ->exists();
+            $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
 
-            if ($roomConflict) {
-                return back()->withInput()->withErrors([
-                    'room_id' => 'This room is already assigned to another course in the same patch.'
-                ]);
+            foreach ($data['day_of_week'] as $pair) {
+                $startTime = $data['start_times'][$pair] ?? null;
+                if (!$startTime) continue;
+
+                $dur     = (float) $data['session_duration'];
+                [$h, $m] = explode(':', $startTime);
+                $endMins = ((int)$h * 60 + (int)$m) + (int)($dur * 60);
+                $endTime = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
+                $startFull   = $startTime . ':00';
+                $targetDays  = $dayMap[$pair] ?? [];
+
+                $conflict = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
+                        $q->where('room_id', $data['room_id'])
+                        ->whereIn('status', ['Active', 'Upcoming'])
+                    )
+                    ->whereBetween('session_date', [$data['start_date'], $data['end_date']])
+                    ->where('status', '!=', 'Cancelled')
+                    ->where('start_time', '<', $endTime)
+                    ->where('end_time',   '>', $startFull)
+                    ->get()
+                    ->first(fn($s) => in_array(
+                        \Carbon\Carbon::parse($s->session_date)->dayOfWeek,
+                        $targetDays
+                    ));
+
+                if ($conflict) {
+                    $course = $conflict->courseInstance?->courseTemplate?->name ?? 'another course';
+                    return back()->withInput()->withErrors([
+                        'room_id' => "Room already booked on {$pair} at {$startTime} — overlaps with \"{$course}\"."
+                    ]);
+                }
             }
         }
 
