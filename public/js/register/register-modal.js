@@ -536,7 +536,9 @@ function applyMaterial(data) {
         }).then(r=>r.json()).then(data => {
             teacher.innerHTML = '<option value="">— Select Teacher —</option>';
             if (!data.length) { teacher.innerHTML='<option disabled>No teachers available</option>'; return; }
-            data.forEach(t => { teacher.innerHTML+=`<option value="${t.teacher_id}">Teacher #${t.teacher_id}</option>`; });
+            data.forEach(t => {     
+                const name = t.employee?.full_name ?? t.full_name ?? `Teacher #${t.teacher_id}`;
+                teacher.innerHTML += `<option value="${t.teacher_id}">${name}</option>`; });
         });
     }
 

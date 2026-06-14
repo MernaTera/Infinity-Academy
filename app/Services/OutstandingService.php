@@ -32,7 +32,6 @@ class OutstandingService
                 'financialTransactions',
                 'createdByCs',
             ])
-            ->where('created_by_cs_id', $employee->employee_id)
             ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
             ->whereNotNull('final_price')
             ->get()
