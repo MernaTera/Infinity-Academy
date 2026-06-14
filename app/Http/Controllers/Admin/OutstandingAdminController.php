@@ -23,7 +23,7 @@ class OutstandingAdminController extends Controller
             'courseInstance.patch',
             'createdByCs',
             'paymentPlan',     
-            'installmentSchedules' => fn($q) => $q->orderBy('due_date'),
+            'installmentSchedules' => fn($q) => $q->with('transaction')->orderBy('due_date'),
             'restrictionLogs'      => fn($q) => $q->whereNull('released_at'),
             'financialTransactions',
         ])
@@ -55,7 +55,7 @@ class OutstandingAdminController extends Controller
 
             $balance              = $totalFees - ($paid - $refunded);
             $e->total_fees        = $totalFees;
-            $e->remaining_balance = max(0, $balance < 0.01 ? 0 : $balance);
+            $e->remaining_balance = max(0, round($balance, 2) <= 0 ? 0 : round($balance, 2));
             $e->total_paid        = $paid - $refunded;
            return $e;
         });

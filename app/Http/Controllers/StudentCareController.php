@@ -105,43 +105,70 @@ class StudentCareController extends Controller
 
         return view('student-care.course-instances.show', compact('instance'));
     }
+    
     public function outstanding()
     {
         $allEnrollments = \App\Models\Enrollment\Enrollment::with([
             'student',
+            'courseTemplate',
             'courseInstance.courseTemplate',
             'courseInstance.patch',
+            'patch',
             'paymentPlan',
             'createdByCs',
             'installmentSchedules' => fn($q) => $q->orderBy('due_date'),
+            'restrictionLogs'      => fn($q) => $q->whereNull('released_at'),
             'financialTransactions',
         ])
-        ->whereIn('status', ['Active', 'Restricted'])
+        ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
+        ->whereNotNull('final_price')
         ->get();
 
-        $enrollments = $allEnrollments->filter(function ($e) {
-            $paid     = $e->financialTransactions
-                ->whereIn('transaction_type', ['Payment', 'Installment'])
-                ->sum('amount');
-            $refunded = $e->financialTransactions
-                ->where('transaction_type', 'Refund')
-                ->sum('amount');
-            $balance  = $e->final_price - ($paid - $refunded);
-            $e->remaining_balance = $balance;
-            $e->total_paid        = $paid - $refunded;
-            return $balance > 0;
+        $enrollments = $allEnrollments->map(function ($e) {
+            $totalFees = (float) $e->final_price
+                + (float) $e->financialTransactions->where('transaction_category', 'Material')->sum('amount')
+                + (float) $e->financialTransactions->where('transaction_category', 'Test')->sum('amount');
+
+            $paidInstallmentIds = $e->installmentSchedules
+                ->where('status', 'Paid')
+                ->pluck('transaction_id')
+                ->filter()
+                ->toArray();
+
+            $paid = (float) $e->financialTransactions
+                    ->where('transaction_type', 'Payment')
+                    ->sum('amount')
+                + (float) $e->financialTransactions
+                    ->where('transaction_type', 'Installment')
+                    ->whereIn('transaction_id', $paidInstallmentIds)
+                    ->sum('amount')
+                - (float) $e->financialTransactions
+                    ->where('transaction_type', 'Refund')
+                    ->sum('amount');
+
+            $balance = $totalFees - $paid;
+
+            $e->total_fees        = $totalFees;
+            $e->total_paid        = max(0, $paid);
+            $e->remaining_balance = $balance < 0.02 ? 0 : round($balance, 2);
+
+            return $e;
         });
 
+        $withBalance    = $enrollments->filter(fn($e) => $e->remaining_balance > 0);
+        $finishedEnrollments = $enrollments->filter(fn($e) => $e->remaining_balance == 0);
+
         $stats = [
-            'total_outstanding' => $enrollments->sum('remaining_balance'),
-            'count'             => $enrollments->count(),
-            'restricted'        => $enrollments->where('status', 'Restricted')->count(),
-            'overdue'           => $enrollments->filter(fn($e) =>
+            'total_outstanding' => $withBalance->sum('remaining_balance'),
+            'count'             => $withBalance->count(),
+            'restricted'        => $withBalance->where('status', 'Restricted')->count(),
+            'overdue'           => $withBalance->filter(fn($e) =>
                 $e->installmentSchedules->where('status', 'Overdue')->isNotEmpty()
             )->count(),
+            'finished_count'    => $finishedEnrollments->count(),
         ];
 
-        return view('student-care.outstanding', compact('enrollments', 'stats'));
+        return view('student-care.outstanding', compact('enrollments', 'withBalance', 'finishedEnrollments', 'stats'));
     }
 
     public function postponed()

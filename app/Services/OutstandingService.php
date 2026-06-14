@@ -47,7 +47,7 @@ class OutstandingService
             $paid      = $this->getPaid($e);
             $total     = $this->getTotal($e); 
             $remaining = max(0, $total - $paid);
-            $remaining = $remaining < 0.01 ? 0 : $remaining;
+            $remaining = $remaining < 0.02 ? 0 : round($remaining, 2);
 
             $nextInstallment = $e->installmentSchedules
                 ->whereIn('status', ['Pending', 'Overdue'])
@@ -156,7 +156,7 @@ class OutstandingService
     private function getRemaining(Enrollment $enrollment): float
     {
         $remaining = $this->getTotal($enrollment) - $this->getPaid($enrollment);
-        return $remaining < 0.01 ? 0 : $remaining;    
+        return $remaining < 0.02 ? 0 : round($remaining, 2); 
     }
 
 }

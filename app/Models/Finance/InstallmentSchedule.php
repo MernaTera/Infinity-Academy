@@ -139,4 +139,9 @@ class InstallmentSchedule extends Model
             ->whereDate('due_date', '<', now());
     }
 
+	public function transaction()
+	{
+		return $this->belongsTo(\App\Models\Finance\FinancialTransaction::class, 'transaction_id', 'transaction_id');
+	}
+
 }

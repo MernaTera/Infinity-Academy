@@ -303,7 +303,7 @@
                                                     @endif
                                                 </td>
                                                 <td style="font-size:11px;color:#AAB8C8">{{ $inst->paid_at ? \Carbon\Carbon::parse($inst->paid_at)->format('d M Y') : '—' }}</td>
-                                                <td style="font-size:11px;color:#7A8A9A">{{ $instTx?->notes ?? '—' }}</td>
+                                                <td style="font-size:11px;color:#7A8A9A">{{ $inst->transaction?->notes ?? '—' }}</td>
                                             </tr>
                                             @endforeach
                                             </tbody>
