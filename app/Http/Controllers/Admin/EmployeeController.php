@@ -66,8 +66,11 @@ class EmployeeController extends Controller
         $englishLevels = EnglishLevel::all();
         $patches       = Patch::whereIn('status', ['Active', 'Upcoming'])->get();
         $contractTypes = \App\Models\HR\ContractType::where('is_active', true)->get();
+        $timeSlots     = \App\Models\Academic\TimeSlot::where('is_active', true)->orderBy('start_time')->get(); // ✅
 
-        return view('admin.employees.create', compact('roles', 'branches', 'englishLevels', 'patches', 'contractTypes'));
+        return view('admin.employees.create', compact(
+            'roles', 'branches', 'englishLevels', 'patches', 'contractTypes', 'timeSlots'
+        ));
     }
 
     /*
@@ -75,7 +78,7 @@ class EmployeeController extends Controller
     | Store
     |------------------------------------------------------------------
     */
-    public function store(Request $request)
+public function store(Request $request)
     {
         $request->validate([
             'name'             => 'required|string|max:255',
@@ -85,9 +88,12 @@ class EmployeeController extends Controller
             'branch_id'        => 'required|exists:branch,branch_id',
             'salary'           => 'nullable|numeric|min:0',
             'english_level_id' => 'nullable|exists:english_level,english_level_id',
-            'contract_type'    => 'nullable|in:PT,FT,OT',
+            'contract_type_id' => 'nullable|exists:contract_type,contract_type_id',
             'max_sessions'     => 'nullable|integer|min:1',
             'patch_id'         => 'nullable|exists:patch,patch_id',
+            'availability'     => 'nullable|array',
+            'availability.*'   => 'string',
+            'target_amount'    => 'nullable|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -109,7 +115,10 @@ class EmployeeController extends Controller
                 'hired_at'  => now(),
             ]);
 
-            $role = Role::find($request->role_id);
+            $adminId = Employee::where('user_id', auth()->id())->value('employee_id');
+            $role    = Role::find($request->role_id);
+
+            // ── Teacher ───────────────────────────────────────────────
             if ($role?->role_name === 'Teacher' && $request->english_level_id) {
 
                 $teacher = Teacher::create([
@@ -118,26 +127,38 @@ class EmployeeController extends Controller
                     'is_active'        => true,
                 ]);
 
-                if ($request->contract_type && $request->patch_id) {
-                    \App\Models\Academic\ContractType::create([
-                        'teacher_id'           => $teacher->teacher_id,
-                        'patch_id'             => $request->patch_id,
-                        'contract_type'        => $request->contract_type,
-                        'max_sessions_allowed' => $request->max_sessions ?? 9,
-                        'is_active'            => true,
-                        'created_by_admin_id' => Employee::where('user_id', auth()->id())->value('employee_id'),
-
+                // ✅ TeacherContract
+                if ($request->contract_type_id && $request->patch_id) {
+                    \App\Models\HR\TeacherContract::create([
+                        'teacher_id'          => $teacher->teacher_id,
+                        'patch_id'            => $request->patch_id,
+                        'contract_type_id'    => $request->contract_type_id,
+                        'is_active'           => true,
+                        'created_by_admin_id' => $adminId,
                     ]);
+                }
+
+                // ✅ TeacherAvailability — INSIDE transaction, AFTER teacher created
+                if ($request->filled('availability')) {
+                    foreach ($request->availability as $item) {
+                        [$slotId, $day] = explode(':', $item);
+                        \App\Models\HR\TeacherAvailability::create([
+                            'teacher_id'   => $teacher->teacher_id,
+                            'time_slot_id' => (int) $slotId,
+                            'day_of_week'  => $day,
+                        ]);
+                    }
                 }
             }
 
+            // ── CS Target ─────────────────────────────────────────────
             if ($role?->role_name === 'Customer Service' && $request->target_amount && $request->patch_id) {
                 CsTarget::create([
-                    'employee_id'        => $employee->employee_id,
-                    'patch_id'           => $request->patch_id,
-                    'target_amount'      => $request->target_amount,
-                    'is_locked'          => false,
-                    'created_by_admin_id'=> Employee::where('user_id', auth()->id())->value('employee_id'),
+                    'employee_id'         => $employee->employee_id,
+                    'patch_id'            => $request->patch_id,
+                    'target_amount'       => $request->target_amount,
+                    'is_locked'           => false,
+                    'created_by_admin_id' => $adminId,
                 ]);
             }
         });

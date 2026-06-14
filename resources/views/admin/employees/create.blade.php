@@ -13,13 +13,11 @@
 .page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0}
 .btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:transparent;border:1px solid rgba(27,79,168,0.2);border-radius:4px;color:#7A8A9A;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s}
 .btn-back:hover{border-color:#1B4FA8;color:#1B4FA8;text-decoration:none}
-
 .form-card{max-width:860px;background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;position:relative;box-shadow:0 4px 24px rgba(27,79,168,0.07)}
 .form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)}
 .form-body{padding:28px 32px}
 .sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(245,145,30,0.15);margin-top:4px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:20px}
-.form-grid-1{grid-template-columns:1fr}
 .form-field{display:flex;flex-direction:column;gap:5px}
 .form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A}
 .req{color:#F5911E;margin-left:2px}
@@ -33,6 +31,11 @@
 .btn-submit:hover{color:#fff}
 .btn-cancel{padding:10px 20px;background:transparent;border:1px solid rgba(27,79,168,0.15);border-radius:4px;color:#7A8A9A;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all 0.2s}
 .btn-cancel:hover{border-color:rgba(27,79,168,0.3);color:#1B4FA8;text-decoration:none}
+.slot-card{background:rgba(27,79,168,0.02);border:1px solid rgba(27,79,168,0.1);border-radius:6px;padding:14px 16px}
+.day-label{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;cursor:pointer;font-size:12px;color:#4A5A7A;background:#fff;transition:all 0.2s;user-select:none}
+.day-label:hover{border-color:#1B4FA8}
+.day-label input{accent-color:#1B4FA8}
+.day-label input:checked ~ *{color:#1B4FA8}
 @media(max-width:680px){.form-grid{grid-template-columns:1fr}.create-page{padding:18px 14px}.form-body{padding:18px 20px}}
 </style>
 
@@ -55,11 +58,11 @@
     @endif
 
     <div class="form-card">
-        <form method="POST" action="{{ route('admin.employees.store') }}" id="empForm">
+        <form method="POST" action="{{ route('admin.employees.store') }}" onsubmit="return validateForm()">
             @csrf
             <div class="form-body">
 
-                {{-- Account Info --}}
+                {{-- ── Account Info ── --}}
                 <div class="sec-label">Account Information</div>
                 <div class="form-grid">
                     <div class="form-field">
@@ -76,7 +79,7 @@
                     </div>
                     <div class="form-field">
                         <label class="form-label">Role <span class="req">*</span></label>
-                        <select name="role_id" class="form-control" id="roleSelect" onchange="onRoleChange()" required>
+                        <select name="role_id" id="roleSelect" class="form-control" onchange="onRoleChange()" required>
                             <option value="">— Select Role —</option>
                             @foreach($roles as $role)
                             <option value="{{ $role->role_id }}" data-name="{{ $role->role_name }}"
@@ -90,7 +93,7 @@
 
                 <div class="form-divider"></div>
 
-                {{-- Employee Info --}}
+                {{-- ── Employment Details ── --}}
                 <div class="sec-label">Employment Details</div>
                 <div class="form-grid">
                     <div class="form-field">
@@ -110,7 +113,7 @@
                     </div>
                 </div>
 
-                {{-- Teacher Section --}}
+                {{-- ══ TEACHER SECTION ══ --}}
                 <div id="teacherSection" style="display:none">
                     <div class="form-divider"></div>
                     <div class="sec-label">Teacher Details</div>
@@ -126,12 +129,10 @@
                         </div>
                         <div class="form-field">
                             <label class="form-label">Contract Type</label>
-                            <select name="contract_type_id" class="form-control" id="contractTypeSelect"
-                                    onchange="fillMaxSessions()">
+                            <select name="contract_type_id" id="contractTypeSelect" class="form-control" onchange="fillMaxSessions()">
                                 <option value="" data-max="">— Select —</option>
                                 @foreach($contractTypes as $ct)
-                                <option value="{{ $ct->contract_type_id }}"
-                                        data-max="{{ $ct->max_sessions_allowed }}">
+                                <option value="{{ $ct->contract_type_id }}" data-max="{{ $ct->max_sessions_allowed }}">
                                     {{ $ct->name }} (max {{ $ct->max_sessions_allowed }} sessions)
                                 </option>
                                 @endforeach
@@ -139,12 +140,9 @@
                         </div>
                         <div class="form-field">
                             <label class="form-label">Max Sessions / Patch</label>
-                            <input type="number" name="max_sessions" id="maxSessionsInput" readonly
-                                class="form-control" placeholder="e.g. 9" min="1"
-                                style="background:rgba(27,79,168,0.03)">
-                            <span style="font-size:10px;color:#AAB8C8;margin-top:3px">
-                                This is the maximum number of sessions this teacher can teach in a patch. It should be less than or equal to the max sessions defined in the selected contract type.
-                            </span>
+                            <input type="number" name="max_sessions" id="maxSessionsInput" class="form-control"
+                                   readonly placeholder="Auto from contract type" min="1"
+                                   style="background:rgba(27,79,168,0.03);cursor:not-allowed;color:#7A8A9A">
                         </div>
                         <div class="form-field">
                             <label class="form-label">Assign to Patch</label>
@@ -156,9 +154,48 @@
                             </select>
                         </div>
                     </div>
-                </div>
 
-                {{-- CS Section --}}
+                    {{-- ── Availability ── --}}
+                    <div class="form-divider"></div>
+                    <div class="sec-label">Availability — Teaching Slots</div>
+                    <div style="font-size:11px;color:#7A8A9A;margin-bottom:14px">
+                        Select which day pairs this teacher is available for each time slot.
+                    </div>
+
+                    @php
+                        $dayPairs = ['sat_tue' => 'Sat & Tue', 'sun_wed' => 'Sun & Wed', 'mon_thu' => 'Mon & Thu'];
+                    @endphp
+
+                    <div style="display:flex;flex-direction:column;gap:10px">
+                        @foreach($timeSlots as $slot)
+                        <div class="slot-card">
+                            <div style="margin-bottom:10px">
+                                <span style="font-weight:600;color:#1A2A4A;font-size:13px">{{ $slot->name }}</span>
+                                <span style="font-size:11px;color:#7A8A9A;margin-left:8px">
+                                    {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                                </span>
+                                <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#AAB8C8;margin-left:8px">
+                                    {{ $slot->slot_type }}
+                                </span>
+                            </div>
+                            <div style="display:flex;gap:10px;flex-wrap:wrap">
+                                @foreach($dayPairs as $day => $label)
+                                <label class="day-label" id="lbl-{{ $slot->time_slot_id }}-{{ $day }}">
+                                    <input type="checkbox"
+                                           name="availability[]"
+                                           value="{{ $slot->time_slot_id }}:{{ $day }}"
+                                           onchange="styleLabel(this)">
+                                    {{ $label }}
+                                </label>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                {{-- ── END TEACHER SECTION ── --}}
+
+                {{-- ══ CS SECTION ══ --}}
                 <div id="csSection" style="display:none">
                     <div class="form-divider"></div>
                     <div class="sec-label">CS Target (Current Patch)</div>
@@ -178,6 +215,7 @@
                         </div>
                     </div>
                 </div>
+                {{-- ── END CS SECTION ── --}}
 
             </div>
             <div class="form-footer">
@@ -192,16 +230,48 @@
 function onRoleChange() {
     const sel      = document.getElementById('roleSelect');
     const roleName = sel.options[sel.selectedIndex]?.dataset.name ?? '';
-    document.getElementById('teacherSection').style.display = roleName === 'Teacher' ? 'block' : 'none';
-    document.getElementById('csSection').style.display      = roleName === 'Customer Service' ? 'block' : 'none';
+    document.getElementById('teacherSection').style.display = roleName === 'Teacher'           ? 'block' : 'none';
+    document.getElementById('csSection').style.display      = roleName === 'Customer Service'  ? 'block' : 'none';
 }
+
 function fillMaxSessions() {
-    const sel = document.getElementById('contractTypeSelect');
-    const max = sel.options[sel.selectedIndex]?.dataset.max ?? '';
-    const input = document.getElementById('maxSessionsInput');
-    input.value = max;
+    const sel   = document.getElementById('contractTypeSelect');
+    const max   = sel.options[sel.selectedIndex]?.dataset.max ?? '';
+    document.getElementById('maxSessionsInput').value = max;
 }
-// Init on load
+
+function styleLabel(checkbox) {
+    const label = checkbox.closest('label');
+    if (checkbox.checked) {
+        label.style.borderColor = '#1B4FA8';
+        label.style.background  = 'rgba(27,79,168,0.05)';
+        label.style.color       = '#1B4FA8';
+    } else {
+        label.style.borderColor = 'rgba(27,79,168,0.12)';
+        label.style.background  = '#fff';
+        label.style.color       = '#4A5A7A';
+    }
+}
+function validateForm() {
+    const teacherSection = document.getElementById('teacherSection');
+    if (teacherSection.style.display === 'none') return true; // مش teacher → مش محتاج
+
+    const checked = document.querySelectorAll('input[name="availability[]"]:checked');
+    if (checked.length === 0) {
+        let err = document.getElementById('availabilityError');
+        if (!err) {
+            err = document.createElement('div');
+            err.id = 'availabilityError';
+            err.style.cssText = 'color:#DC2626;font-size:11px;padding:10px 14px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);border-radius:4px;margin-top:10px';
+            err.textContent = '⚠ Please select at least one availability slot.';
+            document.querySelector('.slot-card')?.closest('div[style]')?.after(err);
+        }
+        err.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+    return true;
+}
+
 onRoleChange();
 </script>
 @endsection
