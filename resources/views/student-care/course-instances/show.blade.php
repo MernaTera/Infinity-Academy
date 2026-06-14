@@ -441,7 +441,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($instance->sessions as $session)
+                        @forelse($instance->sessions->sortBy('session_number') as $session)
                         @php
                             $sClass = match($session->status) {
                                 'Scheduled' => 's-scheduled',
