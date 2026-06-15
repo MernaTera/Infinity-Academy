@@ -180,6 +180,19 @@ class CourseInstanceController extends Controller
                 );
 
                 $this->schedulingService->generateSessionsMultiPair($instance, $schedules);
+                $teacher = \App\Models\HR\Teacher::with('employee')->find($data['teacher_id']);
+                if ($teacher?->employee) {
+                    \DB::table('user_notification')->insert([
+                        'employee_id'         => $teacher->employee->employee_id,
+                        'title'               => 'New Course Assigned',
+                        'message'             => 'You have been assigned to teach "' . ($instance->courseTemplate?->name ?? 'a new course') . '".',
+                        'related_entity_type' => 'course_instance',
+                        'related_entity_id'   => $instance->course_instance_id,
+                        'is_read'             => false,
+                        'created_at'          => now(),
+                        'updated_at'          => now(),
+                    ]);
+                }
             });
 
         } catch (\Exception $e) {
@@ -241,7 +254,6 @@ class CourseInstanceController extends Controller
         ]);
     }
 
-    // ✅ FIXED: removed premature $slots[] before loop, added 'end' to each slot
     public function getTimeSlotsForPair(Request $request)
     {
         $teacherId = $request->query('teacher_id');
@@ -273,7 +285,7 @@ class CourseInstanceController extends Controller
             }
             $slots[] = [
                 'start'    => $timeStr,
-                'end'      => $slotEnd->format('H:i'), // ✅ slot end for out-of-range check
+                'end'      => $slotEnd->format('H:i'),
                 'slot_id'  => $slot->time_slot_id,
                 'is_break' => $isBreak,
             ];
@@ -415,5 +427,97 @@ class CourseInstanceController extends Controller
         $enrollment->update(['status' => 'Postponed']);
 
         return back()->with('success', 'Student postponed successfully.');
+    }
+
+    public function getTeacherContractInfo(Request $request)
+    {
+        $teacherId = $request->query('teacher_id');
+        $patchId   = $request->query('patch_id');
+
+        if (!$teacherId || !$patchId) return response()->json(null);
+
+        $contract = \App\Models\HR\TeacherContract::with('contractType')
+            ->where('teacher_id', $teacherId)
+            ->where('patch_id', $patchId)
+            ->where('is_active', true)
+            ->first();
+
+        if (!$contract) return response()->json(null);
+
+        $existingSessions = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
+            $q->where('teacher_id', $teacherId)
+            ->where('patch_id', $patchId)
+            ->whereIn('status', ['Active', 'Upcoming'])
+        )->where('status', '!=', 'Cancelled')->count();
+
+        $maxSessions = $contract->contractType?->max_sessions_allowed ?? 0;
+
+        return response()->json([
+            'contract_name'    => $contract->contractType?->name ?? '—',
+            'max_sessions'     => $maxSessions,
+            'current_sessions' => $existingSessions,
+            'remaining'        => max(0, $maxSessions - $existingSessions),
+        ]);
+    }
+
+    public function checkRoomAvailability(Request $request)
+    {
+        $roomId    = $request->query('room_id');
+        $startDate = $request->query('start_date');
+        $endDate   = $request->query('end_date');
+        $pairs     = $request->query('pairs', '');
+        $startTime = $request->query('start_time');
+        $duration  = (float) $request->query('duration', 2);
+
+        if (!$roomId || !$startDate || !$startTime) {
+            return response()->json(['available' => true]);
+        }
+
+        $pairsArr  = array_filter(explode(',', $pairs));
+        $dayMap    = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+        $targetDays = array_merge(...array_map(fn($p) => $dayMap[$p] ?? [], $pairsArr));
+
+        [$h, $m]  = explode(':', $startTime);
+        $endMins  = ((int)$h * 60 + (int)$m) + (int)($duration * 60);
+        $endTime  = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
+        $startFull = $startTime . ':00';
+
+        $conflict = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
+            $q->where('room_id', $roomId)->whereIn('status', ['Active','Upcoming'])
+        )
+        ->whereBetween('session_date', [$startDate, $endDate])
+        ->where('status', '!=', 'Cancelled')
+        ->where('start_time', '<', $endTime)
+        ->where('end_time',   '>', $startFull)
+        ->get()
+        ->first(fn($s) => in_array(
+            \Carbon\Carbon::parse($s->session_date)->dayOfWeek,
+            $targetDays
+        ));
+
+        if ($conflict) {
+            $course = $conflict->courseInstance?->courseTemplate?->name ?? 'another course';
+            $date   = \Carbon\Carbon::parse($conflict->session_date)->format('d M Y');
+            return response()->json([
+                'available' => false,
+                'message'   => "Room is booked on {$date} by \"{$course}\"",
+            ]);
+        }
+
+        return response()->json(['available' => true]);
+    }
+
+    public function getTeacherAvailablePairs(Request $request)
+    {
+        $teacherId = $request->query('teacher_id');
+        if (!$teacherId) return response()->json([]);
+
+        $pairs = \App\Models\HR\TeacherAvailability::where('teacher_id', $teacherId)
+            ->pluck('day_of_week')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        return response()->json($pairs);
     }
 }

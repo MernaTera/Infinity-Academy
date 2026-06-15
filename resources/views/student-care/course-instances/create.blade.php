@@ -321,50 +321,55 @@
 <script>
 let _breakSlots   = @json($breakSlots ?? []);
 let _previewTimer = null;
+let _contractInfo = null;
 
 const dayMap     = { sun_wed:[0,3], sat_tue:[6,2], mon_thu:[1,4] };
 const pairLabels = { sun_wed:'Sun & Wed', sat_tue:'Sat & Tue', mon_thu:'Mon & Thu' };
 
-// ── Helpers ──
 function getCheckedPairs() {
     return [...document.querySelectorAll('input[name="day_of_week[]"]:checked')].map(el => el.value);
 }
+
 function resetSelect(id, placeholder, disabled=false) {
     const el = document.getElementById(id);
+    if (!el) return;
     el.innerHTML = `<option value="">${placeholder}</option>`;
     el.disabled = disabled;
 }
+
 function setLoading(id) {
     const el = document.getElementById(id);
+    if (!el) return;
     el.innerHTML = '<option value="">Loading...</option>';
     el.disabled = true;
 }
+
 function formatDate(dateStr) {
     if (!dateStr) return '—';
     const d = new Date(dateStr + 'T00:00:00');
     return d.toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
 }
 
-// ── Readonly helper ──
 function setInstanceDefaults(hours, session, capacity) {
     const fh = document.getElementById('ci_total_hours');
     const fs = document.getElementById('ci_session_duration');
     const fc = document.getElementById('ci_capacity');
-    if (hours)    { fh.value = hours;    fh.readOnly = true; }
-    if (session)  { fs.value = session;  fs.readOnly = true; }
-    if (capacity) { fc.value = capacity; fc.readOnly = true; }
+    if (hours   && fh) { fh.value = hours;    fh.readOnly = true; }
+    if (session && fs) { fs.value = session;  fs.readOnly = true; }
+    if (capacity&& fc) { fc.value = capacity; fc.readOnly = true; }
     recalculate();
     updateSummary();
 }
+
 function clearInstanceDefaults() {
     ['ci_total_hours','ci_session_duration','ci_capacity'].forEach(id => {
         const el = document.getElementById(id);
+        if (!el) return;
         el.readOnly = false;
         el.value = '';
     });
 }
 
-// ── Course change ──
 async function onCourseChange() {
     const sel      = document.getElementById('ci_course');
     const courseId = sel.value;
@@ -372,8 +377,8 @@ async function onCourseChange() {
     const engLevel = opt?.dataset.englishLevel || '';
 
     resetSelect('ci_level',   '— Select Level (optional) —', true);
-    resetSelect('ci_sublevel','— Select Level First —', true);
-    resetSelect('ci_teacher', '— Select Course First —', true);
+    resetSelect('ci_sublevel','— Select Level First —',      true);
+    resetSelect('ci_teacher', '— Select Course First —',     true);
     clearInstanceDefaults();
     updateSummary();
     if (!courseId) return;
@@ -383,29 +388,28 @@ async function onCourseChange() {
     const c = opt?.dataset.capacity;
     if (h || s || c) setInstanceDefaults(h, s, c);
 
+    const lvl = document.getElementById('ci_level');
     try {
         setLoading('ci_level');
         const res  = await fetch(`/student-care/levels/${courseId}`);
-        const data = await res.json();
-        const lvl  = document.getElementById('ci_level');
-        if (!data.length) {
-            resetSelect('ci_level', '— No Levels —', true);
-        } else {
-            lvl.innerHTML = '<option value="">— No Level (optional) —</option>';
-            data.forEach(l => {
-                lvl.innerHTML += `<option value="${l.level_id}"
-                    data-hours="${l.total_hours??''}"
-                    data-session="${l.default_session_duration??''}"
-                    data-capacity="${l.max_capacity??''}">${l.name}</option>`;
-            });
-            lvl.disabled = false;
-        }
-    } catch { resetSelect('ci_level', '— Error loading levels —', true); }
+        const data = res.ok ? await res.json() : [];
+        lvl.innerHTML = '<option value="">— No Level (optional) —</option>';
+        data.forEach(l => {
+            lvl.innerHTML += `<option value="${l.level_id}"
+                data-hours="${l.total_hours??''}"
+                data-session="${l.default_session_duration??''}"
+                data-capacity="${l.max_capacity??''}">${l.name}</option>`;
+        });
+    } catch(e) {
+        console.error('Levels fetch error:', e);
+        lvl.innerHTML = '<option value="">— No Level (optional) —</option>';
+    } finally {
+        lvl.disabled = false;
+    }
 
     if (engLevel) await loadTeachers(engLevel);
 }
 
-// ── Level change ──
 async function onLevelChange() {
     const lvl     = document.getElementById('ci_level');
     const levelId = lvl.value;
@@ -422,27 +426,26 @@ async function onLevelChange() {
 
     if (!levelId) return;
 
+    const sub = document.getElementById('ci_sublevel');
     try {
         setLoading('ci_sublevel');
         const res  = await fetch(`/student-care/sublevels/${levelId}`);
-        const data = await res.json();
-        const sub  = document.getElementById('ci_sublevel');
-        if (!data.length) {
-            resetSelect('ci_sublevel', '— No Sublevels —', true);
-        } else {
-            sub.innerHTML = '<option value="">— No Sublevel (optional) —</option>';
-            data.forEach(s => {
-                sub.innerHTML += `<option value="${s.sublevel_id}"
-                    data-hours="${s.total_hours??''}"
-                    data-session="${s.default_session_duration??''}"
-                    data-capacity="${s.max_capacity??''}">${s.name}</option>`;
-            });
-            sub.disabled = false;
-        }
-    } catch { resetSelect('ci_sublevel', '— Error —', true); }
+        const data = res.ok ? await res.json() : [];
+        sub.innerHTML = '<option value="">— No Sublevel (optional) —</option>';
+        data.forEach(s => {
+            sub.innerHTML += `<option value="${s.sublevel_id}"
+                data-hours="${s.total_hours??''}"
+                data-session="${s.default_session_duration??''}"
+                data-capacity="${s.max_capacity??''}">${s.name}</option>`;
+        });
+    } catch(e) {
+        console.error('Sublevels fetch error:', e);
+        sub.innerHTML = '<option value="">— No Sublevel (optional) —</option>';
+    } finally {
+        sub.disabled = false;
+    }
 }
 
-// ── Sublevel change ──
 function onSublevelChange() {
     const sub = document.getElementById('ci_sublevel');
     const opt = sub.options[sub.selectedIndex];
@@ -454,7 +457,6 @@ function onSublevelChange() {
     }
 }
 
-// ── Load teachers ──
 async function loadTeachers(englishLevelId) {
     setLoading('ci_teacher');
     try {
@@ -470,20 +472,44 @@ async function loadTeachers(englishLevelId) {
             });
             sel.disabled = false;
         }
-    } catch { resetSelect('ci_teacher', '— Error loading teachers —', true); }
+    } catch {
+        resetSelect('ci_teacher', '— Error loading teachers —', true);
+    }
 }
-
-// ── Teacher change ──
-function onTeacherChange() {
+async function onTeacherChange() {
     const sel  = document.getElementById('ci_teacher');
     const name = sel.options[sel.selectedIndex]?.text || '—';
     document.getElementById('sum-teacher').textContent = name;
     updateSummary();
-    // ✅ Reload ALL checked pairs
-    getCheckedPairs().forEach(pair => renderTimeSlots(pair));
-}
+    checkTeacherContract();
+    document.querySelectorAll('input[name="day_of_week[]"]').forEach(cb => {
+        cb.checked  = false;
+        cb.disabled = false;
+        cb.closest('.pair-option').style.opacity = '1';
+    });
+    if (!sel.value) { onPairChange(); return; }
 
-// ── Room change ──
+    try {
+        const res   = await fetch(`/student-care/teacher-available-pairs?teacher_id=${sel.value}`);
+        const pairs = await res.json();
+        pairs.forEach(pair => {
+            const cb = document.getElementById(`pair_${pair}`);
+            if (cb) cb.checked = true;
+        });
+        ['sat_tue', 'sun_wed', 'mon_thu'].forEach(pair => {
+            if (!pairs.includes(pair)) {
+                const cb  = document.getElementById(`pair_${pair}`);
+                const opt = cb?.closest('.pair-option');
+                if (cb)  cb.disabled = true;
+                if (opt) opt.style.opacity = '0.4';
+            }
+        });
+    } catch(e) {
+        console.error('Error fetching teacher pairs:', e);
+    }
+
+    onPairChange();
+}
 function onRoomChange() {
     const sel      = document.getElementById('ci_room');
     const opt      = sel.options[sel.selectedIndex];
@@ -500,24 +526,21 @@ function onRoomChange() {
         document.getElementById('capacityHint').style.display = 'none';
     }
     updateSummary();
+    checkRoomAvailability();
 }
 
-// ── Start date change ──
 function onStartDateChange() {
     updateSummary();
     recalculate();
-    // ✅ Reload ALL checked pairs
+    checkRoomAvailability();
     getCheckedPairs().forEach(pair => renderTimeSlots(pair));
 }
 
-// ── Pair change ──
 function onPairChange() {
     const pairs   = getCheckedPairs();
     const section = document.getElementById('timePickerSection');
-
     document.getElementById('sum-days').textContent = pairs.map(p => pairLabels[p]).join(' + ') || '—';
 
-    // ✅ Rebuild time pickers for each checked pair
     section.innerHTML = '';
     if (!pairs.length) {
         section.style.display = 'none';
@@ -538,25 +561,17 @@ function onPairChange() {
             <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
                 <div class="field" style="flex:1;min-width:160px;">
                     <label class="field-label">Start Time <span class="req">*</span></label>
-                    <input type="time"
-                           name="start_times[${pair}]"
-                           id="ci_start_time_${pair}"
-                           class="field-input"
-                           step="1800"
-                           onchange="onTimeChange('${pair}')">
+                    <input type="time" name="start_times[${pair}]" id="ci_start_time_${pair}" class="field-input" step="1800" onchange="onTimeChange('${pair}')">
                 </div>
                 <div style="padding-top:20px;color:var(--faint);">→</div>
                 <div class="field" style="flex:1;min-width:160px;">
                     <label class="field-label">End Time</label>
-                    <input type="time" id="ci_end_time_${pair}" class="field-input" readonly
-                           style="background:#F9F9F9;color:var(--faint);">
+                    <input type="time" id="ci_end_time_${pair}" class="field-input" readonly style="background:#F9F9F9;color:var(--faint);">
                 </div>
             </div>
             <input type="hidden" name="time_slot_ids[${pair}]" id="ci_time_slot_id_${pair}">
             <div id="timeSlotsContainer_${pair}">
-                <div style="font-size:11px;color:var(--faint);text-align:center;padding:20px;">
-                    Select teacher to see available times
-                </div>
+                <div style="font-size:11px;color:var(--faint);text-align:center;padding:20px;">Select teacher to see available times</div>
             </div>
             <div class="conflict-alert" id="conflictAlert_${pair}">
                 <strong>⚠ Conflict (${pairLabels[pair]}):</strong>
@@ -568,9 +583,9 @@ function onPairChange() {
 
     recalculate();
     updateSummary();
+    checkRoomAvailability();
 }
 
-// ── Render time slots — ✅ single innerHTML, with out-of-range check ──
 async function renderTimeSlots(pair) {
     const container = document.getElementById(`timeSlotsContainer_${pair}`);
     if (!container) return;
@@ -595,11 +610,9 @@ async function renderTimeSlots(pair) {
         if (res.ok) occupied = await res.json();
     } catch {}
 
-    // ✅ Single innerHTML with out-of-range check
     container.innerHTML = '<div class="time-grid">' + slots.map(slot => {
         const isBreak    = isBreakTime(slot.start);
         const isOccupied = occupied.includes(slot.start);
-
         let isOutOfRange = false;
         if (sessionDur && slot.end) {
             const [sh, sm] = slot.start.split(':').map(Number);
@@ -607,18 +620,10 @@ async function renderTimeSlots(pair) {
             const [eh, em] = slot.end.split(':').map(Number);
             isOutOfRange = sessionEndMins > (eh * 60 + em);
         }
-
-        const cls   = 'time-slot-btn'
-            + (isBreak      ? ' break-time' : '')
-            + (isOccupied   ? ' occupied'   : '')
-            + (isOutOfRange ? ' too-late'   : '');
-
+        const cls   = 'time-slot-btn' + (isBreak ? ' break-time' : '') + (isOccupied ? ' occupied' : '') + (isOutOfRange ? ' too-late' : '');
         const label = isBreak ? 'Break' : isOccupied ? 'Occupied' : isOutOfRange ? 'Too Late' : 'Available';
-
         const click = (!isBreak && !isOccupied && !isOutOfRange)
-            ? `onclick="selectTimeSlot(this,'${slot.start}','${slot.slot_id||''}','${pair}')"`
-            : '';
-
+            ? `onclick="selectTimeSlot(this,'${slot.start}','${slot.slot_id||''}','${pair}')"` : '';
         return `<div class="${cls}" ${click} data-start="${slot.start}">
             <div class="time-slot-time">${slot.start}</div>
             <div class="time-slot-label">${label}</div>
@@ -640,16 +645,13 @@ function isBreakTime(t) {
 }
 
 function selectTimeSlot(el, startTime, slotId, pair) {
-    // ✅ Clear selection only within this pair's container
-    document.querySelectorAll(`#timeSlotsContainer_${pair} .time-slot-btn`)
-        .forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll(`#timeSlotsContainer_${pair} .time-slot-btn`).forEach(b => b.classList.remove('selected'));
     el.classList.add('selected');
     document.getElementById(`ci_start_time_${pair}`).value   = startTime;
     document.getElementById(`ci_time_slot_id_${pair}`).value = slotId;
     onTimeChange(pair);
 }
 
-// ── ✅ onTimeChange — only one version, takes pair parameter ──
 function onTimeChange(pair) {
     const startTime = document.getElementById(`ci_start_time_${pair}`)?.value;
     const dur       = parseFloat(document.getElementById('ci_session_duration').value) || 0;
@@ -658,8 +660,6 @@ function onTimeChange(pair) {
         const total = h*60 + m + dur*60;
         const et    = `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`;
         document.getElementById(`ci_end_time_${pair}`).value = et;
-
-        // Update summary time — show all pairs that have a time selected
         const pairs = getCheckedPairs();
         const times = pairs.map(p => {
             const st = document.getElementById(`ci_start_time_${p}`)?.value;
@@ -669,9 +669,9 @@ function onTimeChange(pair) {
     }
     triggerPreview();
     updateSummary();
+    checkRoomAvailability();
 }
 
-// ── Recalculate ──
 function recalculate() {
     const totalHours = parseFloat(document.getElementById('ci_total_hours').value) || 0;
     const sessionDur = parseFloat(document.getElementById('ci_session_duration').value) || 0;
@@ -682,6 +682,7 @@ function recalculate() {
         document.getElementById('sessionsInfo').style.display = 'block';
         document.getElementById('sum-sessions').textContent   = sessions + ' sessions';
         document.getElementById('sum-hours').textContent      = totalHours + ' hrs';
+        evaluateContractAlert();
 
         const pairs     = getCheckedPairs();
         const startDate = document.getElementById('ci_start_date').value;
@@ -689,20 +690,17 @@ function recalculate() {
             const endDate = calcEndDate(startDate, pairs, sessions);
             document.getElementById('ci_end_date').value    = endDate;
             document.getElementById('sum-end').textContent  = formatDate(endDate);
-            document.getElementById('prev-end').textContent = formatDate(endDate);
+            const prevEnd = document.getElementById('prev-end');
+            if (prevEnd) prevEnd.textContent = formatDate(endDate);
         }
-
-        // ✅ Re-render slots to update Too Late status with new session duration
         pairs.forEach(pair => renderTimeSlots(pair));
     } else {
         document.getElementById('sessionsInfo').style.display = 'none';
     }
-
     triggerPreview();
     updateSummary();
 }
 
-// ── Calc end date ──
 function calcEndDate(startDate, pairs, sessions) {
     if (!startDate || !pairs.length || !sessions) return '';
     const targetDays = pairs.flatMap(p => dayMap[p] || []);
@@ -716,7 +714,6 @@ function calcEndDate(startDate, pairs, sessions) {
     return last ? last.toISOString().split('T')[0] : '';
 }
 
-// ── Preview ──
 function triggerPreview() {
     clearTimeout(_previewTimer);
     _previewTimer = setTimeout(fetchPreview, 500);
@@ -727,11 +724,8 @@ async function fetchPreview() {
     const startDate  = document.getElementById('ci_start_date').value;
     const totalHours = parseFloat(document.getElementById('ci_total_hours').value) || 0;
     const sessionDur = parseFloat(document.getElementById('ci_session_duration').value) || 0;
-
-    const firstPairWithTime = pairs.find(p => document.getElementById(`ci_start_time_${p}`)?.value);
-    const startTime = firstPairWithTime
-        ? document.getElementById(`ci_start_time_${firstPairWithTime}`).value
-        : null;
+    const firstPair  = pairs.find(p => document.getElementById(`ci_start_time_${p}`)?.value);
+    const startTime  = firstPair ? document.getElementById(`ci_start_time_${firstPair}`).value : null;
 
     if (!startDate || !pairs.length || !startTime || !totalHours || !sessionDur) {
         document.getElementById('previewSection').style.display = 'none';
@@ -757,26 +751,19 @@ async function fetchPreview() {
             const res = await fetch('/student-care/check-conflicts', {
                 method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                body: JSON.stringify({
-                    teacher_id:       teacherId,
-                    start_date:       startDate,
-                    end_date:         endDate,
-                    day_of_week:      pairs,
-                    start_time:       startTime,
-                    session_duration: sessionDur,
-                }),
+                body: JSON.stringify({ teacher_id:teacherId, start_date:startDate, end_date:endDate, day_of_week:pairs, start_time:startTime, session_duration:sessionDur }),
             });
             if (res.ok) {
                 const data = await res.json();
                 pairs.forEach(p => {
-                    const alert   = document.getElementById(`conflictAlert_${p}`);
-                    const details = document.getElementById(`conflictDetails_${p}`);
-                    if (!alert || !details) return;
+                    const alertEl  = document.getElementById(`conflictAlert_${p}`);
+                    const detailEl = document.getElementById(`conflictDetails_${p}`);
+                    if (!alertEl || !detailEl) return;
                     if (data.conflicts?.length) {
-                        details.innerHTML = data.conflicts.map(c => `<div>• ${c}</div>`).join('');
-                        alert.classList.add('show');
+                        detailEl.innerHTML = data.conflicts.map(c => `<div>• ${c}</div>`).join('');
+                        alertEl.classList.add('show');
                     } else {
-                        alert.classList.remove('show');
+                        alertEl.classList.remove('show');
                     }
                 });
             }
@@ -784,25 +771,102 @@ async function fetchPreview() {
     }
 }
 
-// ── Summary ──
 function updateSummary() {
     const course   = document.getElementById('ci_course');
     const type     = document.querySelector('[name="type"]');
     const mode     = document.querySelector('[name="delivery_mood"]');
-    const capacity = document.getElementById('ci_capacity').value;
-    document.getElementById('sum-course').textContent   = course.options[course.selectedIndex]?.text?.trim() || '—';
-    document.getElementById('sum-type').textContent     = type?.value || '—';
-    document.getElementById('sum-mode').textContent     = mode?.value || '—';
+    const capacity = document.getElementById('ci_capacity')?.value;
+    if (course) document.getElementById('sum-course').textContent   = course.options[course.selectedIndex]?.text?.trim() || '—';
+    if (type)   document.getElementById('sum-type').textContent     = type.value || '—';
+    if (mode)   document.getElementById('sum-mode').textContent     = mode.value || '—';
     document.getElementById('sum-capacity').textContent = capacity ? `${capacity} students` : '—';
-    document.getElementById('sum-start').textContent    = formatDate(document.getElementById('ci_start_date').value);
-    document.getElementById('sum-end').textContent      = formatDate(document.getElementById('ci_end_date').value);
-    const hours = document.getElementById('ci_total_hours').value;
+    document.getElementById('sum-start').textContent    = formatDate(document.getElementById('ci_start_date')?.value);
+    document.getElementById('sum-end').textContent      = formatDate(document.getElementById('ci_end_date')?.value);
+    const hours = document.getElementById('ci_total_hours')?.value;
     if (hours) document.getElementById('sum-hours').textContent = hours + ' hrs';
-
 }
+
+async function checkTeacherContract() {
+    const teacherId = document.getElementById('ci_teacher').value;
+    const patchSel  = document.querySelector('[name="patch_id"]');
+    const patchId   = patchSel?.value;
+    if (!teacherId || !patchId) { hideContractAlert(); return; }
+    try {
+        const res  = await fetch(`/student-care/teacher-contract-info?teacher_id=${teacherId}&patch_id=${patchId}`);
+        const data = await res.json();
+        if (data && typeof data.max_sessions !== 'undefined') {
+            _contractInfo = data;
+        } else {
+            _contractInfo = null;
+        }
+        evaluateContractAlert();
+    } catch {
+        _contractInfo = null;
+    }
+}
+
+function evaluateContractAlert() {
+    if (!_contractInfo) { hideContractAlert(); return; }
+    const newSessions = parseInt(document.getElementById('sessionsCount')?.textContent) || 0;
+    if (newSessions === 0) { hideContractAlert(); return; }
+
+    const after = _contractInfo.current_sessions + newSessions;
+    let el = document.getElementById('contractAlert');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'contractAlert';
+        el.style.cssText = 'padding:12px 16px;border-radius:6px;margin-top:12px;font-size:12px;border-left:3px solid;';
+        document.getElementById('sessionsInfo')?.after(el);
+    }
+    if (after > _contractInfo.max_sessions) {
+        const over = after - _contractInfo.max_sessions;
+        el.style.cssText = 'padding:12px 16px;border-radius:6px;margin-top:12px;font-size:12px;border-left:3px solid;background:rgba(220,38,38,0.06);border-color:#DC2626;color:#DC2626;display:block;';
+        el.innerHTML = `⚠ <strong>Contract Limit Exceeded:</strong> This teacher (${_contractInfo.contract_name}) has a max of <strong>${_contractInfo.max_sessions} sessions</strong>. They have <strong>${_contractInfo.current_sessions}</strong> + <strong>${newSessions}</strong> new — exceeding by <strong>${over}</strong>.`;
+    } else {
+        el.style.cssText = 'padding:12px 16px;border-radius:6px;margin-top:12px;font-size:12px;border-left:3px solid;background:rgba(5,150,105,0.06);border-color:#059669;color:#059669;display:block;';
+        el.innerHTML = `✓ <strong>${_contractInfo.contract_name}</strong> — ${_contractInfo.current_sessions} existing + ${newSessions} new = ${after}/${_contractInfo.max_sessions} sessions.`;
+    }
+}
+
+function hideContractAlert() {
+    const el = document.getElementById('contractAlert');
+    if (el) el.style.display = 'none';
+}
+
+async function checkRoomAvailability() {
+    const roomId    = document.getElementById('ci_room')?.value;
+    const startDate = document.getElementById('ci_start_date').value;
+    const endDate   = document.getElementById('ci_end_date').value;
+    const pairs     = getCheckedPairs();
+    const dur       = document.getElementById('ci_session_duration').value;
+    const firstPair = pairs.find(p => document.getElementById(`ci_start_time_${p}`)?.value);
+    const startTime = firstPair ? document.getElementById(`ci_start_time_${firstPair}`).value : '';
+
+    let el = document.getElementById('roomAlert');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'roomAlert';
+        el.style.cssText = 'padding:10px 14px;border-radius:4px;margin-top:8px;font-size:12px;border-left:3px solid;display:none;';
+        document.getElementById('ci_room')?.closest('.field')?.appendChild(el);
+    }
+    if (!roomId || !startDate || !startTime || !pairs.length) { el.style.display='none'; return; }
+    try {
+        const res  = await fetch(`/student-care/check-room-availability?room_id=${roomId}&start_date=${startDate}&end_date=${endDate}&pairs=${pairs.join(',')}&start_time=${startTime}&duration=${dur}`);
+        const data = await res.json();
+        if (!data.available) {
+            el.style.cssText = 'padding:10px 14px;border-radius:4px;margin-top:8px;font-size:12px;border-left:3px solid;background:rgba(220,38,38,0.06);border-color:#DC2626;color:#DC2626;display:block;';
+            el.innerHTML = `⚠ ${data.message}`;
+        } else {
+            el.style.cssText = 'padding:10px 14px;border-radius:4px;margin-top:8px;font-size:12px;border-left:3px solid;background:rgba(5,150,105,0.06);border-color:#059669;color:#059669;display:block;';
+            el.innerHTML = `✓ Room is available for the selected schedule`;
+        }
+    } catch { el.style.display='none'; }
+}
+
 function onModeChange() {
-    const mode    = document.querySelector('[name="delivery_mood"]').value;
+    const mode    = document.querySelector('[name="delivery_mood"]')?.value;
     const roomSel = document.getElementById('ci_room');
+    if (!mode || !roomSel) return;
     [...roomSel.options].forEach(opt => {
         if (!opt.value) return;
         const roomType = opt.dataset.type?.toLowerCase() || '';
@@ -815,9 +879,9 @@ function onModeChange() {
     updateSummary();
 }
 
-document.addEventListener('DOMContentLoaded', onModeChange);
-
-    document.querySelector('[name="patch_id"]').addEventListener('change', function() {
+// ── Init ──
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('[name="patch_id"]')?.addEventListener('change', function() {
         const opt   = this.options[this.selectedIndex];
         const start = opt?.dataset.start;
         const end   = opt?.dataset.end;
@@ -828,10 +892,14 @@ document.addEventListener('DOMContentLoaded', onModeChange);
             input.value = start;
             onStartDateChange();
         } else {
-            input.min   = '';
-            input.max   = '';
+            input.min = '';
+            input.max = '';
         }
         updateSummary();
+        checkTeacherContract();
     });
+
+    onModeChange();
+});
 </script>
 @endsection
