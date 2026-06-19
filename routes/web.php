@@ -232,6 +232,8 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::patch('/employees/{id}/toggle', [EmployeeController::class, 'toggle'])->name('employees.toggle');
         Route::post('/employees/{id}/profile', [EmployeeController::class, 'updateProfile'])->name('employees.update-profile');        
         Route::post('/employees/{id}/assign-contract', [EmployeeController::class, 'assignContract'])->name('employees.assign-contract');
+        Route::patch('/employees/{id}/update-availability', [EmployeeController::class, 'updateAvailability'])->name('employees.update-availability');
+        Route::patch('/employees/{id}/update-all', [EmployeeController::class, 'updateAll'])->name('employees.update-all');
 
 
         //Students

@@ -353,17 +353,21 @@ public function store(Request $request)
     {
         $request->validate([
             'full_name'     => 'required|string|max:255',
+            'english_level_id' => 'nullable|exists:english_level,english_level_id',
             'salary'        => 'nullable|numeric|min:0', 
             'target_amount' => 'nullable|numeric|min:0',
             'target_month'  => 'required|string',
         ]);
 
-        $employee = Employee::with('user')->findOrFail($id);
+        $employee = Employee::with(['user', 'teacher'])->findOrFail($id);
 
         $employee->update([
             'full_name' => $request->full_name,
             'salary'    => $request->salary,        
         ]);
+        if ($request->filled('english_level_id') && $employee->teacher) {
+            $employee->teacher->update(['english_level_id' => $request->english_level_id]);
+        }
         $employee->user->update(['name' => $request->full_name]);
 
         if ($request->filled('new_password')) {
@@ -383,6 +387,86 @@ public function store(Request $request)
                     'target_amount'       => $request->target_amount,
                     'created_by_admin_id' => $adminEmployee->employee_id,
                 ]
+            );
+        }
+
+        return back()->with('success', 'Employee updated successfully.');
+    }
+
+    public function updateAvailability(Request $request, $id)
+    {
+        $employee = Employee::findOrFail($id);
+        $teacher  = \App\Models\HR\Teacher::where('employee_id', $employee->employee_id)->firstOrFail();
+
+        \App\Models\HR\TeacherAvailability::where('teacher_id', $teacher->teacher_id)->delete();
+
+        $pairs    = $request->input('availability_pairs', []);
+        $slotIds  = $request->input('time_slot_ids', []);
+
+        foreach ($pairs as $pair) {
+            $slotId = $slotIds[$pair] ?? null;
+            if (!$slotId) continue;
+            \App\Models\HR\TeacherAvailability::create([
+                'teacher_id'   => $teacher->teacher_id,
+                'time_slot_id' => $slotId,
+                'day_of_week'  => $pair,
+            ]);
+        }
+
+        return back()->with('success', 'Availability updated successfully.');
+    }
+    public function updateAll(Request $request, $id)
+    {
+        $request->validate([
+            'full_name'        => 'required|string|max:255',
+            'salary'           => 'nullable|numeric|min:0',
+            'english_level_id' => 'nullable|exists:english_level,english_level_id',
+            'contract_type_id' => 'nullable|exists:contract_type,contract_type_id',
+            'patch_id'         => 'nullable|exists:patch,patch_id',
+            'target_amount'    => 'nullable|numeric|min:0',
+            'target_month'     => 'required|string',
+        ]);
+
+        $employee = Employee::with(['user','teacher'])->findOrFail($id);
+        $adminId  = Employee::where('user_id', auth()->id())->value('employee_id');
+
+        // Basic
+        $employee->update(['full_name' => $request->full_name, 'salary' => $request->salary]);
+        $employee->user->update(['name' => $request->full_name]);
+        if ($request->filled('new_password')) {
+            $employee->user->update(['password' => \Hash::make($request->new_password)]);
+        }
+
+        // Teacher
+        if ($request->role_name === 'Teacher' && $employee->teacher) {
+            if ($request->filled('english_level_id')) {
+                $employee->teacher->update(['english_level_id' => $request->english_level_id]);
+            }
+            // Contract
+            if ($request->filled('contract_type_id') && $request->filled('patch_id')) {
+                \App\Models\HR\TeacherContract::updateOrCreate(
+                    ['teacher_id' => $employee->teacher->teacher_id, 'patch_id' => $request->patch_id],
+                    ['contract_type_id' => $request->contract_type_id, 'is_active' => true, 'created_by_admin_id' => $adminId]
+                );
+            }
+            // Availability
+            \App\Models\HR\TeacherAvailability::where('teacher_id', $employee->teacher->teacher_id)->delete();
+            foreach ($request->input('availability_pairs', []) as $pair) {
+                $slotId = $request->input("time_slot_ids.{$pair}");
+                if (!$slotId) continue;
+                \App\Models\HR\TeacherAvailability::create([
+                    'teacher_id'   => $employee->teacher->teacher_id,
+                    'time_slot_id' => $slotId,
+                    'day_of_week'  => $pair,
+                ]);
+            }
+        }
+
+        // CS Target
+        if ($request->role_name === 'Customer Service' && $request->filled('target_amount')) {
+            \App\Models\Enrollment\CsTarget::updateOrCreate(
+                ['employee_id' => $employee->employee_id, 'month' => $request->target_month],
+                ['target_amount' => $request->target_amount, 'created_by_admin_id' => $adminId]
             );
         }
 
