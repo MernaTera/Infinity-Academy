@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Models\Academic\CourseInstance;
 
 class TeacherController extends Controller
 {
@@ -29,7 +30,8 @@ class TeacherController extends Controller
             ->latest('start_date')->first();
 
         // Active contract for current patch
-        $contract = \App\Models\HR\ContractType::where('teacher_id', $teacher->teacher_id)
+        $contract = \App\Models\HR\TeacherContract::with('contractType')
+            ->where('teacher_id', $teacher->teacher_id)
             ->where('is_active', true)
             ->when($currentPatch, fn($q) => $q->where('patch_id', $currentPatch->patch_id))
             ->latest('created_at')
@@ -223,6 +225,91 @@ class TeacherController extends Controller
         return view('teacher.courses', compact('activeCourses', 'completedCourses', 'stats'));
     }
 
+    public function pendingApprovals()
+    {
+        $teacher = \App\Models\HR\Teacher::where('employee_id',
+            \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id')
+        )->first();
+
+        $pending = CourseInstance::with(['courseTemplate', 'patch', 'instanceSchedules.timeSlot'])
+            ->where('teacher_id', $teacher->teacher_id)
+            ->where('status', 'Pending_Approval')
+            ->latest()
+            ->get();
+
+        return view('teacher.pending-approvals', compact('pending'));
+    }
+
+    public function approveInstance($id)
+    {
+        $teacher = \App\Models\HR\Teacher::where('employee_id',
+            \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id')
+        )->first();
+
+        $instance = CourseInstance::with('instanceSchedules')
+            ->where('teacher_id', $teacher->teacher_id)
+            ->where('status', 'Pending_Approval')
+            ->findOrFail($id);
+
+        $schedulingService = app(\App\Services\SchedulingService::class);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($instance, $schedulingService) {
+
+        $schedulingService->generateSessionsMultiPair($instance, $instance->instanceSchedules->all());
+
+            $instance->update(['status' => 'Upcoming']);
+
+            $scEmployee = \App\Models\HR\Employee::find($instance->created_by_employee_id);
+            if ($scEmployee) {
+                \DB::table('user_notification')->insert([
+                    'employee_id'         => $scEmployee->employee_id,
+                    'title'               => 'Course Instance Approved',
+                    'message'             => 'Teacher approved "' . ($instance->courseTemplate?->name ?? 'the course') . '" — sessions have been generated.',
+                    'related_entity_type' => 'course_instance',
+                    'related_entity_id'   => $instance->course_instance_id,
+                    'is_read'             => false,
+                    'created_at'          => now(),
+                    'updated_at'          => now(),
+                ]);
+            }
+        });
+
+        return back()->with('success', 'Course approved — sessions generated successfully.');
+    }
+
+    public function rejectInstance(Request $request, $id)
+    {
+        $teacher = \App\Models\HR\Teacher::where('employee_id',
+            \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id')
+        )->first();
+
+        $instance = CourseInstance::with(['instanceSchedules', 'courseTemplate'])
+            ->where('teacher_id', $teacher->teacher_id)
+            ->where('status', 'Pending_Approval')
+            ->findOrFail($id);
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($instance, $request) {
+
+            $scEmployee = \App\Models\HR\Employee::find($instance->created_by_employee_id);
+            if ($scEmployee) {
+                \DB::table('user_notification')->insert([
+                    'employee_id'         => $scEmployee->employee_id,
+                    'title'               => 'Course Instance Rejected',
+                    'message'             => 'Teacher rejected "' . ($instance->courseTemplate?->name ?? 'the course') . '". Reason: ' . ($request->reason ?? 'No reason provided.'),
+                    'related_entity_type' => 'course_instance',
+                    'related_entity_id'   => $instance->course_instance_id,
+                    'is_read'             => false,
+                    'created_at'          => now(),
+                    'updated_at'          => now(),
+                ]);
+            }
+
+            $instance->instanceSchedules()->delete();
+            $instance->delete();
+        });
+
+        return back()->with('success', 'Course instance rejected and removed.');
+    }
     // ─── course show ────────────────────────────────────────────────────────
     public function courseShow($id)
     {

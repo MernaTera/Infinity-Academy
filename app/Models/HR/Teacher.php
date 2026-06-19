@@ -61,7 +61,7 @@ class Teacher extends Model
 
 	public function contractTypes()
 	{
-		return $this->hasMany(ContractType::class, 'teacher_id');
+		return $this->hasMany(\App\Models\HR\TeacherContract::class, 'teacher_id');
 	}
 
 	public function courseInstances()

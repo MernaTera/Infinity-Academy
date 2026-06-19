@@ -240,6 +240,21 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                     <span class="tsl-link-text">My Courses</span>
                 </a>
+                <a href="{{ route('teacher.pending-approvals') }}" 
+                class="tsl-link {{ request()->routeIs('teacher.pending-approvals') ? 'active' : '' }}" 
+                data-label="Pending Approvals">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span class="tsl-link-text">Pending Approvals</span>
+                    @php
+                        $teacher = \App\Models\HR\Teacher::where('employee_id',
+                            \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id')
+                        )->value('teacher_id');
+                        $pendingCount = $teacher ? \App\Models\Academic\CourseInstance::where('teacher_id', $teacher)->where('status','Pending_Approval')->count() : 0;
+                    @endphp
+                    @if($pendingCount > 0)
+                        <span class="tsl-badge">{{ $pendingCount }}</span>
+                    @endif
+                </a>
             </div>
         </div>
 

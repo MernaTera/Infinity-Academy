@@ -173,40 +173,157 @@
     @if($roleName === 'Teacher' && $teacherData)
     <div class="profile-card">
         <div class="profile-body">
-            <div class="sec-label">Teacher Info</div>
-            <div class="stat-row stat-row-3" style="margin-bottom:18px">
+
+            {{-- Stats --}}
+            <div class="sec-label">Teacher Stats</div>
+            <div class="stat-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px">
                 <div class="stat-mini">
                     <div class="slabel">English Level</div>
-                    <div class="sval" style="font-size:16px;font-family:'DM Sans',sans-serif;font-weight:500">
+                    <div class="sval" style="font-size:15px;font-family:'DM Sans',sans-serif;font-weight:500">
                         {{ $employee->teacher?->englishLevel?->level_name ?? '—' }}
                     </div>
                 </div>
                 <div class="stat-mini">
                     <div class="slabel">Active Courses</div>
-                    <div class="sval">{{ $teacherData['active_courses'] }}</div>
+                    <div class="sval" style="color:#059669">{{ $teacherData['active_courses'] }}</div>
                 </div>
                 <div class="stat-mini">
-                    <div class="slabel">Total Students</div>
+                    <div class="slabel">Upcoming Courses</div>
+                    <div class="sval" style="color:#1B4FA8">{{ $teacherData['upcoming_courses'] }}</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="slabel">Active Students</div>
                     <div class="sval">{{ $teacherData['total_students'] }}</div>
                 </div>
             </div>
+
+            {{-- Contract --}}
             @if($teacherData['contract'])
-            <div class="sec-label">Current Contract</div>
-            <div class="stat-row stat-row-3">
+            <div class="sec-label">Current Contract — {{ $teacherData['contract']->patch?->name ?? '—' }}</div>
+            <div class="stat-row stat-row-3" style="margin-bottom:18px">
                 <div class="stat-mini">
                     <div class="slabel">Contract Type</div>
-                    <div class="sval" style="font-size:16px;font-family:'DM Sans',sans-serif">{{ $teacherData['contract']->contract_type }}</div>
+                    <div class="sval" style="font-size:15px;font-family:'DM Sans',sans-serif">
+                        {{ $teacherData['contract']->contractType?->name ?? '—' }}
+                    </div>
                 </div>
                 <div class="stat-mini">
-                    <div class="slabel">Max Sessions</div>
-                    <div class="sval">{{ $teacherData['contract']->max_sessions_allowed }}</div>
+                    <div class="slabel">Max Sessions / Patch</div>
+                    <div class="sval">{{ $teacherData['contract']->contractType?->max_sessions_allowed ?? '—' }}</div>
                 </div>
                 <div class="stat-mini">
-                    <div class="slabel">Patch</div>
-                    <div class="sval" style="font-size:14px;font-family:'DM Sans',sans-serif">{{ $teacherData['contract']->patch?->name ?? '—' }}</div>
+                    <div class="slabel">Contract Status</div>
+                    <div class="sval" style="font-size:13px;font-family:'DM Sans',sans-serif;color:{{ $teacherData['contract']->is_active ? '#059669' : '#DC2626' }}">
+                        {{ $teacherData['contract']->is_active ? 'Active' : 'Inactive' }}
+                    </div>
                 </div>
             </div>
+            @else
+            <div style="font-size:12px;color:#AAB8C8;padding:10px 0;margin-bottom:18px">No contract assigned for current patch.</div>
             @endif
+
+            {{-- Availability --}}
+            @if($employee->teacher?->availability?->isNotEmpty())
+            @php
+                $pairLabels = ['sat_tue'=>'Sat & Tue','sun_wed'=>'Sun & Wed','mon_thu'=>'Mon & Thu'];
+            @endphp
+            <div class="sec-label">Availability</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+                @foreach($employee->teacher->availability as $av)
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:5px;">
+                    <div>
+                        <div style="font-size:11px;font-weight:600;color:#059669">{{ $pairLabels[$av->day_of_week] ?? $av->day_of_week }}</div>
+                        <div style="font-size:10px;color:#7A8A9A;margin-top:2px">
+                            {{ $av->timeSlot?->name ?? '—' }}
+                            @if($av->timeSlot)
+                            · {{ \Carbon\Carbon::parse($av->timeSlot->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($av->timeSlot->end_time)->format('H:i') }}
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            @endif
+
+            {{-- ── Assign / Edit Contract ── --}}
+            <div class="sec-label" style="margin-top:4px">
+                {{ $teacherData['contract'] ? 'Edit Contract' : 'Assign Contract' }}
+            </div>
+            <form method="POST" action="{{ route('admin.employees.assign-contract', $employee->employee_id) }}"
+                style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end;margin-bottom:20px">
+                @csrf
+                <div>
+                    <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;display:block;margin-bottom:5px">Contract Type</label>
+                    <select name="contract_type_id" class="form-control" required>
+                        <option value="">— Select —</option>
+                        @foreach(\App\Models\HR\ContractType::where('is_active',true)->get() as $ct)
+                        <option value="{{ $ct->contract_type_id }}"
+                            {{ $teacherData['contract']?->contract_type_id == $ct->contract_type_id ? 'selected' : '' }}>
+                            {{ $ct->name }} (max {{ $ct->max_sessions_allowed }} sessions)
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;display:block;margin-bottom:5px">Patch</label>
+                    <select name="patch_id" class="form-control" required>
+                        <option value="">— Select —</option>
+                        @foreach(\App\Models\Academic\Patch::whereIn('status',['Active','Upcoming'])->get() as $p)
+                        <option value="{{ $p->patch_id }}"
+                            {{ $teacherData['contract']?->patch_id == $p->patch_id ? 'selected' : '' }}>
+                            {{ $p->name }} ({{ $p->status }})
+                        </option>
+                        @endforeach
+                    </select>
+                </div>
+                <button type="submit" class="btn-save" style="white-space:nowrap">
+                    {{ $teacherData['contract'] ? 'Update' : 'Assign' }}
+                </button>
+            </form>
+
+            {{-- Assigned Courses --}}
+            <div class="sec-label">Assigned Courses</div>
+            @if($teacherData['assigned_courses']->isNotEmpty())
+            <div style="border:1px solid rgba(27,79,168,0.08);border-radius:6px;overflow:hidden;">
+                @foreach($teacherData['assigned_courses'] as $ci)
+                @php
+                    $statusColor = match($ci->status) {
+                        'Active'           => '#059669',
+                        'Upcoming'         => '#1B4FA8',
+                        'Pending_Approval' => '#C47010',
+                        default            => '#AAB8C8',
+                    };
+                    $pairLbls = ['sat_tue'=>'Sat & Tue','sun_wed'=>'Sun & Wed','mon_thu'=>'Mon & Thu'];
+                @endphp
+                <div style="display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid rgba(27,79,168,0.05);transition:background 0.15s;"
+                    onmouseover="this.style.background='rgba(27,79,168,0.02)'"
+                    onmouseout="this.style.background=''">
+                    <div style="width:6px;height:6px;border-radius:50%;background:{{ $statusColor }};flex-shrink:0;"></div>
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:500;color:#1A2A4A">
+                            {{ $ci->courseTemplate?->name ?? '—' }}
+                            @if($ci->level) <span style="font-size:10px;color:#7A8A9A">· {{ $ci->level->name }}</span> @endif
+                        </div>
+                        <div style="font-size:10px;color:#AAB8C8;margin-top:2px;display:flex;gap:10px;flex-wrap:wrap">
+                            <span>{{ $ci->patch?->name ?? '—' }}</span>
+                            @foreach($ci->instanceSchedules as $sch)
+                            <span>{{ $pairLbls[$sch->day_of_week] ?? $sch->day_of_week }}
+                                @if($sch->start_time) · {{ \Carbon\Carbon::parse($sch->start_time)->format('H:i') }} @endif
+                            </span>
+                            @endforeach
+                            <span>{{ $ci->total_hours }} hrs · {{ $ci->type }}</span>
+                        </div>
+                    </div>
+                    <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;border:1px solid;color:{{ $statusColor }};border-color:{{ $statusColor }}20;background:{{ $statusColor }}10;white-space:nowrap;">
+                        {{ str_replace('_',' ',$ci->status) }}
+                    </span>
+                </div>
+                @endforeach
+            </div>
+            @else
+            <div style="font-size:12px;color:#AAB8C8;padding:10px 0">No courses assigned yet.</div>
+            @endif
+
         </div>
     </div>
     @endif

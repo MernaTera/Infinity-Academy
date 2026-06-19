@@ -148,8 +148,8 @@ class SchedulingService
                 CourseSession::create([
                     'course_instance_id'      => $instance->course_instance_id,
                     'session_date'            => $current->toDateString(),
-                    'start_time' => $startDateTime->format('H:i:s'),
-                    'end_time'   => $endDateTime->format('H:i:s'),
+                    'start_time'              => $startDateTime->format('H:i:s'),
+                    'end_time'                => $endDateTime->format('H:i:s'), 
                     'session_number'          => $sessionNum,
                     'room_id'                 => $instance->room_id,
                     'generated_from_schedule' => true,

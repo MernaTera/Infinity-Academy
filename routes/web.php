@@ -175,6 +175,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
 
         Route::get('/teachers/by-course/{courseId}',       [CourseInstanceController::class, 'getTeachersByCourse'])->name('teachers.by-course');
         Route::get('/teachers/by-course-level/{levelId}',  [CourseInstanceController::class, 'getTeachersByLevel'])->name('teachers.by-level');
+        Route::get('/teacher-free-dates', [CourseInstanceController::class, 'getTeacherFreeDates']);
 
         Route::get('/attendance/{session}',  [AttendanceController::class, 'show'])->name('attendance.show');
 
@@ -230,6 +231,8 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::put('/employees/{id}',          [EmployeeController::class, 'update'])->name('employees.update');
         Route::patch('/employees/{id}/toggle', [EmployeeController::class, 'toggle'])->name('employees.toggle');
         Route::post('/employees/{id}/profile', [EmployeeController::class, 'updateProfile'])->name('employees.update-profile');        
+        Route::post('/employees/{id}/assign-contract', [EmployeeController::class, 'assignContract'])->name('employees.assign-contract');
+
 
         //Students
         Route::get('/students',      [AdminStudentController::class, 'index'])->name('students.index');
@@ -373,6 +376,10 @@ Route::middleware(['auth', 'permission:academic.view'])
         Route::get('/reports/{id}/edit',  [TeacherReportController::class, 'edit'])->name('reports.edit');
         Route::put('/reports/{id}',       [TeacherReportController::class, 'update'])->name('reports.update');
         Route::patch('/reports/{id}/sent',[TeacherReportController::class, 'markSent'])->name('reports.mark-sent');
+
+        Route::get('/pending-approvals', [TeacherController::class, 'pendingApprovals'])->name('pending-approvals');
+        Route::patch('/course-instances/{id}/approve', [TeacherController::class, 'approveInstance'])->name('instance.approve');
+        Route::patch('/course-instances/{id}/reject',  [TeacherController::class, 'rejectInstance'])->name('instance.reject');
     });
 
 Route::middleware(['auth', 'permission:attendance.create'])

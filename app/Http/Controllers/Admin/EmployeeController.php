@@ -184,7 +184,7 @@ public function store(Request $request)
 
         $currentPatch = Patch::active()->latest('start_date')->first();
         $roleName     = $employee->user?->role?->role_name;
-
+        
         $csData = null;
         if ($roleName === 'Customer Service') {
             $currentMonth = now()->format('Y-m');
@@ -216,10 +216,23 @@ public function store(Request $request)
             $teacherData = [
                 'active_courses'  => \App\Models\Academic\CourseInstance::where('teacher_id', $employee->teacher->teacher_id)
                     ->where('status', 'Active')->count(),
+                'upcoming_courses' => \App\Models\Academic\CourseInstance::where('teacher_id', $employee->teacher->teacher_id)
+                    ->where('status', 'Upcoming')->count(),
                 'total_students'  => \App\Models\Enrollment\Enrollment::whereHas('courseInstance', fn($q) =>
-                    $q->where('teacher_id', $employee->teacher->teacher_id))->count(),
-                'contract'        => $employee->teacher->contractTypes
-                    ->where('patch_id', $currentPatch?->patch_id)->first(),
+                    $q->where('teacher_id', $employee->teacher->teacher_id)
+                    ->whereIn('status', ['Active','Upcoming'])
+                )->whereIn('status', ['Active','Restricted'])->count(),
+                'contract' => $employee->teacher->contractTypes
+                    ->where('is_active', true)
+                    ->sortByDesc('created_at')
+                    ->first(),
+                'assigned_courses' => \App\Models\Academic\CourseInstance::with([
+                    'courseTemplate', 'patch', 'instanceSchedules.timeSlot',
+                ])
+                ->where('teacher_id', $employee->teacher->teacher_id)
+                ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+                ->orderByRaw("FIELD(status, 'Active', 'Upcoming', 'Pending_Approval')")
+                ->get(),
             ];
         }
 
@@ -227,7 +240,32 @@ public function store(Request $request)
             'employee', 'roleName', 'csData', 'teacherData', 'currentPatch'
         ));
     }
+    
+    public function assignContract(Request $request, $id)
+    {
+        $request->validate([
+            'contract_type_id' => 'required|exists:contract_type,contract_type_id',
+            'patch_id'         => 'required|exists:patch,patch_id',
+        ]);
 
+        $employee = Employee::findOrFail($id);
+        $teacher  = \App\Models\HR\Teacher::where('employee_id', $employee->employee_id)->firstOrFail();
+        $adminId  = Employee::where('user_id', auth()->id())->value('employee_id');
+
+        \App\Models\HR\TeacherContract::updateOrCreate(
+            [
+                'teacher_id' => $teacher->teacher_id,
+                'patch_id'   => $request->patch_id,
+            ],
+            [
+                'contract_type_id'    => $request->contract_type_id,
+                'is_active'           => true,
+                'created_by_admin_id' => $adminId,
+            ]
+        );
+
+        return back()->with('success', 'Contract assigned successfully.');
+    }
     /*
     |------------------------------------------------------------------
     | Edit
