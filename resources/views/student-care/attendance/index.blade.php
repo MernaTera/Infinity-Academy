@@ -106,7 +106,7 @@
     <div class="page-header">
         <div>
             <div class="page-eyebrow">Student Care — Attendance</div>
-            <h1 class="page-title">Take Attendance</h1>
+            <h1 class="page-title">View Attendance</h1>
         </div>
         <a href="{{ route('student-care.instances.show', $session->courseInstance->course_instance_id) }}" class="btn-back">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
@@ -250,7 +250,7 @@
             @endif
         </div>
 
-        @if($isOpen)
+        <!-- @if($isOpen)
         <div class="quick-bar">
             <button type="button" class="quick-btn btn-all-present" onclick="markAll('Present')">
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -261,7 +261,7 @@
                 All Absent
             </button>
         </div>
-        @endif
+        @endif -->
 
         <form method="POST" action="{{ route('student-care.attendance.store', $session->course_session_id) }}" id="attForm">
             @csrf
@@ -293,7 +293,7 @@
                     {{-- Restricted — always absent, no input --}}
                     <span class="att-badge badge-restricted">🔒 Restricted</span>
 
-                @elseif($isOpen)
+                <!-- @elseif($isOpen)
                     {{-- Active toggle --}}
                     <div class="toggle-wrap" id="toggle_{{ $enrollment->enrollment_id }}">
                         <button type="button"
@@ -307,7 +307,7 @@
                                 onclick="setStatus({{ $enrollment->enrollment_id }}, 'Absent')">
                             ✕ Absent
                         </button>
-                    </div>
+                    </div> -->
                     <input type="hidden"
                            name="attendance[{{ $enrollment->enrollment_id }}]"
                            id="att_{{ $enrollment->enrollment_id }}"
@@ -334,7 +334,7 @@
             </div>
             @endforelse
 
-            @if($isOpen)
+            <!-- @if($isOpen)
             <div class="att-footer">
                 <div style="font-size:11px;color:var(--faint);">
                     <span id="footerStats">{{ $presentCount }} present · {{ $absentCount }} absent</span>
@@ -344,12 +344,12 @@
                     <span>Save Attendance</span>
                 </button>
             </div>
-            @endif
+            @endif -->
         </form>
     </div>
 
 </div>
-
+<!-- 
 @if($isOpen)
 <script>
 let presentCount = {{ $presentCount }};
@@ -411,6 +411,6 @@ function updateStats() {
     if (pendingEl) pendingEl.textContent = total - marked;
 }
 </script>
-@endif
+@endif -->
 
 @endsection
