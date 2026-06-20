@@ -570,6 +570,9 @@ window.buildInvoice = function() {
 
     document.getElementById('inv_payment').innerHTML = payHTML;
     document.getElementById('final_price_hidden').value = courseAmt;
+    if (document.getElementById('material_price_hidden')) {
+        document.getElementById('material_price_hidden').value = matPrice;
+    }
 
     // ── Schedule (private) ──
     const schedSection = document.getElementById('inv_schedule_section');
