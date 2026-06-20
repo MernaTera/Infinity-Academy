@@ -120,7 +120,23 @@ class RegistrationController extends Controller
             $enrollment = $this->registrationService->register($request->all());
 
             if ($plan && $plan->requires_admin_approval) {
+                if ($request->ajax()) {
+                    return response()->json([
+                        'success'       => true,           
+                        'enrollment_id' => $enrollment->enrollment_id,  
+                        'redirect'      => route('registration.pending', $enrollment->enrollment_id),
+                        'pending'       => true,
+                    ]);
+                }
                 return redirect()->route('registration.pending', $enrollment->enrollment_id);
+            }
+
+            if ($request->ajax()) {
+                return response()->json([
+                    'success'       => true,
+                    'enrollment_id' => $enrollment->enrollment_id,
+                    'redirect'      => route('leads.index'),
+                ]);
             }
 
             return redirect()->route('leads.index')->with('success', 'Student registered successfully.');
@@ -239,15 +255,31 @@ class RegistrationController extends Controller
             return response()->json([
                 'status'          => 'Cancelled',
                 'approval_status' => $log?->status ?? 'Rejected',
-                'rejection_note'  => $note, // ✅ بعد الـ split
+                'rejection_note'  => $note, 
             ]);
         }
 
         return response()->json([
             'status'          => $enrollment->status,
             'approval_status' => $log?->status,
-            'rejection_note'  => $note, // ✅ بعد الـ split
+            'rejection_note'  => $note, 
         ]);
     }
- 
+
+    //--------------------------------------------------
+    public function showInvoice($id)
+    {
+        $enrollment = \App\Models\Enrollment\Enrollment::with([
+            'student.phones',
+            'courseInstance.courseTemplate',
+            'courseInstance.level',
+            'courseInstance.patch',
+            'courseInstance.teacher.employee',
+            'paymentPlan',
+            'transactions',
+            'installmentSchedules',
+        ])->findOrFail($id);
+
+        return view('cs.enrollment-invoice', compact('enrollment'));
+    }
 }
