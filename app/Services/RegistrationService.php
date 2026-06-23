@@ -454,7 +454,7 @@ class RegistrationService
                 'transaction_type'      => 'Payment',
                 'transaction_category'  => 'Test',
                 'amount'                => $testFee,
-                'payment_method'        => 'Cash',
+                'payment_method'        => $depositMethod,
                 'created_by_employee_id'=> $csEmployee->employee_id,
             ]);
 
@@ -478,7 +478,7 @@ class RegistrationService
                 'transaction_type'      => 'Payment',
                 'transaction_category'  => 'Material',
                 'amount'                => $materialPrice,
-                'payment_method'        => 'Cash',
+                'payment_method'        => $depositMethod,
                 'created_by_employee_id'=> $csEmployee->employee_id,
             ]);
 
