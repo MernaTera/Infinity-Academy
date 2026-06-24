@@ -66,36 +66,40 @@ class AdminDashboardController extends Controller
         )->sum('amount');
 
         // ── Payment methods breakdown ─────────────────────────────────
-        // financial_transaction — filter by patch_id for patch period
+        $paidInstallmentIds = DB::table('installment_schedule')
+            ->where('status', 'Paid')
+            ->pluck('transaction_id')
+            ->filter()
+            ->toArray();
+
         $ftMethods = $applyFtPeriod(
             DB::table('financial_transaction')
-                ->whereIn('transaction_type', ['Payment', 'Installment'])
-        )
-        ->select('payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
+                ->where(function ($q) use ($paidInstallmentIds) {
+                    $q->where('transaction_type', 'Payment')
+                    ->orWhere(function ($q2) use ($paidInstallmentIds) {
+                        $q2->where('transaction_type', 'Installment')
+                            ->whereIn('transaction_id', $paidInstallmentIds);
+                    });
+                })
+        )->select('payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
         ->groupBy('payment_method')
         ->get()->keyBy('payment_method');
 
-        // deposit_payment — no patch_id, use date range only
-        $dpMethods = $applyDatePeriod(DB::table('deposit_payment'))
-            ->select('method as payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
-            ->groupBy('method')
-            ->get()->keyBy('payment_method');
-
-        // Cash
-        $cashRevenue = ($ftMethods['Cash']?->total  ?? 0) + ($dpMethods['Cash']?->total  ?? 0);
-        $cashCount   = ($ftMethods['Cash']?->count  ?? 0) + ($dpMethods['Cash']?->count  ?? 0);
+        // Cash — 
+        $cashRevenue = (float)($ftMethods['Cash']?->total ?? 0);
+        $cashCount   = (int)  ($ftMethods['Cash']?->count ?? 0);
 
         // InstaPay = Transfer(ft) + Instapay(dp)
-        $instapayRevenue = ($ftMethods['Transfer']?->total  ?? 0) + ($dpMethods['Instapay']?->total  ?? 0);
-        $instapayCount   = ($ftMethods['Transfer']?->count  ?? 0) + ($dpMethods['Instapay']?->count  ?? 0);
+        $instapayRevenue = ($ftMethods['Transfer']?->total ?? 0) + ($dpMethods['Instapay']?->total ?? 0);
+        $instapayCount   = ($ftMethods['Transfer']?->count ?? 0) + ($dpMethods['Instapay']?->count ?? 0);
 
-        // Vodafone Cash = Online(ft) + Vodafone_Cash(dp)
-        $vodafoneRevenue = ($ftMethods['Online']?->total         ?? 0) + ($dpMethods['Vodafone_Cash']?->total  ?? 0);
-        $vodafoneCount   = ($ftMethods['Online']?->count         ?? 0) + ($dpMethods['Vodafone_Cash']?->count  ?? 0);
+        // Vodafone = Online(ft) + Vodafone_Cash(dp)
+        $vodafoneRevenue = ($ftMethods['Online']?->total ?? 0) + ($dpMethods['Vodafone_Cash']?->total ?? 0);
+        $vodafoneCount   = ($ftMethods['Online']?->count ?? 0) + ($dpMethods['Vodafone_Cash']?->count ?? 0);
 
-        // Card
-        $cardRevenue = ($ftMethods['Card']?->total  ?? 0) + ($dpMethods['Card']?->total  ?? 0);
-        $cardCount   = ($ftMethods['Card']?->count  ?? 0) + ($dpMethods['Card']?->count  ?? 0);
+        // Card — ft بس
+        $cardRevenue = (float)($ftMethods['Card']?->total ?? 0);
+        $cardCount   = (int)  ($ftMethods['Card']?->count ?? 0);
 
         // ── Revenue trend (last 7 days — always all-time trend) ───────
         $revenueTrend = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
