@@ -206,7 +206,7 @@
                         </div>
                         <div class="form-field">
                             <label class="form-label">Assign to Patch</label>
-                            <select name="patch_id" class="form-control">
+                            <select name="cs_patch_id" class="form-control">
                                 <option value="">— Select Patch —</option>
                                 @foreach($patches as $p)
                                 <option value="{{ $p->patch_id }}">{{ $p->name }} ({{ $p->status }})</option>

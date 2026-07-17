@@ -127,7 +127,6 @@ public function store(Request $request)
                     'is_active'        => true,
                 ]);
 
-                // ✅ TeacherContract
                 if ($request->contract_type_id && $request->patch_id) {
                     \App\Models\HR\TeacherContract::create([
                         'teacher_id'          => $teacher->teacher_id,
@@ -138,7 +137,6 @@ public function store(Request $request)
                     ]);
                 }
 
-                // ✅ TeacherAvailability — INSIDE transaction, AFTER teacher created
                 if ($request->filled('availability')) {
                     foreach ($request->availability as $item) {
                         [$slotId, $day] = explode(':', $item);
@@ -155,7 +153,7 @@ public function store(Request $request)
             if ($role?->role_name === 'Customer Service' && $request->target_amount && $request->patch_id) {
                 CsTarget::create([
                     'employee_id'         => $employee->employee_id,
-                    'patch_id'            => $request->patch_id,
+                    'patch_id'            => $request->cs_patch_id,
                     'target_amount'       => $request->target_amount,
                     'is_locked'           => false,
                     'created_by_admin_id' => $adminId,
@@ -437,19 +435,16 @@ public function store(Request $request)
             $employee->user->update(['password' => \Hash::make($request->new_password)]);
         }
 
-        // Teacher
         if ($request->role_name === 'Teacher' && $employee->teacher) {
             if ($request->filled('english_level_id')) {
                 $employee->teacher->update(['english_level_id' => $request->english_level_id]);
             }
-            // Contract
             if ($request->filled('contract_type_id') && $request->filled('patch_id')) {
                 \App\Models\HR\TeacherContract::updateOrCreate(
                     ['teacher_id' => $employee->teacher->teacher_id, 'patch_id' => $request->patch_id],
                     ['contract_type_id' => $request->contract_type_id, 'is_active' => true, 'created_by_admin_id' => $adminId]
                 );
             }
-            // Availability
             \App\Models\HR\TeacherAvailability::where('teacher_id', $employee->teacher->teacher_id)->delete();
             foreach ($request->input('availability_pairs', []) as $pair) {
                 $slotId = $request->input("time_slot_ids.{$pair}");
@@ -462,7 +457,6 @@ public function store(Request $request)
             }
         }
 
-        // CS Target
         if ($request->role_name === 'Customer Service' && $request->filled('target_amount')) {
             \App\Models\Enrollment\CsTarget::updateOrCreate(
                 ['employee_id' => $employee->employee_id, 'month' => $request->target_month],
