@@ -78,6 +78,33 @@
 .avail-card.has-slot .avail-card-title{color:var(--green);}
 .slot-select{width:100%;padding:8px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text);background:#fff;outline:none;margin-top:6px;}
 .slot-select:focus{border-color:var(--blue);}
+.slot-card {
+    background: rgba(27,79,168,0.02);
+    border: 1px solid rgba(27,79,168,0.1);
+    border-radius: 6px;
+    padding: 14px 16px;
+}
+.day-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 14px;
+    border: 1px solid rgba(27,79,168,0.12);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #4A5A7A;
+    background: #fff;
+    transition: all 0.2s;
+    user-select: none;
+}
+.day-label:hover { border-color: #1B4FA8; }
+.day-label input { accent-color: #1B4FA8; }
+.day-label:has(input:checked) {
+    border-color: #1B4FA8;
+    background: rgba(27,79,168,0.05);
+    color: #1B4FA8;
+}
 
 /* buttons */
 .btn-primary{padding:11px 28px;background:var(--blue);border:none;border-radius:5px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;transition:background 0.2s;}
@@ -185,7 +212,9 @@
     {{-- Teacher View --}}
     @if($roleName === 'Teacher' && $teacherData)
     @php
-        $availMap = $employee->teacher?->availability?->keyBy('day_of_week') ?? collect();
+        $availPairs = $employee->teacher?->availability
+            ?->map(fn($a) => $a->time_slot_id . ':' . $a->day_of_week)
+            ?->toArray() ?? [];
         $timeSlots= \App\Models\Academic\TimeSlot::where('is_active',true)->orderBy('start_time')->get();
     @endphp
 
@@ -225,18 +254,25 @@
 
             {{-- Availability --}}
             <div class="sec-label">Availability</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
+            @php
+                $availByPair = $employee->teacher?->availability?->groupBy('day_of_week') ?? collect();
+            @endphp
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:24px;">
                 @foreach($allPairs as $pair)
-                @php $av = $availMap->get($pair); @endphp
-                <div style="padding:10px 16px;border-radius:8px;border:1.5px solid {{ $av ? 'rgba(5,150,105,0.25)' : 'var(--border)' }};background:{{ $av ? 'var(--green-l)' : 'transparent' }};">
-                    <div style="font-size:11px;font-weight:600;color:{{ $av ? 'var(--green)' : 'var(--faint)' }};">{{ $pairLabels[$pair] }}</div>
-                    @if($av)
-                    <div style="font-size:10px;color:var(--muted);margin-top:2px;">
-                        {{ $av->timeSlot?->name ?? '—' }}
-                        @if($av->timeSlot) · {{ \Carbon\Carbon::parse($av->timeSlot->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($av->timeSlot->end_time)->format('H:i') }} @endif
+                @php $slots = $availByPair->get($pair, collect()); @endphp
+                <div style="padding:12px 16px;border-radius:8px;border:1.5px solid {{ $slots->isNotEmpty() ? 'rgba(5,150,105,0.25)' : 'var(--border)' }};background:{{ $slots->isNotEmpty() ? 'var(--green-l)' : 'transparent' }};">
+                    <div style="font-size:11px;font-weight:600;color:{{ $slots->isNotEmpty() ? 'var(--green)' : 'var(--faint)' }};margin-bottom:6px;">{{ $pairLabels[$pair] }}</div>
+                    @if($slots->isNotEmpty())
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                        @foreach($slots as $av)
+                        <span style="font-size:10px;color:var(--muted);padding:3px 8px;background:#fff;border-radius:3px;border:1px solid rgba(5,150,105,0.15);">
+                            {{ $av->timeSlot?->name ?? '—' }}
+                            @if($av->timeSlot) · {{ \Carbon\Carbon::parse($av->timeSlot->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($av->timeSlot->end_time)->format('H:i') }}@endif
+                        </span>
+                        @endforeach
                     </div>
                     @else
-                    <div style="font-size:10px;color:var(--faint);margin-top:2px;">Not available</div>
+                    <div style="font-size:10px;color:var(--faint);">Not available</div>
                     @endif
                 </div>
                 @endforeach
@@ -348,38 +384,29 @@
 
                 <div class="sec-label">Teaching Availability</div>
                 <div class="avail-grid" style="margin-bottom:20px;">
-                    @foreach($allPairs as $pair)
-                    @php $av = $availMap->get($pair); @endphp
-                    <div class="avail-card {{ $av ? 'has-slot' : '' }}" id="avail_card_{{ $pair }}">
-                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-                            <div class="avail-card-title">{{ $pairLabels[$pair] }}</div>
-                            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:11px;color:var(--muted);">
+                <div style="display:flex;flex-direction:column;gap:10px">
+                    @foreach($timeSlots as $slot)
+                    <div class="slot-card">
+                        <div style="margin-bottom:10px">
+                            <span style="font-weight:600;color:#1A2A4A;font-size:13px">{{ $slot->name }}</span>
+                            <span style="font-size:11px;color:#7A8A9A;margin-left:8px">
+                                {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                            </span>
+                        </div>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap">
+                            @foreach($pairLabels as $day => $label)
+                            <label class="day-label">
                                 <input type="checkbox"
-                                       name="availability_pairs[]"
-                                       value="{{ $pair }}"
-                                       {{ $av ? 'checked' : '' }}
-                                       onchange="toggleAvailCard('{{ $pair }}', this.checked)">
-                                Enable
+                                    name="availability[]"
+                                    value="{{ $slot->time_slot_id }}:{{ $day }}"
+                                    {{ in_array($slot->time_slot_id . ':' . $day, $availPairs) ? 'checked' : '' }}>
+                                {{ $label }}
                             </label>
+                            @endforeach
                         </div>
-                        <div id="slot_select_{{ $pair }}" style="{{ $av ? '' : 'display:none;' }}">
-                            <label class="field-label" style="font-size:8px;">Time Slot</label>
-                            <select name="time_slot_ids[{{ $pair }}]" class="slot-select">
-                                <option value="">— Select Slot —</option>
-                                @foreach($timeSlots as $ts)
-                                <option value="{{ $ts->time_slot_id }}" {{ $av?->time_slot_id == $ts->time_slot_id ? 'selected' : '' }}>
-                                    {{ $ts->name }} ({{ \Carbon\Carbon::parse($ts->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($ts->end_time)->format('H:i') }})
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        @if(!$av)
-                        <div id="slot_empty_{{ $pair }}" style="font-size:10px;color:var(--faint);">Not available</div>
-                        @else
-                        <div id="slot_empty_{{ $pair }}" style="font-size:10px;color:var(--faint);display:none;">Not available</div>
-                        @endif
                     </div>
                     @endforeach
+                </div>
                 </div>
                 @endif
 

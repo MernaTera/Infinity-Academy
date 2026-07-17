@@ -150,7 +150,7 @@ public function store(Request $request)
             }
 
             // ── CS Target ─────────────────────────────────────────────
-            if ($role?->role_name === 'Customer Service' && $request->target_amount && $request->patch_id) {
+            if ($role?->role_name === 'Customer Service' && $request->target_amount && $request->cs_patch_id) {
                 CsTarget::create([
                     'employee_id'         => $employee->employee_id,
                     'patch_id'            => $request->cs_patch_id,
@@ -182,7 +182,9 @@ public function store(Request $request)
 
         $currentPatch = Patch::active()->latest('start_date')->first();
         $roleName     = $employee->user?->role?->role_name;
-        
+        $timeSlots = \App\Models\Academic\TimeSlot::where('is_active', true)
+            ->orderBy('start_time')->get();
+        $pairLabels = ['sat_tue'=>'Sat & Tue','sun_wed'=>'Sun & Wed','mon_thu'=>'Mon & Thu'];
         $csData = null;
         if ($roleName === 'Customer Service') {
             $currentMonth = now()->format('Y-m');
@@ -235,7 +237,7 @@ public function store(Request $request)
         }
 
         return view('admin.employees.show', compact(
-            'employee', 'roleName', 'csData', 'teacherData', 'currentPatch'
+            'employee', 'roleName', 'csData', 'teacherData', 'currentPatch', 'timeSlots', 'pairLabels'
         ));
     }
     
@@ -398,21 +400,18 @@ public function store(Request $request)
 
         \App\Models\HR\TeacherAvailability::where('teacher_id', $teacher->teacher_id)->delete();
 
-        $pairs    = $request->input('availability_pairs', []);
-        $slotIds  = $request->input('time_slot_ids', []);
-
-        foreach ($pairs as $pair) {
-            $slotId = $slotIds[$pair] ?? null;
-            if (!$slotId) continue;
+        foreach ($request->input('availability', []) as $item) {
+            [$slotId, $day] = explode(':', $item);
             \App\Models\HR\TeacherAvailability::create([
                 'teacher_id'   => $teacher->teacher_id,
-                'time_slot_id' => $slotId,
-                'day_of_week'  => $pair,
+                'time_slot_id' => (int) $slotId,
+                'day_of_week'  => $day,
             ]);
         }
 
         return back()->with('success', 'Availability updated successfully.');
     }
+
     public function updateAll(Request $request, $id)
     {
         $request->validate([
@@ -446,13 +445,12 @@ public function store(Request $request)
                 );
             }
             \App\Models\HR\TeacherAvailability::where('teacher_id', $employee->teacher->teacher_id)->delete();
-            foreach ($request->input('availability_pairs', []) as $pair) {
-                $slotId = $request->input("time_slot_ids.{$pair}");
-                if (!$slotId) continue;
+            foreach ($request->input('availability', []) as $item) {
+                [$slotId, $day] = explode(':', $item);
                 \App\Models\HR\TeacherAvailability::create([
                     'teacher_id'   => $employee->teacher->teacher_id,
-                    'time_slot_id' => $slotId,
-                    'day_of_week'  => $pair,
+                    'time_slot_id' => (int) $slotId,
+                    'day_of_week'  => $day,
                 ]);
             }
         }
