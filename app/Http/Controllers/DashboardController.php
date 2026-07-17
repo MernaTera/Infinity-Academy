@@ -18,10 +18,22 @@ class DashboardController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
+        
+        return match((int) $user->role_id) {
+            1 => redirect('/admin/dashboard'),
+            3 => redirect('/student-care/dashboard'),
+            4 => redirect('/teacher/dashboard'),
+            2 => $this->showCsDashboard(),
+            default => abort(403),
+        };
+    }
+
+    private function showCsDashboard()
+    {
         $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
         $currentPatch = Patch::active()->latest('start_date')->first();
 
-        // ══ LEADS ══════════════════════════════════════════════
         $myLeads = Lead::where('owner_cs_id', $employee?->employee_id);
 
         $leadsStats = [
@@ -33,36 +45,33 @@ class DashboardController extends Controller
             'public'        => Lead::whereNull('owner_cs_id')->where('is_active', true)->count(),
         ];
 
-    // ══ SALES / REVENUE ════════════════════════════════════
-    $currentMonth = now()->format('Y-m');
+        $currentMonth = now()->format('Y-m');
 
-    // ✅ target by month مش by patch
-    $target = CsTarget::where('employee_id', $employee?->employee_id)
-        ->where('month', $currentMonth)
-        ->first();
+        $target = CsTarget::where('employee_id', $employee?->employee_id)
+            ->where('month', $currentMonth)
+            ->first();
 
-    $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)
-        ->whereBetween('created_at', [
-            now()->startOfMonth(),
-            now()->endOfMonth(),
-        ])
-        ->sum('amount_allocated');
+        $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)
+            ->whereBetween('created_at', [
+                now()->startOfMonth(),
+                now()->endOfMonth(),
+            ])
+            ->sum('amount_allocated');
 
-    $targetAmount = $target?->target_amount ?? 0;
-    $remaining    = max(0, $targetAmount - $achieved);
-    $percentage   = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : 0;
+        $targetAmount = $target?->target_amount ?? 0;
+        $remaining    = max(0, $targetAmount - $achieved);
+        $percentage   = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : 0;
 
-    $salesStats = [
-        'target'        => $targetAmount,
-        'achieved'      => $achieved,
-        'remaining'     => $remaining,
-        'percentage'    => $percentage,
-        'registrations' => Enrollment::where('created_by_cs_id', $employee?->employee_id)
-                            ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
-                            ->count(),
-    ];
+        $salesStats = [
+            'target'        => $targetAmount,
+            'achieved'      => $achieved,
+            'remaining'     => $remaining,
+            'percentage'    => $percentage,
+            'registrations' => Enrollment::where('created_by_cs_id', $employee?->employee_id)
+                                ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
+                                ->count(),
+        ];
 
-        // ══ OUTSTANDING ════════════════════════════════════════
         $myEnrollments = Enrollment::where('created_by_cs_id', $employee?->employee_id)
             ->whereIn('status', ['Active', 'Restricted'])
             ->with('financialTransactions')
@@ -74,7 +83,7 @@ class DashboardController extends Controller
 
         foreach ($myEnrollments as $e) {
             $paid      = $e->financialTransactions->whereIn('transaction_type', ['Payment','Installment'])->sum('amount')
-                       - $e->financialTransactions->where('transaction_type', 'Refund')->sum('amount');
+                    - $e->financialTransactions->where('transaction_type', 'Refund')->sum('amount');
             $remaining = max(0, $e->final_price - $paid);
             if ($remaining > 0) {
                 $outstandingCount++;
@@ -89,19 +98,16 @@ class DashboardController extends Controller
             'total_le'   => $totalOutstanding,
         ];
 
-        // ══ CALLS DUE TODAY ════════════════════════════════════
         $callsDueToday = Lead::where('owner_cs_id', $employee?->employee_id)
             ->whereDate('next_call_at', today())
             ->count();
 
-        // ══ RECENT LEADS (5 أحدث) ═════════════════════════════
         $recentLeads = Lead::where('owner_cs_id', $employee?->employee_id)
             ->with(['courseTemplate'])
             ->latest()
             ->limit(5)
             ->get();
 
-        // ══ RECENT PAYMENTS (5 أحدث) ══════════════════════════
         $recentPayments = \App\Models\Finance\FinancialTransaction::where('created_by_employee_id', $employee?->employee_id)
             ->with(['enrollment.student', 'enrollment.courseTemplate'])
             ->latest()
