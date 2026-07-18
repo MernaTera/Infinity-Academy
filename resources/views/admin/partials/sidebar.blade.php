@@ -188,11 +188,6 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             <span class="sl-txt">Students</span>
         </a>
-        <a href="{{ route('admin.contract-types.index') }}" data-tip="Contract Types"
-           class="sl {{ request()->routeIs('admin.contract-types.*') ? 'active' : '' }}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-            <span class="sl-txt">Contract Types</span>
-        </a>
     </div>
 
     <div class="sb-div"></div>
@@ -229,6 +224,11 @@
            class="sl {{ request()->routeIs('admin.english-levels.*') ? 'active' : '' }}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
             <span class="sl-txt">English Levels</span>
+        </a>
+        <a href="{{ route('admin.contract-types.index') }}" data-tip="Contract Types"
+           class="sl {{ request()->routeIs('admin.contract-types.*') ? 'active' : '' }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            <span class="sl-txt">Contract Types</span>
         </a>
     </div>
 
