@@ -30,10 +30,24 @@ class AdminStudentController extends Controller
             ])->latest(),
         ])
         ->when($search, function ($q) use ($search) {
-            $q->where('full_name', 'like', "%{$search}%")
-              ->orWhere('email', 'like', "%{$search}%")
-              ->orWhereHas('phones', fn($q2) =>
-                  $q2->where('phone_number', 'like', "%{$search}%"));
+            $invoiceId = null;
+            if (preg_match('/^INV-?(\d+)$/i', trim($search), $m)) {
+                $invoiceId = (int) $m[1];
+            } elseif (ctype_digit(trim($search))) {
+                $invoiceId = (int) trim($search);
+            }
+
+            $q->where(function ($sub) use ($search, $invoiceId) {
+                $sub->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhereHas('phones', fn($q2) =>
+                        $q2->where('phone_number', 'like', "%{$search}%"));
+
+                if ($invoiceId !== null) {
+                    $sub->orWhereHas('enrollments', fn($q3) =>
+                        $q3->where('enrollment_id', $invoiceId));
+                }
+            });
         })
         ->when($status, fn($q) => $q->where('status', $status))
         ->when($csFilter, fn($q) =>

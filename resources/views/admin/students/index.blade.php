@@ -85,8 +85,7 @@
         <div class="filter-bar">
             <div class="search-wrap">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input type="text" name="search" placeholder="Search name, phone, email..." value="{{ $search }}">
-            </div>
+                <input type="text" name="search" placeholder="Search name, phone, email, or INV-000012..." value="{{ $search }}">            </div>
             <div class="filter-field">
                 <label class="filter-label">Status</label>
                 <select name="status" class="filter-control">
@@ -119,6 +118,7 @@
                 <thead>
                     <tr>
                         <th>Student</th>
+                        <th>Invoice</th>
                         <th>Phone</th>
                         <th>Course</th>
                         <th>Teacher</th>
@@ -148,6 +148,22 @@
                                 </div>
                             </div>
                         </td>
+                        <td>
+                        @php
+                            $latestEnr = $student->enrollments->first();
+                        @endphp
+                        @if($latestEnr)
+                            <a href="{{ route('admin.students.show', $student->student_id) }}" 
+                            style="font-family:monospace;font-size:11px;color:var(--blue);text-decoration:none;font-weight:500;">
+                                INV-{{ str_pad($latestEnr->enrollment_id, 6, '0', STR_PAD_LEFT) }}
+                            </a>
+                            @if($student->enrollments->count() > 1)
+                                <div style="font-size:9px;color:var(--faint);margin-top:2px;">+{{ $student->enrollments->count() - 1 }} more</div>
+                            @endif
+                        @else
+                            <span style="color:var(--faint);font-size:11px;">—</span>
+                        @endif
+                    </td>
                         <td style="font-family:monospace;font-size:12px;">
                             {{ $student->phones->where('is_primary',true)->first()?->phone_number ?? '—' }}
                         </td>
