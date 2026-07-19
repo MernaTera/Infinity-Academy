@@ -291,7 +291,8 @@ Route::middleware(['auth', 'permission:hr.view'])
 
         //Time slots and break slots
         Route::get('/slots', [PatchAdminController::class, 'slotsIndex'])->name('slots.index');
-
+        Route::put('/patches/time-slots/{id}',  [PatchAdminController::class, 'updateTimeSlot'])->name('patches.timeslots.update');
+        Route::put('/patches/break-slots/{id}', [PatchAdminController::class, 'updateBreakSlot'])->name('patches.breakslots.update');
         
         //Rooms
         Route::get('/rooms',               [RoomController::class, 'index'])->name('rooms.index');

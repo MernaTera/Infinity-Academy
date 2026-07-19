@@ -50,6 +50,27 @@
 .inactive-slot .toggle-btn{color:#059669;border-color:rgba(5,150,105,0.2)}
 .inactive-slot .toggle-btn:hover{background:rgba(5,150,105,0.06)}
 
+/* Edit button */
+.edit-btn{padding:4px 10px;font-size:9px;letter-spacing:1px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(27,79,168,0.2);background:transparent;color:#1B4FA8;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.edit-btn:hover{background:rgba(27,79,168,0.06)}
+.slot-actions{display:flex;gap:6px;align-items:center}
+
+/* Modal */
+.slot-modal-bg{display:none;position:fixed;inset:0;background:rgba(10,20,40,0.45);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:999;padding:20px}
+.slot-modal-bg.show{display:flex}
+.slot-modal{width:100%;max-width:460px;background:#F8F6F2;border:1px solid rgba(27,79,168,0.15);border-radius:8px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(27,79,168,0.18);animation:slotIn 0.3s cubic-bezier(0.16,1,0.3,1) both}
+.slot-modal::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)}
+@keyframes slotIn{from{opacity:0;transform:scale(0.94) translateY(10px)}to{opacity:1;transform:none}}
+.slot-modal-header{padding:18px 22px 14px;border-bottom:1px solid rgba(27,79,168,0.08)}
+.slot-modal-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:3px}
+.slot-modal-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#1B4FA8}
+.slot-modal-body{padding:18px 22px}
+.slot-modal-footer{padding:12px 22px 18px;border-top:1px solid rgba(27,79,168,0.07);display:flex;gap:10px;justify-content:flex-end}
+.btn-cancel{padding:8px 18px;background:transparent;border:1px solid rgba(27,79,168,0.15);border-radius:4px;color:#7A8A9A;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer}
+.btn-cancel:hover{border-color:#1B4FA8;color:#1B4FA8}
+.btn-save{padding:9px 22px;background:#1B4FA8;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;cursor:pointer;transition:background 0.2s}
+.btn-save:hover{background:#2D6FDB}
+
 .empty-state{text-align:center;padding:24px 16px;color:#AAB8C8;font-size:12px;font-style:italic}
 
 @media(max-width:900px){
@@ -100,10 +121,16 @@
                         <span class="slot-type">{{ $slot->slot_type }}</span>
                         @endif
                     </div>
-                    <form method="POST" action="{{ route('admin.patches.timeslots.toggle', $slot->time_slot_id) }}">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="toggle-btn">{{ $slot->is_active ? 'Disable' : 'Enable' }}</button>
-                    </form>
+                    <div class="slot-actions">
+                        <button type="button" class="edit-btn"
+                            onclick="openEditTimeSlot({{ $slot->time_slot_id }}, '{{ addslashes($slot->name) }}', '{{ substr($slot->start_time,0,5) }}', '{{ substr($slot->end_time,0,5) }}', '{{ $slot->slot_type }}')">
+                            ✎ Edit
+                        </button>
+                        <form method="POST" action="{{ route('admin.patches.timeslots.toggle', $slot->time_slot_id) }}">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="toggle-btn">{{ $slot->is_active ? 'Disable' : 'Enable' }}</button>
+                        </form>
+                    </div>
                 </div>
                 @empty
                 <div class="empty-state">No time slots yet — add your first below.</div>
@@ -153,10 +180,16 @@
                         <div class="slot-name">{{ $break->name }}</div>
                         <div class="slot-time">{{ substr($break->start_time,0,5) }} → {{ substr($break->end_time,0,5) }}</div>
                     </div>
-                    <form method="POST" action="{{ route('admin.patches.breakslots.toggle', $break->break_slot_id) }}">
-                        @csrf @method('PATCH')
-                        <button type="submit" class="toggle-btn">{{ $break->is_active ? 'Disable' : 'Enable' }}</button>
-                    </form>
+                    <div class="slot-actions">
+                        <button type="button" class="edit-btn"
+                            onclick="openEditBreakSlot({{ $break->break_slot_id }}, '{{ addslashes($break->name) }}', '{{ substr($break->start_time,0,5) }}', '{{ substr($break->end_time,0,5) }}')">
+                            ✎ Edit
+                        </button>
+                        <form method="POST" action="{{ route('admin.patches.breakslots.toggle', $break->break_slot_id) }}">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="toggle-btn">{{ $break->is_active ? 'Disable' : 'Enable' }}</button>
+                        </form>
+                    </div>
                 </div>
                 @empty
                 <div class="empty-state">No break slots yet — add your first below.</div>
@@ -188,4 +221,118 @@
 
     </div>
 </div>
+{{-- Edit Time Slot Modal --}}
+<div id="editTimeSlotModal" class="slot-modal-bg">
+    <div class="slot-modal">
+        <div class="slot-modal-header">
+            <div class="slot-modal-eyebrow">Admin Panel</div>
+            <div class="slot-modal-title">Edit Time Slot</div>
+        </div>
+        <form id="editTimeSlotForm" method="POST">
+            @csrf @method('PUT')
+            <div class="slot-modal-body">
+                <div class="form-field">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="name" id="et_name" class="form-control" required>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-field">
+                        <label class="form-label">Start</label>
+                        <input type="time" name="start_time" id="et_start" class="form-control" required>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">End</label>
+                        <input type="time" name="end_time" id="et_end" class="form-control" required>
+                    </div>
+                </div>
+                <div class="form-field">
+                    <label class="form-label">Type</label>
+                    <select name="slot_type" id="et_type" class="form-control" required>
+                        <option value="Morning">Morning</option>
+                        <option value="Midday">Midday</option>
+                        <option value="Night">Night</option>
+                    </select>
+                </div>
+            </div>
+            <div class="slot-modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeEditTimeSlot()">Cancel</button>
+                <button type="submit" class="btn-save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{{-- Edit Break Slot Modal --}}
+<div id="editBreakSlotModal" class="slot-modal-bg">
+    <div class="slot-modal">
+        <div class="slot-modal-header">
+            <div class="slot-modal-eyebrow">Admin Panel</div>
+            <div class="slot-modal-title">Edit Break Slot</div>
+        </div>
+        <form id="editBreakSlotForm" method="POST">
+            @csrf @method('PUT')
+            <div class="slot-modal-body">
+                <div class="form-field">
+                    <label class="form-label">Name</label>
+                    <input type="text" name="name" id="eb_name" class="form-control" required>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+                    <div class="form-field">
+                        <label class="form-label">Start</label>
+                        <input type="time" name="start_time" id="eb_start" class="form-control" required>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">End</label>
+                        <input type="time" name="end_time" id="eb_end" class="form-control" required>
+                    </div>
+                </div>
+            </div>
+            <div class="slot-modal-footer">
+                <button type="button" class="btn-cancel" onclick="closeEditBreakSlot()">Cancel</button>
+                <button type="submit" class="btn-save">Save</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditTimeSlot(id, name, start, end, type) {
+    document.getElementById('editTimeSlotForm').action = `/admin/patches/time-slots/${id}`;
+    document.getElementById('et_name').value  = name;
+    document.getElementById('et_start').value = start;
+    document.getElementById('et_end').value   = end;
+    document.getElementById('et_type').value  = type;
+    document.getElementById('editTimeSlotModal').classList.add('show');
+}
+function closeEditTimeSlot() {
+    document.getElementById('editTimeSlotModal').classList.remove('show');
+}
+
+function openEditBreakSlot(id, name, start, end) {
+    document.getElementById('editBreakSlotForm').action = `/admin/patches/break-slots/${id}`;
+    document.getElementById('eb_name').value  = name;
+    document.getElementById('eb_start').value = start;
+    document.getElementById('eb_end').value   = end;
+    document.getElementById('editBreakSlotModal').classList.add('show');
+}
+function closeEditBreakSlot() {
+    document.getElementById('editBreakSlotModal').classList.remove('show');
+}
+
+// Close on backdrop click
+document.getElementById('editTimeSlotModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditTimeSlot();
+});
+document.getElementById('editBreakSlotModal').addEventListener('click', function(e) {
+    if (e.target === this) closeEditBreakSlot();
+});
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeEditTimeSlot();
+        closeEditBreakSlot();
+    }
+});
+</script>
 @endsection

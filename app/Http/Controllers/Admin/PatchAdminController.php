@@ -243,6 +243,44 @@ class PatchAdminController extends Controller
 
         return view('admin.slots.index', compact('timeSlots', 'breakSlots'));
     }
+
+    public function updateTimeSlot(Request $request, $id)
+    {
+        $request->validate([
+            'name'       => 'required|string',
+            'start_time' => 'required',
+            'end_time'   => 'required|after:start_time',
+            'slot_type'  => 'required|in:Morning,Midday,Night',
+        ]);
+
+        $slot = TimeSlot::findOrFail($id);
+        $slot->update([
+            'name'       => $request->name,
+            'start_time' => $request->start_time,
+            'end_time'   => $request->end_time,
+            'slot_type'  => $request->slot_type,
+        ]);
+
+        return back()->with('success', 'Time slot updated.');
+    }
+
+    public function updateBreakSlot(Request $request, $id)
+    {
+        $request->validate([
+            'name'       => 'required|string',
+            'start_time' => 'required',
+            'end_time'   => 'required|after:start_time',
+        ]);
+
+        $break = BreakSlot::findOrFail($id);
+        $break->update([
+            'name'       => $request->name,
+            'start_time' => $request->start_time,
+            'end_time'   => $request->end_time,
+        ]);
+
+        return back()->with('success', 'Break slot updated.');
+    }
     // ── Break Slots ───────────────────────────────────────────────
     public function storeBreakSlot(Request $request)
     {
