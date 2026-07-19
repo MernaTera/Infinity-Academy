@@ -577,7 +577,7 @@
                                 <input type="text" id="material_price" class="form-control-inf" readonly>
                             </div>
                         </div>
-                        {{-- CS split badge — shown when cs_percentage > 0 --}}
+                        {{-- Revenue Type badge — shown when revenue_type is set --}}
                         <div id="material_split_badge" class="material-split" style="display:none;">
                             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>

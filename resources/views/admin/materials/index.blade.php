@@ -141,7 +141,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
                             <th>#</th>
                             <th>Name</th>
                             <th>Price</th>
-                            <th>CS Commission</th>
+                            <th>Revenue Type</th>
                             <th>Status</th>
                             <th>Assigned To</th>
                             <th></th>
@@ -154,10 +154,10 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
                             <td style="font-weight:500;color:var(--text);">{{ $mat->name }}</td>
                             <td style="font-family:monospace;font-size:13px;color:var(--text);">{{ number_format($mat->price, 2) }} LE</td>
                             <td>
-                                @if($mat->cs_percentage > 0)
-                                <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--orange);">{{ $mat->cs_percentage }}%</span>
+                                @if($mat->revenue_type === 'Individual')
+                                <span class="badge" style="background:var(--orange-l);color:#C47010;border:1px solid rgba(245,145,30,0.25);">Individual</span>
                                 @else
-                                <span style="color:var(--faint);font-size:11px;">None</span>
+                                <span class="badge" style="background:var(--blue-l);color:var(--blue);border:1px solid var(--border);">Shared</span>
                                 @endif
                             </td>
                             <td>
@@ -187,7 +187,7 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
                             <td>
                                 <div style="display:flex;gap:6px;flex-wrap:wrap;">
                                     <button class="btn-sm btn-edit"
-                                            onclick="openEdit({{ $mat->material_id }}, '{{ addslashes($mat->name) }}', {{ $mat->price }}, {{ $mat->cs_percentage }})">
+                                            onclick="openEdit({{ $mat->material_id }}, '{{ addslashes($mat->name) }}', {{ $mat->price }}, '{{ $mat->revenue_type }}')">
                                         Edit
                                     </button>
                                     <form method="POST" action="{{ route('admin.materials.toggle', $mat->material_id) }}" style="display:inline;">
@@ -352,8 +352,11 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
                             <input type="number" name="price" class="form-control" placeholder="0.00" step="0.01" min="0" required>
                         </div>
                         <div class="form-field">
-                            <label class="form-label">CS Commission (%)</label>
-                            <input type="number" name="cs_percentage" class="form-control" placeholder="0" min="0" max="100" value="0">
+                            <label class="form-label">Revenue Type <span style="color:var(--orange);">*</span></label>
+                            <select name="revenue_type" class="form-control" required>
+                                <option value="Shared">Shared — split among all CS in branch</option>
+                                <option value="Individual">Individual — to CS who registered</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -396,8 +399,11 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
                             <input type="number" id="edit_price" name="price" class="form-control" step="0.01" min="0" required>
                         </div>
                         <div class="form-field">
-                            <label class="form-label">CS Commission (%)</label>
-                            <input type="number" id="edit_cs" name="cs_percentage" class="form-control" min="0" max="100">
+                            <label class="form-label">Revenue Type <span style="color:var(--orange);">*</span></label>
+                            <select id="edit_revenue" name="revenue_type" class="form-control" required>
+                                <option value="Shared">Shared — split among all CS in branch</option>
+                                <option value="Individual">Individual — to CS who registered</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -427,11 +433,11 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') ['createModal','editModal'].forEach(id => document.getElementById(id).classList.remove('open'));
 });
 
-function openEdit(id, name, price, cs) {
-    document.getElementById('editForm').action = `/admin/materials/${id}`;
-    document.getElementById('edit_name').value  = name;
-    document.getElementById('edit_price').value = price;
-    document.getElementById('edit_cs').value    = cs;
+function openEdit(id, name, price, revenueType) {
+    document.getElementById('editForm').action     = `/admin/materials/${id}`;
+    document.getElementById('edit_name').value     = name;
+    document.getElementById('edit_price').value    = price;
+    document.getElementById('edit_revenue').value  = revenueType;
     document.getElementById('editModal').classList.add('open');
 }
 

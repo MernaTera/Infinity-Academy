@@ -474,7 +474,7 @@ class RegistrationService
             $materialTx = FinancialTransaction::create([
                 'enrollment_id'         => $enrollment->enrollment_id,
                 'patch_id'              => $patchId,
-                'branch_id'              => $branchId, 
+                'branch_id'             => $branchId,
                 'transaction_type'      => 'Payment',
                 'transaction_category'  => 'Material',
                 'amount'                => $materialPrice,
@@ -482,13 +482,16 @@ class RegistrationService
                 'created_by_employee_id'=> $csEmployee->employee_id,
             ]);
 
+            $enrollmentMaterial = \App\Models\Enrollment\EnrollmentMaterial::where('enrollment_id', $enrollment->enrollment_id)
+                ->first();
 
-            $isToefl = str_contains(
-                strtolower($enrollment->courseTemplate?->name ?? ''),
-                'toefl'
-            );
+            $material = $enrollmentMaterial
+                ? \App\Models\Enrollment\Material::find($enrollmentMaterial->material_id)
+                : null;
 
-            if ($isToefl) {
+            $revenueType = $material?->revenue_type ?? 'Shared';
+
+            if ($revenueType === 'Individual') {
                 RevenueSplit::create([
                     'transaction_id'    => $materialTx->transaction_id,
                     'employee_id'       => $csEmployee->employee_id,
@@ -499,10 +502,12 @@ class RegistrationService
                 ]);
             } else {
                 $allCS = Employee::whereHas('user', fn($q) =>
-                    $q->whereHas('role', fn($q2) =>
-                        $q2->where('role_name', 'Customer Service')
+                        $q->whereHas('role', fn($q2) =>
+                            $q2->where('role_name', 'Customer Service')
+                        )
                     )
-                )->get();
+                    ->where('branch_id', $branchId)
+                    ->get();
 
                 $share = $allCS->count() > 0
                     ? round($materialPrice / $allCS->count(), 2)
@@ -520,6 +525,7 @@ class RegistrationService
                 }
             }
         }
+
         $plan = PaymentPlan::find($data['payment_plan_id']);
         if ($plan && $plan->installment_count > 0) {
             if ($plan->requires_admin_approval) {

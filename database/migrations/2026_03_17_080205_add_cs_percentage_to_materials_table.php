@@ -8,8 +8,6 @@ return new class extends Migration {
     public function up(): void
     {
         Schema::table('materials', function (Blueprint $table) {
-            // % of material revenue that goes to the CS who made the deal
-            // Admin sets this per material. Remaining % goes to academy.
             $table->unsignedTinyInteger('cs_percentage')
                   ->default(0)
                   ->after('price')

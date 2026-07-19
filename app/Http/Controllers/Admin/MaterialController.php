@@ -12,12 +12,10 @@ class MaterialController extends Controller
 {
     public function index()
     {
-        // جيبي كل الـ materials مع الـ assignments
         $materials = DB::table('materials')
             ->orderByDesc('created_at')
             ->get();
 
-        // جيبي الـ assignments لكل material
         $assignments = DB::table('material_assignment')
             ->leftJoin('course_template', 'course_template.course_template_id', '=', 'material_assignment.course_template_id')
             ->leftJoin('level', 'level.level_id', '=', 'material_assignment.level_id')
@@ -26,12 +24,11 @@ class MaterialController extends Controller
                 'material_assignment.*',
                 'course_template.name as course_name',
                 'level.name as level_name',
-                'sublevel.name as sublevel_name'
+                'sublevel.name as sublevel_name',
             )
             ->get()
             ->groupBy('material_id');
 
-        // Courses for assignment dropdown
         $courses = DB::table('course_template')->where('is_active', true)->orderBy('name')->get();
 
         $stats = [
@@ -48,7 +45,7 @@ class MaterialController extends Controller
         $request->validate([
             'name'          => 'required|string|max:255',
             'price'         => 'required|numeric|min:0',
-            'cs_percentage' => 'required|integer|min:0|max:100',
+            'revenue_type' => 'required|in:Individual,Shared',
         ]);
 
         $adminId = Employee::where('user_id', auth()->id())->value('employee_id');
@@ -56,7 +53,7 @@ class MaterialController extends Controller
         DB::table('materials')->insert([
             'name'                => $request->name,
             'price'               => $request->price,
-            'cs_percentage'       => $request->cs_percentage,
+            'revenue_type'        => $request->revenue_type,
             'is_active'           => true,
             'created_by_admin_id' => $adminId,
             'created_at'          => now(),
@@ -71,13 +68,13 @@ class MaterialController extends Controller
         $request->validate([
             'name'          => 'required|string|max:255',
             'price'         => 'required|numeric|min:0',
-            'cs_percentage' => 'required|integer|min:0|max:100',
+            'revenue_type' => 'required|in:Individual,Shared',
         ]);
 
         DB::table('materials')->where('material_id', $id)->update([
             'name'          => $request->name,
             'price'         => $request->price,
-            'cs_percentage' => $request->cs_percentage,
+            'revenue_type'  => $request->revenue_type,
             'updated_at'    => now(),
         ]);
 
@@ -104,7 +101,6 @@ class MaterialController extends Controller
             'is_mandatory'       => 'boolean',
         ]);
 
-        // تأكد مفيش duplicate
         $exists = DB::table('material_assignment')
             ->where('material_id', $request->material_id)
             ->where('course_template_id', $request->course_template_id)
@@ -135,7 +131,6 @@ class MaterialController extends Controller
         return back()->with('success', 'Assignment removed.');
     }
 
-    // AJAX — get levels by course
     public function getLevels($courseId)
     {
         $levels = DB::table('level')
@@ -146,7 +141,6 @@ class MaterialController extends Controller
         return response()->json($levels);
     }
 
-    // AJAX — get sublevels by level
     public function getSublevels($levelId)
     {
         $sublevels = DB::table('sublevel')

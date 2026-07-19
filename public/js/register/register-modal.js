@@ -343,10 +343,12 @@ function applyMaterial(data) {
         if (toggle) { toggle.style.borderColor = ''; toggle.style.background = ''; }
     }
 
-    if (splitBadge && splitText && data.cs_percentage > 0) {
-        const csAmt   = (data.price * data.cs_percentage / 100).toFixed(2);
-        const acadAmt = (data.price - csAmt).toFixed(2);
-        splitText.textContent = `CS commission: ${data.cs_percentage}% = ${csAmt} LE · Academy: ${acadAmt} LE`;
+    if (splitBadge && splitText && data.revenue_type) {
+        if (data.revenue_type === 'Individual') {
+            splitText.textContent = 'Full revenue credited to you (CS)';
+        } else {
+            splitText.textContent = 'Revenue shared equally among all CS in your branch';
+        }
         splitBadge.style.display = 'flex';
     } else if (splitBadge) {
         splitBadge.style.display = 'none';
