@@ -24,7 +24,7 @@
 .kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:5px}
 .kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--kc,#1B4FA8);line-height:1}
 
-.two-col{display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start}
+.two-col{display:block;}
 
 /* Patch Cards */
 .patch-list{display:flex;flex-direction:column;gap:12px}
@@ -64,7 +64,7 @@
 .btn-unlock:hover{background:rgba(122,138,154,0.06)}
 
 /* Side panels */
-.side-panel{display:flex;flex-direction:column;gap:16px}
+/* .side-panel{display:flex;flex-direction:column;gap:16px}
 .panel-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;position:relative}
 .panel-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)}
 .panel-header{padding:14px 18px;border-bottom:1px solid rgba(27,79,168,0.07);display:flex;justify-content:space-between;align-items:center}
@@ -76,7 +76,7 @@
 .form-control{width:100%;padding:9px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1A2A4A;background:#fff;outline:none;box-sizing:border-box}
 .form-control:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
 .btn-add{width:100%;padding:9px;background:transparent;border:1.5px dashed rgba(27,79,168,0.2);border-radius:4px;color:#1B4FA8;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:4px}
-.btn-add:hover{border-color:#1B4FA8;background:rgba(27,79,168,0.03)}
+.btn-add:hover{border-color:#1B4FA8;background:rgba(27,79,168,0.03)} */
 
 /* Slot items */
 .slot-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#F8F6F2;border:1px solid rgba(27,79,168,0.07);border-radius:4px;margin-bottom:6px}
@@ -239,7 +239,7 @@
             </div>
         </div>
 
-        {{-- RIGHT — Timetable Config --}}
+        <!-- {{-- RIGHT — Timetable Config --}}
         <div class="side-panel">
 
             {{-- Time Slots --}}
@@ -336,7 +336,7 @@
                 </div>
             </div>
 
-        </div>
+        </div> -->
     </div>
 </div>
 

@@ -278,7 +278,7 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::patch('/test-fees/{id}',    [TestFeeAdminController::class, 'update'])->name('test-fees.update');
         Route::delete('/test-fees/{id}',   [TestFeeAdminController::class, 'destroy'])->name('test-fees.destroy');
         
-        // Patches & Time
+        // Patches
         Route::get('/patches',                      [PatchAdminController::class, 'index'])->name('patches.index');
         Route::post('/patches',                     [PatchAdminController::class, 'store'])->name('patches.store');
         Route::patch('/patches/{id}/status',        [PatchAdminController::class, 'updateStatus'])->name('patches.status');
@@ -289,6 +289,10 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::post('/patches/break-slots',         [PatchAdminController::class, 'storeBreakSlot'])->name('patches.breakslots.store');
         Route::patch('/patches/break-slots/{id}',   [PatchAdminController::class, 'toggleBreakSlot'])->name('patches.breakslots.toggle');
 
+        //Time slots and break slots
+        Route::get('/slots', [PatchAdminController::class, 'slotsIndex'])->name('slots.index');
+
+        
         //Rooms
         Route::get('/rooms',               [RoomController::class, 'index'])->name('rooms.index');
         Route::post('/rooms',              [RoomController::class, 'store'])->name('rooms.store');

@@ -180,6 +180,13 @@ class PatchAdminController extends Controller
         return back()->with('success', 'Time slot updated.');
     }
 
+    public function slotsIndex()
+    {
+        $timeSlots  = TimeSlot::orderBy('start_time')->get();
+        $breakSlots = BreakSlot::orderBy('start_time')->get();
+
+        return view('admin.slots.index', compact('timeSlots', 'breakSlots'));
+    }
     // ── Break Slots ───────────────────────────────────────────────
     public function storeBreakSlot(Request $request)
     {
