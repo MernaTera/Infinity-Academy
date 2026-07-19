@@ -19,11 +19,19 @@ class PatchAdminController extends Controller
 
     public function index()
     {
-        $patches    = Patch::with('branch')->withCount('courseInstances')->orderByDesc('start_date')->get();
+        $patches = Patch::with('branch')
+            ->withCount([
+                'courseInstances',
+                'courseInstances as active_courses_count' => function ($q) {
+                    $q->where('status', 'Active');
+                }
+            ])
+            ->orderByDesc('start_date')
+            ->get();
         $timeSlots  = TimeSlot::where('is_active', true)->get();
         $breakSlots = BreakSlot::where('is_active', true)->get();
         $branches   = Branch::all();
-
+        
         $stats = [
             'total'    => $patches->count(),
             'active'   => $patches->where('status', 'Active')->count(),
@@ -80,6 +88,10 @@ class PatchAdminController extends Controller
     {
         $patch = Patch::findOrFail($id);
 
+        if ($this->hasActiveCourses($id)) {
+            return back()->with('error', 'Cannot edit patch — there are active courses running in this patch.');
+        }
+
         if ($patch->status === 'Closed') {
             return back()->with('error', 'Cannot edit a closed patch.');
         }
@@ -121,14 +133,48 @@ class PatchAdminController extends Controller
     // ── Delete ────────────────────────────────────────────────────
     public function destroy($id)
     {
-        $patch = Patch::withCount('courseInstances')->findOrFail($id);
-
-        if ($patch->course_instances_count > 0) {
-            return back()->with('error', 'Cannot delete patch with existing course instances.');
-        }
+        $patch = Patch::findOrFail($id);
 
         if ($patch->status === 'Active') {
             return back()->with('error', 'Cannot delete an active patch.');
+        }
+
+        if ($this->hasActiveCourses($id)) {
+            return back()->with('error', 'Cannot delete patch — there are active courses running in this patch.');
+        }
+
+        $blockers = [];
+
+        if (\App\Models\Academic\CourseInstance::where('patch_id', $id)->exists()) {
+            $blockers[] = 'course instances';
+        }
+
+        if (\App\Models\Finance\FinancialTransaction::where('patch_id', $id)->exists()) {
+            $blockers[] = 'financial transactions';
+        }
+
+        if (\DB::table('waiting_list')->where('requested_patch_id', $id)->exists()) {
+            $blockers[] = 'waiting list entries';
+        }
+
+        if (class_exists(\App\Models\Enrollment\CsTarget::class) 
+            && \App\Models\Enrollment\CsTarget::where('patch_id', $id)->exists()) {
+            $blockers[] = 'CS targets';
+        }
+
+        if (class_exists(\App\Models\HR\TeacherContract::class)
+            && \App\Models\HR\TeacherContract::where('patch_id', $id)->exists()) {
+            $blockers[] = 'teacher contracts';
+        }
+
+        if (\App\Models\Finance\RevenueSplit::where('patch_id', $id)->exists()) {
+            $blockers[] = 'revenue splits';
+        }
+
+        if (!empty($blockers)) {
+            return back()->with('error', 
+                'Cannot delete patch — it has related records: ' . implode(', ', $blockers) . '. Close it instead to preserve history.'
+            );
         }
 
         $patch->delete();
@@ -141,6 +187,10 @@ class PatchAdminController extends Controller
         $patch = Patch::findOrFail($id);
         $request->validate(['action' => 'required|in:activate,close,lock,unlock']);
 
+        if (in_array($request->action, ['close', 'lock', 'activate']) && $this->hasActiveCourses($id)) {
+            return back()->with('error', "Cannot {$request->action} patch — there are active courses running in this patch.");
+        }
+
         match($request->action) {
             'activate' => $patch->update(['status' => 'Active']),
             'close'    => $patch->update(['status' => 'Closed', 'is_locked' => true]),
@@ -151,6 +201,12 @@ class PatchAdminController extends Controller
         return back()->with('success', 'Patch updated successfully.');
     }
 
+    private function hasActiveCourses($patchId): bool
+    {
+        return \App\Models\Academic\CourseInstance::where('patch_id', $patchId)
+            ->where('status', 'Active')
+            ->exists();
+    }
     // ── Time Slots ────────────────────────────────────────────────
     public function storeTimeSlot(Request $request)
     {

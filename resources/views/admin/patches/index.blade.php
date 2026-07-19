@@ -63,21 +63,6 @@
 .btn-unlock{color:#7A8A9A;border-color:rgba(122,138,154,0.2)}
 .btn-unlock:hover{background:rgba(122,138,154,0.06)}
 
-/* Side panels */
-/* .side-panel{display:flex;flex-direction:column;gap:16px}
-.panel-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;position:relative}
-.panel-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)}
-.panel-header{padding:14px 18px;border-bottom:1px solid rgba(27,79,168,0.07);display:flex;justify-content:space-between;align-items:center}
-.panel-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#1B4FA8}
-.panel-body{padding:16px 18px}
-.sec-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#F5911E;margin-bottom:10px;display:block}
-.form-field{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
-.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A}
-.form-control{width:100%;padding:9px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1A2A4A;background:#fff;outline:none;box-sizing:border-box}
-.form-control:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
-.btn-add{width:100%;padding:9px;background:transparent;border:1.5px dashed rgba(27,79,168,0.2);border-radius:4px;color:#1B4FA8;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;margin-top:4px}
-.btn-add:hover{border-color:#1B4FA8;background:rgba(27,79,168,0.03)} */
-
 /* Slot items */
 .slot-item{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#F8F6F2;border:1px solid rgba(27,79,168,0.07);border-radius:4px;margin-bottom:6px}
 .slot-name{font-size:12px;color:#1A2A4A;font-weight:500}
@@ -154,6 +139,16 @@
                             @endif
                         </div>
                     </div>
+                    @if($patch->active_courses_count > 0)
+                    <div style="margin:0 20px 12px;padding:8px 12px;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.25);border-left:3px solid #F5911E;border-radius:4px;display:flex;align-items:center;gap:8px;font-size:11px;color:#C47010;">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <span><strong>{{ $patch->active_courses_count }}</strong> active {{ Str::plural('course', $patch->active_courses_count) }} — changes are locked.</span>
+                    </div>
+                    @endif
                     <div class="pc-body">
                         <div class="pc-meta">
                             <span class="pc-meta-label">Start</span>
@@ -179,12 +174,18 @@
                     <div style="padding:0 20px 10px;font-size:10px;color:#AAB8C8;text-align:right">{{ $pct }}% elapsed</div>
                     @endif
                     <div class="pc-footer">
+                        @php $hasActive = $patch->active_courses_count > 0; @endphp
+
                         {{-- Activate --}}
                         @if($patch->status === 'Upcoming')
                         <form method="POST" action="{{ route('admin.patches.status', $patch->patch_id) }}" style="display:inline">
                             @csrf @method('PATCH')
                             <input type="hidden" name="action" value="activate">
-                            <button type="submit" class="btn-sm btn-activate">▶ Activate</button>
+                            <button type="submit" class="btn-sm btn-activate" {{ $hasActive ? 'disabled' : '' }}
+                                style="{{ $hasActive ? 'opacity:0.4;cursor:not-allowed;' : '' }}"
+                                {{ $hasActive ? 'title=Active courses block this action' : '' }}>
+                                ▶ Activate
+                            </button>
                         </form>
                         @endif
 
@@ -193,7 +194,11 @@
                         <form method="POST" action="{{ route('admin.patches.status', $patch->patch_id) }}" style="display:inline">
                             @csrf @method('PATCH')
                             <input type="hidden" name="action" value="close">
-                            <button type="submit" class="btn-sm btn-close">■ Close</button>
+                            <button type="submit" class="btn-sm btn-close" {{ $hasActive ? 'disabled' : '' }}
+                                style="{{ $hasActive ? 'opacity:0.4;cursor:not-allowed;' : '' }}"
+                                {{ $hasActive ? 'title=Active courses block this action' : '' }}>
+                                ■ Close
+                            </button>
                         </form>
                         @endif
 
@@ -202,7 +207,11 @@
                         <form method="POST" action="{{ route('admin.patches.status', $patch->patch_id) }}" style="display:inline">
                             @csrf @method('PATCH')
                             <input type="hidden" name="action" value="lock">
-                            <button type="submit" class="btn-sm btn-lock">🔒 Lock</button>
+                            <button type="submit" class="btn-sm btn-lock" {{ $hasActive ? 'disabled' : '' }}
+                                style="{{ $hasActive ? 'opacity:0.4;cursor:not-allowed;' : '' }}"
+                                {{ $hasActive ? 'title=Active courses block this action' : '' }}>
+                                🔒 Lock
+                            </button>
                         </form>
                         @else
                         <form method="POST" action="{{ route('admin.patches.status', $patch->patch_id) }}" style="display:inline">
@@ -214,8 +223,10 @@
 
                         {{-- Edit --}}
                         @if($patch->status !== 'Closed')
-                        <button onclick="openEditPatch({{ $patch->patch_id }}, '{{ addslashes($patch->name) }}', {{ $patch->branch_id }}, '{{ $patch->start_date->format('Y-m-d') }}', '{{ $patch->end_date->format('Y-m-d') }}')"
-                            class="btn-sm" style="color:#1B4FA8;border-color:rgba(27,79,168,0.2);">
+                        <button {{ $hasActive ? 'disabled' : '' }}
+                            onclick="{{ $hasActive ? '' : "openEditPatch({$patch->patch_id}, '".addslashes($patch->name)."', {$patch->branch_id}, '".$patch->start_date->format('Y-m-d')."', '".$patch->end_date->format('Y-m-d')."')" }}"
+                            class="btn-sm" style="color:#1B4FA8;border-color:rgba(27,79,168,0.2);{{ $hasActive ? 'opacity:0.4;cursor:not-allowed;' : '' }}"
+                            {{ $hasActive ? 'title=Active courses block this action' : '' }}>
                             ✎ Edit
                         </button>
                         @endif
@@ -238,105 +249,6 @@
                 @endforelse
             </div>
         </div>
-
-        <!-- {{-- RIGHT — Timetable Config --}}
-        <div class="side-panel">
-
-            {{-- Time Slots --}}
-            <div class="panel-card">
-                <div class="panel-header">
-                    <div class="panel-title">Time Slots</div>
-                </div>
-                <div class="panel-body">
-                    @foreach($timeSlots->merge(\App\Models\Academic\TimeSlot::where('is_active', false)->get()) as $slot)
-                    <div class="slot-item {{ $slot->is_active ? 'active-slot' : 'inactive-slot' }}">
-                        <div>
-                            <div class="slot-name">{{ $slot->name }}</div>
-                            <div class="slot-time">{{ substr($slot->start_time,0,5) }} → {{ substr($slot->end_time,0,5) }}</div>
-                        </div>
-                        <form method="POST" action="{{ route('admin.patches.timeslots.toggle', $slot->time_slot_id) }}">
-                            @csrf @method('PATCH')
-                            <button type="submit" class="toggle-btn">{{ $slot->is_active ? 'Disable' : 'Enable' }}</button>
-                        </form>
-                    </div>
-                    @endforeach
-
-                    <div style="margin-top:12px;border-top:1px solid rgba(27,79,168,0.07);padding-top:12px">
-                        <span class="sec-label">Add Time Slot</span>
-                        <form method="POST" action="{{ route('admin.patches.timeslots.store') }}">
-                            @csrf
-                            <div class="form-field">
-                                <label class="form-label">Name</label>
-                                <input type="text" name="name" class="form-control" placeholder="e.g. Evening Slot">
-                            </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                                <div class="form-field">
-                                    <label class="form-label">Start</label>
-                                    <input type="time" name="start_time" class="form-control">
-                                </div>
-                                <div class="form-field">
-                                    <label class="form-label">End</label>
-                                    <input type="time" name="end_time" class="form-control">
-                                </div>
-                            </div>
-                            <div class="form-field">
-                                <label class="form-label">Type</label>
-                                <select name="slot_type" class="form-control">
-                                    <option value="Morning">Morning</option>
-                                    <option value="Midday">Midday</option>
-                                    <option value="Night">Night</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn-add">+ Add Slot</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Break Slots --}}
-            <div class="panel-card">
-                <div class="panel-header">
-                    <div class="panel-title">Break Slots</div>
-                </div>
-                <div class="panel-body">
-                    @foreach($breakSlots->merge(\App\Models\Academic\BreakSlot::where('is_active', false)->get()) as $break)
-                    <div class="slot-item {{ $break->is_active ? 'active-slot' : 'inactive-slot' }}">
-                        <div>
-                            <div class="slot-name">{{ $break->name }}</div>
-                            <div class="slot-time">{{ substr($break->start_time,0,5) }} → {{ substr($break->end_time,0,5) }}</div>
-                        </div>
-                        <form method="POST" action="{{ route('admin.patches.breakslots.toggle', $break->break_slot_id) }}">
-                            @csrf @method('PATCH')
-                            <button type="submit" class="toggle-btn">{{ $break->is_active ? 'Disable' : 'Enable' }}</button>
-                        </form>
-                    </div>
-                    @endforeach
-
-                    <div style="margin-top:12px;border-top:1px solid rgba(27,79,168,0.07);padding-top:12px">
-                        <span class="sec-label">Add Break Slot</span>
-                        <form method="POST" action="{{ route('admin.patches.breakslots.store') }}">
-                            @csrf
-                            <div class="form-field">
-                                <label class="form-label">Name</label>
-                                <input type="text" name="name" class="form-control" placeholder="e.g. Prayer Break">
-                            </div>
-                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-                                <div class="form-field">
-                                    <label class="form-label">Start</label>
-                                    <input type="time" name="start_time" class="form-control">
-                                </div>
-                                <div class="form-field">
-                                    <label class="form-label">End</label>
-                                    <input type="time" name="end_time" class="form-control">
-                                </div>
-                            </div>
-                            <button type="submit" class="btn-add">+ Add Break</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
-        </div> -->
     </div>
 </div>
 
