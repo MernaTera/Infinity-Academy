@@ -15,6 +15,8 @@ class OutstandingAdminController extends Controller
 {
     public function index()
     {
+        $calculator = app(\App\Services\BalanceCalculator::class);
+
         $allEnrollments = Enrollment::with([
             'student',
             'courseTemplate',  
@@ -22,7 +24,8 @@ class OutstandingAdminController extends Controller
             'courseInstance.courseTemplate',
             'courseInstance.patch',
             'createdByCs',
-            'paymentPlan',     
+            'paymentPlan',
+            'installmentSchedules.transaction',
             'installmentSchedules' => fn($q) => $q->with('transaction')->orderBy('due_date'),
             'restrictionLogs'      => fn($q) => $q->whereNull('released_at'),
             'financialTransactions',
@@ -30,35 +33,14 @@ class OutstandingAdminController extends Controller
         ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
         ->get();
 
-        $enrollments = $allEnrollments->filter(function ($e) {
-            $totalFees = (float) $e->final_price
-                + (float) $e->financialTransactions->where('transaction_category', 'Material')->sum('amount')
-                + (float) $e->financialTransactions->where('transaction_category', 'Test')->sum('amount');
-
-            $paidInstallmentIds = $e->installmentSchedules
-                ->where('status', 'Paid')
-                ->pluck('transaction_id')
-                ->filter()
-                ->toArray();
-
-            $paid = (float) $e->financialTransactions
-                    ->where('transaction_type', 'Payment')
-                    ->sum('amount')
-                + (float) $e->financialTransactions
-                    ->where('transaction_type', 'Installment')
-                    ->whereIn('transaction_id', $paidInstallmentIds)
-                    ->sum('amount');
-
-            $refunded = (float) $e->financialTransactions
-                ->where('transaction_type', 'Refund')
-                ->sum('amount');
-
-            $balance              = $totalFees - ($paid - $refunded);
-            $e->total_fees        = $totalFees;
-            $e->remaining_balance = max(0, round($balance, 2) <= 0 ? 0 : round($balance, 2));
-            $e->total_paid        = $paid - $refunded;
-           return $e;
+        $enrollments = $allEnrollments->map(function ($e) use ($calculator) {
+            $data = $calculator->calculate($e);
+            $e->total_fees        = $data['total_fees'];
+            $e->total_paid        = $data['net_paid'];
+            $e->remaining_balance = $data['remaining_balance'];
+            return $e;
         });
+        
         $withBalance = $enrollments->filter(fn($e) => $e->remaining_balance > 0);
         $stats = [
             'total_outstanding' => $withBalance->sum('remaining_balance'),

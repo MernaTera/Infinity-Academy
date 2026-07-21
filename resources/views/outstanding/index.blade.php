@@ -260,7 +260,11 @@
                     </td>
 
                     <td onclick="event.stopPropagation()">
-                        @if($row['next_due_date'])
+                        @if(!empty($row['has_pending_installment']) && empty($row['next_due_date']))
+                            <div style="font-size:11px;color:#AAB8C8;font-style:italic;line-height:1.4">
+                                Upon course<br>assignment
+                            </div>
+                        @elseif($row['next_due_date'])
                             <div style="font-size:12px;color:#1A2A4A;font-weight:500">{{ $row['next_due_date'] }}</div>
                             @if($row['next_due_amount'])
                             <div style="font-size:10px;color:#7A8A9A;margin-top:2px">{{ number_format($row['next_due_amount']) }} LE</div>
@@ -316,7 +320,13 @@
                                         <tr>
                                             <td style="color:#AAB8C8">{{ $inst['number'] }}</td>
                                             <td style="font-family:monospace">{{ number_format($inst['amount']) }} LE</td>
-                                            <td>{{ $inst['due_date'] ?? '—' }}</td>
+                                            <td>
+                                                @if(!empty($inst['due_date']))
+                                                    {{ $inst['due_date'] }}
+                                                @else
+                                                    <span style="color:#AAB8C8;font-style:italic;font-size:10px">Upon course assignment</span>
+                                                @endif
+                                            </td>
                                             <td>
                                                 @if($inst['status']==='Paid')     <span class="badge b-paid">Paid</span>
                                                 @elseif($inst['status']==='Overdue') <span class="badge b-overdue">Overdue</span>

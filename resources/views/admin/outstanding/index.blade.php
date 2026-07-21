@@ -211,11 +211,18 @@
                     @php
                         $paid        = $enrollment->total_paid;
                         $remaining   = $enrollment->remaining_balance;
-                        $nextDue     = $enrollment->installmentSchedules->where('status','Pending')->sortBy('due_date')->first();
-                        $overdueDue  = $enrollment->installmentSchedules->where('status','Overdue')->first();
-                        $daysOverdue = $overdueDue ? \Carbon\Carbon::parse($overdueDue->due_date)->diffInDays(now()) : 0;
+                        $nextDue     = $enrollment->installmentSchedules->whereIn('status', ['Pending', 'Overdue'])->sortBy('due_date')->first();
+                        $daysOverdue = 0;
+                        if ($nextDue && $nextDue->due_date) {
+                            $dueDate = \Carbon\Carbon::parse($nextDue->due_date)->startOfDay();
+                            $today   = now()->startOfDay();
+                            if ($today->gt($dueDate)) {
+                                $daysOverdue = (int) abs($today->diffInDays($dueDate));
+                            }
+                        }
+                        $hasPendingInstallment = $enrollment->installmentSchedules->whereIn('status', ['Pending', 'Overdue'])->isNotEmpty();
                         $isRestricted = $enrollment->status === 'Restricted';
-                        $rowStatus   = $isRestricted ? 'Restricted' : ($daysOverdue > 0 ? 'overdue' : 'Active');
+                        $rowStatus    = $isRestricted ? 'Restricted' : ($daysOverdue > 0 ? 'overdue' : 'Active');
                     @endphp
                     <tr class="main-row"
                         data-name="{{ strtolower($enrollment->student?->full_name ?? '') }}"
@@ -248,21 +255,33 @@
                         </td>
                         <td onclick="event.stopPropagation()">
                             @if($nextDue)
-                                <div style="font-size:12px;color:#1A2A4A;font-weight:500">{{ \Carbon\Carbon::parse($nextDue->due_date)->format('d M Y') }}</div>
-                                @if($daysOverdue > 0)
-                                <div class="overdue-tag" style="margin-top:3px">{{ $daysOverdue }}d overdue</div>
+                                @if($nextDue->due_date)
+                                    <div style="font-size:12px;color:#1A2A4A;font-weight:500">{{ \Carbon\Carbon::parse($nextDue->due_date)->format('d M Y') }}</div>
+                                    @if($nextDue->amount)
+                                        <div style="font-size:10px;color:#7A8A9A;margin-top:2px">{{ number_format($nextDue->amount) }} LE</div>
+                                    @endif
+                                    @if($daysOverdue > 0)
+                                        <div style="font-size:10px;color:#DC2626;margin-top:2px;font-weight:500">{{ $daysOverdue }}d overdue</div>
+                                    @endif
+                                @else
+                                    <div style="font-size:11px;color:#AAB8C8;font-style:italic;line-height:1.4">
+                                        Upon course<br>assignment
+                                    </div>
                                 @endif
                             @else
-                                <span style="color:#C4CDD6;font-size:11px">—</span>
+                                <span style="color:#AAB8C8;font-size:11px">—</span>
                             @endif
                         </td>
                         <td onclick="event.stopPropagation()">
                             @if($isRestricted)
                                 <span class="badge b-restricted">Restricted</span>
+                                @if($enrollment->restriction_reason)
+                                    <div style="font-size:9px;color:#AAB8C8;margin-top:3px">{{ str_replace('_',' ',strtolower($enrollment->restriction_reason)) }}</div>
+                                @endif
                             @elseif($daysOverdue > 0)
                                 <span class="badge b-overdue">Overdue</span>
                             @else
-                                <span class="badge b-active">Active</span>
+                                <span class="badge b-active">On Track</span>
                             @endif
                         </td>
                         <td onclick="event.stopPropagation()">
@@ -294,7 +313,13 @@
                                             @foreach($enrollment->installmentSchedules as $inst)
                                             <tr>
                                                 <td style="color:#AAB8C8">{{ $inst->installment_number }}</td>
-                                                <td>{{ \Carbon\Carbon::parse($inst->due_date)->format('d M Y') }}</td>
+                                                <td>
+                                                    @if($inst->due_date)
+                                                        {{ \Carbon\Carbon::parse($inst->due_date)->format('d M Y') }}
+                                                    @else
+                                                        <span style="color:#AAB8C8;font-style:italic;font-size:10px">Upon course assignment</span>
+                                                    @endif
+                                                </td>
                                                 <td style="font-family:monospace">{{ number_format($inst->amount) }} LE</td>
                                                 <td>
                                                     @if($inst->status === 'Paid')     <span class="badge b-paid">Paid</span>
@@ -416,10 +441,16 @@
                                     @foreach($enrollment->installmentSchedules as $inst)
                                     <tr>
                                         <td style="color:#AAB8C8">{{ $inst->installment_number }}</td>
-                                        <td>{{ \Carbon\Carbon::parse($inst->due_date)->format('d M Y') }}</td>
+                                        <td>
+                                            @if($inst->due_date)
+                                                {{ \Carbon\Carbon::parse($inst->due_date)->format('d M Y') }}
+                                            @else
+                                                <​span style="color:#AAB8C8;font-style:italic;font-size:10px">Upon course assignment</​span>
+                                            @endif
+                                        </td>
                                         <td style="font-family:monospace">{{ number_format($inst->amount) }} LE</td>
                                         <td><span class="badge b-paid">Paid</span></td>
-                                        <td style="font-size:11px;color:#7A8A9A">{{ $instTx?->notes ?? '—' }}</td> {{-- ✅ --}}
+                                        <td style="font-size:11px;color:#7A8A9A">{{ $inst->transaction?->notes ?? '—' }}</td>
                                         <td style="font-size:11px;color:#AAB8C8">{{ $inst->paid_at ? \Carbon\Carbon::parse($inst->paid_at)->format('d M Y') : '—' }}</td>
                                     </tr>
                                     @endforeach

@@ -108,6 +108,8 @@ class StudentCareController extends Controller
     
     public function outstanding()
     {
+        $calculator = app(\App\Services\BalanceCalculator::class);
+
         $allEnrollments = \App\Models\Enrollment\Enrollment::with([
             'student',
             'courseTemplate',
@@ -124,34 +126,11 @@ class StudentCareController extends Controller
         ->whereNotNull('final_price')
         ->get();
 
-        $enrollments = $allEnrollments->map(function ($e) {
-            $totalFees = (float) $e->final_price
-                + (float) $e->financialTransactions->where('transaction_category', 'Material')->sum('amount')
-                + (float) $e->financialTransactions->where('transaction_category', 'Test')->sum('amount');
-
-            $paidInstallmentIds = $e->installmentSchedules
-                ->where('status', 'Paid')
-                ->pluck('transaction_id')
-                ->filter()
-                ->toArray();
-
-            $paid = (float) $e->financialTransactions
-                    ->where('transaction_type', 'Payment')
-                    ->sum('amount')
-                + (float) $e->financialTransactions
-                    ->where('transaction_type', 'Installment')
-                    ->whereIn('transaction_id', $paidInstallmentIds)
-                    ->sum('amount')
-                - (float) $e->financialTransactions
-                    ->where('transaction_type', 'Refund')
-                    ->sum('amount');
-
-            $balance = $totalFees - $paid;
-
-            $e->total_fees        = $totalFees;
-            $e->total_paid        = max(0, $paid);
-            $e->remaining_balance = $balance < 0.02 ? 0 : round($balance, 2);
-
+        $enrollments = $allEnrollments->map(function ($e) use ($calculator) {
+            $data = $calculator->calculate($e);
+            $e->total_fees        = $data['total_fees'];
+            $e->total_paid        = $data['net_paid'];
+            $e->remaining_balance = $data['remaining_balance'];
             return $e;
         });
 
@@ -173,7 +152,6 @@ class StudentCareController extends Controller
 
     public function postponed()
     {
-        // Group postponements
         $groupPostponed = \App\Models\Enrollment\Postponement::with([
             'enrollment.student',
             'enrollment.courseInstance.courseTemplate',
@@ -187,7 +165,6 @@ class StudentCareController extends Controller
         ->orderByDesc('created_at')
         ->get();
 
-        // Private postponements
         $privatePostponed = \App\Models\Enrollment\Postponement::with([
             'enrollment.student',
             'enrollment.courseInstance.courseTemplate',
@@ -249,7 +226,6 @@ class StudentCareController extends Controller
         $upcomingPatch = \App\Models\Academic\Patch::where('status', 'Upcoming')
             ->oldest('start_date')->first();
 
-        // ── Academic Status ──
         $activeCourses   = \App\Models\Academic\CourseInstance::where('status', 'Active')->count();
         $upcomingCourses = \App\Models\Academic\CourseInstance::where('status', 'Upcoming')->count();
         $totalStudents   = \App\Models\Enrollment\Enrollment::whereIn('status', ['Active', 'Restricted'])->count();
@@ -257,36 +233,29 @@ class StudentCareController extends Controller
         $postponedStudents  = \App\Models\Enrollment\Postponement::where('status', 'Active')->count();
         $waitingList        = \App\Models\Enrollment\WaitingList::where('status', 'Active')->count();
 
-        // ── Alerts ──
-        // Courses ending within 7 days
         $endingSoon = \App\Models\Academic\CourseInstance::where('status', 'Active')
             ->where('end_date', '<=', now()->addDays(7))
             ->where('end_date', '>=', now())
             ->with(['courseTemplate', 'teacher.employee'])
             ->get();
 
-        // Full groups
         $fullGroups = \App\Models\Academic\CourseInstance::where('status', 'Active')
             ->where('type', 'Group')
             ->withCount('enrollments')
             ->get()
             ->filter(fn($i) => $i->enrollments_count >= $i->capacity);
 
-        // Expired postponements not yet handled
         $expiredPostponements = \App\Models\Enrollment\Postponement::where('status', 'Active')
             ->where('expected_return_date', '<', now())
             ->with(['enrollment.student', 'enrollment.courseInstance.courseTemplate'])
             ->get();
 
-        // Expiring soon postponements (within 7 days)
         $expiringSoon = \App\Models\Enrollment\Postponement::where('status', 'Active')
             ->where('expected_return_date', '>=', now())
             ->where('expected_return_date', '<=', now()->addDays(7))
             ->with(['enrollment.student'])
             ->get();
 
-        // ── Retention ──
-        // Group: students in last session
         $nearCompletionGroup = \App\Models\Enrollment\Enrollment::where('status', 'Active')
             ->whereHas('courseInstance', fn($q) => $q->where('type', 'Group')->where('status', 'Active'))
             ->with(['student', 'courseInstance.courseTemplate', 'courseInstance.sessions'])
@@ -298,7 +267,6 @@ class StudentCareController extends Controller
                 return $remaining <= 1 && $total > 0;
             });
 
-        // Private: students with last 4 hours
         $nearCompletionPrivate = \App\Models\Enrollment\Enrollment::where('status', 'Active')
             ->where('enrollment_type', 'Private')
             ->whereNotNull('hours_remaining')
@@ -306,7 +274,6 @@ class StudentCareController extends Controller
             ->with(['student', 'courseInstance.courseTemplate'])
             ->get();
 
-        // ── Recent Activity ──
         $recentInstances = \App\Models\Academic\CourseInstance::with([
             'courseTemplate', 'teacher.employee', 'enrollments'
         ])->where('status', 'Active')

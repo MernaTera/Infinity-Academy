@@ -10,6 +10,13 @@ use App\Models\Finance\RevenueSplit;
 
 class OutstandingService
 {
+    protected BalanceCalculator $calculator;
+
+    public function __construct(BalanceCalculator $calculator)
+    {
+        $this->calculator = $calculator;
+    }
+
     public function getOutstandingData(Employee $employee): array
     {
         $enrollments = $this->getEnrollments($employee);
@@ -35,7 +42,7 @@ class OutstandingService
             ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
             ->whereNotNull('final_price')
             ->get()
-            ->filter(fn($e) => $this->getRemaining($e) >= 0); 
+            ->filter(fn($e) => $this->calculator->getRemaining($e) >= 0);
     }
 
 
@@ -43,9 +50,10 @@ class OutstandingService
     {
         return $enrollments->map(function ($e) {
 
-            $paid      = $this->getPaid($e);
-            $total     = $this->getTotal($e); 
-            $remaining = max(0, $total - $paid);
+            $data = $this->calculator->calculate($e);
+            $paid      = $data['net_paid'];
+            $total     = $data['total_fees'];
+            $remaining = $data['remaining_balance'];
             $remaining = $remaining < 0.02 ? 0 : round($remaining, 2);
 
             $nextInstallment = $e->installmentSchedules
@@ -66,8 +74,12 @@ class OutstandingService
             $daysOverdue = null;
             if ($nextInstallment) {
                 $dueDate = $nextInstallment->due_date;
-                if ($dueDate && now()->startOfDay()->gt(\Carbon\Carbon::parse($dueDate)->startOfDay())) {
-                    $daysOverdue = now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($dueDate)->startOfDay());
+                if ($dueDate) {
+                    $due   = \Carbon\Carbon::parse($dueDate)->startOfDay();
+                    $today = now()->startOfDay();
+                    if ($today->gt($due)) {
+                        $daysOverdue = (int) abs($today->diffInDays($due));
+                    }
                 }
             }
 
@@ -82,6 +94,9 @@ class OutstandingService
                 'is_finished'     => $remaining == 0,
                 'next_due_date'    => $nextInstallment?->due_date?->format('d M Y'),
                 'next_due_amount'  => $nextInstallment?->amount,
+                'has_pending_installment' => $e->installmentSchedules
+                                            ->whereIn('status', ['Pending', 'Overdue'])
+                                            ->isNotEmpty(),
                 'is_restricted'    => $isRestricted,
                 'restriction_reason'=> $activeRestriction?->reason ?? null,
                 'days_overdue'     => $daysOverdue,

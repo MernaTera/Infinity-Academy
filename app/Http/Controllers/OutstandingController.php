@@ -45,22 +45,8 @@ class OutstandingController extends Controller
             'paymentPlan',
         ])->findOrFail($enrollmentId);
 
-        $paidInstallmentIds = $enrollment->installmentSchedules
-            ->where('status', 'Paid')
-            ->pluck('transaction_id')
-            ->filter()
-            ->toArray();
-
-        $paid = (float) $enrollment->financialTransactions
-                ->where('transaction_type', 'Payment')
-                ->where('transaction_category', 'Course')
-                ->sum('amount')
-            + (float) $enrollment->financialTransactions
-                ->where('transaction_type', 'Installment')
-                ->whereIn('transaction_id', $paidInstallmentIds)
-                ->sum('amount');
-
-        $remaining = max(0, $enrollment->final_price - $paid);
+        $calculator = app(\App\Services\BalanceCalculator::class);
+        $remaining = $calculator->getRemaining($enrollment);
 
         if ($request->amount > $remaining) {
             return back()->with('error', 'Amount exceeds remaining balance.');
