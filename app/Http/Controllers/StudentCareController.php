@@ -37,7 +37,10 @@ class StudentCareController extends Controller
         $instances = CourseInstance::with([
             'courseTemplate',
             'teacher',
-            'enrollments'
+            'enrollments',
+        ])
+        ->withCount([
+            'sessions as completed_sessions_count' => fn($q) => $q->where('status', 'Completed'),
         ])
         ->whereIn('status', ['Upcoming', 'Active'])
         ->get();
@@ -51,13 +54,22 @@ class StudentCareController extends Controller
             'waiting_id' => 'required|exists:waiting_list,waiting_id',
             'course_instance_id' => 'required|exists:course_instance,course_instance_id',
         ]);
+
         $waiting = WaitingList::with('enrollment')->findOrFail($request->waiting_id);
 
-        $instances = CourseInstance::with(['courseTemplate','teacher','enrollments'])
-            ->where('status', 'Upcoming')
-            ->where('course_template_id', $waiting->enrollment->course_template_id)
-            ->get();
-        $instance = CourseInstance::with('enrollments')->findOrFail($request->course_instance_id);
+        $instance = CourseInstance::with('enrollments')
+            ->withCount([
+                'sessions as completed_sessions_count' => fn($q) => $q->where('status', 'Completed'),
+            ])
+            ->findOrFail($request->course_instance_id);
+
+        // Business rule: A student cannot join a group course that has completed more than 3 sessions
+        if ($instance->completed_sessions_count > 2) {
+            return back()->with('error',
+                'This course has completed ' . $instance->completed_sessions_count .
+                ' sessions. Students can only join courses that have completed 3 sessions or less.'
+            );
+        }
 
         if ($instance->isFull()) {
             return back()->with('error', 'Instance is full');

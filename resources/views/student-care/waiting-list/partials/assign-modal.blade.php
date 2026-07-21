@@ -216,58 +216,79 @@
                 <div class="assign-instance-list">
                     @forelse($instances as $instance)
                     @php
-                        $count    = $instance->enrollments->count();
-                        $capacity = $instance->capacity;
-                        $pct      = $capacity > 0 ? round(($count / $capacity) * 100) : 0;
-                        $isFull   = $count >= $capacity;
-                        $capColor = $isFull ? '#DC2626' : ($pct >= 80 ? '#C47010' : '#1B4FA8');
+                        $count           = $instance->enrollments->count();
+                        $capacity        = $instance->capacity;
+                        $pct             = $capacity > 0 ? round(($count / $capacity) * 100) : 0;
+                        $isFull          = $count >= $capacity;
+                        $completedCount  = $instance->completed_sessions_count ?? 0;
+                        $sessionsExceeded= $completedCount > 2;
+                        $isDisabled      = $isFull || $sessionsExceeded;
+                        $capColor        = $isFull ? '#DC2626' : ($pct >= 80 ? '#C47010' : '#1B4FA8');
                     @endphp
-                    <label class="assign-instance-card {{ $isFull ? 'is-full' : '' }}"
-                           onclick="selectInstance(this, '{{ $instance->course_instance_id }}')">
+                    <label class="assign-instance-card {{ $isDisabled ? 'is-full' : '' }}"
+                        onclick="{{ $isDisabled ? '' : "selectInstance(this, '{$instance->course_instance_id}')" }}">
 
                         <input class="assign-card-radio" type="radio"
-                               name="_instance_display"
-                               value="{{ $instance->course_instance_id }}"
-                               {{ $isFull ? 'disabled' : '' }}>
+                            name="_instance_display"
+                            value="{{ $instance->course_instance_id }}"
+                            {{ $isDisabled ? 'disabled' : '' }}>
 
                         <div class="assign-card-info">
                             <div class="assign-card-name">
                                 {{ $instance->courseTemplate->name ?? '—' }}
-                                @if($instance->level)
-                                    — {{ $instance->level->name }}
-                                @endif
                             </div>
                             <div class="assign-card-meta">
-                                @if($instance->teacher)
-                                    <span class="assign-tag assign-tag-teacher">
-                                        {{ $instance->teacher->employee->full_name ?? $instance->teacher->name ?? '—' }}
+                                {{-- your existing meta content --}}
+                                <span>{{ $instance->teacher?->employee?->full_name ?? '—' }}</span>
+                                <span>·</span>
+                                <span>{{ $count }}/{{ $capacity }}</span>
+                            </div>
+
+                            {{-- ══ SESSION PROGRESS INDICATOR ══ --}}
+                            <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
+                                <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7A8A9A;">
+                                    Sessions completed: {{ $completedCount }}
+                                </span>
+
+                                @if($sessionsExceeded)
+                                    <span style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+                                                color:#DC2626;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);
+                                                padding:2px 8px;border-radius:3px;">
+                                        ⚠ Exceeded 2-session limit
+                                    </span>
+                                @elseif($completedCount === 3)
+                                    <span style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+                                                color:#C47010;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2);
+                                                padding:2px 8px;border-radius:3px;">
+                                        Last chance
+                                    </span>
+                                @elseif($completedCount > 0)
+                                    <span style="font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;
+                                                color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);
+                                                padding:2px 8px;border-radius:3px;">
+                                        Available ({{ 2 - $completedCount }} left)
                                     </span>
                                 @endif
-                                @if($instance->patch)
-                                    <span class="assign-tag assign-tag-patch">{{ $instance->patch->name }}</span>
-                                @endif
-                                <span class="assign-tag assign-tag-mode">{{ $instance->delivery_mood }}</span>
                             </div>
-                        </div>
 
-                        <div class="assign-cap-wrap" style="--cap-color:{{ $capColor }}">
-                            <div class="assign-cap-text">{{ $count }}/{{ $capacity }}</div>
-                            <div class="assign-cap-bar">
-                                <div class="assign-cap-fill" style="width:{{ $pct }}%;"></div>
+                            @if($sessionsExceeded)
+                            <div style="margin-top:6px;font-size:10px;color:#DC2626;line-height:1.4;">
+                                Cannot join — This course has moved past the 2-session join window. Please wait for next patch.
                             </div>
-                            @if($isFull)
-                                <div class="assign-full-badge">Full</div>
                             @endif
                         </div>
 
+                        {{-- Capacity bar --}}
+                        <div style="width:60px;flex-shrink:0;">
+                            <div style="height:4px;background:rgba(27,79,168,0.08);border-radius:2px;overflow:hidden;">
+                                <div style="width:{{ $pct }}%;height:100%;background:{{ $capColor }};"></div>
+                            </div>
+                            <div style="font-size:9px;color:{{ $capColor }};text-align:right;margin-top:2px;">{{ $pct }}%</div>
+                        </div>
                     </label>
                     @empty
-                    <div class="assign-empty">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1">
-                            <rect x="3" y="4" width="18" height="18" rx="2"/>
-                            <line x1="3" y1="10" x2="21" y2="10"/>
-                        </svg>
-                        <div class="assign-empty-title">No Instances Available</div>
+                    <div style="text-align:center;padding:32px;color:#AAB8C8;font-size:12px;">
+                        No matching course instances available.
                     </div>
                     @endforelse
                 </div>
