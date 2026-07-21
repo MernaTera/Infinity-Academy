@@ -277,5 +277,16 @@ document.getElementById('refundModal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('notification-received', function(e) {
+        const data = e.detail || {};
+        const refundEvents = ['refund_approved', 'refund_rejected'];
+        
+        if (refundEvents.includes(data.entity_type)) {
+            setTimeout(() => window.location.reload(), 1500);
+        }
+    });
+});
 </script>
 @endsection

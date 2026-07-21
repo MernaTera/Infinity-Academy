@@ -53,6 +53,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 playSound();
                 showToast(data);
                 incrementBadge();
+
+                window.dispatchEvent(new CustomEvent('notification-received', { 
+                    detail: data 
+                }));
             });
     }
 

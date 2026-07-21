@@ -19,5 +19,6 @@
             </main>
         </div>
     </div>
+    @include('partials.realtime-notifications')
 </body>
 </html>

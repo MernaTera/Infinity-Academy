@@ -266,5 +266,15 @@ function openApprove(id, name, amount) {
 document.getElementById('approveModal').addEventListener('click', function(e) {
     if (e.target === this) this.classList.remove('open');
 });
+
+document.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('notification-received', function(e) {
+        const data = e.detail || {};
+        
+        if (data.entity_type === 'refund_request') {
+            setTimeout(() => window.location.reload(), 1500);
+        }
+    });
+});
 </script>
 @endsection
