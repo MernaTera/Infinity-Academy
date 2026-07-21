@@ -1,6 +1,6 @@
 <style>
 :root {
-    --sb-w: 220px;
+    --sb-w: 200px;
     --sb-w-col: 56px;
     --sb-bg: #fff;
     --sb-border: rgba(27,79,168,0.08);
@@ -19,7 +19,7 @@
     border-right: 1px solid var(--sb-border);
     position: sticky;
     top: 62px;
-    height: calc(100vh - 62px);
+    height: calc(100vh);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -36,13 +36,13 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    padding: 10px 0 6px;
+    padding: 4px 0 4px;
 }
 
 /* ── GROUP ── */
-.sb-group { margin-bottom: 2px; }
+.sb-group { margin-bottom: 1px; }
 .sb-group-label {
-    font-size: 9.5px;
+    font-size: 8.8px;
     letter-spacing: 2.5px;
     text-transform: uppercase;
     color: var(--sb-label);
@@ -61,7 +61,7 @@
     align-items: center;
     gap: 9px;
     padding: 7px 14px;
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 0.5px;
     color: var(--sb-text);
     text-decoration: none;

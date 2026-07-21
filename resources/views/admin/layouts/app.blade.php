@@ -8,7 +8,7 @@
     <title>@yield('title', 'Admin') — Infinity Academy</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body style="margin:0;background:#F8F6F2;font-family:'DM Sans',sans-serif;">
+<body>
 
     @include('admin.partials.navbar')
 

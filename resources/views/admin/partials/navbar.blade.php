@@ -11,12 +11,53 @@
 <style>
 *::before,*::after{pointer-events:none;}
 #adminNav.scrolled{background:rgba(255,255,255,0.99)!important;box-shadow:0 2px 20px rgba(27,79,168,0.08);}
-.anav-link{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7A8A9A;text-decoration:none;
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTAINER — max-width + responsive padding
+═══════════════════════════════════════════════════════════════ */
+.anav-container{margin:0 auto;padding:0 clamp(12px,2vw,24px);}
+.anav-inner{display:flex;align-items:center;height:62px;gap:clamp(8px,1.5vw,14px);}
+
+/* ═══════════════════════════════════════════════════════════════
+   NAV LINKS — responsive font & spacing
+═══════════════════════════════════════════════════════════════ */
+.anav-link{font-size:clamp(9px,0.85vw,10px);letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-decoration:none;
     padding:6px 0;position:relative;transition:color 0.2s;white-space:nowrap;}
 .anav-link::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:1.5px;
     background:linear-gradient(90deg,#F5911E,#1B4FA8);transition:width 0.35s cubic-bezier(0.16,1,0.3,1);}
 .anav-link:hover,.anav-link.active{color:#1B4FA8;text-decoration:none;}
 .anav-link:hover::after,.anav-link.active::after{width:100%;}
+
+.anav-desktop-links{display:flex;align-items:center;gap:clamp(12px,1.8vw,26px);margin-left:clamp(8px,1.5vw,16px);flex:1;overflow:hidden;}
+
+/* ═══════════════════════════════════════════════════════════════
+   MONITORING DROPDOWN
+═══════════════════════════════════════════════════════════════ */
+.anav-monitor-wrap{position:relative;}
+.anav-monitor-btn{background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;
+    font-size:clamp(9px,0.85vw,10px);letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;
+    padding:6px 0;position:relative;transition:color 0.2s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
+.anav-monitor-btn::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:1.5px;
+    background:linear-gradient(90deg,#F5911E,#1B4FA8);transition:width 0.35s cubic-bezier(0.16,1,0.3,1);}
+.anav-monitor-btn:hover,.anav-monitor-btn.active{color:#1B4FA8;}
+.anav-monitor-btn:hover::after,.anav-monitor-btn.active::after{width:100%;}
+.anav-monitor-chevron{transition:transform 0.2s;opacity:0.6;}
+.anav-monitor-wrap.open .anav-monitor-chevron{transform:rotate(180deg);}
+#monitorPanel{display:none;position:absolute;left:0;top:calc(100% + 10px);
+    background:rgba(255,255,255,0.99);backdrop-filter:blur(16px);
+    border:1px solid rgba(27,79,168,0.1);border-radius:8px;
+    box-shadow:0 12px 40px rgba(27,79,168,0.12);min-width:210px;overflow:hidden;z-index:999;}
+#monitorPanel.open{display:block;animation:dropIn 0.2s ease both;}
+.anav-monitor-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:10px; 
+    letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-decoration:none;transition:all 0.2s;
+    font-family:'DM Sans',sans-serif;}
+.anav-monitor-item:hover,.anav-monitor-item.active{color:#1B4FA8;background:rgba(27,79,168,0.04);text-decoration:none;}
+.anav-monitor-item svg{opacity:0.5;flex-shrink:0;transition:opacity 0.2s;}
+.anav-monitor-item:hover svg,.anav-monitor-item.active svg{opacity:1;}
+
+/* ═══════════════════════════════════════════════════════════════
+   AVATAR + USER DROPDOWN
+═══════════════════════════════════════════════════════════════ */
 .anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(245,145,30,0.08);
     border:1.5px solid rgba(245,145,30,0.25);display:flex;align-items:center;justify-content:center;
     transition:border-color 0.2s;flex-shrink:0;cursor:pointer;}
@@ -32,6 +73,10 @@
     font-family:'DM Sans',sans-serif;width:100%;text-align:left;background:none;border:none;cursor:pointer;}
 .nav-dropdown-item:hover{color:#1B4FA8;background:rgba(27,79,168,0.04);text-decoration:none;}
 .nav-dropdown-item.danger:hover{color:#DC2626;background:rgba(220,38,38,0.04);}
+
+/* ═══════════════════════════════════════════════════════════════
+   BELL PANEL
+═══════════════════════════════════════════════════════════════ */
 #abellPanel{display:none;position:absolute;right:0;top:calc(100% + 10px);
     width:320px;max-width:calc(100vw - 32px);background:rgba(255,255,255,0.99);
     backdrop-filter:blur(16px);border:1px solid rgba(27,79,168,0.1);border-radius:8px;
@@ -41,6 +86,10 @@
 .nav-bell-btn{background:none;border:none;cursor:pointer;padding:7px;color:#AAB8C8;
     position:relative;transition:color 0.2s;display:flex;align-items:center;}
 .nav-bell-btn:hover{color:#F5911E;}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR TOGGLE + HAMBURGER + MOBILE MENU
+═══════════════════════════════════════════════════════════════ */
 .sb-nav-toggle{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
     padding:6px 8px;color:#AAB8C8;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
 .sb-nav-toggle:hover{background:rgba(27,79,168,0.04);color:#1B4FA8;border-color:rgba(27,79,168,0.2);}
@@ -57,8 +106,17 @@
 .amobile-nav-link svg{flex-shrink:0;opacity:0.6;}
 .amobile-nav-link:hover,.amobile-nav-link.active{color:#1B4FA8;background:rgba(27,79,168,0.03);text-decoration:none;}
 .amobile-nav-link:hover svg,.amobile-nav-link.active svg{opacity:1;}
+.amobile-section-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#AAB8C8;
+    padding:14px 20px 6px;background:rgba(27,79,168,0.02);}
+
 @keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(0.96)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateX(20px) scale(0.96)}}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════════════════════ */
+@media(max-width:1200px){.anav-desktop-links{gap:clamp(10px,1.3vw,20px);}}
+@media(max-width:1000px){.anav-desktop-links{gap:clamp(8px,1.1vw,14px);}}
 @media(max-width:900px){
     .anav-desktop-links,.anav-desktop-user-name{display:none!important;}
     .nav-hamburger{display:flex!important;}
@@ -67,8 +125,8 @@
 @media(max-width:500px){#abellPanel{right:-70px;}}
 </style>
 
-<div style="max-width:1600px;margin:0 auto;padding:0 20px;">
-    <div style="display:flex;align-items:center;height:62px;gap:12px;">
+<div class="anav-container">
+    <div class="anav-inner">
 
         {{-- Sidebar toggle (desktop) --}}
         <button class="sb-nav-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
@@ -84,28 +142,50 @@
             <span class="nav-ham-line" id="hl3"></span>
         </button>
 
-        {{-- Logo --}}
-        <a href="{{ route('admin.dashboard') }}" style="text-decoration:none;flex-shrink:0;">
+        {{-- Logo → Dashboard --}}
+        <a href="{{ route('admin.dashboard') }}" style="text-decoration:none;flex-shrink:0;" title="Go to Dashboard">
             <img src="{{ asset('images/logo.png') }}" alt="Infinity" style="height:34px;width:auto;display:block;">
         </a>
 
-        {{-- Desktop links --}}
-        <div class="anav-desktop-links" style="display:flex;align-items:center;gap:24px;margin-left:8px;flex:1;overflow:hidden;">
-            <a href="{{ route('admin.dashboard') }}"          class="anav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">Dashboard</a>
-            <a href="{{ route('admin.employees.index') }}"    class="anav-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">Employees</a>
-            <a href="{{ route('admin.sales.index') }}"        class="anav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">Sales</a>
-            <a href="{{ route('admin.courses.index') }}"      class="anav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">Courses</a>
-            <a href="{{ route('admin.installments.index') }}" class="anav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}" style="display:flex;align-items:center;gap:5px;">
-                Approvals
+        {{-- ═══════════════════════════════════════════════════════
+             DESKTOP LINKS — ordered by business priority
+        ═══════════════════════════════════════════════════════ --}}
+        <div class="anav-desktop-links">
+
+            {{-- 1. Sales — Daily operations, highest priority --}}
+            <a href="{{ route('admin.sales.index') }}"
+               class="anav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">Sales</a>
+
+            {{-- 2. Installments — approvals need urgent action --}}
+            <a href="{{ route('admin.installments.index') }}"
+               class="anav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}"
+               style="display:flex;align-items:center;gap:5px;">
+                Installments
                 @if(isset($navUnreadCount) && $navUnreadCount > 0)
                 <span style="background:#F5911E;color:#fff;font-size:8px;padding:1px 5px;border-radius:20px;letter-spacing:0;font-weight:700;">{{ $navUnreadCount }}</span>
                 @endif
             </a>
-            <a href="{{ route('admin.outstanding.index') }}"  class="anav-link {{ request()->routeIs('admin.outstanding.*') ? 'active' : '' }}">Outstanding</a>
-            <a href="{{ route('admin.audit.index') }}"        class="anav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">Audit</a>
+
+            {{-- 3. Outstanding --}}
+            <a href="{{ route('admin.outstanding.index') }}"
+               class="anav-link {{ request()->routeIs('admin.outstanding.*') ? 'active' : '' }}">Outstanding</a>
+            {{-- 4. Refunds --}}
+            <a href="{{ route('admin.refunds.index') }}"
+               class="anav-link {{ request()->routeIs('admin.refunds.*') ? 'active' : '' }}">Refunds</a>
+
+            {{-- 5. Reports --}}
+            <a href="{{ route('admin.reports.index') }}"
+               class="anav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">Reports</a>
+
+            {{-- 7. Audit --}}
+            <a href="{{ route('admin.audit.index') }}"
+               class="anav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">Audit</a>
+
         </div>
 
-        {{-- Right --}}
+        {{-- ═══════════════════════════════════════════════════════
+             RIGHT — Bell + User menu
+        ═══════════════════════════════════════════════════════ --}}
         <div style="display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;">
 
             {{-- Bell --}}
@@ -143,13 +223,13 @@
                             @foreach($navNotifications as $notif)
                             @php
                                 $nColor = match($notif->related_entity_type ?? '') {
-                                    'installment_approved','report_approved' => '#059669',
-                                    'installment_rejected','report_rejected' => '#DC2626',
+                                    'installment_approved','report_approved','refund_approved' => '#059669',
+                                    'installment_rejected','report_rejected','refund_rejected' => '#DC2626',
                                     default => '#F5911E'
                                 };
                                 $nBg = match($notif->related_entity_type ?? '') {
-                                    'installment_approved','report_approved' => 'rgba(5,150,105,0.1)',
-                                    'installment_rejected','report_rejected' => 'rgba(220,38,38,0.08)',
+                                    'installment_approved','report_approved','refund_approved' => 'rgba(5,150,105,0.1)',
+                                    'installment_rejected','report_rejected','refund_rejected' => 'rgba(220,38,38,0.08)',
                                     default => 'rgba(245,145,30,0.1)'
                                 };
                             @endphp
@@ -242,20 +322,53 @@
     </div>
 </div>
 
-{{-- Mobile Menu --}}
+{{-- ═══════════════════════════════════════════════════════════════
+     MOBILE MENU
+═══════════════════════════════════════════════════════════════ --}}
 <div class="amobile-menu" id="amobileMenu">
     <div style="padding:4px 0;">
-        <a href="{{ route('admin.dashboard') }}"          class="amobile-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>Dashboard</a>
-        <a href="{{ route('admin.employees.index') }}"    class="amobile-nav-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Employees</a>
-        <a href="{{ route('admin.sales.index') }}"        class="amobile-nav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Sales</a>
-        <a href="{{ route('admin.courses.index') }}"      class="amobile-nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>Courses</a>
-        <a href="{{ route('admin.installments.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}" style="justify-content:space-between;">
-            <span style="display:flex;align-items:center;gap:10px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Approvals</span>
-            @if(isset($navUnreadCount) && $navUnreadCount > 0)<span style="background:#F5911E;color:#fff;font-size:9px;padding:2px 7px;border-radius:20px;letter-spacing:0;">{{ $navUnreadCount }}</span>@endif
+
+        {{-- Core Operations --}}
+        <a href="{{ route('admin.sales.index') }}"        class="amobile-nav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+            Sales
         </a>
-        <a href="{{ route('admin.outstanding.index') }}"  class="amobile-nav-link {{ request()->routeIs('admin.outstanding.*') ? 'active' : '' }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Outstanding</a>
-        <a href="{{ route('admin.audit.index') }}"        class="amobile-nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Audit</a>
+        <a href="{{ route('admin.employees.index') }}"    class="amobile-nav-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            Employees
+        </a>
+        <a href="{{ route('admin.courses.index') }}"      class="amobile-nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            Courses
+        </a>
+
+        {{-- Finance --}}
+        <a href="{{ route('admin.installments.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}" style="justify-content:space-between;">
+            <span style="display:flex;align-items:center;gap:10px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                Installments
+            </span>
+            @if(isset($navUnreadCount) && $navUnreadCount > 0)
+            <span style="background:#F5911E;color:#fff;font-size:9px;padding:2px 7px;border-radius:20px;letter-spacing:0;">{{ $navUnreadCount }}</span>
+            @endif
+        </a>
+        <a href="{{ route('admin.outstanding.index') }}"  class="amobile-nav-link {{ request()->routeIs('admin.outstanding.*') ? 'active' : '' }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Outstanding
+        </a>
+
+        {{-- Monitoring section --}}
+        <div class="amobile-section-label">Monitoring</div>
+        <a href="{{ route('admin.refunds.index') }}"      class="amobile-nav-link {{ request()->routeIs('admin.refunds.*') ? 'active' : '' }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            Refunds
+        </a>
+        <a href="{{ route('admin.audit.index') }}"        class="amobile-nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Audit
+        </a>
     </div>
+
     <div style="padding:14px 20px;border-top:1px solid rgba(27,79,168,0.06);display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div style="display:flex;align-items:center;gap:10px;">
             <div class="anav-avatar" style="width:38px;height:38px;">
@@ -280,10 +393,16 @@
 </nav>
 
 <script>
+/* ═══════════════════════════════════════════════════════════════
+   SCROLL SHADOW
+═══════════════════════════════════════════════════════════════ */
 window.addEventListener('scroll',()=>{
     document.getElementById('adminNav')?.classList.toggle('scrolled',window.scrollY>10);
 },{passive:true});
 
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE NAV TOGGLE
+═══════════════════════════════════════════════════════════════ */
 let mobileNavOpen=false;
 function toggleMobileNav(){
     mobileNavOpen=!mobileNavOpen;
@@ -298,37 +417,82 @@ function toggleMobileNav(){
     }
     document.getElementById('auserMenuPanel')?.classList.remove('open');
     document.getElementById('abellPanel').style.display='none';
+    document.getElementById('monitorPanel')?.classList.remove('open');
+    document.getElementById('monitorWrap')?.classList.remove('open');
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   MONITORING DROPDOWN
+═══════════════════════════════════════════════════════════════ */
+function toggleMonitor(e){
+    e?.stopPropagation();
+    const wrap=document.getElementById('monitorWrap');
+    const panel=document.getElementById('monitorPanel');
+    wrap.classList.toggle('open');
+    panel.classList.toggle('open');
+    // Close bell + user menu
+    document.getElementById('abellPanel').style.display='none';
+    document.getElementById('auserMenuPanel')?.classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BELL TOGGLE
+═══════════════════════════════════════════════════════════════ */
 function toggleBell(){
     const p=document.getElementById('abellPanel');
     const open=p.style.display==='block';
     document.getElementById('auserMenuPanel')?.classList.remove('open');
+    document.getElementById('monitorPanel')?.classList.remove('open');
+    document.getElementById('monitorWrap')?.classList.remove('open');
     p.style.display=open?'none':'block';
     if(!open)p.style.animation='dropIn 0.2s ease both';
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   USER MENU TOGGLE
+═══════════════════════════════════════════════════════════════ */
 function toggleUserMenu(){
     document.getElementById('auserMenuPanel').classList.toggle('open');
     document.getElementById('abellPanel').style.display='none';
+    document.getElementById('monitorPanel')?.classList.remove('open');
+    document.getElementById('monitorWrap')?.classList.remove('open');
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CLOSE ALL DROPDOWNS ON OUTSIDE CLICK
+═══════════════════════════════════════════════════════════════ */
 document.addEventListener('click',(e)=>{
     if(!document.getElementById('abellWrap')?.contains(e.target))
         document.getElementById('abellPanel').style.display='none';
     if(!document.getElementById('auserMenuWrap')?.contains(e.target))
         document.getElementById('auserMenuPanel')?.classList.remove('open');
+    if(!document.getElementById('monitorWrap')?.contains(e.target)){
+        document.getElementById('monitorWrap')?.classList.remove('open');
+        document.getElementById('monitorPanel')?.classList.remove('open');
+    }
 });
 
+/* ═══════════════════════════════════════════════════════════════
+   NOTIFICATIONS: BADGE + MARK-AS-READ + SOUND + TOAST
+═══════════════════════════════════════════════════════════════ */
 const unread={{isset($navUnreadCount)?(int)$navUnreadCount:0}};
 if(unread>0)document.getElementById('abellBadge').style.display='block';
 
 async function markRead(id){
-    try{await fetch(`/notifications/${id}/read`,{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.content,'Accept':'application/json'}});}catch(e){}
+    try{
+        await fetch(`/notifications/${id}/read`,{
+            method:'POST',
+            headers:{
+                'X-CSRF-TOKEN':document.querySelector('meta[name="csrf-token"]')?.content,
+                'Accept':'application/json'
+            }
+        });
+    }catch(e){}
 }
 
 const prevUnread={{$navPrevUnread??0}};
 if(unread>prevUnread){
+    // Play notification sound
     try{
         const ctx=new(window.AudioContext||window.webkitAudioContext)();
         const osc=ctx.createOscillator(),gain=ctx.createGain();
@@ -338,6 +502,8 @@ if(unread>prevUnread){
         gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.4);
         osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.4);
     }catch(e){}
+
+    // Show toast
     const t=document.createElement('div');
     t.innerHTML=`<div style="position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.99);border:1px solid rgba(27,79,168,0.1);border-left:3px solid #F5911E;border-radius:8px;box-shadow:0 8px 32px rgba(27,79,168,0.15);animation:toastIn 0.4s cubic-bezier(0.16,1,0.3,1) both;font-family:'DM Sans',sans-serif;min-width:240px;">
         <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,145,30,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
@@ -347,6 +513,9 @@ if(unread>prevUnread){
         <button onclick="this.closest('div').parentElement.remove()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#AAB8C8;font-size:18px;line-height:1;padding:0 2px;">×</button>
     </div>`;
     document.body.appendChild(t);
-    setTimeout(()=>{t.firstElementChild.style.animation='toastOut 0.3s ease forwards';setTimeout(()=>t.remove(),300);},4500);
+    setTimeout(()=>{
+        t.firstElementChild.style.animation='toastOut 0.3s ease forwards';
+        setTimeout(()=>t.remove(),300);
+    },4500);
 }
 </script>
