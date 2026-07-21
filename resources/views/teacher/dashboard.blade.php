@@ -208,8 +208,8 @@
                 @if($contract)
                     <span class="td-contract-badge">
                         <span class="td-contract-dot"></span>
-                        {{ $contract->contract_type }}
-                        &nbsp;·&nbsp; max {{ $contract->max_sessions_allowed }} sessions
+                        Contract: {{ $contract->contractType->name }}
+                        &nbsp;·&nbsp; max {{ $contract->contractType->max_sessions_allowed }} sessions/month
                     </span>
                 @else
                     <span class="td-contract-badge" style="color:#AAB8C8;border-color:rgba(170,184,200,.3)">
@@ -263,10 +263,10 @@
         </div>
 
         {{-- Overload check --}}
-        @if($contract && $sessionsThisMonth > $contract->max_sessions_allowed)
+        @if($contract && $contract->contractType && $sessionsThisMonth > $contract->contractType->max_sessions_allowed)
         <div style="margin-left:auto">
             <div class="td-overload">
-                ⚠️ Session overload — {{ $sessionsThisMonth }}/{{ $contract->max_sessions_allowed }}
+                ⚠️ Session overload — {{ $sessionsThisMonth }}/{{ $contract->contractType->max_sessions_allowed }}
             </div>
         </div>
         @endif
