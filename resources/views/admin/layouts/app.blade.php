@@ -18,6 +18,6 @@
             @yield('content')
         </main>
     </div>
-
+@include('partials.realtime-notifications')
 </body>
 </html>

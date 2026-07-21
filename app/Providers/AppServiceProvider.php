@@ -95,11 +95,34 @@ class AppServiceProvider extends ServiceProvider
                 $employeeId = Employee::where('user_id', auth()->id())
                     ->value('employee_id');
 
+                $userRole = auth()->user()->role?->role_name ?? '';
+
                 $navNotifications = DB::table('user_notification')
                     ->where('employee_id', $employeeId)
                     ->orderByDesc('created_at')
                     ->limit(10)
-                    ->get();
+                    ->get()
+                    ->map(function ($notif) use ($userRole) {
+                        $type = $notif->related_entity_type ?? '';
+                        
+                        $notif->url = match (true) {
+                            in_array($type, ['refund_request', 'refund_approved', 'refund_rejected']) => 
+                                $userRole === 'Admin' ? url('/admin/refunds') : url('/refunds'),
+                            
+                            in_array($type, ['installment_request', 'installment_approved', 'installment_rejected']) => 
+                                $userRole === 'Admin' ? url('/admin/installments') : url('/leads'),
+                            
+                            $type === 'course_instance' => url('/teacher/courses'),
+                            
+                            in_array($type, ['report_approved', 'report_rejected']) => url('/teacher/reports'),
+                            
+                            $type === 'waiting_list' => url('/student-care/waiting-list'),
+                            
+                            default => '#',
+                        };
+                        
+                        return $notif;
+                    });
 
                 $navUnreadCount = DB::table('user_notification')
                     ->where('employee_id', $employeeId)

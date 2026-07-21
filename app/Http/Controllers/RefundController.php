@@ -103,7 +103,7 @@ class RefundController extends Controller
             return back()->with('error', 'A refund request already exists for this enrollment.');
         }
 
-        RefundRequest::create([
+        $refundRequest = RefundRequest::create([
             'enrollment_id' => $enrollment->enrollment_id,
             'requested_by'  => $employeeId,
             'amount'        => $deposit->amount,
@@ -111,6 +111,24 @@ class RefundController extends Controller
             'status'        => 'Pending',
         ]);
 
-        return back()->with('success', 'Refund request submitted. Awaiting admin approval.');
+        $adminIds = DB::table('employee')
+            ->join('users', 'employee.user_id', '=', 'users.id')
+            ->join('role', 'users.role_id', '=', 'role.role_id')
+            ->where('role.role_name', 'Admin')
+            ->pluck('employee.employee_id');
+
+        $studentName = $enrollment->student?->full_name ?? "Enrollment #{$enrollment->enrollment_id}";
+
+        foreach ($adminIds as $adminId) {
+            \App\Services\NotificationService::send(
+                $adminId,
+                'New Refund Request',
+                "Refund requested for {$studentName} — " . number_format($deposit->amount) . ' LE',
+                'refund_request',
+                $refundRequest->request_id
+            );
+        }
+
+        return redirect()->route('refunds.index')->with('success', 'Refund request submitted. Awaiting admin approval.');
     }
 }

@@ -51,7 +51,6 @@ class AdminRefundController extends Controller
 
         DB::transaction(function () use ($refund, $enrollment, $adminEmployee) {
 
-            // 1) Create Refund transaction
             $transaction = FinancialTransaction::create([
                 'enrollment_id'          => $enrollment->enrollment_id,
                 'patch_id'               => $enrollment->patch_id,
@@ -66,7 +65,6 @@ class AdminRefundController extends Controller
                 'created_by_employee_id' => $adminEmployee->employee_id,
             ]);
 
-            // 2) Mark refund request as Processed
             $refund->update([
                 'status'                   => 'Approved',
                 'approved_by_admin_id'     => $adminEmployee->employee_id,
@@ -74,11 +72,19 @@ class AdminRefundController extends Controller
                 'processed_transaction_id' => $transaction->transaction_id,
             ]);
 
-            // 3) Cancel enrollment
             $enrollment->update(['status' => 'Cancelled']);
         });
 
-        return back()->with('success', 'Refund approved and processed. Enrollment cancelled.');
+        $studentName = $refund->enrollment?->student?->full_name ?? "Enrollment #{$refund->enrollment_id}";
+        \App\Services\NotificationService::send(
+            $refund->requested_by,
+            'Refund Approved',
+            "Your refund request for {$studentName} was approved — " . number_format($refund->amount) . ' LE',
+            'refund_approved',
+            $refund->request_id
+        );
+
+        return redirect()->route('admin.refunds.index')->with('success', 'Refund approved and processed. Enrollment cancelled.');
     }
 
     public function reject(Request $request, $id)
@@ -100,6 +106,15 @@ class AdminRefundController extends Controller
             'rejection_note'       => $request->reason,
         ]);
 
-        return back()->with('success', 'Refund request rejected.');
+        $studentName = $refund->enrollment?->student?->full_name ?? "Enrollment #{$refund->enrollment_id}";
+        \App\Services\NotificationService::send(
+            $refund->requested_by,
+            'Refund Rejected',
+            "Your refund request for {$studentName} was rejected. Reason: " . $request->reason,
+            'refund_rejected',
+            $refund->request_id
+        );
+
+        return redirect()->route('admin.refunds.index')->with('success', 'Refund request rejected.');
     }
 }
