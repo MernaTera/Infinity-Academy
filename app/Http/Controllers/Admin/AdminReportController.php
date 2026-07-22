@@ -12,41 +12,62 @@ class AdminReportController extends Controller
 {
     public function index(Request $request)
     {
-        $filterStatus  = $request->query('status', 'Submitted');
+        $filterStatus  = $request->query('status', 'all');
         $filterTeacher = $request->query('teacher_id', 'all');
 
-        $reports = Report::with([
-            'enrollment.student',
-            'enrollment.courseTemplate',
-            'enrollment.level',
-            'enrollment.sublevel',
-            'enrollment.courseInstance',
+        $completedInstances = \App\Models\Academic\CourseInstance::with([
+            'courseTemplate', 'level', 'sublevel', 'patch',
             'teacher.employee',
-            'reportScores',
-            'approvedBy',
+            'sessions',
+            'enrollments.student.phones',
+            'enrollments.report.approvedBy',
+            'enrollments.attendances',
         ])
-        ->when($filterStatus !== 'all', fn($q) => $q->where('status', $filterStatus))
+        ->where('status', 'Completed')
         ->when($filterTeacher !== 'all', fn($q) => $q->where('teacher_id', $filterTeacher))
-        ->latest('updated_at')
+        ->orderBy('end_date', 'asc')
         ->get();
 
-        // Teachers who have reports
-        $teachers = Teacher::with('employee')
-            ->whereHas('reports')
-            ->get();
-
         $stats = [
-            'submitted' => Report::where('status', 'Submitted')->count(),
-            'approved'  => Report::where('status', 'Approved')->count(),
-            'rejected'  => Report::where('status', 'Rejected')->count(),
-            'sent'      => Report::where('status', 'Sent')->count(),
+            'pending'   => 0,
+            'draft'     => 0,
+            'submitted' => 0,
+            'approved'  => 0,
+            'rejected'  => 0,
+            'sent'      => 0,
+            'overdue'   => 0,
         ];
 
-        // Group by teacher → course
-        $grouped = $reports->groupBy(fn($r) => $r->teacher_id);
+        foreach ($completedInstances as $inst) {
+            $deadline = $inst->end_date
+                ? \Carbon\Carbon::parse($inst->end_date)->addDays(3)
+                : null;
+            $isPastDeadline = $deadline && $deadline->isPast();
+
+            foreach ($inst->enrollments as $enr) {
+                $status = $enr->report?->status;
+                if (!$status) {
+                    $stats['pending']++;
+                    if ($isPastDeadline) $stats['overdue']++;
+                    continue;
+                }
+                match($status) {
+                    'Draft'     => $stats['draft']++,
+                    'Submitted' => $stats['submitted']++,
+                    'Approved'  => $stats['approved']++,
+                    'Rejected'  => $stats['rejected']++,
+                    'Sent'      => $stats['sent']++,
+                    default     => null,
+                };
+            }
+        }
+
+        $teachers = Teacher::with('employee')
+            ->whereHas('courseInstances', fn($q) => $q->where('status', 'Completed'))
+            ->get();
 
         return view('admin.reports.index', compact(
-            'reports', 'stats', 'filterStatus', 'filterTeacher', 'teachers', 'grouped'
+            'completedInstances', 'stats', 'filterStatus', 'filterTeacher', 'teachers'
         ));
     }
 
