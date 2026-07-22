@@ -88,8 +88,7 @@ class AppServiceProvider extends ServiceProvider
         User::observe(AuditObserver::class);
 
 
-        // ── Navbar Notifications ──
-        View::composer(['layouts.*', 'admin.layouts.*'], function ($view) {
+        View::composer(['layouts.*', 'admin.layouts.*', 'teacher.layouts.*', 'student-care.layouts.*'], function ($view) {
             if (auth()->check()) {
 
                 $employeeId = Employee::where('user_id', auth()->id())
