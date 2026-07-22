@@ -24,64 +24,60 @@ class TeacherReportController extends Controller
         ['name' => 'Final Exam (Writing Task 3)','max' => 10],
     ];
 
+    
     public function index()
     {
-        $employee = Employee::where('user_id', auth()->id())->first();
-        $teacher  = Teacher::where('employee_id', $employee?->employee_id)->first();
-
-        if (!$teacher) abort(403, 'Not a teacher account.');
-
-        $enrollments = Enrollment::with([
-            'student',
-            'courseTemplate',
-            'level',
-            'sublevel',
-            'courseInstance',
-            'report',
-        ])
-        ->whereHas('courseInstance', fn($q) =>
-            $q->where('teacher_id', $teacher->teacher_id)
-              ->whereIn('status', ['Completed', 'Active'])
-        )
-        ->get();
-
-        // جيبي الـ reports
-        $reports = Report::with([
-            'enrollment.student',
-            'enrollment.courseTemplate',
-            'enrollment.level',
-            'enrollment.sublevel',
-            'enrollment.courseInstance',
-            'reportScores',
+        $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+        $teacher  = \App\Models\HR\Teacher::where('employee_id', $employee?->employee_id)->first();
+        $completedInstances = \App\Models\Academic\CourseInstance::with([
+            'courseTemplate', 'level', 'sublevel', 'patch',
+            'sessions',
+            'enrollments.student',
+            'enrollments.report',
+            'enrollments.attendances',
         ])
         ->where('teacher_id', $teacher->teacher_id)
-        ->latest('updated_at')
+        ->where('status', 'Completed')
+        ->orderBy('end_date', 'asc') 
         ->get();
 
-        // الـ enrollments اللي مفيهاش report لسه (الـ completed courses)
-        $pendingEnrollments = $enrollments->filter(function ($e) use ($teacher) {
-            return !$e->report && $e->courseInstance?->status === 'Completed';
-        });
-
-        // Deadline warnings — الـ courses اللي انتهت وفات عليها أكتر من 3 أيام ومفيش report
-        $overdueEnrollments = $pendingEnrollments->filter(function ($e) {
-            $endDate = $e->courseInstance?->end_date;
-            return $endDate && \Carbon\Carbon::parse($endDate)->addDays(3)->isPast();
-        });
-
         $stats = [
-            'draft'     => $reports->where('status', 'Draft')->count(),
-            'submitted' => $reports->where('status', 'Submitted')->count(),
-            'approved'  => $reports->where('status', 'Approved')->count(),
-            'rejected'  => $reports->where('status', 'Rejected')->count(),
-            'sent'      => $reports->where('status', 'Sent')->count(),
-            'pending'   => $pendingEnrollments->count(),
-            'overdue'   => $overdueEnrollments->count(),
+            'pending'   => 0,  
+            'draft'     => 0,  
+            'submitted' => 0, 
+            'approved'  => 0, 
+            'rejected'  => 0,  
+            'sent'      => 0,  
+            'overdue'   => 0,  
         ];
 
-        return view('teacher.reports.index', compact(
-            'reports', 'pendingEnrollments', 'overdueEnrollments', 'stats', 'teacher'
-        ));
+        foreach ($completedInstances as $inst) {
+            $deadline = $inst->end_date
+                ? \Carbon\Carbon::parse($inst->end_date)->addDays(3)
+                : null;
+            $isPastDeadline = $deadline && $deadline->isPast();
+
+            foreach ($inst->enrollments as $enr) {
+                $status = $enr->report?->status;
+
+                if (!$status) {
+                    $stats['pending']++;
+                    if ($isPastDeadline) $stats['overdue']++;
+                    continue;
+                }
+
+                match($status) {
+                    'Draft'     => $stats['draft']++,
+                    'Submitted' => $stats['submitted']++,
+                    'Approved'  => $stats['approved']++,
+                    'Rejected'  => $stats['rejected']++,
+                    'Sent'      => $stats['sent']++,
+                    default     => null,
+                };
+            }
+        }
+
+        return view('teacher.reports.index', compact('completedInstances', 'stats'));
     }
 
     public function create(Request $request)
