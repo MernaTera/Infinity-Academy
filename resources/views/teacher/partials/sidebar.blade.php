@@ -152,19 +152,95 @@
     color: #AAB8C8; margin-left: auto; flex-shrink: 0;
 }
 
-/* Collapsed */
+/* ═══════════════════════════════════════════════════════
+   COLLAPSED STATE — clean, tight icon-only view
+═══════════════════════════════════════════════════════ */
 #teacherSidebar.collapsed .tsl-link-text,
-#teacherSidebar.collapsed .tsb-section-label,
-#teacherSidebar.collapsed .tsb-section-chevron,
 #teacherSidebar.collapsed .tsl-badge,
 #teacherSidebar.collapsed .tsl-view-tag{
     opacity: 0; width: 0; pointer-events: none;
 }
-#teacherSidebar.collapsed .tsl-link{ padding: 10px 0; justify-content: center; border-left-color: transparent !important; }
-#teacherSidebar.collapsed .tsl-link.active{ background: var(--tsb-active-bg); }
-#teacherSidebar.collapsed .tsb-section-header{ justify-content: center; padding: 10px 0 4px; }
-#teacherSidebar.collapsed .tsb-section-body{ max-height: 600px !important; }
+
+/* Hide section headers completely (label + padding) */
+#teacherSidebar.collapsed .tsb-section-header{
+    display: none;
+}
+
+/* Show section body without collapse animation */
+#teacherSidebar.collapsed .tsb-section-body{
+    max-height: 600px !important;
+}
+
+/* Reduce spacing between sections */
+#teacherSidebar.collapsed .tsb-section{
+    margin-top: 0;
+}
+
+/* Add subtle divider between sections instead of section headers */
+#teacherSidebar.collapsed .tsb-section + .tsb-section{
+    border-top: 1px solid var(--tsb-border);
+    margin-top: 6px;
+    padding-top: 6px;
+}
+
+/* Center icons + tight vertical padding */
+#teacherSidebar.collapsed .tsl-link{
+    padding: 11px 0;
+    justify-content: center;
+    border-left: none !important;
+    position: relative;
+}
+
+/* Active state: solid green background + green icon */
+#teacherSidebar.collapsed .tsl-link.active{
+    background: var(--tsb-active-bg);
+}
+#teacherSidebar.collapsed .tsl-link.active svg{
+    color: var(--tsb-green);
+    opacity: 1;
+}
+
+/* Small green dot on the right of active icon for extra clarity */
+#teacherSidebar.collapsed .tsl-link.active::before{
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 20px;
+    background: var(--tsb-green);
+    border-radius: 2px 0 0 2px;
+}
+
+/* Hide dividers when collapsed (we use section borders instead) */
+#teacherSidebar.collapsed .tsl-div{
+    display: none;
+}
+
+/* Icon spacing */
+#teacherSidebar.collapsed .tsl-link svg{
+    min-width: 16px;
+    width: 16px;
+    height: 16px;
+}
+
+/* Rotate toggle arrow */
 #teacherSidebar.collapsed .tsb-toggle-btn svg{ transform: rotate(180deg); }
+
+/* Tooltip on hover (kept from original) */
+#teacherSidebar.collapsed .tsl-link::after{
+    content: attr(data-label);
+    position: absolute;
+    left: calc(var(--tsb-w-collapsed) + 8px);
+    top: 50%; transform: translateY(-50%);
+    background: #1A2A4A; color: #fff;
+    font-size: 10px; letter-spacing: 1px; text-transform: uppercase;
+    padding: 5px 10px; border-radius: 4px;
+    white-space: nowrap; pointer-events: none;
+    opacity: 0; transition: opacity 0.15s; z-index: 999;
+}
+#teacherSidebar.collapsed .tsl-link:hover::after{ opacity: 1; }
 
 #teacherSidebar.collapsed .tsl-link::after{
     content: attr(data-label);
@@ -234,7 +310,6 @@
                 <a href="{{ route('teacher.schedule') }}" class="tsl-link {{ request()->routeIs('teacher.schedule') ? 'active' : '' }}" data-label="Patch Schedule">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
                     <span class="tsl-link-text">Patch Schedule</span>
-                    <span class="tsl-view-tag">View</span>
                 </a>
                 <a href="{{ route('teacher.courses') }}" class="tsl-link {{ request()->routeIs('teacher.courses*') ? 'active' : '' }}" data-label="My Courses">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
