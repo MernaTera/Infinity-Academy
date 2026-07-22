@@ -89,7 +89,7 @@ class AdminReportController extends Controller
 
     public function approve(Request $request, $id)
     {
-        $report = Report::findOrFail($id);
+        $report = Report::with(['teacher.employee', 'enrollment.student'])->findOrFail($id);
 
         if ($report->status !== 'Submitted') {
             return back()->with('error', 'Report is not in submitted state.');
@@ -98,27 +98,28 @@ class AdminReportController extends Controller
         $adminEmployee = Employee::where('user_id', auth()->id())->first();
         $report->approve($adminEmployee?->employee_id);
 
-        \Illuminate\Support\Facades\DB::table('user_notification')->insert([
-            'employee_id'         => $report->teacher?->employee_id,
-            'title'               => 'Report Approved',
-            'message'             => 'Your report for student ' .
-                                     ($report->enrollment?->student?->full_name ?? '—') .
-                                     ' has been approved. You can now send it to the student.',
-            'related_entity_type' => 'report_approved',
-            'related_entity_id'   => $report->report_id,
-            'is_read'             => false,
-            'created_at'          => now(),
-            'updated_at'          => now(),
-        ]);
+        $teacherEmployeeId = $report->teacher?->employee_id;
+        $studentName       = $report->enrollment?->student?->full_name ?? '—';
 
-        return back()->with('success', 'Report approved successfully.');
+        if ($teacherEmployeeId) {
+            \App\Services\NotificationService::send(
+                (int) $teacherEmployeeId,
+                'Report Approved',
+                "Your report for {$studentName} has been approved. You can now send it to the student.",
+                'report_approved',
+                $report->report_id
+            );
+        }
+
+        return redirect()->route('admin.reports.index')
+            ->with('success', 'Report approved successfully.');
     }
 
     public function reject(Request $request, $id)
     {
-        $request->validate(['reason' => 'required|string|min:5']);
+        $request->validate(['reason' => 'required|string|min:3']);
 
-        $report = Report::findOrFail($id);
+        $report = Report::with(['teacher.employee', 'enrollment.student'])->findOrFail($id);
 
         if ($report->status !== 'Submitted') {
             return back()->with('error', 'Report is not in submitted state.');
@@ -127,19 +128,20 @@ class AdminReportController extends Controller
         $adminEmployee = Employee::where('user_id', auth()->id())->first();
         $report->reject($adminEmployee?->employee_id, $request->reason);
 
-        \Illuminate\Support\Facades\DB::table('user_notification')->insert([
-            'employee_id'         => $report->teacher?->employee_id,
-            'title'               => 'Report Rejected',
-            'message'             => 'Your report for student ' .
-                                     ($report->enrollment?->student?->full_name ?? '—') .
-                                     ' was rejected. Reason: ' . $request->reason,
-            'related_entity_type' => 'report_rejected',
-            'related_entity_id'   => $report->report_id,
-            'is_read'             => false,
-            'created_at'          => now(),
-            'updated_at'          => now(),
-        ]);
+        $teacherEmployeeId = $report->teacher?->employee_id;
+        $studentName       = $report->enrollment?->student?->full_name ?? '—';
 
-        return back()->with('success', 'Report rejected.');
+        if ($teacherEmployeeId) {
+            \App\Services\NotificationService::send(
+                (int) $teacherEmployeeId,
+                'Report Rejected',
+                "Your report for {$studentName} was rejected. Reason: {$request->reason}",
+                'report_rejected',
+                $report->report_id
+            );
+        }
+
+        return redirect()->route('admin.reports.index')
+            ->with('success', 'Report rejected. Teacher has been notified.');
     }
 }

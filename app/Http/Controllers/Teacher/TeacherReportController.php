@@ -155,34 +155,28 @@ class TeacherReportController extends Controller
                 ]);
             }
 
-            // Store comments as a score entry with max=0 trick OR add column
-            // For now store in a note — if comments column added later use that
             if ($request->filled('comments')) {
-                // إضافة comments في rejection_note مؤقتاً لحد ما يتضاف column
                 $report->update(['rejection_note' => '__COMMENTS__' . $request->comments]);
             }
 
-            // Notify admin if submitted
             if ($request->action === 'submit') {
-                $admins = \App\Models\Auth\User::whereHas('role', fn($q) =>
-                    $q->where('role_name', 'Admin')
-                )->with('employee')->get();
+                $studentName = \App\Models\Enrollment\Enrollment::find($request->enrollment_id)?->student?->full_name ?? '—';
+                $teacherName = $employee?->full_name ?? 'Teacher';
 
-                foreach ($admins as $admin) {
-                    if ($admin->employee) {
-                        DB::table('user_notification')->insert([
-                            'employee_id'         => $admin->employee->employee_id,
-                            'title'               => 'New Report Submitted',
-                            'message'             => 'Teacher ' . ($employee?->full_name ?? '') .
-                                                     ' submitted a report for student ' .
-                                                     (\App\Models\Enrollment\Enrollment::find($request->enrollment_id)?->student?->full_name ?? ''),
-                            'related_entity_type' => 'report_submitted',
-                            'related_entity_id'   => $report->report_id,
-                            'is_read'             => false,
-                            'created_at'          => now(),
-                            'updated_at'          => now(),
-                        ]);
-                    }
+                $adminIds = DB::table('employee')
+                    ->join('users', 'employee.user_id', '=', 'users.id')
+                    ->join('role', 'users.role_id', '=', 'role.role_id')
+                    ->where('role.role_name', 'Admin')
+                    ->pluck('employee.employee_id');
+
+                foreach ($adminIds as $adminId) {
+                    \App\Services\NotificationService::send(
+                        (int) $adminId,
+                        'New Report Submitted',
+                        "Teacher {$teacherName} submitted a report for {$studentName}",
+                        'report_submitted',
+                        $report->report_id
+                    );
                 }
             }
         });
@@ -257,23 +251,23 @@ class TeacherReportController extends Controller
             }
 
             if ($request->action === 'submit') {
-                $admins = \App\Models\Auth\User::whereHas('role', fn($q) =>
-                    $q->where('role_name', 'Admin')
-                )->with('employee')->get();
+                $studentName = $report->enrollment?->student?->full_name ?? '—';
+                $teacherName = $employee?->full_name ?? 'Teacher';
 
-                foreach ($admins as $admin) {
-                    if ($admin->employee) {
-                        \Illuminate\Support\Facades\DB::table('user_notification')->insert([
-                            'employee_id'         => $admin->employee->employee_id,
-                            'title'               => 'Report Resubmitted',
-                            'message'             => 'Teacher ' . ($employee?->full_name ?? '') . ' resubmitted a report.',
-                            'related_entity_type' => 'report_submitted',
-                            'related_entity_id'   => $report->report_id,
-                            'is_read'             => false,
-                            'created_at'          => now(),
-                            'updated_at'          => now(),
-                        ]);
-                    }
+                $adminIds = DB::table('employee')
+                    ->join('users', 'employee.user_id', '=', 'users.id')
+                    ->join('role', 'users.role_id', '=', 'role.role_id')
+                    ->where('role.role_name', 'Admin')
+                    ->pluck('employee.employee_id');
+
+                foreach ($adminIds as $adminId) {
+                    \App\Services\NotificationService::send(
+                        (int) $adminId,
+                        'Report Resubmitted',
+                        "Teacher {$teacherName} resubmitted a report for {$studentName}",
+                        'report_submitted',
+                        $report->report_id
+                    );
                 }
             }
         });

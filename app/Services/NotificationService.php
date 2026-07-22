@@ -69,9 +69,13 @@ class NotificationService
             'installment_request', 'installment_approved', 'installment_rejected' =>
                 $role === 'Admin' ? url('/admin/installments') : url('/leads'),
 
+            'report_submitted' =>
+                $role === 'Admin' ? url('/admin/reports') : url('/teacher/reports'),
+            'report_approved', 'report_rejected' =>
+                url('/teacher/reports'),
+
             'course_instance' => url('/teacher/courses'),
-            'report_approved', 'report_rejected' => url('/teacher/reports'),
-            'waiting_list' => url('/student-care/waiting-list'),
+            'waiting_list'    => url('/student-care/waiting-list'),
 
             default => '#',
         };
