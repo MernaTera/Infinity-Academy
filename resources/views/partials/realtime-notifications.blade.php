@@ -33,7 +33,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Wait for Echo to be available
     let attempts = 0;
     const maxAttempts = 20;
     const waitForEcho = setInterval(() => {
@@ -104,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function incrementBadge() {
-        // Show badge dots on all possible bell icons
         ['bellBadge', 'abellBadge', 'tBellBadge', 'scBellBadge'].forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'block';
