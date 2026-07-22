@@ -104,8 +104,8 @@ class AdminReportController extends Controller
         if ($teacherEmployeeId) {
             \App\Services\NotificationService::send(
                 (int) $teacherEmployeeId,
-                'Report Approved',
-                "Your report for {$studentName} has been approved. You can now send it to the student.",
+                '✅ Report Approved — Send Within 24 Hours',
+                "Your report for {$studentName} has been approved. Please mark it as sent to the student within 24 hours.",
                 'report_approved',
                 $report->report_id
             );

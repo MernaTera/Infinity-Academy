@@ -253,6 +253,13 @@
             <div class="tr-kpi-val">{{ $stats['sent'] }}</div>
             <div class="tr-kpi-hint">Delivered</div>
         </div>
+        @if($stats['send_overdue'] > 0)
+        <div class="tr-kpi-card" style="--kpi-c:var(--red);">
+            <div class="tr-kpi-label">Send Overdue</div>
+            <div class="tr-kpi-val">{{ $stats['send_overdue'] }}</div>
+            <div class="tr-kpi-hint">Past 24h deadline</div>
+        </div>
+        @endif
     </div>
 
     {{-- ══════════════════════════════════════════
@@ -476,7 +483,14 @@
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                             Awaiting Admin
                                         </span>
-                                    @elseif($status === 'Approved')
+                                @elseif($status === 'Approved')
+                                    @php
+                                        $approvedAt   = $report->approved_at ? \Carbon\Carbon::parse($report->approved_at) : null;
+                                        $sendDeadline = $approvedAt?->copy()->addDay();
+                                        $sendOverdue  = $sendDeadline && $sendDeadline->isPast();
+                                        $hoursLeft    = $sendDeadline ? (int) now()->diffInHours($sendDeadline, false) : null;
+                                    @endphp
+                                    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
                                         <form method="POST" action="{{ route('teacher.reports.mark-sent', $report->report_id) }}" style="display:inline;">
                                             @csrf @method('PATCH')
                                             <button type="submit" class="tr-btn tr-btn-success">
@@ -484,6 +498,22 @@
                                                 Mark as Sent
                                             </button>
                                         </form>
+                                        @if($sendDeadline)
+                                            @if($sendOverdue)
+                                                <span style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:0.5px;">
+                                                    ⚠ OVERDUE by {{ abs($hoursLeft) }}h
+                                                </span>
+                                            @elseif($hoursLeft <= 12)
+                                                <span style="font-size:9px;color:var(--orange);font-weight:600;">
+                                                    ⏳ {{ $hoursLeft }}h left
+                                                </span>
+                                            @else
+                                                <span style="font-size:9px;color:var(--muted);">
+                                                    Send by {{ $sendDeadline->format('d M · H:i') }}
+                                                </span>
+                                            @endif
+                                        @endif
+                                    </div>
                                     @elseif($status === 'Sent')
                                         <span class="tr-btn tr-btn-neutral" style="cursor:default;opacity:0.7;">
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>

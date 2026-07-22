@@ -47,8 +47,9 @@ class TeacherReportController extends Controller
             'submitted' => 0, 
             'approved'  => 0, 
             'rejected'  => 0,  
-            'sent'      => 0,  
-            'overdue'   => 0,  
+            'sent'         => 0,  
+            'overdue'      => 0,  
+            'send_overdue' => 0, 
         ];
 
         foreach ($completedInstances as $inst) {
@@ -59,6 +60,13 @@ class TeacherReportController extends Controller
 
             foreach ($inst->enrollments as $enr) {
                 $status = $enr->report?->status;
+
+                if ($status === 'Approved' && $enr->report?->approved_at) {
+                    $deadline = \Carbon\Carbon::parse($enr->report->approved_at)->addDay();
+                    if ($deadline->isPast()) {
+                        $stats['send_overdue']++;
+                    }
+                }
 
                 if (!$status) {
                     $stats['pending']++;
@@ -93,12 +101,10 @@ class TeacherReportController extends Controller
                 ->findOrFail($enrollmentId);
         }
 
-        // Check existing report
         if ($enrollment && $enrollment->report) {
             return redirect()->route('teacher.reports.edit', $enrollment->report->report_id);
         }
 
-        // Available completed enrollments without reports
         $availableEnrollments = Enrollment::with(['student','courseTemplate','level','sublevel','courseInstance'])
             ->whereHas('courseInstance', fn($q) =>
                 $q->where('teacher_id', $teacher->teacher_id)
@@ -127,7 +133,6 @@ class TeacherReportController extends Controller
         $employee = Employee::where('user_id', auth()->id())->first();
         $teacher  = Teacher::where('employee_id', $employee?->employee_id)->first();
 
-        // تأكد إن الـ enrollment مش عنده report
         $existing = Report::where('enrollment_id', $request->enrollment_id)->first();
         if ($existing) {
             return redirect()->route('teacher.reports.edit', $existing->report_id);

@@ -13,7 +13,7 @@
 #teacherNav.scrolled{background:rgba(255,255,255,0.99)!important;box-shadow:0 2px 20px rgba(5,150,105,0.08);}
 
 /* CONTAINER */
-.tnav-container{max-width:1600px;margin:0 auto;padding:0 clamp(12px,2vw,24px);}
+.tnav-container{margin:0 auto;padding:0 clamp(12px,2vw,24px);}
 .tnav-inner{display:flex;align-items:center;height:62px;gap:clamp(8px,1.5vw,14px);}
 
 /* NAV LINKS */

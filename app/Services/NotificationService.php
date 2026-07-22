@@ -76,7 +76,8 @@ class NotificationService
 
             'course_instance' => url('/teacher/courses'),
             'waiting_list'    => url('/student-care/waiting-list'),
-
+            'report_submit_soon', 'report_submit_today', 'report_submit_overdue',
+            'report_send_soon', 'report_send_overdue' => url('/teacher/reports'),
             default => '#',
         };
     }
