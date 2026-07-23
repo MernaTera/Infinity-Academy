@@ -281,6 +281,16 @@
             <span class="sl-txt">Refunds</span>
             @if($pr > 0)<span class="sl-bdg">{{ $pr }}</span>@endif
         </a>
+        <a href="{{ route('admin.postponed.index') }}" data-tip="Postponed"
+        class="sl {{ request()->routeIs('admin.postponed.*') ? 'active' : '' }}">
+            @php $pp = \App\Models\Enrollment\Postponement::where('status','Active')->count(); @endphp
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span class="sl-txt">Postponed</span>
+            @if($pp > 0)<span class="sl-bdg">{{ $pp }}</span>@endif
+        </a>
     </div>
 
     <div class="sb-div"></div>

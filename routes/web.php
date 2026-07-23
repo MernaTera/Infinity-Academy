@@ -348,6 +348,13 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::patch('/refunds/{id}/approve', [AdminRefundController::class, 'approve'])->name('refunds.approve');
         Route::patch('/refunds/{id}/reject',  [AdminRefundController::class, 'reject'])->name('refunds.reject');
 
+        //Postponed
+        Route::get('/postponed', [\App\Http\Controllers\Admin\AdminPostponementController::class, 'index'])->name('postponed.index');
+        Route::patch('/postponed/{id}/resume', [\App\Http\Controllers\Admin\AdminPostponementController::class, 'resume'])->name('postponed.resume');
+        Route::patch('/postponed/{id}/expire', [\App\Http\Controllers\Admin\AdminPostponementController::class, 'expire'])->name('postponed.expire');
+        Route::patch('/postponed/{id}/extend', [\App\Http\Controllers\Admin\AdminPostponementController::class, 'extend'])->name('postponed.extend');
+        Route::patch('/postponed/{id}/force-cancel', [\App\Http\Controllers\Admin\AdminPostponementController::class, 'forceCancel'])->name('postponed.force-cancel');
+
         //Sales Tables
         Route::get('/sales', [AdminSalesController::class, 'index'])->name('sales.index');
 
