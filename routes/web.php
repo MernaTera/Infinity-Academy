@@ -384,6 +384,7 @@ Route::middleware(['auth', 'permission:academic.view'])
         Route::get('/reports/{id}/edit',  [TeacherReportController::class, 'edit'])->name('reports.edit');
         Route::put('/reports/{id}',       [TeacherReportController::class, 'update'])->name('reports.update');
         Route::patch('/reports/{id}/sent',[TeacherReportController::class, 'markSent'])->name('reports.mark-sent');
+        Route::get('/reports/{id}/show', [TeacherReportController::class, 'show'])->name('reports.show');
 
         Route::get('/pending-approvals', [TeacherController::class, 'pendingApprovals'])->name('pending-approvals');
         Route::patch('/course-instances/{id}/approve', [TeacherController::class, 'approveInstance'])->name('instance.approve');

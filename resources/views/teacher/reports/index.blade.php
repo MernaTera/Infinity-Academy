@@ -483,42 +483,49 @@
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                                             Awaiting Admin
                                         </span>
-                                @elseif($status === 'Approved')
-                                    @php
-                                        $approvedAt   = $report->approved_at ? \Carbon\Carbon::parse($report->approved_at) : null;
-                                        $sendDeadline = $approvedAt?->copy()->addDay();
-                                        $sendOverdue  = $sendDeadline && $sendDeadline->isPast();
-                                        $hoursLeft    = $sendDeadline ? (int) now()->diffInHours($sendDeadline, false) : null;
-                                    @endphp
-                                    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
-                                        <form method="POST" action="{{ route('teacher.reports.mark-sent', $report->report_id) }}" style="display:inline;">
-                                            @csrf @method('PATCH')
-                                            <button type="submit" class="tr-btn tr-btn-success">
-                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                                                Mark as Sent
-                                            </button>
-                                        </form>
-                                        @if($sendDeadline)
-                                            @if($sendOverdue)
-                                                <span style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:0.5px;">
-                                                    ⚠ OVERDUE by {{ abs($hoursLeft) }}h
-                                                </span>
-                                            @elseif($hoursLeft <= 12)
-                                                <span style="font-size:9px;color:var(--orange);font-weight:600;">
-                                                    ⏳ {{ $hoursLeft }}h left
-                                                </span>
-                                            @else
-                                                <span style="font-size:9px;color:var(--muted);">
-                                                    Send by {{ $sendDeadline->format('d M · H:i') }}
-                                                </span>
+                                        @elseif($status === 'Approved')
+                                            @php
+                                                $approvedAt   = $report->approved_at ? \Carbon\Carbon::parse($report->approved_at) : null;
+                                                $sendDeadline = $approvedAt?->copy()->addDay();
+                                                $sendOverdue  = $sendDeadline && $sendDeadline->isPast();
+                                                $hoursLeft    = $sendDeadline ? (int) now()->diffInHours($sendDeadline, false) : null;
+                                            @endphp
+                                            <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;">
+                                                <div style="display:flex;gap:4px;">
+                                                    <a href="{{ route('teacher.reports.show', $report->report_id) }}"
+                                                    class="tr-btn tr-btn-neutral" title="View & Download PDF">
+                                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                                        View
+                                                    </a>
+                                                    <form method="POST" action="{{ route('teacher.reports.mark-sent', $report->report_id) }}" style="display:inline;">
+                                                        @csrf @method('PATCH')
+                                                        <button type="submit" class="tr-btn tr-btn-success">
+                                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                                            Mark as Sent
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                            @if($sendDeadline)
+                                                @if($sendOverdue)
+                                                    <span style="font-size:9px;color:var(--red);font-weight:700;letter-spacing:0.5px;">⚠ OVERDUE by {{ abs($hoursLeft) }}h</span>
+                                                @elseif($hoursLeft <= 12)
+                                                    <span style="font-size:9px;color:var(--orange);font-weight:600;">⏳ {{ $hoursLeft }}h left</span>
+                                                @else
+                                                    <span style="font-size:9px;color:var(--muted);">Send by {{ $sendDeadline->format('d M · H:i') }}</span>
+                                                @endif
                                             @endif
-                                        @endif
-                                    </div>
+                                        </div>
                                     @elseif($status === 'Sent')
+                                        <div style="display:flex;gap:4px;">
+                                        <a href="{{ route('teacher.reports.show', $report->report_id) }}" class="tr-btn tr-btn-neutral">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                            View
+                                        </a>
                                         <span class="tr-btn tr-btn-neutral" style="cursor:default;opacity:0.7;">
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                            Completed
+                                            Sent
                                         </span>
+                                    </div>
                                     @endif
                                 </td>
                             </tr>

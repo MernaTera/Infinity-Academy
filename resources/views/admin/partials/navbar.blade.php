@@ -161,9 +161,9 @@
                class="anav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}"
                style="display:flex;align-items:center;gap:5px;">
                 Installments
-                @if(isset($navUnreadCount) && $navUnreadCount > 0)
+                <!-- @if(isset($navUnreadCount) && $navUnreadCount > 0)
                 <span style="background:#F5911E;color:#fff;font-size:8px;padding:1px 5px;border-radius:20px;letter-spacing:0;font-weight:700;">{{ $navUnreadCount }}</span>
-                @endif
+                @endif -->
             </a>
 
             {{-- 3. Outstanding --}}

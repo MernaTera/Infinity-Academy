@@ -281,6 +281,29 @@ class TeacherReportController extends Controller
             ->with('success', $request->action === 'submit' ? 'Report resubmitted.' : 'Draft saved.');
     }
 
+    public function show($id)
+    {
+        $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+        $teacher  = \App\Models\HR\Teacher::where('employee_id', $employee?->employee_id)->first();
+
+        $report = \App\Models\Reports\Report::with([
+            'enrollment.student',
+            'enrollment.courseTemplate',
+            'enrollment.level',
+            'enrollment.sublevel',
+            'enrollment.courseInstance.patch',
+            'reportScores',
+            'teacher.employee',
+            'approvedBy',
+        ])->findOrFail($id);
+
+        if ($report->teacher_id !== $teacher?->teacher_id) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        return view('teacher.reports.show', compact('report'));
+    }
+
     public function markSent($id)
     {
         $employee = Employee::where('user_id', auth()->id())->first();
