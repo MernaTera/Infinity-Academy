@@ -132,10 +132,29 @@
             <div class="page-eyebrow">Employee Profile</div>
             <h1 class="page-title">{{ $employee->full_name }}</h1>
         </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            @if($employee->teacher)
+            <a href="{{ route('admin.teachers.show', $employee->teacher->teacher_id) }}"
+            style="display:inline-flex;align-items:center;gap:6px;
+                    font-size:10px;color:var(--blue);text-decoration:none;
+                    padding:8px 16px;background:var(--blue-l);
+                    border:1px solid rgba(27,79,168,0.2);border-radius:4px;
+                    letter-spacing:1.5px;text-transform:uppercase;font-weight:600;
+                    margin-left:10px;transition:all 0.2s;font-family:'DM Sans',sans-serif;"
+            onmouseover="this.style.background='var(--blue)';this.style.color='#fff';"
+            onmouseout="this.style.background='var(--blue-l)';this.style.color='var(--blue)';">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                </svg>
+                View Full Teacher Profile
+            </a>
+            @endif
         <a href="{{ route('admin.employees.index') }}" class="btn-back">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back
         </a>
+</div>
     </div>
 
     @if(session('success'))

@@ -246,7 +246,7 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::get('/reports/{id}',               [AdminReportController::class, 'show'])->name('reports.show');
         Route::patch('/reports/{id}/approve',     [AdminReportController::class, 'approve'])->name('reports.approve');
         Route::patch('/reports/{id}/reject',      [AdminReportController::class, 'reject'])->name('reports.reject');
-
+        Route::get('/teachers/{id}',              [\App\Http\Controllers\Admin\TeacherProfileController::class, 'show'])->name('teachers.show');
         
         // Courses
         Route::get('/courses',                 [CourseAdminController::class, 'index'])->name('courses.index');
