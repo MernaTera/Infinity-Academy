@@ -121,25 +121,21 @@ class InstallmentApprovalController extends Controller
                 'approved_at'          => now(),
             ]);
 
-            // ── Notify CS ─────────────────────────────────────────────
+            // ── Notify CS via real-time ─────────────────────────────
             $csEmployeeId = $log->request_by_cs_id;
             if ($csEmployeeId) {
-                DB::table('user_notification')->insert([
-                    'employee_id'         => $csEmployeeId,
-                    'title'               => 'Installment Request Approved',
-                    'message'             => 'Your installment plan request for ' .
-                                            ($enrollment->student?->full_name ?? 'student') .
-                                            ' has been approved by the admin.',
-                    'related_entity_type' => 'installment_approval',
-                    'related_entity_id'   => $enrollment->enrollment_id,
-                    'is_read'             => false,
-                    'created_at'          => now(),
-                    'updated_at'          => now(),
-                ]);
+                $studentName = $enrollment->student?->full_name ?? 'student';
+                \App\Services\NotificationService::send(
+                    (int) $csEmployeeId,
+                    '✅ Installment Request Approved',
+                    "Your installment plan request for {$studentName} has been approved.",
+                    'installment_approved',
+                    $enrollment->enrollment_id
+                );
             }
         });
 
-        return back()->with('success', 'Request approved and student registered successfully.');
+        return redirect()->route('admin.installments.index')->with('success', 'Request approved.');
     }
 
     /*
@@ -207,24 +203,20 @@ class InstallmentApprovalController extends Controller
                 'rejection_note'       => $studentName . '||' . $request->reason,
             ]);
 
-            // ── 8. Notify CS ──────────────────────────────────────────
+            // ── 8. Notify CS via real-time ─────────────────────────
             $csEmployeeId = $log->request_by_cs_id;
             if ($csEmployeeId) {
-                DB::table('user_notification')->insert([
-                    'employee_id'         => $csEmployeeId,
-                    'title'               => 'Installment Request Declined',
-                    'message'             => 'Your request for ' . $studentName .
-                                            ' was declined. Reason: ' . $request->reason,
-                    'related_entity_type' => 'installment_approval',
-                    'related_entity_id'   => $enrollmentId,
-                    'is_read'             => false,
-                    'created_at'          => now(),
-                    'updated_at'          => now(),
-                ]);
+                \App\Services\NotificationService::send(
+                    (int) $csEmployeeId,
+                    '❌ Installment Request Declined',
+                    "Your request for {$studentName} was declined. Reason: {$request->reason}",
+                    'installment_rejected',
+                    $enrollmentId
+                );
             }
         });
 
-        return back()->with('success', 'Request rejected.');
+        return redirect()->route('admin.installments.index')->with('success', 'Request rejected.');
     }
 
     /*

@@ -23,18 +23,18 @@ class PatchSeeder extends Seeder
             'created_by_admin_id' => 1
         ],
         [
-            'name' => 'Patch Feb 2026',
+            'name' => 'Patch July-August 2026',
             'branch_id' => 1,
-            'start_date' => '2026-07-05',
-            'end_date' => '2026-08-06',
+            'start_date' => '2026-07-21',
+            'end_date' => '2026-08-21',
             'status' => 'Active',
             'created_by_admin_id' => 1
         ],
         [
-            'name' => 'Patch Mar 2026',
+            'name' => 'Patch September 2026',
             'branch_id' => 1,
-            'start_date' => '2026-08-07',
-            'end_date' => '2026-09-08',
+            'start_date' => '2026-09-22',
+            'end_date' => '2026-10-23',
             'status' => 'Upcoming',
             'created_by_admin_id' => 1
         ]

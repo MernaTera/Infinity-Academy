@@ -19,7 +19,7 @@
     border-right: 1px solid var(--sb-border);
     position: sticky;
     top: 62px;
-    height: calc(100vh);
+    height: calc(100vh - 62px);
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -99,7 +99,7 @@
 /* ── TOGGLE BTN ── */
 .sb-foot {
     border-top: 1px solid var(--sb-border);
-    padding: 8px 10px;
+    /* padding: 8px 10px; */
     display: flex;
     justify-content: flex-end;
     flex-shrink: 0;
@@ -323,12 +323,6 @@
     </div>
 
 </nav>
-
-<div class="sb-foot">
-    <button class="sb-tog" onclick="toggleSidebar()" title="Toggle sidebar">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-    </button>
-</div>
 </aside>
 
 <script>

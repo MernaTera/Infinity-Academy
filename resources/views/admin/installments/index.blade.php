@@ -207,6 +207,14 @@ function closeReject() {
 document.getElementById('rejectModal').addEventListener('click', function(e) {
     if (e.target === this) closeReject();
 });
+document.addEventListener('DOMContentLoaded', function() {
+    window.addEventListener('notification-received', function(e) {
+        const data = e.detail || {};
+        if (data.entity_type === 'installment_request') {
+            setTimeout(() => window.location.reload(), 1500);
+        }
+    });
+});
 setTimeout(() => location.reload(), 30000);
 </script>
 @endsection

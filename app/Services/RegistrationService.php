@@ -107,19 +107,19 @@ class RegistrationService
                     $q->where('role_name', 'Admin')
                 )->get();
  
+                $csName      = auth()->user()->name ?? 'CS';
+                $studentName = $lead->full_name ?? 'a student';
+
                 foreach ($admins as $admin) {
                     $adminEmployee = Employee::where('user_id', $admin->id)->first();
                     if ($adminEmployee) {
-                        DB::table('user_notification')->insert([
-                            'employee_id'         => $adminEmployee->employee_id,
-                            'title'               => 'New Installment Approval Request',
-                            'message'             => 'CS ' . (auth()->user()->name ?? '') . ' submitted an installment plan request for student ' . ($lead->full_name ?? '') . '.',
-                            'related_entity_type' => 'installment_approval',
-                            'related_entity_id'   => $enrollment->enrollment_id,
-                            'is_read'             => false,
-                            'created_at'          => now(),
-                            'updated_at'          => now(),
-                        ]);
+                        \App\Services\NotificationService::send(
+                            (int) $adminEmployee->employee_id,
+                            'New Installment Request',
+                            "CS {$csName} submitted an installment plan request for {$studentName}.",
+                            'installment_request',
+                            $enrollment->enrollment_id
+                        );
                     }
                 }
             }
