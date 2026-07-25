@@ -122,29 +122,18 @@ class AdminDashboardController extends Controller
             ->count();
 
         // ── Outstanding — accurate calculation ────────────────────────
+        $balanceCalc = app()->make(\App\Services\BalanceCalculator::class);
+
         $allActiveEnrollments = Enrollment::with([
             'financialTransactions',
             'installmentSchedules',
         ])->whereIn('status', ['Active', 'Restricted', 'Waiting'])
-          ->whereNotNull('final_price')
-          ->get();
+        ->whereNotNull('final_price')
+        ->get();
 
-        $totalOutstanding = $allActiveEnrollments->sum(function ($e) {
-            $totalFees = (float) $e->final_price
-                + (float) $e->financialTransactions->where('transaction_category', 'Material')->sum('amount')
-                + (float) $e->financialTransactions->where('transaction_category', 'Test')->sum('amount');
-
-            $paidInstIds = $e->installmentSchedules
-                ->where('status', 'Paid')
-                ->pluck('transaction_id')->filter()->toArray();
-
-            $paid = (float) $e->financialTransactions->where('transaction_type', 'Payment')->sum('amount')
-                  + (float) $e->financialTransactions->where('transaction_type', 'Installment')
-                        ->whereIn('transaction_id', $paidInstIds)->sum('amount')
-                  - (float) $e->financialTransactions->where('transaction_type', 'Refund')->sum('amount');
-
-            $remaining = $totalFees - $paid;
-            return $remaining < 0.01 ? 0 : $remaining;
+        $totalOutstanding = $allActiveEnrollments->sum(function ($e) use ($balanceCalc) {
+            $result = $balanceCalc->calculate($e);
+            return max(0, (float) $result['remaining_balance']);
         });
 
         // ── Installments ──────────────────────────────────────────────
