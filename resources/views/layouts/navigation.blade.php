@@ -12,6 +12,10 @@
 *::before,*::after{pointer-events:none;}
 #mainNav.scrolled{background:rgba(255,255,255,0.99)!important;box-shadow:0 2px 20px rgba(27,79,168,0.08);}
 
+.sb-nav-toggle{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
+    padding:6px 8px;color:#AAB8C8;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+.sb-nav-toggle:hover{background:rgba(27,79,168,0.04);color:#1B4FA8;border-color:rgba(27,79,168,0.2);}
+
 .nav-link{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7A8A9A;
     text-decoration:none;padding:6px 0;position:relative;transition:color 0.2s;white-space:nowrap;}
 .nav-link::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:1.5px;
@@ -74,8 +78,15 @@
 @media(max-width:500px){#bellPanel{right:-60px;}}
 </style>
 
-<div style="max-width:1600px;margin:0 auto;padding:0 20px;">
+<div style="margin:0 auto;padding:0 20px;">
     <div style="display:flex;align-items:center;height:62px;gap:12px;">
+
+        {{-- Sidebar toggle (desktop) --}}
+        <button class="sb-nav-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
 
         {{-- Hamburger (mobile) --}}
         <button class="nav-hamburger" onclick="toggleMobileNav()" id="navHamburger">
