@@ -36,6 +36,7 @@ class RegistrationController extends Controller
     {
         $lead = Lead::findOrFail($lead_id);
 
+        // Allow multiple registrations for the same lead if the query parameter 'renew' is present
         // if ($lead->status === 'Registered' && !request()->query('renew')) {
         //     return back()->with('error', 'This lead is already registered.');
         // }
@@ -112,24 +113,66 @@ class RegistrationController extends Controller
 
         try {
             $lead = Lead::find($request->lead_id);
-            $lead->update([
+
+            $oldStatus     = $lead->status;
+            $oldInterests  = [
+                'interested_course_template_id' => $lead->interested_course_template_id,
+                'interested_level_id'           => $lead->interested_level_id,
+                'interested_sublevel_id'        => $lead->interested_sublevel_id,
+            ];
+
+            $newInterests = [
                 'interested_course_template_id' => $request->course_template_id,
                 'interested_level_id'           => $request->level_id ?: null,
                 'interested_sublevel_id'        => $request->sublevel_id ?: null,
-            ]);
+            ];
+            $lead->update($newInterests);
+
+            $interestChanges = [];
+            foreach ($newInterests as $key => $val) {
+                if ((string) $oldInterests[$key] !== (string) $val) {
+                    $interestChanges[$key] = [
+                        'from' => $oldInterests[$key],
+                        'to'   => $val,
+                    ];
+                }
+            }
+            if (!empty($interestChanges)) {
+                \App\Services\LeadActivityLogger::for($lead)
+                    ->action('Interest_Updated')
+                    ->changed($interestChanges)
+                    ->reason('Updated during registration form')
+                    ->record();
+            }
+
             $enrollment = $this->registrationService->register($request->all());
+            $lead->refresh(); 
+
+            $courseName = \App\Models\Academic\CourseTemplate::find($request->course_template_id)?->name ?? 'course';
 
             if ($plan && $plan->requires_admin_approval) {
+                \App\Services\LeadActivityLogger::for($lead)
+                    ->action('Note_Added')
+                    ->reason("Registration submitted for admin approval in \"{$courseName}\" (Enrollment #{$enrollment->enrollment_id})")
+                    ->notes('Waiting for admin approval before status changes to Registered.')
+                    ->record();
+
                 if ($request->ajax()) {
                     return response()->json([
-                        'success'       => true,           
-                        'enrollment_id' => $enrollment->enrollment_id,  
+                        'success'       => true,
+                        'enrollment_id' => $enrollment->enrollment_id,
                         'redirect'      => route('registration.pending', $enrollment->enrollment_id),
                         'pending'       => true,
                     ]);
                 }
                 return redirect()->route('registration.pending', $enrollment->enrollment_id);
             }
+
+            \App\Services\LeadActivityLogger::for($lead)
+                ->action('Registered')
+                ->status($oldStatus, 'Registered')
+                ->reason("Registered in \"{$courseName}\" (Enrollment #{$enrollment->enrollment_id})")
+                ->record();
 
             if ($request->ajax()) {
                 return response()->json([

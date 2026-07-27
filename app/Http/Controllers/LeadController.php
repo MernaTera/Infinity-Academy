@@ -164,19 +164,44 @@ class LeadController extends Controller
             $this->leadRepository->update($id, $data);
             $lead->refresh();
 
-            $this->leadService->logHistory($lead, $old, $lead->status, 'Updated from status dropdown');
+            \App\Services\LeadActivityLogger::for($lead)
+                ->action('Status_Changed')
+                ->status($old, $lead->status)
+                ->notes('Updated from status dropdown')
+                ->record();
 
             return response()->json(['success' => true]);
         }
 
         $lead      = $this->leadRepository->find($id);
-        $old       = $lead->status;
-        $validated = app(StoreLeadRequest::class)->validated();
+        $oldStatus = $lead->status;
+        $validated = app(\App\Http\Requests\StoreLeadRequest::class)->validated();
+
+        $trackedFields = [
+            'full_name', 'phone_1', 'phone_2', 'source',
+            'interested_course_template_id', 'interested_level_id', 'interested_sublevel_id',
+            'notes', 'branch_id',
+        ];
+        $changedFields = \App\Services\LeadActivityLogger::detectChanges($lead, $validated, $trackedFields);
 
         $this->leadRepository->update($id, $validated);
         $lead->refresh();
 
-        $this->leadService->logHistory($lead, $old, $lead->status, 'Updated from edit form');
+        if (!empty($changedFields)) {
+            \App\Services\LeadActivityLogger::for($lead)
+                ->action('Data_Updated')
+                ->changed($changedFields)
+                ->notes('Lead edited from form')
+                ->record();
+        }
+
+        if ($oldStatus !== $lead->status) {
+            \App\Services\LeadActivityLogger::for($lead)
+                ->action('Status_Changed')
+                ->status($oldStatus, $lead->status)
+                ->notes('Changed while editing lead')
+                ->record();
+        }
 
         return redirect()
             ->route('leads.index')
@@ -192,7 +217,8 @@ class LeadController extends Controller
     {
         $employeeId = $this->currentEmployeeId();
         $lead       = Lead::findOrFail($id);
-        $old        = $lead->status;
+        $oldOwner   = $lead->owner_cs_id;
+        $oldStatus  = $lead->status;
 
         $lead->update([
             'owner_cs_id' => $employeeId,
@@ -200,7 +226,19 @@ class LeadController extends Controller
             'is_active'   => true,
         ]);
 
-        $this->leadService->logHistory($lead, $old, 'Waiting', 'Taken from ' . request()->input('source', 'public') . ' leads');
+        \App\Services\LeadActivityLogger::for($lead)
+            ->action('Owner_Changed')
+            ->changed(['owner_cs_id' => ['from' => $oldOwner, 'to' => $employeeId]])
+            ->reason('Taken from ' . request()->input('source', 'public') . ' leads')
+            ->record();
+
+        if ($oldStatus !== 'Waiting') {
+            \App\Services\LeadActivityLogger::for($lead)
+                ->action('Status_Changed')
+                ->status($oldStatus, 'Waiting')
+                ->notes('Auto-reset to Waiting on assignment')
+                ->record();
+        }
 
         return response()->json(['success' => true]);
     }
@@ -237,9 +275,84 @@ class LeadController extends Controller
     {
         $history = LeadHistory::where('lead_id', $id)
             ->orderBy('changed_at', 'desc')
-            ->get();
+            ->get()
+            ->map(function ($h) {
+                $employee = \App\Models\HR\Employee::find($h->changed_by);
+                
+                $enrichedFields = $this->enrichChangedFields($h->changed_fields ?? []);
+
+                return [
+                    'history_id'      => $h->history_id,
+                    'action_type'     => $h->action_type ?? 'Status_Changed',
+                    'old_status'      => $h->old_status,
+                    'new_status'      => $h->new_status,
+                    'changed_fields'  => $enrichedFields,
+                    'reason'          => $h->reason,
+                    'call_outcome'    => $h->call_outcome,
+                    'notes'           => $h->notes,
+                    'ip_address'      => $h->ip_address,
+                    'changed_at'      => $h->changed_at,
+                    'changed_by_id'   => $h->changed_by,
+                    'changed_by_name' => $employee?->full_name ?? 'System',
+                ];
+            });
 
         return response()->json($history);
+    }
+
+
+    private function enrichChangedFields(array $fields): array
+    {
+        $labels = [
+            'full_name'                     => 'Full Name',
+            'phone_1'                       => 'Primary Phone',
+            'phone_2'                       => 'Secondary Phone',
+            'source'                        => 'Source',
+            'notes'                         => 'Notes',
+            'branch_id'                     => 'Branch',
+            'owner_cs_id'                   => 'Owner (CS)',
+            'interested_course_template_id' => 'Interested Course',
+            'interested_level_id'           => 'Interested Level',
+            'interested_sublevel_id'        => 'Interested Sublevel',
+            'status'                        => 'Status',
+            'next_call_at'                  => 'Next Call At',
+        ];
+
+        $enriched = [];
+        foreach ($fields as $key => $change) {
+            $label = $labels[$key] ?? ucwords(str_replace('_', ' ', $key));
+
+            $from = $change['from'] ?? null;
+            $to   = $change['to']   ?? null;
+
+            if ($key === 'interested_course_template_id') {
+                $from = $from ? (\App\Models\Academic\CourseTemplate::find($from)?->name ?? "ID:{$from}") : '—';
+                $to   = $to   ? (\App\Models\Academic\CourseTemplate::find($to)?->name   ?? "ID:{$to}")   : '—';
+            } elseif ($key === 'interested_level_id') {
+                $from = $from ? (\App\Models\Academic\Level::find($from)?->name ?? "ID:{$from}") : '—';
+                $to   = $to   ? (\App\Models\Academic\Level::find($to)?->name   ?? "ID:{$to}")   : '—';
+            } elseif ($key === 'interested_sublevel_id') {
+                $from = $from ? (\App\Models\Academic\Sublevel::find($from)?->name ?? "ID:{$from}") : '—';
+                $to   = $to   ? (\App\Models\Academic\Sublevel::find($to)?->name   ?? "ID:{$to}")   : '—';
+            } elseif ($key === 'branch_id') {
+                $from = $from ? (\App\Models\Academic\Branch::find($from)?->name ?? "ID:{$from}") : '—';
+                $to   = $to   ? (\App\Models\Academic\Branch::find($to)?->name   ?? "ID:{$to}")   : '—';
+            } elseif ($key === 'owner_cs_id') {
+                $from = $from ? (\App\Models\HR\Employee::find($from)?->full_name ?? "ID:{$from}") : 'Unassigned';
+                $to   = $to   ? (\App\Models\HR\Employee::find($to)?->full_name   ?? "ID:{$to}")   : 'Unassigned';
+            } else {
+                $from = $from === null || $from === '' ? '—' : (string) $from;
+                $to   = $to   === null || $to   === '' ? '—' : (string) $to;
+            }
+
+            $enriched[] = [
+                'label' => $label,
+                'from'  => $from,
+                'to'    => $to,
+            ];
+        }
+
+        return $enriched;
     }
 
     /*

@@ -35,17 +35,24 @@ class LeadHistory extends Model
 	protected $casts = [
 		'lead_id' => 'integer',
 		'changed_by' => 'integer',
-		'changed_at' => 'datetime'
+		'changed_at' => 'datetime',
+        'changed_fields' => 'array'
 	];
 
-	protected $fillable = [
-		'lead_id',
-		'old_status',
-		'new_status',
-		'notes',
-		'changed_by',
-		'changed_at'
-	];
+    protected $fillable = [
+        'lead_id',
+        'action_type',      
+        'old_status',
+        'new_status',
+        'changed_fields',   
+        'reason',           
+        'call_outcome',     
+        'ip_address',       
+        'user_agent',       
+        'notes',
+        'changed_by',
+        'changed_at',
+    ];
 
 	public function employee()
 	{

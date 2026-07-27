@@ -6,6 +6,7 @@ use App\Models\Leads\Lead;
 use App\Models\Leads\LeadHistory;
 use App\Models\Leads\LeadCallLog;
 use App\Interfaces\LeadRepositoryInterface;
+use App\Services\LeadActivityLogger;
 use Illuminate\Support\Facades\Auth;
 
 class LeadService
@@ -17,9 +18,6 @@ class LeadService
         $this->leadRepository = $leadRepository;
     }
 
-    // ─────────────────────────────────────────
-    // Helper — get current employee_id safely
-    // ─────────────────────────────────────────
     private function currentEmployeeId(): int
     {
         $employee = Auth::user()->employee; // hasOne → single model
@@ -27,11 +25,7 @@ class LeadService
         return $employee->employee_id;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Create Lead
-    |--------------------------------------------------------------------------
-    */
+
     public function createLead(array $data): Lead
     {
         $data['owner_cs_id'] = $this->currentEmployeeId();
@@ -81,6 +75,19 @@ class LeadService
             'notes'         => 'Call scheduled',
         ]);
 
+        $lead->update([
+            'status'       => 'Scheduled_Call',
+            'next_call_at' => $datetime,
+        ]);
+
+        LeadActivityLogger::for($lead)
+            ->action('Call_Logged')
+            ->callOutcome('Follow_Up_Scheduled')
+            ->status($lead->status, 'Scheduled_Call')
+            ->notes($notes)
+            ->reason("Call scheduled for {$datetime}")
+            ->record();
+
         $this->logHistory($lead, $lead->status, 'Scheduled_Call', "Call scheduled for {$datetime}");
 
         return $lead;
@@ -105,6 +112,19 @@ class LeadService
             'outcome'       => 'Call_Again',
             'notes'         => 'Call again scheduled',
         ]);
+
+        $lead->update([
+            'status'       => 'Call_Again',
+            'next_call_at' => $datetime,
+        ]);
+
+        LeadActivityLogger::for($lead)
+            ->action('Call_Logged')
+            ->callOutcome('Call_Again')
+            ->status($lead->status, 'Call_Again')
+            ->notes($notes)
+            ->reason("Call again scheduled for {$datetime}")
+            ->record();
 
         $this->logHistory($lead, $lead->status, 'Call_Again', "Call again scheduled for {$datetime}");
 
@@ -216,14 +236,20 @@ class LeadService
     */
     public function logHistory($lead, $old = null, $new = null, $note = null): void
     {
-        LeadHistory::create([
-            'lead_id'    => $lead->lead_id,
-            'old_status' => $old,
-            'new_status' => $new,
-            'notes'      => $note,
-            'changed_by' => $this->currentEmployeeId(),
-            'changed_at' => now(),
-        ]);
+        $actionType = 'Status_Changed';
+        if ($old === null && $new !== null) {
+            $actionType = 'Created';
+        } elseif ($new === 'Registered') {
+            $actionType = 'Registered';
+        } elseif ($new === 'Archived') {
+            $actionType = 'Archived';
+        }
+
+        LeadActivityLogger::for($lead)
+            ->action($actionType)
+            ->status($old, $new)
+            ->notes($note)
+            ->record();
     }
 
     /*

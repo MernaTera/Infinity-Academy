@@ -120,7 +120,17 @@ class InstallmentApprovalController extends Controller
                 'approved_by_admin_id' => $adminEmployee?->employee_id,
                 'approved_at'          => now(),
             ]);
-
+            $leadEnrollment = \App\Models\Enrollment\Enrollment::find($enrollment->enrollment_id);
+            if ($leadEnrollment?->lead_id) {
+                $lead = \App\Models\Leads\Lead::find($leadEnrollment->lead_id);
+                if ($lead) {
+                    \App\Services\LeadActivityLogger::for($lead)
+                        ->action('Registered')
+                        ->status($lead->status, 'Registered')
+                        ->reason("Admin approved installment plan · Enrollment #{$enrollment->enrollment_id}")
+                        ->record();
+                }
+            }
             // ── Notify CS via real-time ─────────────────────────────
             $csEmployeeId = $log->request_by_cs_id;
             if ($csEmployeeId) {
@@ -202,6 +212,18 @@ class InstallmentApprovalController extends Controller
                 'approved_at'          => now(),
                 'rejection_note'       => $studentName . '||' . $request->reason,
             ]);
+
+            $leadEnrollment = \App\Models\Enrollment\Enrollment::find($enrollment->enrollment_id);
+            if ($leadEnrollment?->lead_id) {
+                $lead = \App\Models\Leads\Lead::find($leadEnrollment->lead_id);
+                if ($lead) {
+                    \App\Services\LeadActivityLogger::for($lead)
+                        ->action('Note_Added')
+                        ->status($lead->status, 'Registered')
+                        ->reason("Admin Rejected installment plan · Enrollment #{$enrollment->enrollment_id} · Reason: {$request->reason}")
+                        ->record();
+                }
+            }
 
             // ── 8. Notify CS via real-time ─────────────────────────
             $csEmployeeId = $log->request_by_cs_id;
