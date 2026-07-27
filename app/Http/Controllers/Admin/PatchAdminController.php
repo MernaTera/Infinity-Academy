@@ -181,6 +181,58 @@ class PatchAdminController extends Controller
         return back()->with('success', 'Patch deleted successfully.');
     }
 
+    // ── Extend Date ───────────────────────────────────────────────
+    public function extendDate(Request $request, $id)
+    {
+        $patch = Patch::findOrFail($id);
+
+        if ($patch->status === 'Closed') {
+            return back()->with('error', 'Cannot modify a closed patch.');
+        }
+
+        $request->validate([
+            'end_date' => 'required|date|after:' . $patch->start_date,
+        ]);
+
+        $newEnd = \Carbon\Carbon::parse($request->end_date);
+
+        $latestCourseEnd = \App\Models\Academic\CourseInstance::where('patch_id', $id)
+            ->whereIn('status', ['Active', 'Upcoming', 'Completed'])
+            ->max('end_date');
+
+        if ($latestCourseEnd && $newEnd->lt(\Carbon\Carbon::parse($latestCourseEnd))) {
+            $blockingCourse = \App\Models\Academic\CourseInstance::with('courseTemplate')
+                ->where('patch_id', $id)
+                ->where('end_date', $latestCourseEnd)
+                ->first();
+
+            $courseName = $blockingCourse?->courseTemplate?->name ?? 'A course';
+            $formatted  = \Carbon\Carbon::parse($latestCourseEnd)->format('d M Y');
+
+            return back()->with(
+                'error',
+                "Cannot shorten patch — \"{$courseName}\" ends on {$formatted}. New end date must be on or after that to keep the course calendar valid."
+            );
+        }
+
+        $overlap = Patch::where('branch_id', $patch->branch_id)
+            ->where('patch_id', '!=', $id)
+            ->where('status', '!=', 'Closed')
+            ->where('start_date', '<=', $newEnd->toDateString())
+            ->where('end_date',   '>=', $patch->start_date)
+            ->exists();
+
+        if ($overlap) {
+            return back()->with('error', 'New end date conflicts with another patch in the same branch.');
+        }
+
+        $oldEnd = $patch->end_date;
+        $patch->update(['end_date' => $newEnd->toDateString()]);
+
+        $action = $newEnd->gt(\Carbon\Carbon::parse($oldEnd)) ? 'extended' : 'shortened';
+        return back()->with('success', "Patch {$action} successfully to " . $newEnd->format('d M Y') . ".");
+    }
+
     // ── Status ────────────────────────────────────────────────────
     public function updateStatus(Request $request, $id)
     {

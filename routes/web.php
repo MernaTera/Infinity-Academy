@@ -288,7 +288,8 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::patch('/patches/time-slots/{id}',    [PatchAdminController::class, 'toggleTimeSlot'])->name('patches.timeslots.toggle');
         Route::post('/patches/break-slots',         [PatchAdminController::class, 'storeBreakSlot'])->name('patches.breakslots.store');
         Route::patch('/patches/break-slots/{id}',   [PatchAdminController::class, 'toggleBreakSlot'])->name('patches.breakslots.toggle');
-
+        Route::patch('/patches/{id}/extend',        [PatchAdminController::class, 'extendDate'])->name('patches.extend');
+        
         //Time slots and break slots
         Route::get('/slots', [PatchAdminController::class, 'slotsIndex'])->name('slots.index');
         Route::put('/patches/time-slots/{id}',  [PatchAdminController::class, 'updateTimeSlot'])->name('patches.timeslots.update');

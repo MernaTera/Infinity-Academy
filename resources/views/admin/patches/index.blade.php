@@ -239,6 +239,19 @@
                             <button type="submit" class="btn-sm btn-close">✕ Delete</button>
                         </form>
                         @endif
+                        <button type="button" 
+                                onclick="openExtendModal({{ $patch->patch_id }}, '{{ $patch->name }}', '{{ $patch->end_date }}', '{{ $patch->start_date }}')"
+                                style="padding:6px 12px;background:transparent;border:1px solid rgba(27,79,168,0.25);
+                                    border-radius:5px;color:var(--blue);font-family:'DM Sans',sans-serif;
+                                    font-size:10px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;
+                                    font-weight:600;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="16" rx="2"/>
+                                <line x1="12" y1="10" x2="12" y2="16"/>
+                                <line x1="9" y1="13" x2="15" y2="13"/>
+                            </svg>
+                            Adjust End Date
+                        </button>
                     </div>
                 </div>
                 @empty
@@ -369,6 +382,102 @@ document.getElementById('editPatchModal').addEventListener('click', function(e) 
 <script>
 document.getElementById('newPatchModal').addEventListener('click', function(e) {
     if (e.target === this) this.classList.remove('show');
+});
+</script>
+{{-- ══════════════ EXTEND END DATE MODAL ══════════════ --}}
+<div id="extendModal" style="display:none;position:fixed;inset:0;background:rgba(10,20,40,0.5);
+     backdrop-filter:blur(4px);z-index:9999;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:#fff;border-radius:10px;width:100%;max-width:480px;overflow:hidden;
+                box-shadow:0 20px 60px rgba(10,20,40,0.3);">
+        <div style="padding:18px 22px;border-bottom:1px solid rgba(27,79,168,0.09);
+                    background:linear-gradient(135deg,#F5911E,#FFB347);color:#fff;">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;">
+                Adjust Patch End Date
+            </div>
+            <div id="extendPatchName" style="font-size:11px;opacity:0.9;margin-top:3px;letter-spacing:0.5px;"></div>
+        </div>
+
+        <form id="extendForm" method="POST">
+            @csrf @method('PATCH')
+            <div style="padding:20px 22px;">
+                <div style="background:rgba(245,145,30,0.08);border-left:3px solid #F5911E;
+                            padding:10px 14px;border-radius:4px;margin-bottom:16px;font-size:11.5px;
+                            color:#C47010;line-height:1.5;">
+                    <strong>Notice:</strong> You can extend or shorten the patch end date. New date must be after the last scheduled course session.
+                </div>
+
+                <label style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+                              color:#7A8A9A;font-weight:600;margin-bottom:6px;display:block;">
+                    Current End Date
+                </label>
+                <div id="currentEndDate" style="font-family:'Bebas Neue',sans-serif;font-size:20px;
+                     letter-spacing:2px;color:#1A2A4A;margin-bottom:16px;"></div>
+
+                <label style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
+                              color:#7A8A9A;font-weight:600;margin-bottom:6px;display:block;">
+                    New End Date <span style="color:#DC2626;">*</span>
+                </label>
+                <input type="date" name="end_date" id="newEndDate" required
+                       style="width:100%;padding:11px 14px;background:#F8F6F2;
+                              border:1px solid rgba(27,79,168,0.15);border-radius:6px;
+                              font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;
+                              outline:none;transition:border-color 0.2s;">
+                <div id="extendHint" style="font-size:10px;color:#7A8A9A;margin-top:6px;letter-spacing:0.3px;"></div>
+            </div>
+
+            <div style="padding:14px 22px;border-top:1px solid rgba(27,79,168,0.09);
+                        display:flex;justify-content:flex-end;gap:8px;background:#FAFAF7;">
+                <button type="button" onclick="closeExtendModal()"
+                        style="padding:9px 18px;background:transparent;border:1px solid rgba(27,79,168,0.15);
+                               border-radius:5px;color:#7A8A9A;font-family:'DM Sans',sans-serif;
+                               font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;
+                               font-weight:600;">
+                    Cancel
+                </button>
+                <button type="submit"
+                        style="padding:10px 22px;background:#F5911E;border:none;border-radius:5px;
+                               color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;
+                               letter-spacing:3px;cursor:pointer;">
+                    Save
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openExtendModal(patchId, patchName, currentEnd, startDate) {
+    document.getElementById('extendPatchName').textContent = patchName;
+    document.getElementById('extendForm').action = `/admin/patches/${patchId}/extend`;
+
+    const dateInput = document.getElementById('newEndDate');
+    dateInput.value = currentEnd;
+    dateInput.min = new Date(new Date(startDate).getTime() + 86400000).toISOString().split('T')[0];
+
+    const formatted = new Date(currentEnd).toLocaleDateString('en-GB', {
+        day: '2-digit', month: 'short', year: 'numeric'
+    });
+    document.getElementById('currentEndDate').textContent = formatted;
+
+    document.getElementById('extendHint').innerHTML =
+        `Patch started on <strong style="color:#1A2A4A;">${new Date(startDate).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})}</strong>. ` +
+        `You can extend or shorten as long as no session is left unscheduled.`;
+
+    document.getElementById('extendModal').style.display = 'flex';
+}
+
+function closeExtendModal() {
+    document.getElementById('extendModal').style.display = 'none';
+}
+
+document.getElementById('extendModal').addEventListener('click', function(e) {
+    if (e.target === this) closeExtendModal();
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && document.getElementById('extendModal').style.display === 'flex') {
+        closeExtendModal();
+    }
 });
 </script>
 @endsection
