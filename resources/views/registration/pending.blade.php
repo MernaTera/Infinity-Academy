@@ -28,7 +28,6 @@
 
     .pending-body { padding: 48px 40px 40px; }
 
-    /* Pulse icon */
     .pulse-wrap {
         width: 80px; height: 80px; border-radius: 50%;
         background: rgba(245,145,30,0.07);
@@ -65,7 +64,6 @@
         margin-bottom: 28px;
     }
 
-    /* Status dots */
     .status-dots {
         display: flex; justify-content: center; align-items: center; gap: 8px;
         margin-bottom: 28px;
@@ -110,7 +108,6 @@
         font-size: 10px; color: #AAB8C8; margin-top: 16px; letter-spacing: 0.5px;
     }
 
-    /* ── SUCCESS STATE ── */
     .state-success { display: none; }
     .state-success .pulse-wrap { background: rgba(5,150,105,0.07); border-color: rgba(5,150,105,0.2); }
     .state-success .pulse-ring { border-color: rgba(5,150,105,0.15); }
@@ -118,7 +115,6 @@
     .state-success .pending-title { color: #059669; }
     .state-success .dot { background: #059669; }
 
-    /* ── REJECTED STATE ── */
     .state-rejected { display: none; }
     .state-rejected .pulse-wrap { background: rgba(220,38,38,0.07); border-color: rgba(220,38,38,0.2); }
     .state-rejected .pulse-ring { border-color: rgba(220,38,38,0.15); animation: none; }
@@ -238,13 +234,21 @@
 const enrollmentId = {{ $enrollment->enrollment_id }};
 let pollInterval;
 let pollCount = 0;
+const MAX_POLLS = 90; 
 
 function startPolling() {
-    pollInterval = setInterval(checkStatus, 10000); // every 10s
+    pollInterval = setInterval(checkStatus, 10000); 
 }
 
 async function checkStatus() {
     pollCount++;
+
+    if (pollCount > MAX_POLLS) {
+        clearInterval(pollInterval);
+        showTimeout();
+        return;
+    }
+
     const statusEl = document.getElementById('pollStatus');
     if (statusEl) statusEl.textContent = `Checking status... (check #${pollCount})`;
 
@@ -252,11 +256,22 @@ async function checkStatus() {
         const res  = await fetch(`/registration/check-status/${enrollmentId}`);
         const data = await res.json();
 
-        if (data.status === 'Active') {
+        if (data.approval_status === 'Approved') {
             showSuccess();
-        } else if (data.status === 'Cancelled' && data.approval_status === 'Rejected') {
-            showRejected(data.rejection_note);
+            return;
         }
+
+        if (data.approval_status === 'Rejected') {
+            showRejected(data.rejection_note);
+            return;
+        }
+
+        if (data.status === 'Cancelled') {
+            showRejected(data.rejection_note || 'Registration was cancelled.');
+            return;
+        }
+
+
     } catch (e) {
         if (statusEl) statusEl.textContent = 'Connection error — retrying...';
     }
@@ -268,7 +283,6 @@ function showSuccess() {
     document.getElementById('stateSuccess').style.display  = 'block';
     document.getElementById('stateRejected').style.display = 'none';
 
-    // Redirect after 3 seconds
     setTimeout(() => {
         window.location.href = '{{ route("leads.index") }}?approved=1';
     }, 3000);
@@ -291,10 +305,29 @@ function showRejected(note) {
     }, 5000);
 }
 
-// Start polling on page load
+function showTimeout() {
+    const statusEl = document.getElementById('pollStatus');
+    if (statusEl) {
+        statusEl.innerHTML = `
+            <div style="color:#F5911E;font-weight:600;margin-top:12px;">
+                Still waiting for admin approval...
+            </div>
+            <div style="font-size:11px;color:#7A8A9A;margin-top:6px;">
+                You'll receive a notification once decided. Feel free to return to your leads.
+            </div>
+            <a href="{{ route('leads.index') }}"
+               style="display:inline-block;margin-top:14px;padding:8px 20px;
+                      background:#1B4FA8;color:#fff;text-decoration:none;
+                      border-radius:6px;font-size:11px;letter-spacing:1.5px;
+                      text-transform:uppercase;font-weight:600;">
+                Back to Leads
+            </a>
+        `;
+    }
+}
+
 startPolling();
 
-// Also check immediately after 2 seconds (in case already approved)
 setTimeout(checkStatus, 2000);
 </script>
 
