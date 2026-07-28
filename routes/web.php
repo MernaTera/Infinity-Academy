@@ -113,6 +113,7 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::get('/registration/pending/{enrollmentId}', [RegistrationController::class, 'pending'])->name('registration.pending');
         Route::get('/near-completion', [StudentCareController::class, 'nearCompletion'])->name('near-completion');
         Route::get('/enrollments/{id}/invoice', [RegistrationController::class, 'showInvoice'])->name('cs.enrollment.invoice');
+        Route::get('/leads/{leadId}/invoice', [\App\Http\Controllers\LeadController::class, 'showInvoice'])->name('leads.invoice');
         
         Route::get('/refunds',  [RefundController::class, 'index'])->name('refunds.index');
         Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');

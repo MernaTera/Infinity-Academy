@@ -322,6 +322,6 @@ class RegistrationController extends Controller
             'installmentSchedules',
         ])->findOrFail($id);
 
-        return view('cs.enrollment-invoice', compact('enrollment'));
+        return view('registration.invoice', compact('enrollment'));
     }
 }
