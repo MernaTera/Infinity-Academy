@@ -359,7 +359,18 @@
                                             <td style="font-family:monospace;color:{{ $tx['type']==='Refund'?'#DC2626':'#059669' }}">
                                                 {{ $tx['type']==='Refund'?'-':'+' }}{{ number_format($tx['amount']) }} LE
                                             </td>
-                                            <td style="color:#AAB8C8">{{ $tx['method'] }}</td>
+                                            <td style="color:#AAB8C8">
+                                                @if(($tx['method_count'] ?? 1) > 1 && !empty($tx['methods_breakdown']))
+                                                    <div style="font-size:11px;color:#7A8A9A;font-weight:600;">Multi-method</div>
+                                                    @foreach($tx['methods_breakdown'] as $mb)
+                                                        <div style="font-size:10px;color:#AAB8C8;">
+                                                            {{ str_replace('_', ' ', $mb['method']) }}: <span style="font-family:monospace;">{{ number_format($mb['amount']) }} LE</span>
+                                                        </div>
+                                                    @endforeach
+                                                @else
+                                                    {{ str_replace('_', ' ', $tx['method']) }}
+                                                @endif
+                                            </td>
                                             <td style="font-size:11px;color:#7A8A9A">{{ $tx['notes'] ?? '—' }}</td>
                                             <td style="font-size:11px;color:#AAB8C8">{{ $tx['date'] }}</td>
                                         </tr>
@@ -367,7 +378,7 @@
                                         </tbody>
                                     </table>
                                     @else
-                                    <div style="font-size:11px;color:#AAB8C8;padding:8px 0">No payment history.</div>
+                                    <div style="font-size:11px;color:#AAB8C8">No history available.</div>
                                     @endif
                                 </div>
 

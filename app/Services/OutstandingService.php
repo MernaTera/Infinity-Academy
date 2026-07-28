@@ -4,9 +4,6 @@ namespace App\Services;
 
 use App\Models\Enrollment\Enrollment;
 use App\Models\HR\Employee;
-use Illuminate\Support\Facades\DB;
-use App\Models\Finance\FinancialTransaction;
-use App\Models\Finance\RevenueSplit;
 
 class OutstandingService
 {
@@ -22,29 +19,30 @@ class OutstandingService
         $enrollments = $this->getEnrollments($employee);
 
         return [
-            'rows'        => $this->buildRows($enrollments),
-            'summary'     => $this->buildSummary($enrollments),
+            'rows'    => $this->buildRows($enrollments),
+            'summary' => $this->buildSummary($enrollments),
         ];
     }
-
 
     private function getEnrollments(Employee $employee)
     {
         return Enrollment::with([
                 'student',
                 'courseTemplate',
+                'patch',                             
+                'courseInstance.courseTemplate',
+                'courseInstance.patch',              
                 'paymentPlan',
                 'installmentSchedules' => fn($q) => $q->orderBy('due_date'),
-                'restrictionLogs' => fn($q) => $q->whereNull('released_at')->orderByDesc('triggered_at'),
+                'restrictionLogs'      => fn($q) => $q->whereNull('released_at')->orderByDesc('triggered_at'),
                 'financialTransactions',
                 'createdByCs',
+                'waitingLists',                      
             ])
             ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
             ->whereNotNull('final_price')
-            ->get()
-            ->filter(fn($e) => $this->calculator->getRemaining($e) >= 0);
+            ->get();
     }
-
 
     private function buildRows($enrollments): \Illuminate\Support\Collection
     {
@@ -54,7 +52,6 @@ class OutstandingService
             $paid      = $data['net_paid'];
             $total     = $data['total_fees'];
             $remaining = $data['remaining_balance'];
-            $remaining = $remaining < 0.02 ? 0 : round($remaining, 2);
 
             $nextInstallment = $e->installmentSchedules
                 ->whereIn('status', ['Pending', 'Overdue'])
@@ -66,111 +63,136 @@ class OutstandingService
                 ->pluck('transaction_id')
                 ->filter()
                 ->toArray();
-                
 
             $activeRestriction = $e->restrictionLogs->first();
             $isRestricted      = $e->restriction_flag || $activeRestriction;
 
             $daysOverdue = null;
-            if ($nextInstallment) {
-                $dueDate = $nextInstallment->due_date;
-                if ($dueDate) {
-                    $due   = \Carbon\Carbon::parse($dueDate)->startOfDay();
-                    $today = now()->startOfDay();
-                    if ($today->gt($due)) {
-                        $daysOverdue = (int) abs($today->diffInDays($due));
-                    }
+            if ($nextInstallment && $nextInstallment->due_date) {
+                $due   = \Carbon\Carbon::parse($nextInstallment->due_date)->startOfDay();
+                $today = now()->startOfDay();
+                if ($today->gt($due)) {
+                    $daysOverdue = (int) abs($today->diffInDays($due));
                 }
             }
+
+            $patchName = $this->resolvePatchName($e);
+
+            $groupedTransactions = $this->groupTransactions($e, $scheduledPendingIds);
 
             return [
                 'enrollment_id'    => $e->enrollment_id,
                 'student_name'     => $e->student?->full_name ?? '—',
-                'course'           => $e->courseTemplate?->name ?? '—',
+                'course'           => $e->courseTemplate?->name ?? $e->courseInstance?->courseTemplate?->name ?? '—',
+                'patch'            => $patchName,
                 'payment_plan'     => $e->paymentPlan?->name ?? '—',
                 'total'            => $total,
                 'paid'             => $paid,
                 'remaining'        => $remaining,
-                'is_finished'     => $remaining == 0,
+                'is_finished'      => $remaining == 0,
                 'next_due_date'    => $nextInstallment?->due_date?->format('d M Y'),
                 'next_due_amount'  => $nextInstallment?->amount,
                 'has_pending_installment' => $e->installmentSchedules
                                             ->whereIn('status', ['Pending', 'Overdue'])
                                             ->isNotEmpty(),
                 'is_restricted'    => $isRestricted,
-                'restriction_reason'=> $activeRestriction?->reason ?? null,
+                'restriction_reason' => $activeRestriction?->reason ?? null,
                 'days_overdue'     => $daysOverdue,
                 'cs_name'          => $e->createdByCs?->full_name ?? '—',
                 'enrollment_type'  => $e->enrollment_type,
-                'installments' => $e->installmentSchedules->map(fn($i) => [
+                'installments'     => $e->installmentSchedules->map(fn($i) => [
                     'number'   => $i->installment_number,
                     'amount'   => $i->amount,
                     'due_date' => $i->due_date?->format('d M Y'),
                     'status'   => $i->status,
                     'paid_at'  => $i->paid_at?->format('d M Y'),
                 ])->toArray(),
-                'transactions' => $e->financialTransactions
-                    ->filter(fn($t) =>
-                        in_array($t->transaction_type, ['Payment', 'Refund']) ||
-                        ($t->transaction_type === 'Installment' && !in_array($t->transaction_id, $scheduledPendingIds))
-                    )
-                    ->map(fn($t) => [
-                        'type'     => $t->transaction_type,
-                        'category' => $t->transaction_category,
-                        'amount' => $t->amount,
-                        'method' => $t->payment_method,
-                        'notes'    => $t->notes, 
-                        'date'   => $t->created_at?->format('d M Y'),
-                    ])->toArray(),
+                'transactions' => $groupedTransactions,
             ];
         })->values();
     }
 
+    private function groupTransactions($enrollment, array $scheduledPendingIds): array
+    {
+        $relevantTxs = $enrollment->financialTransactions
+            ->filter(fn($t) =>
+                in_array($t->transaction_type, ['Payment', 'Refund']) ||
+                ($t->transaction_type === 'Installment' && !in_array($t->transaction_id, $scheduledPendingIds))
+            );
+
+        $grouped = $relevantTxs->groupBy(function ($t) {
+            $minute = $t->created_at?->format('Y-m-d H:i') ?? '—';
+            return "{$t->transaction_type}::{$t->transaction_category}::{$minute}";
+        });
+
+        return $grouped->map(function ($group) {
+            $first  = $group->first();
+            $total  = $group->sum('amount');
+            $count  = $group->count();
+
+            $methodsBreakdown = null;
+            if ($count > 1) {
+                $methodsBreakdown = $group
+                    ->groupBy('payment_method')
+                    ->map(fn($mgroup, $method) => [
+                        'method' => $method,
+                        'amount' => $mgroup->sum('amount'),
+                    ])
+                    ->values()
+                    ->toArray();
+            }
+
+            return [
+                'type'              => $first->transaction_type,
+                'category'          => $first->transaction_category,
+                'amount'            => $total,
+                'method'            => $count > 1 ? 'Multi' : $first->payment_method,
+                'methods_breakdown' => $methodsBreakdown,
+                'method_count'      => $count,
+                'notes'             => $first->notes,
+                'date'              => $first->created_at?->format('d M Y'),
+            ];
+        })->sortByDesc('date')->values()->toArray();
+    }
+
+
+    private function resolvePatchName($enrollment): string
+    {
+        if ($enrollment->patch?->name) {
+            return $enrollment->patch->name;
+        }
+        if ($enrollment->courseInstance?->patch?->name) {
+            return $enrollment->courseInstance->patch->name;
+        }
+        $wl = $enrollment->waitingLists?->first();
+        if ($wl) {
+            if ($wl->requested_patch_id) {
+                $reqPatch = \App\Models\Academic\Patch::find($wl->requested_patch_id);
+                if ($reqPatch) {
+                    $suffix = $wl->preferred_type === 'Next_Patch' ? ' · Next Patch' : '';
+                    return $reqPatch->name . $suffix;
+                }
+            }
+            if ($wl->preferred_type === 'Next_Patch') {
+                return 'Next Patch (TBD)';
+            }
+            if ($wl->preferred_type === 'Specific_Date' && $wl->preferred_start_date) {
+                return 'Custom Start · ' . \Carbon\Carbon::parse($wl->preferred_start_date)->format('d M Y');
+            }
+        }
+        return '—';
+    }
 
     private function buildSummary($enrollments): array
     {
         $rows = $this->buildRows($enrollments);
 
         return [
-            'total_outstanding' => $rows->sum('remaining'),
-            'total_students'    => $rows->count(),
-            'restricted_count'  => $rows->where('is_restricted', true)->count(),
-            'overdue_count'     => $rows->whereNotNull('days_overdue')->count(),
-            'finished_count'    => $rows->where('is_finished', true)->count(), 
+            'total_outstanding' => $rows->where('is_finished', false)->sum('remaining'),
+            'total_students'    => $rows->where('is_finished', false)->count(),
+            'restricted_count'  => $rows->where('is_restricted', true)->where('is_finished', false)->count(),
+            'overdue_count'     => $rows->whereNotNull('days_overdue')->where('is_finished', false)->count(),
+            'finished_count'    => $rows->where('is_finished', true)->count(),
         ];
     }
-
-    private function getPaid(Enrollment $enrollment): float
-    {
-        $paidInstallmentIds = $enrollment->installmentSchedules
-            ->where('status', 'Paid')
-            ->pluck('transaction_id')
-            ->filter()
-            ->toArray();
-
-        return (float) $enrollment->financialTransactions
-                ->where('transaction_type', 'Payment')
-                ->sum('amount') // ✅ كل categories
-            + (float) $enrollment->financialTransactions
-                ->where('transaction_type', 'Installment')
-                ->whereIn('transaction_id', $paidInstallmentIds)
-                ->sum('amount')
-            - (float) $enrollment->financialTransactions
-                ->where('transaction_type', 'Refund')
-                ->sum('amount');
-    }
-
-    private function getTotal(Enrollment $enrollment): float
-    {
-        return (float) $enrollment->final_price
-            + (float) $enrollment->financialTransactions->where('transaction_category', 'Material')->sum('amount')
-            + (float) $enrollment->financialTransactions->where('transaction_category', 'Test')->sum('amount');
-    }
-
-    private function getRemaining(Enrollment $enrollment): float
-    {
-        $remaining = $this->getTotal($enrollment) - $this->getPaid($enrollment);
-        return $remaining < 0.02 ? 0 : round($remaining, 2); 
-    }
-
 }

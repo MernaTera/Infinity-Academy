@@ -19,8 +19,8 @@ class OutstandingAdminController extends Controller
 
         $allEnrollments = Enrollment::with([
             'student',
-            'courseTemplate',  
-            'patch',           
+            'courseTemplate',
+            'patch',
             'courseInstance.courseTemplate',
             'courseInstance.patch',
             'createdByCs',
@@ -29,6 +29,7 @@ class OutstandingAdminController extends Controller
             'installmentSchedules' => fn($q) => $q->with('transaction')->orderBy('due_date'),
             'restrictionLogs'      => fn($q) => $q->whereNull('released_at'),
             'financialTransactions',
+            'waitingLists',   
         ])
         ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
         ->get();

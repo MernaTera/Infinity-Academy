@@ -32,18 +32,13 @@ class AdminDashboardController extends Controller
         [$from, $to]         = $this->periodRange($period, $currentPatch);
         [$prevFrom, $prevTo] = $this->previousPeriodRange($period, $currentPatch, $from, $to);
 
-        // ═══════════════════════════════════════════════════════════
-        // Helper closures
-        // ═══════════════════════════════════════════════════════════
-        $applyFtPeriod = function ($q) use ($period, $currentPatch, $from, $to) {
-            if ($period === 'patch' && $currentPatch) {
-                return $q->where('patch_id', $currentPatch->patch_id);
-            }
+
+        $applyFtPeriod = function ($q) use ($from, $to) {
             if ($from) return $q->whereBetween('created_at', [$from, $to]);
             return $q;
         };
 
-        $applyFtPeriodPrev = function ($q) use ($period, $currentPatch, $prevFrom, $prevTo) {
+        $applyFtPeriodPrev = function ($q) use ($prevFrom, $prevTo) {
             if ($prevFrom) return $q->whereBetween('created_at', [$prevFrom, $prevTo]);
             return $q;
         };
@@ -53,11 +48,6 @@ class AdminDashboardController extends Controller
             return $q;
         };
 
-        // ═══════════════════════════════════════════════════════════
-        // TIER 1: EXECUTIVE OVERVIEW
-        // ═══════════════════════════════════════════════════════════
-
-        // Period Revenue (current + previous for comparison)
         $periodRevenue = $applyFtPeriod(
             FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
         )->sum('amount');
@@ -70,7 +60,6 @@ class AdminDashboardController extends Controller
             ? round(($periodRevenue - $prevPeriodRevenue) / $prevPeriodRevenue * 100)
             : ($periodRevenue > 0 ? 100 : 0);
 
-        // Period Enrollments
         $periodEnrollments = Enrollment::when($period === 'patch' && $currentPatch,
                 fn($q) => $q->where('patch_id', $currentPatch->patch_id))
             ->when($period !== 'patch' && $from,
@@ -85,10 +74,8 @@ class AdminDashboardController extends Controller
             ? round(($periodEnrollments - $prevPeriodEnrollments) / $prevPeriodEnrollments * 100)
             : ($periodEnrollments > 0 ? 100 : 0);
 
-        // Total Revenue (all-time)
         $totalRevenue = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])->sum('amount');
 
-        // Outstanding Balance — using BalanceCalculator for consistency
         $balanceCalc = app()->make(BalanceCalculator::class);
         $allActiveEnrollments = Enrollment::with(['financialTransactions','installmentSchedules'])
             ->whereIn('status', ['Active', 'Restricted', 'Waiting'])
@@ -100,27 +87,22 @@ class AdminDashboardController extends Controller
             return max(0, (float) $result['remaining_balance']);
         });
 
-        // Total Refunded (period)
         $totalRefunded = $applyFtPeriod(
             FinancialTransaction::where('transaction_type', 'Refund')
         )->sum('amount');
 
-        // ═══════════════════════════════════════════════════════════
-        // TIER 2: ACTION QUEUE — Live snapshot
-        // ═══════════════════════════════════════════════════════════
+     
         $pendingInstallments = InstallmentSchedule::where('status', 'Pending')->count();
         $overdueInstallments = InstallmentSchedule::where('status', 'Overdue')->count();
         $pendingApprovals    = \App\Models\Finance\InstallmentApprovalLog::where('status', 'Pending')->count();
         $pendingRefunds      = RefundRequest::where('status', 'Pending')->count();
         $pendingReports      = Report::where('status', 'Submitted')->count();
 
-        // Overdue reports (past deadline)
         $overdueReports = Report::whereIn('status', ['Draft'])
             ->orWhere(function($q) {
                 $q->whereNull('status');
             })->count();
 
-        // Expiring postponements (within 7 days)
         $expiringPostponements = Postponement::where('status', 'Active')
             ->where('expected_return_date', '<=', now()->addDays(7))
             ->where('expected_return_date', '>=', now())
@@ -130,41 +112,29 @@ class AdminDashboardController extends Controller
             ->where('updated_at', '>=', now()->subDays(7))
             ->count();
 
-        // Overall action queue score (for badge)
         $totalActions = $overdueInstallments + $pendingApprovals + $pendingRefunds + $pendingReports + $expiringPostponements;
 
-        // ═══════════════════════════════════════════════════════════
-        // TIER 3: FINANCIAL BREAKDOWN
-        // ═══════════════════════════════════════════════════════════
 
-        // Payment methods (FIXED — no double counting)
         $dpMethods = $applyDatePeriod(DB::table('deposit_payment'))
             ->select('method as payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
             ->groupBy('method')->get()->keyBy('payment_method');
 
+
         $ftMethods = $applyFtPeriod(
             DB::table('financial_transaction')
-                ->where(function ($q) {
-                    $q->where('transaction_type', 'Installment')
-                      ->orWhere(function ($q2) {
-                          $q2->where('transaction_type', 'Payment')
-                             ->where('transaction_category', '!=', 'Course');
-                      });
-                })
+                ->whereIn('transaction_type', ['Payment', 'Installment'])
         )
         ->select('payment_method', DB::raw('SUM(amount) as total'), DB::raw('COUNT(*) as count'))
         ->groupBy('payment_method')->get()->keyBy('payment_method');
 
-        $cashRevenue     = ($dpMethods['Cash']?->total ?? 0)          + ($ftMethods['Cash']?->total ?? 0);
-        $cashCount       = ($dpMethods['Cash']?->count ?? 0)          + ($ftMethods['Cash']?->count ?? 0);
-        $instapayRevenue = ($dpMethods['Instapay']?->total ?? 0)      + ($ftMethods['Transfer']?->total ?? 0);
-        $instapayCount   = ($dpMethods['Instapay']?->count ?? 0)      + ($ftMethods['Transfer']?->count ?? 0);
-        $vodafoneRevenue = ($dpMethods['Vodafone_Cash']?->total ?? 0) + ($ftMethods['Online']?->total ?? 0);
-        $vodafoneCount   = ($dpMethods['Vodafone_Cash']?->count ?? 0) + ($ftMethods['Online']?->count ?? 0);
-        $cardRevenue     = $ftMethods['Card']?->total ?? 0;
-        $cardCount       = $ftMethods['Card']?->count ?? 0;
-
-        // Revenue trend (last 14 days — for chart & sparkline)
+        $cashRevenue     = $ftMethods['Cash']?->total     ?? 0;
+        $cashCount       = $ftMethods['Cash']?->count     ?? 0;
+        $instapayRevenue = $ftMethods['Transfer']?->total ?? 0;    
+        $instapayCount   = $ftMethods['Transfer']?->count ?? 0;
+        $vodafoneRevenue = $ftMethods['Online']?->total   ?? 0;    
+        $vodafoneCount   = $ftMethods['Online']?->count   ?? 0;
+        $cardRevenue     = $ftMethods['Card']?->total     ?? 0;
+        $cardCount       = $ftMethods['Card']?->count     ?? 0;
         $revenueTrend = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
             ->where('created_at', '>=', now()->subDays(13)->startOfDay())
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('SUM(amount) as total'))
@@ -177,10 +147,8 @@ class AdminDashboardController extends Controller
             $trendValues[] = (float) ($revenueTrend[$d]?->total ?? 0);
         }
 
-        // Sparkline (last 7 days simple version)
         $revenueSparkline = array_slice($trendValues, -7);
 
-        // Revenue by Course (Top 6)
         $revenueByCourse = DB::table('financial_transaction as ft')
             ->join('enrollment as e', 'ft.enrollment_id', '=', 'e.enrollment_id')
             ->leftJoin('course_instance as ci', 'e.course_instance_id', '=', 'ci.course_instance_id')
@@ -198,7 +166,6 @@ class AdminDashboardController extends Controller
             ->having('name', '!=', null)
             ->orderByDesc('total')->limit(6)->get();
 
-        // Revenue by Branch
         $revenueByBranch = DB::table('financial_transaction as ft')
             ->join('branch', 'ft.branch_id', '=', 'branch.branch_id')
             ->whereIn('ft.transaction_type', ['Payment', 'Installment'])
@@ -207,9 +174,7 @@ class AdminDashboardController extends Controller
             ->select('branch.name', DB::raw('SUM(ft.amount) as total'), DB::raw('COUNT(*) as count'))
             ->groupBy('branch.name')->orderByDesc('total')->get();
 
-        // ═══════════════════════════════════════════════════════════
-        // TIER 4: ACADEMIC OPERATIONS
-        // ═══════════════════════════════════════════════════════════
+
         $activeCourses      = CourseInstance::where('status', 'Active')->count();
         $upcomingCourses    = CourseInstance::where('status', 'Upcoming')->count();
         $completedCourses   = CourseInstance::where('status', 'Completed')
@@ -219,14 +184,12 @@ class AdminDashboardController extends Controller
         $restrictedStudents = Enrollment::where('status', 'Restricted')->count();
         $waitingList        = WaitingList::where('status', 'Active')->count();
 
-        // Avg capacity — exclude 0-capacity instances
         $activeInstances = CourseInstance::where('status', 'Active')->withCount('enrollments')->get();
         $validInstances  = $activeInstances->filter(fn($i) => $i->capacity > 0);
         $avgCapacity     = $validInstances->count() > 0
             ? round($validInstances->avg(fn($i) => ($i->enrollments_count / $i->capacity) * 100))
             : 0;
 
-        // Enrollment trend (14 days)
         $enrollTrend = Enrollment::where('created_at', '>=', now()->subDays(13)->startOfDay())
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as total'))
             ->groupBy('date')->orderBy('date')->get()->keyBy('date');
@@ -238,9 +201,6 @@ class AdminDashboardController extends Controller
             $enrollValues[] = $enrollTrend[$d]?->total ?? 0;
         }
 
-        // ═══════════════════════════════════════════════════════════
-        // TIER 5: SALES & CS PERFORMANCE
-        // ═══════════════════════════════════════════════════════════
         $csEmployees = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
             ->where('status', 'Active')
             ->get()
@@ -264,7 +224,6 @@ class AdminDashboardController extends Controller
                 elseif ($from) $regQ->whereBetween('created_at', [$from, $to]);
                 $registrations = $regQ->count();
 
-                // Leads count NOW filtered by period
                 $leadsQ = Lead::where('owner_cs_id', $emp->employee_id);
                 if ($from) $leadsQ->whereBetween('created_at', [$from, $to]);
 
@@ -287,15 +246,11 @@ class AdminDashboardController extends Controller
             ->when($from, fn($q) => $q->whereBetween('updated_at', [$from, $to]))->count();
         $conversionRate = $totalLeads > 0 ? round($convertedLeads / $totalLeads * 100) : 0;
 
-        // Recent enrollments
         $recentEnrollments = Enrollment::with(['student', 'courseTemplate', 'courseInstance.courseTemplate', 'createdByCs'])
             ->when($period === 'patch' && $currentPatch, fn($q) => $q->where('patch_id', $currentPatch->patch_id))
             ->when($period !== 'patch' && $from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
             ->latest()->limit(8)->get();
 
-        // ═══════════════════════════════════════════════════════════
-        // TIER 6: WORKFORCE
-        // ═══════════════════════════════════════════════════════════
         $totalEmployees = Employee::where('status', 'Active')->count();
         $totalTeachers  = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Teacher'))
             ->where('status', 'Active')->count();
