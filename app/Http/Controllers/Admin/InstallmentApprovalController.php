@@ -121,6 +121,25 @@ class InstallmentApprovalController extends Controller
                 'approved_at'          => now(),
             ]);
 
+            $waitingMeta = $log->waiting_list_meta ? json_decode($log->waiting_list_meta, true) : null;
+            if ($waitingMeta) {
+                $waiting = \App\Models\Enrollment\WaitingList::create([
+                    'enrollment_id'           => $enrollment->enrollment_id,
+                    'requested_patch_id'      => $waitingMeta['requested_patch_id']      ?? null,
+                    'preferred_type'          => $waitingMeta['preferred_type']          ?? null,
+                    'preferred_delivery_type' => $waitingMeta['preferred_delivery_type'] ?? null,
+                    'preferred_delivery_mood' => $waitingMeta['preferred_delivery_mood'] ?? null,
+                    'preferred_start_date'    => $waitingMeta['preferred_start_date']    ?? null,
+                    'status'                  => 'Active',
+                    'notes'                   => $waitingMeta['notes']                   ?? null,
+                    'created_by_cs_id'        => $log->request_by_cs_id,
+                ]);
+
+                \DB::afterCommit(function () use ($waiting) {
+                    event(new \App\Events\WaitingListUpdated($waiting));
+                });
+            }
+
             if ($lead) {
                 $courseName = $enrollment->courseTemplate?->name 
                     ?? \App\Models\Academic\CourseTemplate::find($enrollment->course_template_id)?->name 
@@ -197,36 +216,28 @@ class InstallmentApprovalController extends Controller
             InstallmentSchedule::where('enrollment_id', $enrollmentId)->delete();
             DB::table('deposit_payment')->where('enrollment_id', $enrollmentId)->delete();
 
-            // ── 2. حذف المواد ─────────────────────────────────────────
             \App\Models\Enrollment\EnrollmentMaterial::where('enrollment_id', $enrollmentId)->delete();
 
-            // ── 3. حذف الـ placement test لو موجود ────────────────────
             if ($enrollment->placement_test_id) {
                 \App\Models\Enrollment\PlacementTest::where('test_id', $enrollment->placement_test_id)->delete();
                 $enrollment->update(['placement_test_id' => null]);
             }
 
-            // ── 4. الـ enrollment يفضل موجود بـ Cancelled ─────────────
             $enrollment->update(['status' => 'Cancelled']);
 
-            // ── 5. Lead يرجع Waiting ──────────────────────────────────
             $studentName = $enrollment->student?->full_name ?? 'student';
             $lead = Lead::where('student_id', $enrollment->student_id)->first();
             if ($lead) {
                 $studentName = $lead->full_name;
                 $lead->update([
-                    'status'     => 'Waiting',
                     'student_id' => null,
                 ]);
             }
-
-            // ── 6. Student يبقى Inactive ──────────────────────────────
             $enrollment->student?->update([
                 'is_active'     => false,
                 'global_status' => 'Inactive',
             ]);
 
-            // ── 7. Update log ─────────────────────────────────────────
             $log->update([
                 'status'               => 'Rejected',
                 'approved_by_admin_id' => $adminEmployee?->employee_id,

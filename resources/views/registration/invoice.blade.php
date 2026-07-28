@@ -403,14 +403,48 @@ document.getElementById('confirm_register_btn').addEventListener('click', async 
             btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Registered ✓</span>';
             btn.style.background = 'linear-gradient(135deg,#059669,#10B981)';
 
+            const mainForm = document.getElementById('main_form');
+            if (mainForm) {
+                mainForm.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);
+            }
+
+            const targetUrl = data.redirect || '{{ route("leads.index") }}';
+            const safeRedirect = () => window.location.href = targetUrl;
+
             const backBtn = document.getElementById('inv_close_btn_2');
-            backBtn.textContent = data.pending ? '← View Approval Status' : '← Go to Leads';
-            backBtn.onclick = () => window.location.href = data.redirect;
+            backBtn.textContent = data.pending ? '← View Approval Status' : '← Back to Leads';
+            backBtn.onclick = safeRedirect;
+
+            const xBtn = document.getElementById('inv_close_btn');
+            if (xBtn) {
+                xBtn.onclick = safeRedirect;
+            }
+
+            const backdrop = document.getElementById('invoiceModal');
+            if (backdrop) {
+                const newBackdrop = backdrop.cloneNode(true);
+                backdrop.dataset.locked = 'true';
+                backdrop.addEventListener('click', function(e) {
+                    if (e.target === this && this.dataset.locked === 'true') {
+                        safeRedirect();
+                    }
+                }, true); 
+            }
+
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && document.getElementById('invoiceModal').dataset.locked === 'true') {
+                    e.stopImmediatePropagation();
+                    safeRedirect();
+                }
+            }, true); 
+
+            if (data.pending) {
+                setTimeout(safeRedirect, 1500);
+            }
         } else if (data.redirect) {
             window.location.href = data.redirect;
 
         } else if (data.errors) {
-            // validation errors
             btn.disabled = false;
             btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Confirm &amp; Register</span>';
             alert(Object.values(data.errors).flat().join('\n'));
@@ -423,7 +457,6 @@ document.getElementById('confirm_register_btn').addEventListener('click', async 
     }
 });
 
-/* ── Move modal to body ── */
 document.addEventListener('DOMContentLoaded', function() {
     const modal = document.getElementById('invoiceModal');
     if (modal && modal.parentElement !== document.body) {
@@ -431,7 +464,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-/* ── Print ── */
 window.infPrintInvoice = function() {
     let printArea = document.getElementById('inf-print-area');
     if (!printArea) {
@@ -450,7 +482,6 @@ window.infPrintInvoice = function() {
     window.print();
 };
 
-/* ── Build Invoice ── */
 window.buildInvoice = function() {
     const courseEl    = document.getElementById('course_select');
     const levelEl     = document.getElementById('level_select');
@@ -467,11 +498,9 @@ window.buildInvoice = function() {
     const testFeeSel  = document.getElementById('test_fee_select');
     const testName    = testFeeSel?.options[testFeeSel?.selectedIndex]?.text || 'Placement Test';
 
-    // ── Header ──
     document.getElementById('inv_ref').textContent  = 'INV-——';
     document.getElementById('inv_date').textContent = new Date().toLocaleDateString('en-EG', {day:'2-digit',month:'short',year:'numeric'});
 
-    // ── Student (name + phone only) ──
     document.getElementById('inv_student').innerHTML =
         infRow('Full Name', document.getElementById('student_name')?.value || '—') +
         infRow('Phone',     document.getElementById('student_phone')?.value || '—');
@@ -482,7 +511,6 @@ window.buildInvoice = function() {
     //         infRow('Test Score', testScore + ' / 100', 'blue');
     // }
 
-    // ── Course ──
     const courseText = courseEl?.options[courseEl.selectedIndex]?.text || '—';
     const levelText  = levelEl?.value    ? (levelEl.options[levelEl.selectedIndex]?.text    || '—') : '—';
     const subText    = sublevelEl?.value ? (sublevelEl.options[sublevelEl.selectedIndex]?.text || '—') : '—';
@@ -495,7 +523,6 @@ window.buildInvoice = function() {
         infRow('Mode',     modeEl?.options[modeEl?.selectedIndex]?.text || '—') +
         infRow('Start',    patchEl?.options[patchEl?.selectedIndex]?.text || '—');
 
-    // ── Pricing ──
     const p         = typeof pricing !== 'undefined' ? pricing : {courseBasePrice:0,courseDiscount:0,courseFinalPrice:0,isPackage:false};
     const matPrice  = matCheckEl?.checked ? parseFloat(matPriceHid?.value || 0) : 0;
     const testFee   = parseFloat(document.querySelector('[name="test_fee"]')?.value || 0);
@@ -522,7 +549,6 @@ window.buildInvoice = function() {
     document.getElementById('inv_course_total_sub').textContent = p.isPackage ? 'Package price' : (p.courseDiscount > 0 ? `After ${fmtLE(p.courseDiscount)} discount` : 'Regular price');
     document.getElementById('inv_total_val').textContent        = fmtLE(grandTotal);
 
-    // ── Payment Plan ──
     const selOpt        = paySelectEl?.options[paySelectEl?.selectedIndex];
     const depositPct    = parseFloat(selOpt?.dataset.deposit || 0);
     const installments  = parseInt(selOpt?.dataset.installments || 0);
@@ -553,7 +579,6 @@ window.buildInvoice = function() {
         payHTML += `</tbody></table></div>`;
     }
 
-    // Deposit payment methods
     const depositSec = document.getElementById('deposit_section');
     if (depositSec && depositSec.style.display !== 'none') {
         const methods = [...document.querySelectorAll('.payment-method-row')]
@@ -574,7 +599,6 @@ window.buildInvoice = function() {
         document.getElementById('material_price_hidden').value = matPrice;
     }
 
-    // ── Schedule (private) ──
     const schedSection = document.getElementById('inv_schedule_section');
     if (typeInput?.value === 'private') {
         const bundleEl   = document.getElementById('bundle_select');

@@ -157,37 +157,55 @@ class RegistrationService
                 'custom'  => 'Specific_Date',
             ];
 
-            $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
+$preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
             $requestedPatchId = null;
-
+ 
             if ($data['patch_option'] !== 'custom') {
                 $requestedPatchId = $patchData['patch_id'] ?? $data['patch_id'] ?? null;
             }
+ 
+            if (!$requiresApproval) {
+                $waiting = WaitingList::create([
+                    'enrollment_id'           => $enrollment->enrollment_id,
+                    'requested_patch_id'      => $requestedPatchId,
+                    'preferred_type'          => $preferredType,
+                    'preferred_delivery_type' => $enrollment->enrollment_type,
+                    'preferred_delivery_mood' => $enrollment->delivery_mood,
+                    'preferred_start_date'    => $preferredType === 'Specific_Date'
+                        ? ($patchData['date'] ?? $data['custom_date'] ?? null)
+                        : null,
+                    'status'           => 'Active',
+                    'notes'            => $data['notes'] ?? null,
+                    'created_by_cs_id' => auth()->user()?->employee?->employee_id,
+                ]);
+                event(new WaitingListUpdated($waiting));
 
-            $waiting = WaitingList::create([
-                'enrollment_id'           => $enrollment->enrollment_id,
-                'requested_patch_id'      => $requestedPatchId,
-                'preferred_type'          => $preferredType,
-                'preferred_delivery_type' => $enrollment->enrollment_type,
-                'preferred_delivery_mood' => $enrollment->delivery_mood,
-                'preferred_start_date'    => $preferredType === 'Specific_Date'
-                    ? ($patchData['date'] ?? $data['custom_date'] ?? null)
-                    : null,
-                'status'           => 'Active',
-                'notes'            => $data['notes'] ?? null,
-                'created_by_cs_id' => auth()->user()?->employee?->employee_id,
-            ]);
+                $lead->update([
+                    'status'     => 'Registered',
+                    'student_id' => $student->student_id,
+                ]);
+            } else {
+                $lead->update([
+                    'student_id' => $student->student_id,
+                ]);
 
-            // Also defer waiting list event
-            $pendingEvents[] = new WaitingListUpdated($waiting);
+                $waitingMeta = json_encode([
+                    'requested_patch_id'      => $requestedPatchId,
+                    'preferred_type'          => $preferredType,
+                    'preferred_delivery_type' => $enrollment->enrollment_type,
+                    'preferred_delivery_mood' => $enrollment->delivery_mood,
+                    'preferred_start_date'    => $preferredType === 'Specific_Date'
+                        ? ($patchData['date'] ?? $data['custom_date'] ?? null)
+                        : null,
+                    'notes'                   => $data['notes'] ?? null,
+                ]);
 
-            $leadStatus = $requiresApproval ? 'Waiting' : 'Registered';
-
-            $lead->update([
-                'status'     => $leadStatus,
-                'student_id' => $student->student_id,
-            ]);
-
+                \App\Models\Finance\InstallmentApprovalLog::where('enrollment_id', $enrollment->enrollment_id)
+                    ->where('status', 'Pending')
+                    ->latest()
+                    ->update(['waiting_list_meta' => $waitingMeta]);
+            }
+ 
             return $enrollment;
         });
 

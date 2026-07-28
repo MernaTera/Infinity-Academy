@@ -5,6 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Invoice — Enrollment #{{ $enrollment->enrollment_id }}</title>
+<link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
     *,*::before,*::after{box-sizing:border-box;}
@@ -88,7 +89,6 @@
     .inv-footer-brand{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;color:#0F1F3D;}
     .inv-footer-sub{font-size:10px;color:#7A8A9A;margin-top:4px;letter-spacing:0.5px;}
 
-    /* Print styles */
     @media print{
         body{padding:0;background:#fff;}
         .inv-wrap{box-shadow:none;border-radius:0;}
@@ -101,35 +101,53 @@
 <body>
 
 @php
-    // Compute totals
     $courseTemplate = $enrollment->courseTemplate ?? $enrollment->courseInstance?->courseTemplate;
     $courseName     = $courseTemplate?->name ?? '—';
     $levelName      = $enrollment->level?->name ?? $enrollment->courseInstance?->level?->name ?? '—';
     $sublevelName   = $enrollment->sublevel?->name ?? '—';
-    $patchName      = $enrollment->patch?->name ?? $enrollment->courseInstance?->patch?->name ?? '—';
+    $patchName = '—';
+    if ($enrollment->patch?->name) {
+        $patchName = $enrollment->patch->name;
+    } elseif ($enrollment->courseInstance?->patch?->name) {
+        $patchName = $enrollment->courseInstance->patch->name;
+    } else {
+        // Case: Next Patch / Specific Date → info lives on waiting_list
+        $wl = $enrollment->waitingLists?->first();
+        if ($wl) {
+            if ($wl->requested_patch_id) {
+                $reqPatch = \App\Models\Academic\Patch::find($wl->requested_patch_id);
+                if ($reqPatch) {
+                    $patchName = $reqPatch->name;
+                    if ($wl->preferred_type === 'Next_Patch') {
+                        $patchName .= ' · Next Patch';
+                    }
+                }
+            } elseif ($wl->preferred_type === 'Next_Patch') {
+                $patchName = 'Next Patch (TBD)';
+            } elseif ($wl->preferred_type === 'Specific_Date' && $wl->preferred_start_date) {
+                $patchName = 'Custom Start · ' . \Carbon\Carbon::parse($wl->preferred_start_date)->format('d M Y');
+            }
+        }
+    }    
     $teacherName    = $enrollment->teacher?->employee?->full_name 
                     ?? $enrollment->courseInstance?->teacher?->employee?->full_name ?? '—';
     $studentPhone   = $enrollment->student?->phones?->first()?->phone_number ?? '—';
 
-    // Financial
     $finalPrice     = (float) $enrollment->final_price;
     $discountValue  = (float) ($enrollment->discount_value ?? 0);
     $basePrice      = $finalPrice + $discountValue;
 
-    $paidAmount = $enrollment->financialTransactions
-        ?->where('type', '!=', 'Refund')
-        ?->sum('amount') ?? 0;
+    $paidAmount = \DB::table('deposit_payment')
+        ->where('enrollment_id', $enrollment->enrollment_id)
+        ->sum('amount');
     $remaining  = max(0, $finalPrice - $paidAmount);
 
-    // Deposit payments (multiple methods)
     $depositPayments = \DB::table('deposit_payment')
         ->where('enrollment_id', $enrollment->enrollment_id)
         ->get();
 
-    // Installment schedules
     $installments = $enrollment->installmentSchedules ?? collect();
 
-    // Status color
     $statusColor = match($enrollment->status){
         'Active'           => 'green',
         'Waiting'          => 'orange',

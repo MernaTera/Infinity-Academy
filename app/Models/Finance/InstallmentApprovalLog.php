@@ -51,7 +51,8 @@ class InstallmentApprovalLog extends Model
 		'status',
 		'approved_by_admin_id',
 		'approved_at',
-		'rejection_note'
+		'rejection_note',
+        'waiting_list_meta'
 	];
 
 	public function requestedBy()

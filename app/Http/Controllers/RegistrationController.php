@@ -317,9 +317,11 @@ class RegistrationController extends Controller
             'courseInstance.level',
             'courseInstance.patch',
             'courseInstance.teacher.employee',
+            'patch', 
             'paymentPlan',
             'financialTransactions',
             'installmentSchedules',
+            'waitingLists',
         ])->findOrFail($id);
 
         return view('registration.invoice-page', compact('enrollment'));
