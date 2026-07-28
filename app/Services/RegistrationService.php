@@ -29,16 +29,18 @@ class RegistrationService
 {
     public function register($data)
     {
-        return DB::transaction(function () use ($data) {
- 
+        $pendingNotifications = [];
+
+        $enrollment = DB::transaction(function () use ($data, &$pendingNotifications) {
+
             $this->validateBusiness($data);
             $this->validateTeacherAvailability($data);
             $this->validateNoConflict($data);
             $this->validatePatch($data);
             $this->validatePricing($data);
- 
+
             $lead = Lead::findOrFail($data['lead_id']);
- 
+
             $student = Student::create([
                 'full_name'     => $lead->full_name,
                 'email'         => $lead->email,
@@ -48,35 +50,35 @@ class RegistrationService
                 'global_status' => 'Active',
                 'is_active'     => true,
             ]);
- 
+
             StudentPhone::where('phone_number', $lead->phone)->delete();
             StudentPhone::create([
                 'student_id'   => $student->student_id,
                 'phone_number' => $lead->phone,
                 'is_primary'   => true,
             ]);
- 
+
             $patchData    = $this->handlePatchSelection($data);
             $currentPatch = Patch::where('status', 'Active')->first();
- 
+
             $availabilities = collect();
             if (!empty($data['day']) && !empty($data['time_slot_id'])) {
                 $availabilities = TeacherAvailability::where('day_of_week', $data['day'])
                     ->where('time_slot_id', $data['time_slot_id'])
                     ->get();
             }
- 
+
             $pricing        = app(\App\Services\PricingService::class)->calculate($data);
             $formFinalPrice = (float) ($data['final_price'] ?? 0);
             if ($formFinalPrice > 0) {
                 $pricing['final_price'] = $formFinalPrice;
             }
             $data['final_price'] = $pricing['final_price'];
- 
+
             $enrollment = $this->createEnrollment($student, $data, $patchData);
             $this->attachMaterials($enrollment, $data);
             $this->createFinancialRecords($enrollment, $data, $pricing, $currentPatch);
- 
+
             $testScore = $data['test_score'] ?? null;
             $testFee   = floatval($data['test_fee'] ?? 0);
 
@@ -88,13 +90,13 @@ class RegistrationService
                     'fee_paid'         => true,
                     'created_by_cs_id' => auth()->user()?->employee?->employee_id,
                 ]);
-                
+
                 $enrollment->update(['placement_test_id' => $test->test_id]);
             }
 
             $plan             = PaymentPlan::find($data['payment_plan_id']);
             $requiresApproval = $plan && $plan->requires_admin_approval;
- 
+
             if ($requiresApproval) {
                 \App\Models\Finance\InstallmentApprovalLog::create([
                     'enrollment_id'    => $enrollment->enrollment_id,
@@ -102,41 +104,42 @@ class RegistrationService
                     'request_by_cs_id' => auth()->user()?->employee?->employee_id,
                     'status'           => 'Pending',
                 ]);
- 
+
+                // ── Collect notifications instead of sending immediately ──
                 $admins = \App\Models\Auth\User::whereHas('role', fn($q) =>
                     $q->where('role_name', 'Admin')
                 )->get();
- 
+
                 $csName      = auth()->user()->name ?? 'CS';
                 $studentName = $lead->full_name ?? 'a student';
 
                 foreach ($admins as $admin) {
                     $adminEmployee = Employee::where('user_id', $admin->id)->first();
                     if ($adminEmployee) {
-                        \App\Services\NotificationService::send(
-                            (int) $adminEmployee->employee_id,
-                            'New Installment Request',
-                            "CS {$csName} submitted an installment plan request for {$studentName}.",
-                            'installment_request',
-                            $enrollment->enrollment_id
-                        );
+                        $pendingNotifications[] = [
+                            'employee_id' => (int) $adminEmployee->employee_id,
+                            'title'       => 'New Installment Request',
+                            'message'     => "CS {$csName} submitted an installment plan request for {$studentName}.",
+                            'entity_type' => 'installment_request',
+                            'entity_id'   => $enrollment->enrollment_id,
+                        ];
                     }
                 }
             }
- 
+
             $preferredTypeMap = [
                 'current' => 'Current_Patch',
                 'next'    => 'Next_Patch',
                 'custom'  => 'Specific_Date',
             ];
- 
+
             $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
             $requestedPatchId = null;
- 
+
             if ($data['patch_option'] !== 'custom') {
                 $requestedPatchId = $patchData['patch_id'] ?? $data['patch_id'] ?? null;
             }
- 
+
             $waiting = WaitingList::create([
                 'enrollment_id'           => $enrollment->enrollment_id,
                 'requested_patch_id'      => $requestedPatchId,
@@ -150,23 +153,50 @@ class RegistrationService
                 'notes'            => $data['notes'] ?? null,
                 'created_by_cs_id' => auth()->user()?->employee?->employee_id,
             ]);
-            event(new WaitingListUpdated($waiting));
- 
+
+            // Also defer waiting list event
+            $pendingEvents[] = new WaitingListUpdated($waiting);
+
             $leadStatus = $requiresApproval ? 'Waiting' : 'Registered';
- 
+
             $lead->update([
                 'status'     => $leadStatus,
                 'student_id' => $student->student_id,
             ]);
- 
+
             return $enrollment;
         });
+
+
+        foreach ($pendingNotifications as $notif) {
+            try {
+                \App\Services\NotificationService::send(
+                    $notif['employee_id'],
+                    $notif['title'],
+                    $notif['message'],
+                    $notif['entity_type'],
+                    $notif['entity_id']
+                );
+            } catch (\Throwable $e) {
+                \Log::warning('Post-commit notification failed: ' . $e->getMessage(), [
+                    'notification' => $notif,
+                ]);
+            }
+        }
+
+        try {
+            $waiting = WaitingList::where('enrollment_id', $enrollment->enrollment_id)
+                ->latest()->first();
+            if ($waiting) {
+                event(new WaitingListUpdated($waiting));
+            }
+        } catch (\Throwable $e) {
+            \Log::warning('Post-commit waiting-list event failed: ' . $e->getMessage());
+        }
+
+        return $enrollment;
     }
-    /*
-    |------------------------------------------------------------------
-    | Patch Logic
-    |------------------------------------------------------------------
-    */
+
     private function handlePatchSelection($data)
     {
         if ($data['patch_option'] === 'current') {
