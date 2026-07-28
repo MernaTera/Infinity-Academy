@@ -601,44 +601,51 @@ $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
         }
 
         $plan = PaymentPlan::find($data['payment_plan_id']);
-        if ($plan && $plan->installment_count > 0) {
-            if ($plan->requires_admin_approval) {
-                return;
-            }
-            $remaining  = $pricing['final_price'] - $depositAmount;
-            $instAmount = round($remaining / $plan->installment_count, 2);
 
-            $existingSchedules = \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->get();
-            foreach ($existingSchedules as $sched) {
-                FinancialTransaction::where('transaction_id', $sched->transaction_id)
-                    ->where('transaction_type', 'Installment')
-                    ->delete();
-            }
-            \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->delete();
+               
+                $existingSchedules = \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->get();
+                foreach ($existingSchedules as $sched) {
+                    FinancialTransaction::where('transaction_id', $sched->transaction_id)
+                        ->where('transaction_type', 'Installment')
+                        ->delete();
+                }
+                \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->delete();
 
-            for ($i = 1; $i <= $plan->installment_count; $i++) {
+                if (!$plan || $plan->installment_count <= 0) {
+                    return;
+                }
 
-                $instTx = FinancialTransaction::create([
-                    'enrollment_id'          => $enrollment->enrollment_id,
-                    'patch_id'               => $patchId,
-                    'branch_id'              => $branchId,
-                    'transaction_type'       => 'Installment',
-                    'transaction_category'   => 'Course',
-                    'amount'                 => $instAmount,
-                    'payment_method'         => 'Cash',
-                    'created_by_employee_id' => $csEmployee->employee_id,
-                ]);
+                if ($plan->requires_admin_approval) {
+                    return;
+                }
 
-                \App\Models\Finance\InstallmentSchedule::create([
-                    'enrollment_id'      => $enrollment->enrollment_id,
-                    'transaction_id'     => $instTx->transaction_id,
-                    'installment_number' => $i,
-                    'due_date'           => null,
-                    'amount'             => $instAmount,
-                    'status'             => 'Pending',
-                ]);
-            }
-        }
+                $remaining  = $pricing['final_price'] - $depositAmount;
+                $instAmount = round($remaining / $plan->installment_count, 2);
+
+                for ($i = 1; $i <= $plan->installment_count; $i++) {
+
+                    $instTx = FinancialTransaction::create([
+                        'enrollment_id'          => $enrollment->enrollment_id,
+                        'patch_id'               => $patchId,
+                        'branch_id'              => $branchId,
+                        'transaction_type'       => 'Installment',
+                        'transaction_category'   => 'Course',
+                        'amount'                 => $instAmount,
+                        'payment_method'         => 'Cash',
+                        'created_by_employee_id' => $csEmployee->employee_id,
+                    ]);
+
+                    \App\Models\Finance\InstallmentSchedule::create([
+                        'enrollment_id'      => $enrollment->enrollment_id,
+                        'transaction_id'     => $instTx->transaction_id,
+                        'installment_number' => $i,
+                        'due_date'           => null,
+                        'amount'             => $instAmount,
+                        'status'             => 'Pending',
+                    ]);
+                }
+            
+            
     }
 
     private function getDepositPct($data): float
