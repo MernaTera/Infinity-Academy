@@ -9,15 +9,24 @@ class NotificationService
 {
     /**
      * Send a notification to an employee (DB + real-time broadcast)
+     * 
+     * @param int $employeeId
+     * @param string $title
+     * @param string $message
+     * @param string|null $entityType
+     * @param int|null $entityId
+     * @param array $metadata Optional extra details for rich notifications
+     * @param string $priority normal | high (high = persistent toast)
      */
     public static function send(
         int $employeeId,
         string $title,
         string $message,
         ?string $entityType = null,
-        ?int $entityId = null
+        ?int $entityId = null,
+        array $metadata = [],
+        string $priority = 'normal'
     ): int {
-        // Insert into DB
         $id = DB::table('user_notification')->insertGetId([
             'employee_id'         => $employeeId,
             'title'               => $title,
@@ -29,10 +38,8 @@ class NotificationService
             'updated_at'          => now(),
         ]);
 
-        // Compute URL for the notification
         $url = self::computeUrl($employeeId, $entityType);
 
-        // Broadcast in real-time
         try {
             broadcast(new NotificationCreated([
                 'id'          => $id,
@@ -41,19 +48,17 @@ class NotificationService
                 'entity_type' => $entityType,
                 'entity_id'   => $entityId,
                 'url'         => $url,
+                'metadata'    => $metadata,
+                'priority'    => $priority,
                 'created_at'  => now()->toIso8601String(),
             ], $employeeId));
         } catch (\Exception $e) {
-            // Silently fail if broadcast unavailable — notification still in DB
             \Log::warning('Broadcast failed: ' . $e->getMessage());
         }
 
         return $id;
     }
 
-    /**
-     * Compute the URL for a notification based on entity type and employee role
-     */
     private static function computeUrl(int $employeeId, ?string $entityType): string
     {
         $role = DB::table('employee')

@@ -116,12 +116,36 @@ class RegistrationService
                 foreach ($admins as $admin) {
                     $adminEmployee = Employee::where('user_id', $admin->id)->first();
                     if ($adminEmployee) {
+                        $courseName = \App\Models\Academic\CourseTemplate::find($data['course_template_id'])?->name ?? 'a course';
+                        $planName   = $plan->name ?? 'installment plan';
+                        $deposit    = (float) collect($data['deposit_methods'] ?? [])->sum(fn($m) => (float) ($m['amount'] ?? 0));
+                        $remaining  = max(0, ($data['final_price'] ?? 0) - $deposit);
+
+                        $metadata = [
+                            'cs_name'           => $csName,
+                            'student_name'      => $studentName,
+                            'course_name'       => $courseName,
+                            'plan_name'         => $planName,
+                            'total_price'       => number_format((float) ($data['final_price'] ?? 0), 0),
+                            'deposit_amount'    => number_format($deposit, 0),
+                            'remaining_amount'  => number_format($remaining, 0),
+                            'installment_count' => (int) ($plan->installment_count ?? 0),
+                            'enrollment_id'     => $enrollment->enrollment_id,
+                            'submitted_at'      => now()->format('H:i · d M'),
+                        ];
+
+                        $richMessage = "CS {$csName} requested \"{$planName}\" for {$studentName} in \"{$courseName}\".\n"
+                                    . "Total: {$metadata['total_price']} LE · Deposit: {$metadata['deposit_amount']} LE · "
+                                    . "{$metadata['installment_count']} installments";
+
                         $pendingNotifications[] = [
                             'employee_id' => (int) $adminEmployee->employee_id,
-                            'title'       => 'New Installment Request',
-                            'message'     => "CS {$csName} submitted an installment plan request for {$studentName}.",
+                            'title'       => '💰 New Installment Request',
+                            'message'     => $richMessage,
                             'entity_type' => 'installment_request',
                             'entity_id'   => $enrollment->enrollment_id,
+                            'metadata'    => $metadata,
+                            'priority'    => 'high',
                         ];
                     }
                 }
@@ -168,16 +192,18 @@ class RegistrationService
         });
 
 
-        foreach ($pendingNotifications as $notif) {
-            try {
-                \App\Services\NotificationService::send(
-                    $notif['employee_id'],
-                    $notif['title'],
-                    $notif['message'],
-                    $notif['entity_type'],
-                    $notif['entity_id']
-                );
-            } catch (\Throwable $e) {
+            foreach ($pendingNotifications as $notif) {
+                try {
+                    \App\Services\NotificationService::send(
+                        $notif['employee_id'],
+                        $notif['title'],
+                        $notif['message'],
+                        $notif['entity_type'],
+                        $notif['entity_id'],
+                        $notif['metadata'] ?? [],
+                        $notif['priority'] ?? 'normal'
+                    );
+                } catch (\Throwable $e) {
                 \Log::warning('Post-commit notification failed: ' . $e->getMessage(), [
                     'notification' => $notif,
                 ]);
