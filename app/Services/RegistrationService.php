@@ -471,48 +471,50 @@ $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
         }
         $patchId    = $patch?->patch_id;
 
-        $depositAmount = ($pricing['final_price'] * $this->getDepositPct($data)) / 100;
+$depositAmount = ($pricing['final_price'] * $this->getDepositPct($data)) / 100;
 
-        $firstMethod = collect($data['deposit_methods'] ?? [])
-            ->first(fn($m) => ($m['amount'] ?? 0) > 0);
-        $depositMethod = $firstMethod['method'] ?? 'Cash';
+
         $methodMap = [
-            'Instapay'     => 'Transfer',
+            'Instapay'      => 'Transfer',
             'Vodafone_Cash' => 'Online',
-            'Cash'         => 'Cash',
-            'Card'         => 'Card',
-            'Transfer'     => 'Transfer',
-            'Online'       => 'Online',
+            'Cash'          => 'Cash',
+            'Card'          => 'Card',
+            'Transfer'      => 'Transfer',
+            'Online'        => 'Online',
         ];
-        $depositMethod = $methodMap[$depositMethod] ?? 'Cash';
-
-        $depositTx = FinancialTransaction::create([
-            'enrollment_id'         => $enrollment->enrollment_id,
-            'patch_id'              => $patchId,
-            'branch_id'              => $branchId,
-            'transaction_type'      => 'Payment',
-            'transaction_category'  => 'Course',
-            'amount'                => $depositAmount,
-            'payment_method'        => $depositMethod,
-            'created_by_employee_id'=> $csEmployee->employee_id,
-        ]);
-
-        RevenueSplit::create([
-            'transaction_id'    => $depositTx->transaction_id,
-            'employee_id'       => $csEmployee->employee_id,
-            'branch_id'         => $branchId,
-            'patch_id'          => $patchId,
-            'amount_allocated'  => $depositAmount,
-            'allocation_type'   => 'Direct',
-        ]);
 
         $methods = $data['deposit_methods'] ?? [];
+
         foreach ($methods as $method) {
-            if (empty($method['amount']) || $method['amount'] <= 0) continue;
+            $amt = (float) ($method['amount'] ?? 0);
+            if ($amt <= 0) continue;
+
+            $mappedMethod = $methodMap[$method['method']] ?? 'Cash';
+
+            $tx = FinancialTransaction::create([
+                'enrollment_id'          => $enrollment->enrollment_id,
+                'patch_id'               => $patchId,
+                'branch_id'              => $branchId,
+                'transaction_type'       => 'Payment',
+                'transaction_category'   => 'Course',
+                'amount'                 => $amt,
+                'payment_method'         => $mappedMethod,
+                'created_by_employee_id' => $csEmployee->employee_id,
+            ]);
+
+            RevenueSplit::create([
+                'transaction_id'   => $tx->transaction_id,
+                'employee_id'      => $csEmployee->employee_id,
+                'branch_id'        => $branchId,
+                'patch_id'         => $patchId,
+                'amount_allocated' => $amt,
+                'allocation_type'  => 'Direct',
+            ]);
+
             \Illuminate\Support\Facades\DB::table('deposit_payment')->insert([
                 'enrollment_id'    => $enrollment->enrollment_id,
                 'method'           => $method['method'],
-                'amount'           => $method['amount'],
+                'amount'           => $amt,
                 'reference_number' => $method['reference'] ?? null,
                 'created_at'       => now(),
                 'updated_at'       => now(),
@@ -521,24 +523,32 @@ $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
 
         $testFee = floatval($data['test_fee'] ?? 0);
         if ($testFee > 0) {
+            $primaryMethod = collect($methods)
+                ->filter(fn($m) => (float) ($m['amount'] ?? 0) > 0)
+                ->sortByDesc(fn($m) => (float) ($m['amount'] ?? 0))
+                ->first();
+
+            $testMethodRaw = $primaryMethod['method'] ?? 'Cash';
+            $testMethod    = $methodMap[$testMethodRaw] ?? 'Cash';
+
             $testTx = FinancialTransaction::create([
-                'enrollment_id'         => $enrollment->enrollment_id,
-                'patch_id'              => $patchId,
+                'enrollment_id'          => $enrollment->enrollment_id,
+                'patch_id'               => $patchId,
                 'branch_id'              => $branchId,
-                'transaction_type'      => 'Payment',
-                'transaction_category'  => 'Test',
-                'amount'                => $testFee,
-                'payment_method'        => 'Cash',
-                'created_by_employee_id'=> $csEmployee->employee_id,
+                'transaction_type'       => 'Payment',
+                'transaction_category'   => 'Test',
+                'amount'                 => $testFee,
+                'payment_method'         => $testMethod,
+                'created_by_employee_id' => $csEmployee->employee_id,
             ]);
 
             RevenueSplit::create([
-                'transaction_id'    => $testTx->transaction_id,
-                'employee_id'       => $csEmployee->employee_id,
-                'branch_id'         => $branchId,
-                'patch_id'          => $patchId,
-                'amount_allocated'  => $testFee,
-                'allocation_type'   => 'Direct',
+                'transaction_id'   => $testTx->transaction_id,
+                'employee_id'      => $csEmployee->employee_id,
+                'branch_id'        => $branchId,
+                'patch_id'         => $patchId,
+                'amount_allocated' => $testFee,
+                'allocation_type'  => 'Direct',
             ]);
         }
 
