@@ -2,62 +2,104 @@
 
 namespace App\Services;
 
-use App\Models\HR\TeacherAvailability;
+use App\Models\HR\Teacher;
+use App\Models\HR\TeacherContract;
 use App\Models\Academic\CourseInstance;
-use App\Models\Academic\Patch;
-use Illuminate\Http\Request;
+use App\Models\Academic\CourseTemplate;
+use App\Models\Academic\Level;
+use App\Models\Academic\Sublevel;
 
 class TeacherAvailabilityService
 {
-public function getAvailableTeachers($data)
-{
-    if (($data['patch_option'] ?? '') !== 'current') {
-        return [];
-    }
-
-    if (empty($data['patch_id'])) {
-        return [];
-    }
-
-    $teachers = \App\Models\HR\Teacher::with(['availability', 'employee'])
-        ->where('is_active', 1)
-        ->get();
-
-    $availableTeachers = [];
-
-    foreach ($teachers as $teacher) {
-        if (!$this->isTeacherValid($teacher, $data)) {
-            continue;
+    public function getAvailableTeachers($data)
+    {
+        if (($data['patch_option'] ?? '') !== 'current') {
+            return [];
         }
-        $availableTeachers[] = $teacher;
-    }
 
-    return $availableTeachers;
-}
-
-private function isTeacherValid($teacher, $data)
-{
-    if (!empty($data['sublevel_id'])) {
-        $sub = \App\Models\Academic\Sublevel::find($data['sublevel_id']);
-        if ($sub && $sub->teacher_min_level) {
-            return $teacher->english_level_id >= $sub->teacher_min_level;
+        $patchId = $data['patch_id'] ?? null;
+        if (!$patchId) {
+            return [];
         }
-    }
 
-    if (!empty($data['level_id'])) {
-        $level = \App\Models\Academic\Level::find($data['level_id']);
-        if ($level && $level->teacher_level) {
-            return $teacher->english_level_id >= $level->teacher_level;
+        $levelId    = $data['level_id']    ?? null;
+        $sublevelId = $data['sublevel_id'] ?? null;
+        $courseId   = $data['course_template_id'] ?? null;
+
+        $contracts = TeacherContract::with(['contractType', 'teacher.availability', 'teacher.employee'])
+            ->where('patch_id', $patchId)
+            ->where('is_active', true)
+            ->whereHas('teacher', fn($q) => $q->where('is_active', true))
+            ->whereHas('contractType', fn($q) => $q->where('is_active', true))
+            ->get();
+
+        $available = [];
+        $seenTeacherIds = [];
+
+        foreach ($contracts as $contract) {
+            $teacher = $contract->teacher;
+            if (!$teacher) continue;
+
+            if (in_array($teacher->teacher_id, $seenTeacherIds)) continue;
+
+            if (!$this->teacherLevelSufficient($teacher, $levelId, $sublevelId, $courseId)) {
+                continue;
+            }
+
+            $maxAllowed = (int) ($contract->contractType?->max_sessions_allowed ?? 0);
+            if ($maxAllowed <= 0) continue;
+
+            $used = $this->countTeacherSessionsInPatch($teacher->teacher_id, $patchId);
+            if ($used >= $maxAllowed) continue;
+
+            if ($teacher->availability->isEmpty()) continue;
+
+            $seenTeacherIds[] = $teacher->teacher_id;
+            $available[] = $teacher;
         }
+
+        return $available;
     }
 
-    if (!empty($data['course_template_id'])) {
-        $course = \App\Models\Academic\CourseTemplate::find($data['course_template_id']);
-        if ($course && $course->english_level_id) {
-            return $teacher->english_level_id >= $course->english_level_id;
+    private function teacherLevelSufficient(Teacher $teacher, ?int $levelId, ?int $sublevelId, ?int $courseId): bool
+    {
+        if ($sublevelId) {
+            $sub = Sublevel::find($sublevelId);
+            if ($sub && $sub->teacher_min_level) {
+                return $teacher->english_level_id >= $sub->teacher_min_level;
+            }
         }
+
+        if ($levelId) {
+            $level = Level::find($levelId);
+            if ($level && $level->teacher_level) {
+                return $teacher->english_level_id >= $level->teacher_level;
+            }
+        }
+
+        if ($courseId) {
+            $course = CourseTemplate::find($courseId);
+            if ($course && $course->english_level_id) {
+                return $teacher->english_level_id >= $course->english_level_id;
+            }
+        }
+
+        return true;
     }
 
-    return true;
-}
+    private function countTeacherSessionsInPatch(int $teacherId, int $patchId): int
+    {
+        $courses = CourseInstance::where('teacher_id', $teacherId)
+            ->where('patch_id', $patchId)
+            ->whereIn('status', ['Active', 'Upcoming', 'Completed'])
+            ->get();
+
+        $total = 0;
+        foreach ($courses as $course) {
+            if ($course->session_duration > 0) {
+                $total += (int) ceil((float) $course->total_hours / (float) $course->session_duration);
+            }
+        }
+        return $total;
+    }
 }
