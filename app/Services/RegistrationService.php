@@ -34,6 +34,7 @@ class RegistrationService
         $enrollment = DB::transaction(function () use ($data, &$pendingNotifications) {
 
             $this->validateBusiness($data);
+            $this->validatePatchOptionAvailability($data); 
             $this->validateTeacherAvailability($data);
             $this->validateNoConflict($data);
             $this->validatePatch($data);
@@ -157,7 +158,7 @@ class RegistrationService
                 'custom'  => 'Specific_Date',
             ];
 
-$preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
+            $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
             $requestedPatchId = null;
  
             if ($data['patch_option'] !== 'custom') {
@@ -347,6 +348,73 @@ $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
         }
     }
 
+    private function validatePatchOptionAvailability($data)
+    {
+        $patchOption = $data['patch_option'] ?? null;
+
+        if ($patchOption !== 'current') {
+            return;
+        }
+
+        $type = ucfirst(strtolower($data['type'] ?? ''));
+        $mode = $data['mode'] ?? $data['delivery_mood'] ?? null;
+
+        $options = app(\App\Services\PatchService::class)->getOptions([
+            'course_template_id' => $data['course_template_id'] ?? null,
+            'type'               => $type,
+            'delivery_mood'      => $mode,
+            'level_id'           => $data['level_id']    ?? null,
+            'sublevel_id'        => $data['sublevel_id'] ?? null,
+        ]);
+
+        $currentOption = collect($options)->firstWhere('type', 'current');
+
+        if (!$currentOption) {
+            throw new \Exception(
+                'The Current Patch option is no longer available for this course/level/mode. '
+                . 'Please refresh and choose Next Patch or a specific date.'
+            );
+        }
+
+        if (($currentOption['case'] ?? null) === 'A') {
+            $expectedInstanceId = $currentOption['course_instance_id'] ?? null;
+
+            $submittedInstanceId = $data['course_instance_id'] ?? null;
+
+            if ($expectedInstanceId && $submittedInstanceId
+                && (int) $submittedInstanceId !== (int) $expectedInstanceId) {
+                throw new \Exception(
+                    'The selected course group has changed. Please refresh the form and try again.'
+                );
+            }
+        }
+
+        if (($currentOption['case'] ?? null) === 'B') {
+            if (empty($data['teacher_id'])) {
+                throw new \Exception('Please select a teacher for this registration.');
+            }
+
+            $availableTeachers = app(\App\Services\TeacherAvailabilityService::class)
+                ->getAvailableTeachers([
+                    'patch_option'       => 'current',
+                    'patch_id'           => $data['patch_id'] ?? null,
+                    'course_template_id' => $data['course_template_id'] ?? null,
+                    'level_id'           => $data['level_id']    ?? null,
+                    'sublevel_id'        => $data['sublevel_id'] ?? null,
+                    'delivery_mood'      => $mode,
+                ]);
+
+            $availableIds = collect($availableTeachers)->pluck('teacher_id')->map(fn($id) => (int) $id);
+
+            if (!$availableIds->contains((int) $data['teacher_id'])) {
+                throw new \Exception(
+                    'The selected teacher is no longer available for this patch '
+                    . '(fully booked or schedule changed). Please refresh and pick another.'
+                );
+            }
+        }
+    }
+
     private function validateTeacherAvailability($data)
     {
         if (empty($data['teacher_id'])) return;
@@ -471,7 +539,7 @@ $preferredType    = $preferredTypeMap[$data['patch_option']] ?? null;
         }
         $patchId    = $patch?->patch_id;
 
-$depositAmount = ($pricing['final_price'] * $this->getDepositPct($data)) / 100;
+        $depositAmount = ($pricing['final_price'] * $this->getDepositPct($data)) / 100;
 
 
         $methodMap = [
