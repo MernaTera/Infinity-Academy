@@ -519,6 +519,7 @@
 
                 <select id="patch_select" name="patch_option" class="form-control-inf"></select>
                 <input type="hidden" id="patch_id" name="patch_id">
+                <input type="hidden" name="course_instance_id" id="course_instance_id" value="">
 
                 <div id="custom_date_wrap" style="display:none; margin-top:12px;">
                     <label class="form-label">Specific Start Date <span class="required">*</span></label>

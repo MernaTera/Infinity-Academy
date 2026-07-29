@@ -197,9 +197,27 @@ class RegistrationController extends Controller
     | AJAX Helpers
     |------------------------------------------------------------------
     */
-    public function getPatchOptions($courseId)
+
+    public function getPatchOptions(Request $request)
     {
-        $options = app(PatchService::class)->getOptions($courseId);
+        $validated = $request->validate([
+            'course_template_id' => 'required|integer|exists:course_template,course_template_id',
+            'type'               => 'nullable|string|in:Group,Private',
+            'delivery_mood'      => 'nullable|string|in:Online,Offline',
+            'level_id'           => 'nullable|integer|exists:level,level_id',
+            'sublevel_id'        => 'nullable|integer|exists:sublevel,sublevel_id',
+        ]);
+
+        $options = app(PatchService::class)->getOptions($validated);
+        return response()->json($options);
+    }
+
+
+    public function getPatchOptionsLegacy($courseId)
+    {
+        $options = app(PatchService::class)->getOptions([
+            'course_template_id' => $courseId,
+        ]);
         return response()->json($options);
     }
 

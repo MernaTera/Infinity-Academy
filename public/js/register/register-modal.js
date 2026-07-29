@@ -487,16 +487,23 @@ function applyMaterial(data) {
 
     sublevel.addEventListener('change', () => { calculatePrice(); loadMaterial(); });
 
-    // Bug fix: ضيفنا loadPackages هنا
     document.querySelectorAll('input[name="type"]').forEach(radio => {
         radio.addEventListener('change', function() {
             document.getElementById('private_extra').style.display = this.value==='private'?'block':'none';
             calculatePrice();
             loadTeachers();
-            if (course?.value) loadPackages(course.value); // ← Bug fix #4
+            loadPatch();
+            if (course?.value) loadPackages(course.value); 
         });
     });
+    const modeSelect = document.querySelector('select[name="mode"]');
+    if (modeSelect) {
+        modeSelect.addEventListener('change', loadPatch);
+    }
 
+
+    if (level)    level.addEventListener('change', loadPatch);
+    if (sublevel) sublevel.addEventListener('change', loadPatch);
     bundle?.addEventListener('change', calculatePrice);
     paymentSelect?.addEventListener('change', () => { refreshPaymentSummary(); refreshDepositSection(); });
 
@@ -505,26 +512,82 @@ function applyMaterial(data) {
     // ─────────────────────────────────────────
     function loadPatch() {
         if (!course.value) return;
-        fetch(`/patch-options/${course.value}`)
-            .then(r=>r.json())
-            .then(options => {
-                patch.innerHTML = '';
-                options.forEach(o => { patch.innerHTML += `<option value="${o.type}" data-id="${o.patch_id||''}">${o.label}</option>`; });
-                patch.dispatchEvent(new Event('change'));
-            });
-    }
 
-    if (patch) {
-        patch.addEventListener('change', function() {
-            const val = this.value;
-            const sel = patch.options[patch.selectedIndex];
-            patchId.value = sel?.dataset?.id || '';
-            if (customDateWrap) { customDateWrap.style.display=val==='custom'?'block':'none'; if(customDate) customDate.required=val==='custom'; }
-            if (teacherBlock)   teacherBlock.style.display = val==='current'?'block':'none';
-            if (val!=='current' && teacher) teacher.innerHTML = '<option value="">— Select Teacher —</option>';
-            if (val==='current') loadTeachers();
+        const typeVal = document.querySelector('input[name="type"]:checked')?.value;
+        const type    = typeVal ? typeVal.charAt(0).toUpperCase() + typeVal.slice(1).toLowerCase() : null;
+
+        const mode = document.querySelector('select[name="mode"]')?.value || null;
+
+        const payload = {
+            course_template_id: course.value,
+            type:               type,
+            delivery_mood:      mode,
+            level_id:           level?.value    || null,
+            sublevel_id:        sublevel?.value || null,
+        };
+
+        fetch('/patch-options', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN':  document.querySelector('meta[name="csrf-token"]').content,
+                'Accept':        'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+        .then(r => r.json())
+        .then(options => {
+            patch.innerHTML = '';
+            if (!options || options.length === 0) {
+                patch.innerHTML = '<option value="">— No options available —</option>';
+                return;
+            }
+            options.forEach(o => {
+                const caseAttr = o.case ? ` data-case="${o.case}"` : '';
+                const needsTeacher = o.requires_teacher_choice ? ' data-needs-teacher="1"' : '';
+                const courseInstance = o.course_instance_id ? ` data-course-instance="${o.course_instance_id}"` : '';
+                patch.innerHTML += `<option value="${o.type}" data-id="${o.patch_id || ''}"${caseAttr}${needsTeacher}${courseInstance}>${o.label}</option>`;
+            });
+            patch.dispatchEvent(new Event('change'));
+        })
+        .catch(err => {
+            console.error('Failed to load patch options:', err);
+            patch.innerHTML = '<option value="">— Failed to load —</option>';
         });
     }
+
+       if (patch) {
+            patch.addEventListener('change', function() {
+                const val = this.value;
+                const sel = patch.options[patch.selectedIndex];
+
+                patchId.value = sel?.dataset?.id || '';
+
+                const courseInstanceInput = document.getElementById('course_instance_id');
+                if (courseInstanceInput) {
+                    courseInstanceInput.value = sel?.dataset?.courseInstance || '';
+                }
+
+                if (customDateWrap) {
+                    customDateWrap.style.display = val === 'custom' ? 'block' : 'none';
+                    if (customDate) customDate.required = val === 'custom';
+                }
+
+                const needsTeacher = sel?.dataset?.needsTeacher === '1';
+
+                if (teacherBlock) {
+                    teacherBlock.style.display = (val === 'current' && needsTeacher) ? 'block' : 'none';
+                }
+
+                if (!needsTeacher && teacher) {
+                    teacher.innerHTML = '<option value="">— Select Teacher —</option>';
+                }
+
+                if (val === 'current' && needsTeacher) {
+                    loadTeachers();
+                }
+            });
+        }
 
     // ─────────────────────────────────────────
     // Teachers

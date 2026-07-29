@@ -119,7 +119,8 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
 
         // AJAX helpers used inside the registration form
-        Route::get('/patch-options/{courseId}',         [RegistrationController::class, 'getPatchOptions']);
+        Route::post('/patch-options',                    [RegistrationController::class, 'getPatchOptions'])->name('patch.options');
+        Route::get('/patch-options/{courseId}',          [RegistrationController::class, 'getPatchOptionsLegacy']);
         Route::post('/calculate-price',                 [RegistrationController::class, 'calculatePrice']);
         Route::post('/available-teachers',              [RegistrationController::class, 'getAvailableTeachers']);
         Route::post('/teacher-schedule',                [RegistrationController::class, 'getTeacherSchedule']);
