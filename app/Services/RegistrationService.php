@@ -250,32 +250,35 @@ class RegistrationService
         if ($data['patch_option'] === 'current') {
             return [
                 'patch_id' => $data['patch_id'],
-                'type' => 'direct'
+                'type'     => 'direct'
             ];
         }
 
         if ($data['patch_option'] === 'next') {
+            $nextPatch = \App\Models\Academic\Patch::where('status', 'Upcoming')
+                ->orderBy('start_date')
+                ->first();
+
             return [
-                'patch_id' => null,
-                'type' => 'waiting',
-                'date' => now()->addWeeks(2)
+                'patch_id' => $nextPatch?->patch_id,   
+                'type'     => 'waiting',
+                'date'     => $nextPatch?->start_date ?? now()->addWeeks(2), 
             ];
         }
 
         if ($data['patch_option'] === 'custom') {
-
             if (empty($data['custom_date'])) {
                 throw new \App\Exceptions\BusinessValidationException('Please select a start date.');
             }
 
             return [
                 'patch_id' => null,
-                'type' => 'waiting',
-                'date' => $data['custom_date']
+                'type'     => 'waiting',
+                'date'     => $data['custom_date']
             ];
         }
 
-        throw new \App\Exceptions\BusinessValidationException('Invalid start option selected. Please refresh and try again.');
+        throw new \App\Exceptions\BusinessValidationException('Invalid start option selected.');
     }
 
     /*
@@ -460,17 +463,28 @@ class RegistrationService
     {
         if ($data['patch_option'] !== 'custom') return;
 
-        $lastPatch = \App\Models\Academic\Patch::orderByDesc('end_date')->first();
+        $lastPatch = \App\Models\Academic\Patch::whereIn('status', ['Active', 'Upcoming', 'Completed'])
+            ->orderByDesc('end_date')
+            ->first();
 
         if ($lastPatch && $data['custom_date'] <= $lastPatch->end_date) {
-            throw new \App\Exceptions\BusinessValidationException('The start date must be after the current patch ends.');
+            $endFormatted = \Carbon\Carbon::parse($lastPatch->end_date)->format('d M Y');
+            throw new \App\Exceptions\BusinessValidationException(
+                "The custom start date must be after {$endFormatted} (the end of the last scheduled patch)."
+            );
         }
     }
 
     private function validatePricing($data)
     {
-        if (!empty($data['discount_value']) && $data['discount_value'] < 0) {
-            throw new \App\Exceptions\BusinessValidationException('Invalid discount value.');
+        $discount = (float) ($data['discount_value'] ?? 0);
+
+        if ($discount < 0) {
+            throw new \App\Exceptions\BusinessValidationException('Discount value cannot be negative.');
+        }
+        $finalPrice = (float) ($data['final_price'] ?? 0);
+        if ($discount > 0 && $finalPrice <= 0) {
+            throw new \App\Exceptions\BusinessValidationException('Invalid pricing: discount applied but final price is zero or negative.');
         }
     }
 
@@ -541,12 +555,13 @@ class RegistrationService
     {
         $csEmployee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
 
-        $branchId = $csEmployee?->branch_id 
-            ?? $patch?->branch_id 
-            ?? \App\Models\Core\Branch::first()?->branch_id;
+        $branchId = $csEmployee?->branch_id ?? $patch?->branch_id;
 
         if (!$branchId) {
-            throw new \Exception('Branch resolution failed: no branch found for CS employee, patch, or system default.');
+            throw new \Exception(
+                'Branch resolution failed: the CS employee has no branch and no patch branch is available. '
+                . 'Please assign a branch to the CS account.'
+            );
         }
         $patchId    = $patch?->patch_id;
 
