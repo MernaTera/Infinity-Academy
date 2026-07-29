@@ -24,6 +24,9 @@ use App\Models\Finance\FinancialTransaction;
 use App\Models\Finance\RevenueSplit;
 use App\Models\Finance\TestFeeSetting;
 use App\Models\HR\Employee;
+use App\Models\Finance\InstallmentSchedule;
+use App\Models\Finance\InstallmentApprovalLog;
+use App\Exceptions\BusinessValidationException;
 
 class RegistrationService
 {
@@ -262,7 +265,7 @@ class RegistrationService
         if ($data['patch_option'] === 'custom') {
 
             if (empty($data['custom_date'])) {
-                throw new \Exception('Please select a date');
+                throw new \App\Exceptions\BusinessValidationException('Please select a start date.');
             }
 
             return [
@@ -272,7 +275,7 @@ class RegistrationService
             ];
         }
 
-        throw new \Exception('Invalid patch option');
+        throw new \App\Exceptions\BusinessValidationException('Invalid start option selected. Please refresh and try again.');
     }
 
     /*
@@ -331,19 +334,18 @@ class RegistrationService
         if ($data['type'] === 'group') {
 
             if ($data['patch_option'] === 'current' && empty($data['patch_id'])) {
-                throw new \Exception('Invalid patch selection');
+                throw new \App\Exceptions\BusinessValidationException('Invalid patch selection. Please refresh and choose a start option.');
             }
 
             if ($data['patch_option'] === 'custom' && empty($data['custom_date'])) {
-                throw new \Exception('Custom date required');
+                throw new \App\Exceptions\BusinessValidationException('A custom start date is required.');
             }
         }
 
 
         if (!empty($data['custom_date'])) {
-
-            if ($data['custom_date'] < now()->toDateString()) {
-                throw new \Exception('Date must be in future');
+            if ($data['custom_date'] <= now()->toDateString()) {
+                throw new \BusinessValidationException('The start date must be a future date (tomorrow or later).');
             }
         }
     }
@@ -424,24 +426,33 @@ class RegistrationService
             ->exists();
 
         if (!$exists) {
-            throw new \Exception('Teacher not available on this day');
+            throw new \App\Exceptions\BusinessValidationException('The selected teacher is not available on this day.');
         }
     }
 
     private function validateNoConflict($data)
     {
         if (empty($data['teacher_id'])) return;
+        if (($data['patch_option'] ?? '') !== 'current') return;
+        if (empty($data['patch_id'])) return;
+
+        $day        = $data['day']          ?? null;
+        $timeSlotId = $data['time_slot_id'] ?? null;
+        if (!$day && !$timeSlotId) return;
 
         $conflict = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
             ->where('patch_id', $data['patch_id'])
-            ->whereHas('instanceSchedules', function ($q) use ($data) { // ← instanceSchedules
-                $q->where('day_of_week', $data['day'] ?? null)
-                ->where('time_slot_id', $data['time_slot_id'] ?? null);
+            ->whereIn('status', ['Active', 'Upcoming'])
+            ->whereHas('instanceSchedules', function ($q) use ($day, $timeSlotId) {
+                if ($day)        $q->where('day_of_week', $day);
+                if ($timeSlotId) $q->where('time_slot_id', $timeSlotId);
             })
             ->exists();
 
         if ($conflict) {
-            throw new \Exception('Teacher already booked');
+            throw new \BusinessValidationException(
+                'The selected teacher is already booked for this day/time slot in this patch.'
+            );
         }
     }
 
@@ -452,14 +463,14 @@ class RegistrationService
         $lastPatch = \App\Models\Academic\Patch::orderByDesc('end_date')->first();
 
         if ($lastPatch && $data['custom_date'] <= $lastPatch->end_date) {
-            throw new \Exception('Date must be after current patch');
+            throw new \App\Exceptions\BusinessValidationException('The start date must be after the current patch ends.');
         }
     }
 
     private function validatePricing($data)
     {
         if (!empty($data['discount_value']) && $data['discount_value'] < 0) {
-            throw new \Exception('Invalid discount');
+            throw new \App\Exceptions\BusinessValidationException('Invalid discount value.');
         }
     }
 
@@ -535,7 +546,7 @@ class RegistrationService
             ?? \App\Models\Core\Branch::first()?->branch_id;
 
         if (!$branchId) {
-            throw new \Exception('Branch not found for this employee');
+            throw new \Exception('Branch resolution failed: no branch found for CS employee, patch, or system default.');
         }
         $patchId    = $patch?->patch_id;
 

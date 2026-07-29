@@ -184,12 +184,23 @@ class RegistrationController extends Controller
 
             return redirect()->route('leads.index')->with('success', 'Student registered successfully.');
 
-        } catch (\Throwable $e) {
-            \Log::error('Registration failed: ' . $e->getMessage());
-            return back()
-                ->withInput()
-                ->with('error', 'Registration failed: ' . $e->getMessage() . ' — Please try again or contact support.');
-        }
+            } catch (\App\Exceptions\BusinessValidationException $e) {
+                return back()
+                    ->withInput()
+                    ->with('error', $e->getMessage());
+
+            } catch (\Throwable $e) {
+                \Log::error('Registration failed', [
+                    'message' => $e->getMessage(),
+                    'file'    => $e->getFile(),
+                    'line'    => $e->getLine(),
+                    'lead_id' => $request->lead_id ?? null,
+                    'trace'   => $e->getTraceAsString(),
+                ]);
+                return back()
+                    ->withInput()
+                    ->with('error', 'Something went wrong while processing the registration. Please try again, or contact support if the problem persists.');
+            }
     }
 
     /*
