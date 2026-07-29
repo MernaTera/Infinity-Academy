@@ -82,16 +82,49 @@ class RegistrationController extends Controller
     */
     public function store(Request $request)
     {
-        $request->validate([
-            'lead_id'            => 'required|exists:lead,lead_id',
-            'type'               => 'required|in:group,private',
-            'course_template_id' => 'required|exists:course_template,course_template_id',
-            'payment_plan_id'    => 'required',
-            'patch_option'       => 'required|in:current,next,custom',
-            'teacher_id'         => 'nullable',
-            'day'                => 'nullable',
-            'custom_date'        => 'nullable|date',
-        ]);
+        $validated = $request->validate([
+                    'lead_id'            => 'required|exists:lead,lead_id',
+                    'type'               => 'required|in:group,private',
+                    'mode'               => 'required|in:Online,Offline',             
+                    'course_template_id' => 'required|exists:course_template,course_template_id',
+                    'level_id'           => 'nullable|exists:level,level_id',
+                    'sublevel_id'        => 'nullable|exists:sublevel,sublevel_id',
+                    'payment_plan_id'    => 'required|exists:payment_plan,payment_plan_id',
+                    'patch_option'       => 'required|in:current,next,custom',
+                    'patch_id'           => 'nullable|exists:patch,patch_id',
+                    'teacher_id'         => 'nullable|exists:teacher,teacher_id',
+                    'course_instance_id' => 'nullable|exists:course_instance,course_instance_id',
+                    'day'                => 'nullable|string',
+                    'custom_date'        => 'nullable|date|after:today',              
+                    'final_price'        => 'required|numeric|min:0',
+                    'discount_value'     => 'nullable|numeric|min:0',                
+                    'test_fee'           => 'nullable|numeric|min:0',
+                    'test_score'         => 'nullable|string|max:50',
+
+                    'deposit_methods'            => 'nullable|array',
+                    'deposit_methods.*.method'   => 'required_with:deposit_methods|in:Cash,Instapay,Vodafone_Cash',
+                    'deposit_methods.*.amount'   => 'required_with:deposit_methods|numeric|min:0',
+                ], [
+                    'mode.required'                    => 'Please select a delivery mode (Online or Offline).',
+                    'mode.in'                          => 'Invalid delivery mode selected.',
+                    'deposit_methods.*.method.in'      => 'One of the payment methods is invalid.',
+                    'deposit_methods.*.amount.numeric' => 'Payment amounts must be valid numbers.',
+                    'deposit_methods.*.amount.min'     => 'Payment amounts cannot be negative.',
+                    'custom_date.after'                => 'The start date must be in the future.',
+                    'final_price.required'             => 'Course price could not be determined. Please re-select the course.',
+                ]);
+        $discountValue = (float) ($request->discount_value ?? 0);
+        $finalPriceVal = (float) $request->final_price;
+
+        if ($discountValue > 0) {
+            $basePrice = $finalPriceVal + $discountValue;
+
+            if ($discountValue >= $basePrice) {
+                return back()->withInput()->withErrors([
+                    'discount_value' => "Discount ({$discountValue} LE) cannot be equal to or greater than the course price ({$basePrice} LE)."
+                ]);
+            }
+        }
 
         $plan          = \App\Models\Finance\PaymentPlan::find($request->payment_plan_id);
         $finalPrice    = (float) $request->final_price;
@@ -102,7 +135,16 @@ class RegistrationController extends Controller
             $depositOnCourse = round($finalPrice * $plan->deposit_percentage / 100, 2);
             $requiredDeposit = round($depositOnCourse + $materialPrice + $testFee, 2);
             $methods   = $request->input('deposit_methods', []);
-            $totalPaid = round(collect($methods)->sum(fn($m) => (float)($m['amount'] ?? 0)), 2);
+
+            $validMethods = collect($methods)->filter(fn($m) => (float)($m['amount'] ?? 0) > 0);
+
+            if ($validMethods->isEmpty()) {
+                return back()->withInput()->withErrors([
+                    'deposit_methods' => "At least one payment method with a positive amount is required (required deposit: {$requiredDeposit} LE)."
+                ]);
+            }
+
+            $totalPaid = round($validMethods->sum(fn($m) => (float)($m['amount'] ?? 0)), 2);
 
             if (abs($totalPaid - $requiredDeposit) > 0.01) {
                 return back()->withInput()->withErrors([
