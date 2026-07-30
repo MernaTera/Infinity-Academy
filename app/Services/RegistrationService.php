@@ -682,7 +682,16 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
         }
 
         // ═══════════════════════════════════════════════════════════
-        // INSTALLMENT SCHEDULE (no ft until actually paid)
+        // INSTALLMENT SCHEDULE
+        //
+        // For each installment we create a FinancialTransaction (type
+        // Installment) AND a schedule row linked to it, with status 'Pending'.
+        // The transaction EXISTS so the enrollment shows correctly in the
+        // Outstanding page and BalanceCalculator can link paid installments,
+        // but it is NOT counted as received revenue while the schedule is
+        // Pending — the dashboard/BalanceCalculator only count installments
+        // whose schedule status is 'Paid'. This matches the approval path in
+        // InstallmentApprovalController exactly, keeping the two consistent.
         // ═══════════════════════════════════════════════════════════
         $plan = PaymentPlan::find($data['payment_plan_id']);
 
@@ -703,20 +712,30 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
             return;
         }
 
- 
-        $remaining  = $courseFinal - $courseDeposit;
-        $instAmount = round($remaining / $plan->installment_count, 2);
+        $remaining   = $courseFinal - $courseDeposit;
+        $installmentAmt = round($remaining / $plan->installment_count, 2);
 
-            for ($i = 1; $i <= $plan->installment_count; $i++) {
-                InstallmentSchedule::create([
-                    'enrollment_id'      => $enrollment->enrollment_id,
-                    'transaction_id'     => null,   // ← filled when the installment is paid
-                    'installment_number' => $i,
-                    'due_date'           => null,
-                    'amount'             => $installmentAmt,
-                    'status'             => 'Pending',
-                ]);
-            }
+        for ($i = 1; $i <= $plan->installment_count; $i++) {
+            $instTx = FinancialTransaction::create([
+                'enrollment_id'          => $enrollment->enrollment_id,
+                'patch_id'               => $patchId,
+                'branch_id'              => $branchId,
+                'transaction_type'       => 'Installment',
+                'transaction_category'   => 'Course',
+                'amount'                 => $installmentAmt,
+                'payment_method'         => 'Cash',
+                'created_by_employee_id' => $csEmployee->employee_id,
+            ]);
+
+            InstallmentSchedule::create([
+                'enrollment_id'      => $enrollment->enrollment_id,
+                'transaction_id'     => $instTx->transaction_id,
+                'installment_number' => $i,
+                'due_date'           => null,   // set when SC assigns the course
+                'amount'             => $installmentAmt,
+                'status'             => 'Pending',
+            ]);
+        }
     }
 
     private function getDepositPct($data): float
