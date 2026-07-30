@@ -395,27 +395,46 @@ class RegistrationService
         }
 
         if (($currentOption['case'] ?? null) === 'B') {
-            if (empty($data['teacher_id'])) {
-                throw new \Exception('Please select a teacher for this registration.');
-            }
+            $type = ucfirst(strtolower($data['type'] ?? ''));
 
-            $availableTeachers = app(\App\Services\TeacherAvailabilityService::class)
-                ->getAvailableTeachers([
-                    'patch_option'       => 'current',
-                    'patch_id'           => $data['patch_id'] ?? null,
-                    'course_template_id' => $data['course_template_id'] ?? null,
-                    'level_id'           => $data['level_id']    ?? null,
-                    'sublevel_id'        => $data['sublevel_id'] ?? null,
-                    'delivery_mood'      => $mode,
-                ]);
+            if ($type === 'Private') {
+                if (empty($data['teacher_id'])) {
+                    throw new \App\Exceptions\BusinessValidationException('Please select a teacher for this private registration.');
+                }
 
-            $availableIds = collect($availableTeachers)->pluck('teacher_id')->map(fn($id) => (int) $id);
+                $availableTeachers = app(\App\Services\TeacherAvailabilityService::class)
+                    ->getAvailableTeachers([
+                        'patch_option'       => 'current',
+                        'patch_id'           => $data['patch_id'] ?? null,
+                        'course_template_id' => $data['course_template_id'] ?? null,
+                        'level_id'           => $data['level_id']    ?? null,
+                        'sublevel_id'        => $data['sublevel_id'] ?? null,
+                        'delivery_mood'      => $data['mode'] ?? null,
+                    ]);
 
-            if (!$availableIds->contains((int) $data['teacher_id'])) {
-                throw new \Exception(
-                    'The selected teacher is no longer available for this patch '
-                    . '(fully booked or schedule changed). Please refresh and pick another.'
-                );
+                $availableIds = collect($availableTeachers)->pluck('teacher_id')->map(fn($id) => (int) $id);
+
+                if (!$availableIds->contains((int) $data['teacher_id'])) {
+                    throw new \App\Exceptions\BusinessValidationException(
+                        'The selected teacher is no longer available for this patch. Please refresh and pick another.'
+                    );
+                }
+            } else {
+                $availableTeachers = app(\App\Services\TeacherAvailabilityService::class)
+                    ->getAvailableTeachers([
+                        'patch_option'       => 'current',
+                        'patch_id'           => $data['patch_id'] ?? null,
+                        'course_template_id' => $data['course_template_id'] ?? null,
+                        'level_id'           => $data['level_id']    ?? null,
+                        'sublevel_id'        => $data['sublevel_id'] ?? null,
+                        'delivery_mood'      => $data['mode'] ?? null,
+                    ]);
+
+                if (empty($availableTeachers)) {
+                    throw new \App\Exceptions\BusinessValidationException(
+                        'No teacher is available to start a new group in the current patch. Please choose Next Patch or a specific date.'
+                    );
+                }
             }
         }
     }
@@ -551,7 +570,7 @@ class RegistrationService
         ]);
     }
 
-    private function createFinancialRecords($enrollment, $data, $pricing, $patch)
+private function createFinancialRecords($enrollment, $data, $pricing, $patch)
     {
         $csEmployee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
 
@@ -563,10 +582,15 @@ class RegistrationService
                 . 'Please assign a branch to the CS account.'
             );
         }
-        $patchId    = $patch?->patch_id;
 
-        $depositAmount = ($pricing['final_price'] * $this->getDepositPct($data)) / 100;
+        $patchId = $patch?->patch_id;
 
+        // ─── Compute each component's correct amount ───
+        $courseFinal   = (float) $pricing['final_price'];
+        $depositPct    = $this->getDepositPct($data);
+        $courseDeposit = round($courseFinal * $depositPct / 100, 2);
+        $testFee       = floatval($data['test_fee'] ?? 0);
+        $materialPrice = floatval($data['material_price'] ?? 0);
 
         $methodMap = [
             'Instapay'      => 'Transfer',
@@ -577,22 +601,37 @@ class RegistrationService
             'Online'        => 'Online',
         ];
 
-        $methods = $data['deposit_methods'] ?? [];
+        // Components in FILL ORDER (Course first, then Test, then Material)
+        $components = [
+            ['category' => 'Course',   'remaining' => $courseDeposit],
+            ['category' => 'Test',     'remaining' => $testFee],
+            ['category' => 'Material', 'remaining' => $materialPrice],
+        ];
 
-        foreach ($methods as $method) {
-            $amt = (float) ($method['amount'] ?? 0);
-            if ($amt <= 0) continue;
+        // Payment methods the CS entered (queue to consume in order)
+        $methodQueue = collect($data['deposit_methods'] ?? [])
+            ->map(fn($m) => [
+                'method' => $m['method'] ?? 'Cash',
+                'amount' => (float) ($m['amount'] ?? 0),
+            ])
+            ->filter(fn($m) => $m['amount'] > 0)
+            ->values()
+            ->toArray();
 
-            $mappedMethod = $methodMap[$method['method']] ?? 'Cash';
+        // ─── Helper: create a Payment ft + revenue split ───
+        $createPaymentTx = function ($category, $amount, $rawMethod) use (
+            $enrollment, $patchId, $branchId, $csEmployee, $methodMap
+        ) {
+            if ($amount <= 0.001) return;
 
             $tx = FinancialTransaction::create([
                 'enrollment_id'          => $enrollment->enrollment_id,
                 'patch_id'               => $patchId,
                 'branch_id'              => $branchId,
                 'transaction_type'       => 'Payment',
-                'transaction_category'   => 'Course',
-                'amount'                 => $amt,
-                'payment_method'         => $mappedMethod,
+                'transaction_category'   => $category,
+                'amount'                 => round($amount, 2),
+                'payment_method'         => $methodMap[$rawMethod] ?? 'Cash',
                 'created_by_employee_id' => $csEmployee->employee_id,
             ]);
 
@@ -601,155 +640,83 @@ class RegistrationService
                 'employee_id'      => $csEmployee->employee_id,
                 'branch_id'        => $branchId,
                 'patch_id'         => $patchId,
-                'amount_allocated' => $amt,
+                'amount_allocated' => round($amount, 2),
                 'allocation_type'  => 'Direct',
             ]);
+        };
 
+        // ─── Fill each component from the method queue, in order ───
+        // Each method is consumed across one or more components. Categories stay
+        // correct (for balance) AND payment_method reflects the real split.
+        $mIdx = 0;
+        foreach ($components as &$comp) {
+            while ($comp['remaining'] > 0.001 && $mIdx < count($methodQueue)) {
+                $avail = $methodQueue[$mIdx]['amount'];
+
+                if ($avail <= 0.001) { $mIdx++; continue; }
+
+                $take = min($comp['remaining'], $avail);
+
+                $createPaymentTx($comp['category'], $take, $methodQueue[$mIdx]['method']);
+
+                $comp['remaining']            -= $take;
+                $methodQueue[$mIdx]['amount'] -= $take;
+
+                if ($methodQueue[$mIdx]['amount'] <= 0.001) $mIdx++;
+            }
+        }
+        unset($comp);
+
+        // ─── Record the raw payment-method split for audit (once) ───
+        foreach (($data['deposit_methods'] ?? []) as $m) {
+            $amt = (float) ($m['amount'] ?? 0);
+            if ($amt <= 0) continue;
             \Illuminate\Support\Facades\DB::table('deposit_payment')->insert([
                 'enrollment_id'    => $enrollment->enrollment_id,
-                'method'           => $method['method'],
+                'method'           => $m['method'] ?? 'Cash',
                 'amount'           => $amt,
-                'reference_number' => $method['reference'] ?? null,
+                'reference_number' => null,
                 'created_at'       => now(),
                 'updated_at'       => now(),
             ]);
         }
 
-        $testFee = floatval($data['test_fee'] ?? 0);
-        if ($testFee > 0) {
-            $primaryMethod = collect($methods)
-                ->filter(fn($m) => (float) ($m['amount'] ?? 0) > 0)
-                ->sortByDesc(fn($m) => (float) ($m['amount'] ?? 0))
-                ->first();
-
-            $testMethodRaw = $primaryMethod['method'] ?? 'Cash';
-            $testMethod    = $methodMap[$testMethodRaw] ?? 'Cash';
-
-            $testTx = FinancialTransaction::create([
-                'enrollment_id'          => $enrollment->enrollment_id,
-                'patch_id'               => $patchId,
-                'branch_id'              => $branchId,
-                'transaction_type'       => 'Payment',
-                'transaction_category'   => 'Test',
-                'amount'                 => $testFee,
-                'payment_method'         => $testMethod,
-                'created_by_employee_id' => $csEmployee->employee_id,
-            ]);
-
-            RevenueSplit::create([
-                'transaction_id'   => $testTx->transaction_id,
-                'employee_id'      => $csEmployee->employee_id,
-                'branch_id'        => $branchId,
-                'patch_id'         => $patchId,
-                'amount_allocated' => $testFee,
-                'allocation_type'  => 'Direct',
-            ]);
-        }
-
-        $materialPrice = floatval($data['material_price'] ?? 0);
-        if ($materialPrice > 0) {
-
-            $materialTx = FinancialTransaction::create([
-                'enrollment_id'         => $enrollment->enrollment_id,
-                'patch_id'              => $patchId,
-                'branch_id'             => $branchId,
-                'transaction_type'      => 'Payment',
-                'transaction_category'  => 'Material',
-                'amount'                => $materialPrice,
-                'payment_method'        => 'Cash',
-                'created_by_employee_id'=> $csEmployee->employee_id,
-            ]);
-
-            $enrollmentMaterial = \App\Models\Enrollment\EnrollmentMaterial::where('enrollment_id', $enrollment->enrollment_id)
-                ->first();
-
-            $material = $enrollmentMaterial
-                ? \App\Models\Enrollment\Material::find($enrollmentMaterial->material_id)
-                : null;
-
-            $revenueType = $material?->revenue_type ?? 'Shared';
-
-            if ($revenueType === 'Individual') {
-                RevenueSplit::create([
-                    'transaction_id'    => $materialTx->transaction_id,
-                    'employee_id'       => $csEmployee->employee_id,
-                    'branch_id'         => $branchId,
-                    'patch_id'          => $patchId,
-                    'amount_allocated'  => $materialPrice,
-                    'allocation_type'   => 'Direct',
-                ]);
-            } else {
-                $allCS = Employee::whereHas('user', fn($q) =>
-                        $q->whereHas('role', fn($q2) =>
-                            $q2->where('role_name', 'Customer Service')
-                        )
-                    )
-                    ->where('branch_id', $branchId)
-                    ->get();
-
-                $share = $allCS->count() > 0
-                    ? round($materialPrice / $allCS->count(), 2)
-                    : $materialPrice;
-
-                foreach ($allCS as $cs) {
-                    RevenueSplit::create([
-                        'transaction_id'    => $materialTx->transaction_id,
-                        'employee_id'       => $cs->employee_id,
-                        'branch_id'         => $branchId,
-                        'patch_id'          => $patchId,
-                        'amount_allocated'  => $share,
-                        'allocation_type'   => 'Shared',
-                    ]);
-                }
-            }
-        }
-
+        // ═══════════════════════════════════════════════════════════
+        // INSTALLMENT SCHEDULE (no ft until actually paid)
+        // ═══════════════════════════════════════════════════════════
         $plan = PaymentPlan::find($data['payment_plan_id']);
 
-               
-                $existingSchedules = \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->get();
-                foreach ($existingSchedules as $sched) {
-                    FinancialTransaction::where('transaction_id', $sched->transaction_id)
-                        ->where('transaction_type', 'Installment')
-                        ->delete();
-                }
-                \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->delete();
+        // Clean up any existing schedules first (defensive)
+        $existingSchedules = \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->get();
+        foreach ($existingSchedules as $sched) {
+            FinancialTransaction::where('transaction_id', $sched->transaction_id)
+                ->where('transaction_type', 'Installment')
+                ->delete();
+        }
+        \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->delete();
 
-                if (!$plan || $plan->installment_count <= 0) {
-                    return;
-                }
+        if (!$plan || $plan->installment_count <= 0) {
+            return;
+        }
 
-                if ($plan->requires_admin_approval) {
-                    return;
-                }
+        if ($plan->requires_admin_approval) {
+            return;
+        }
 
-                $remaining  = $pricing['final_price'] - $depositAmount;
-                $instAmount = round($remaining / $plan->installment_count, 2);
+ 
+        $remaining  = $courseFinal - $courseDeposit;
+        $instAmount = round($remaining / $plan->installment_count, 2);
 
-                for ($i = 1; $i <= $plan->installment_count; $i++) {
-
-                    $instTx = FinancialTransaction::create([
-                        'enrollment_id'          => $enrollment->enrollment_id,
-                        'patch_id'               => $patchId,
-                        'branch_id'              => $branchId,
-                        'transaction_type'       => 'Installment',
-                        'transaction_category'   => 'Course',
-                        'amount'                 => $instAmount,
-                        'payment_method'         => 'Cash',
-                        'created_by_employee_id' => $csEmployee->employee_id,
-                    ]);
-
-                    \App\Models\Finance\InstallmentSchedule::create([
-                        'enrollment_id'      => $enrollment->enrollment_id,
-                        'transaction_id'     => $instTx->transaction_id,
-                        'installment_number' => $i,
-                        'due_date'           => null,
-                        'amount'             => $instAmount,
-                        'status'             => 'Pending',
-                    ]);
-                }
-            
-            
+            for ($i = 1; $i <= $plan->installment_count; $i++) {
+                InstallmentSchedule::create([
+                    'enrollment_id'      => $enrollment->enrollment_id,
+                    'transaction_id'     => null,   // ← filled when the installment is paid
+                    'installment_number' => $i,
+                    'due_date'           => null,
+                    'amount'             => $installmentAmt,
+                    'status'             => 'Pending',
+                ]);
+            }
     }
 
     private function getDepositPct($data): float

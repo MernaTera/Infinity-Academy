@@ -86,7 +86,6 @@ class InstallmentApprovalController extends Controller
             }
             InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->delete();
 
-            // ── Create installment schedule ───────────────────────────
             for ($i = 1; $i <= $plan->installment_count; $i++) {
 
                 $tx = FinancialTransaction::create([
@@ -104,7 +103,7 @@ class InstallmentApprovalController extends Controller
                     'enrollment_id'      => $enrollment->enrollment_id,
                     'transaction_id'     => $tx->transaction_id,
                     'installment_number' => $i,
-                    'due_date'           => null, 
+                    'due_date'           => null,
                     'amount'             => $installmentAmt,
                     'status'             => 'Pending',
                 ]);

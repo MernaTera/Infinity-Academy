@@ -110,7 +110,8 @@ class PatchService
                     'label'                   => 'Current Patch — Start new group with available teacher',
                     'patch_id'                => $currentPatch->patch_id,
                     'course_instance_id'      => null,
-                    'requires_teacher_choice' => true,
+                    'requires_teacher_choice' => false,
+                    'auto_teacher_id'         => $teacher->teacher_id, 
                 ];
             }
         }
