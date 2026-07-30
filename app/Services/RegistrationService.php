@@ -618,9 +618,18 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
             ->values()
             ->toArray();
 
-        // ─── Helper: create a Payment ft + revenue split ───
+        // ─── Helper: create a Payment ft (NO revenue split here) ───
+        // Revenue splits are handled separately per category:
+        //   Course   → Direct to the registering CS
+        //   Test     → NO revenue split (not counted toward CS revenue)
+        //   Material → by revenue_type (Individual = Direct, Shared = split)
+        // We collect the created transactions per category so we can attach
+        // the correct split afterwards.
+        $courseTxs   = [];
+        $materialTxs = [];
+
         $createPaymentTx = function ($category, $amount, $rawMethod) use (
-            $enrollment, $patchId, $branchId, $csEmployee, $methodMap
+            $enrollment, $patchId, $branchId, $csEmployee, $methodMap, &$courseTxs, &$materialTxs
         ) {
             if ($amount <= 0.001) return;
 
@@ -635,14 +644,24 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
                 'created_by_employee_id' => $csEmployee->employee_id,
             ]);
 
-            RevenueSplit::create([
-                'transaction_id'   => $tx->transaction_id,
-                'employee_id'      => $csEmployee->employee_id,
-                'branch_id'        => $branchId,
-                'patch_id'         => $patchId,
-                'amount_allocated' => round($amount, 2),
-                'allocation_type'  => 'Direct',
-            ]);
+            // Course deposit → Direct revenue to the registering CS
+            if ($category === 'Course') {
+                RevenueSplit::create([
+                    'transaction_id'   => $tx->transaction_id,
+                    'employee_id'      => $csEmployee->employee_id,
+                    'branch_id'        => $branchId,
+                    'patch_id'         => $patchId,
+                    'amount_allocated' => round($amount, 2),
+                    'allocation_type'  => 'Direct',
+                ]);
+            }
+
+            // Track material transactions so we can split them by revenue_type
+            if ($category === 'Material') {
+                $materialTxs[] = $tx;
+            }
+
+            // Test → intentionally NO revenue split (not CS revenue)
         };
 
         // ─── Fill each component from the method queue, in order ───
@@ -666,6 +685,65 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
             }
         }
         unset($comp);
+
+        // ─── Material revenue split by revenue_type ───
+        // Individual → full amount Direct to the registering CS.
+        // Shared     → split equally among ALL active CS in the branch.
+        if (!empty($materialTxs)) {
+            $enrollmentMaterial = \App\Models\Enrollment\EnrollmentMaterial::where('enrollment_id', $enrollment->enrollment_id)->first();
+            $material     = $enrollmentMaterial
+                ? \App\Models\Enrollment\Material::find($enrollmentMaterial->material_id)
+                : null;
+            $revenueType  = $material?->revenue_type ?? 'Shared';
+
+            if ($revenueType === 'Individual') {
+                // Full material revenue → registering CS (Direct)
+                foreach ($materialTxs as $mtx) {
+                    RevenueSplit::create([
+                        'transaction_id'   => $mtx->transaction_id,
+                        'employee_id'      => $csEmployee->employee_id,
+                        'branch_id'        => $branchId,
+                        'patch_id'         => $patchId,
+                        'amount_allocated' => (float) $mtx->amount,
+                        'allocation_type'  => 'Direct',
+                    ]);
+                }
+            } else {
+                // Shared → split each material tx equally among all active branch CS
+                $branchCS = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
+                    ->where('branch_id', $branchId)
+                    ->where('status', 'Active')
+                    ->get();
+
+                $csCount = $branchCS->count();
+
+                foreach ($materialTxs as $mtx) {
+                    if ($csCount > 0) {
+                        $share = round((float) $mtx->amount / $csCount, 2);
+                        foreach ($branchCS as $cs) {
+                            RevenueSplit::create([
+                                'transaction_id'   => $mtx->transaction_id,
+                                'employee_id'      => $cs->employee_id,
+                                'branch_id'        => $branchId,
+                                'patch_id'         => $patchId,
+                                'amount_allocated' => $share,
+                                'allocation_type'  => 'Shared',
+                            ]);
+                        }
+                    } else {
+                        // No branch CS found → fall back to registering CS
+                        RevenueSplit::create([
+                            'transaction_id'   => $mtx->transaction_id,
+                            'employee_id'      => $csEmployee->employee_id,
+                            'branch_id'        => $branchId,
+                            'patch_id'         => $patchId,
+                            'amount_allocated' => (float) $mtx->amount,
+                            'allocation_type'  => 'Shared',
+                        ]);
+                    }
+                }
+            }
+        }
 
         // ─── Record the raw payment-method split for audit (once) ───
         foreach (($data['deposit_methods'] ?? []) as $m) {

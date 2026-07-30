@@ -69,14 +69,14 @@ class OutstandingController extends Controller
                 'created_by_employee_id' => $employee->employee_id,
             ]);
 
-            RevenueSplit::create([
-                'transaction_id'   => $tx->transaction_id,
-                'employee_id'      => $enrollment->created_by_cs_id,
-                'branch_id'        => $employee->branch_id,
-                'patch_id'         => $patchId, 
-                'amount_allocated' => $request->amount,
-                'allocation_type'  => 'Direct',
-            ]);
+            // RevenueSplit::create([
+            //     'transaction_id'   => $tx->transaction_id,
+            //     'employee_id'      => $enrollment->created_by_cs_id,
+            //     'branch_id'        => $employee->branch_id,
+            //     'patch_id'         => $patchId, 
+            //     'amount_allocated' => $request->amount,
+            //     'allocation_type'  => 'Direct',
+            // ]);
 
     
             $amountLeft = (float) $request->amount;
