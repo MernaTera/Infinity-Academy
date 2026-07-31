@@ -111,7 +111,11 @@ class AppServiceProvider extends ServiceProvider
                             in_array($type, ['installment_request', 'installment_approved', 'installment_rejected']) => 
                                 $userRole === 'Admin' ? url('/admin/installments') : url('/leads'),
                             
-                            $type === 'course_instance' => url('/teacher/courses'),
+                            $type === 'course_instance' => match ($userRole) {
+                                'Teacher'      => url('/teacher/pending-approvals'),
+                                'Student Care' => url('/student-care/course-instances'),
+                                default        => '#', 
+                            },
                             
                             in_array($type, ['report_approved', 'report_rejected']) => url('/teacher/reports'),
                             

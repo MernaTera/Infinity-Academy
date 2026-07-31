@@ -79,7 +79,11 @@ class NotificationService
             'report_approved', 'report_rejected' =>
                 url('/teacher/reports'),
 
-            'course_instance' => url('/teacher/courses'),
+            'course_instance' => match ($role) {
+                'Teacher'      => url('/teacher/pending-approvals'),
+                'Student Care' => url('/student-care/course-instances'),
+                default        => '#',   
+            },
             'waiting_list'    => url('/student-care/waiting-list'),
             'report_submit_soon', 'report_submit_today', 'report_submit_overdue',
             'report_send_soon', 'report_send_overdue' => url('/teacher/reports'),
