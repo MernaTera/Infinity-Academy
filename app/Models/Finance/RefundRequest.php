@@ -51,6 +51,7 @@ class RefundRequest extends Model
 		'enrollment_id',
 		'requested_by',
 		'amount',
+        'includes_material',
 		'reason',
 		'status',
 		'approved_by_admin_id',

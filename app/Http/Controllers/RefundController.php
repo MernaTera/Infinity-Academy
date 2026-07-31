@@ -27,10 +27,11 @@ class RefundController extends Controller
             'student',
             'courseTemplate',
             'level',
-            // ALL Course-category deposit payments (the deposit may be split
-            // across several payment methods: Cash + Instapay + Vodafone ...)
+            // ALL Course + Material deposit payments (Test is never refundable,
+            // Material is refunded only if the CS opts in). Course may be split
+            // across several payment methods.
             'financialTransactions' => fn($q) => $q->where('transaction_type', 'Payment')
-                                                    ->where('transaction_category', 'Course')
+                                                    ->whereIn('transaction_category', ['Course', 'Material'])
                                                     ->orderBy('created_at'),
             'installmentSchedules',
             'refundRequests',
@@ -39,11 +40,12 @@ class RefundController extends Controller
         ->whereIn('status', ['Active', 'Pending_Approval', 'Waiting'])
         ->get()
         ->filter(function ($enrollment) {
-            $deposits = $enrollment->financialTransactions;
-            if ($deposits->isEmpty()) return false;
+            $deposits       = $enrollment->financialTransactions;
+            $courseDeposits = $deposits->where('transaction_category', 'Course');
+            if ($courseDeposits->isEmpty()) return false;
 
-            // Within 3 days of the FIRST deposit payment
-            $firstPaid = $deposits->sortBy('created_at')->first();
+            // Within 3 days of the FIRST course deposit payment
+            $firstPaid = $courseDeposits->sortBy('created_at')->first();
             if ($firstPaid->created_at->diffInDays(now()) > 3) return false;
 
             // NOT eligible if any installment has already been paid
@@ -83,14 +85,16 @@ class RefundController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'enrollment_id' => 'required|exists:enrollment,enrollment_id',
-            'reason'        => 'required|string|min:5',
+            'enrollment_id'     => 'required|exists:enrollment,enrollment_id',
+            'reason'            => 'required|string|min:5',
+            'include_material'  => 'nullable|boolean',
         ]);
 
         $employeeId = Employee::where('user_id', auth()->id())->value('employee_id');
         $enrollment = Enrollment::with([
+            // Course + Material deposits (Test is never refundable)
             'financialTransactions' => fn($q) => $q->where('transaction_type', 'Payment')
-                                                    ->where('transaction_category', 'Course'),
+                                                    ->whereIn('transaction_category', ['Course', 'Material']),
             'installmentSchedules',
         ])->findOrFail($request->enrollment_id);
 
@@ -99,15 +103,26 @@ class RefundController extends Controller
             return back()->with('error', 'You can only request refunds for your own enrollments.');
         }
 
-        // Total Course deposit = sum of ALL Course-category payments (split methods)
-        $deposits = $enrollment->financialTransactions;
-        if ($deposits->isEmpty()) {
-            return back()->with('error', 'No deposit payment found for this enrollment.');
-        }
-        $depositTotal = (float) $deposits->sum('amount');
-        $firstPaid    = $deposits->sortBy('created_at')->first();
+        $allDeposits = $enrollment->financialTransactions;
+        $courseDeposits   = $allDeposits->where('transaction_category', 'Course');
+        $materialDeposits = $allDeposits->where('transaction_category', 'Material');
 
-        // Check 3-day window (from first deposit payment)
+        if ($courseDeposits->isEmpty()) {
+            return back()->with('error', 'No course deposit found for this enrollment.');
+        }
+
+        // Course deposit is always refunded
+        $courseTotal = (float) $courseDeposits->sum('amount');
+
+        // Material only if the CS opted in AND material was actually paid
+        $includeMaterial = $request->boolean('include_material');
+        $materialTotal   = (float) $materialDeposits->sum('amount');
+        $refundMaterial  = $includeMaterial && $materialTotal > 0;
+
+        $refundTotal = $courseTotal + ($refundMaterial ? $materialTotal : 0);
+
+        // 3-day window (from first course deposit payment)
+        $firstPaid = $courseDeposits->sortBy('created_at')->first();
         if ($firstPaid->created_at->diffInDays(now()) > 3) {
             return back()->with('error', 'Refund window has expired (3 days from payment).');
         }
@@ -119,7 +134,7 @@ class RefundController extends Controller
             return back()->with('error', 'This student has already paid an installment — deposit refund is no longer available.');
         }
 
-        // Check no existing pending request
+        // No existing pending/approved request
         $existing = RefundRequest::where('enrollment_id', $enrollment->enrollment_id)
             ->whereIn('status', ['Pending', 'Approved'])
             ->first();
@@ -128,11 +143,12 @@ class RefundController extends Controller
         }
 
         $refundRequest = RefundRequest::create([
-            'enrollment_id' => $enrollment->enrollment_id,
-            'requested_by'  => $employeeId,
-            'amount'        => $depositTotal,
-            'reason'        => $request->reason,
-            'status'        => 'Pending',
+            'enrollment_id'     => $enrollment->enrollment_id,
+            'requested_by'      => $employeeId,
+            'amount'            => $refundTotal,
+            'includes_material' => $refundMaterial,
+            'reason'            => $request->reason,
+            'status'            => 'Pending',
         ]);
 
         $adminIds = DB::table('employee')
@@ -142,12 +158,13 @@ class RefundController extends Controller
             ->pluck('employee.employee_id');
 
         $studentName = $enrollment->student?->full_name ?? "Enrollment #{$enrollment->enrollment_id}";
+        $matNote = $refundMaterial ? ' (incl. material)' : '';
 
         foreach ($adminIds as $adminId) {
             \App\Services\NotificationService::send(
                 $adminId,
                 'New Refund Request',
-                "Refund requested for {$studentName} — " . number_format($depositTotal) . ' LE',
+                "Refund requested for {$studentName} — " . number_format($refundTotal) . ' LE' . $matNote,
                 'refund_request',
                 $refundRequest->request_id
             );

@@ -23,7 +23,7 @@
 
     /* ═══ HEADER ═══ */
     .page-header {
-        max-width:1280px; margin:0 auto 22px;
+        margin:0 auto 22px;
         background:linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
         border-radius:14px; padding:24px 30px;
         display:flex; align-items:center; justify-content:space-between;
@@ -40,7 +40,7 @@
     .btn-add { display:inline-flex; align-items:center; gap:8px; padding:12px 24px; background:var(--orange); border:none; border-radius:8px; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:3px; text-decoration:none; transition:all 0.25s; position:relative; z-index:1; box-shadow:0 4px 16px rgba(245,145,30,0.3); }
     .btn-add:hover { background:#E8850F; transform:translateY(-2px); text-decoration:none; color:#fff; }
 
-    .leads-wrap { max-width:1280px; margin:0 auto; }
+    .leads-wrap { margin:0 auto; }
 
     /* ═══ STATS ═══ */
     .stats-row { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:20px; }

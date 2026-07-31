@@ -23,7 +23,7 @@
 
     /* ═══ HEADER ═══ */
     .rf-header {
-        max-width:1120px; margin:0 auto 22px;
+        margin:0 auto 22px;
         background:linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
         border-radius:14px; padding:24px 30px;
         position:relative; overflow:hidden; box-shadow:0 8px 32px rgba(15,31,61,0.15);
@@ -36,7 +36,7 @@
     .rf-title { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:4px; color:#fff; line-height:1; margin:0; }
     .rf-sub { font-size:11px; color:rgba(255,255,255,0.5); margin-top:5px; letter-spacing:0.5px; }
 
-    .rf-wrap { max-width:1120px; margin:0 auto; }
+    .rf-wrap { margin:0 auto; }
 
     /* ═══ POLICY BANNER ═══ */
     .policy-banner {
@@ -204,13 +204,18 @@
             @forelse($eligibleEnrollments as $enrollment)
                 @php
                     $deposits    = $enrollment->financialTransactions;
-                    $firstPaid   = $deposits->sortBy('created_at')->first();
-                    $depositTotal= $deposits->sum('amount');
+                    // Course + Material shown separately; Test is excluded from refunds
+                    $courseDeposits   = $deposits->where('transaction_category', 'Course');
+                    $materialDeposits = $deposits->where('transaction_category', 'Material');
+                    $courseTotal      = $courseDeposits->sum('amount');
+                    $materialTotal    = $materialDeposits->sum('amount');
+
+                    $firstPaid   = $courseDeposits->sortBy('created_at')->first() ?? $deposits->sortBy('created_at')->first();
                     $daysAgo     = $firstPaid ? (int) $firstPaid->created_at->diffInDays(now()) : 0;
                     $hoursLeft   = $firstPaid ? max(0, 72 - (int) $firstPaid->created_at->diffInHours(now())) : 0;
 
-                    // Merge deposits by payment_method for the breakdown
-                    $byMethod = $deposits->groupBy('payment_method')->map(fn($g) => $g->sum('amount'));
+                    // Merge Course deposits by payment_method for the breakdown
+                    $byMethod = $courseDeposits->groupBy('payment_method')->map(fn($g) => $g->sum('amount'));
 
                     $timerClass = $hoursLeft > 48 ? 'timer-ok' : ($hoursLeft > 12 ? 'timer-warn' : 'timer-crit');
 
@@ -266,8 +271,8 @@
 
                     <div class="elig-card-bottom">
                         <div class="elig-total">
-                            <div class="elig-total-label">Refund Amount</div>
-                            <div class="elig-total-val">{{ number_format($depositTotal, 0) }} LE</div>
+                            <div class="elig-total-label">Deposit (refundable)</div>
+                            <div class="elig-total-val">{{ number_format($courseTotal, 0) }} LE</div>
                         </div>
                         @if($hasPending)
                             <button class="btn-refund" disabled title="Refund already requested">
@@ -276,7 +281,7 @@
                             </button>
                         @else
                             <button class="btn-refund"
-                                onclick="openRefundModal({{ $enrollment->enrollment_id }}, '{{ addslashes($enrollment->student?->full_name ?? 'Student') }}', '{{ addslashes($enrollment->courseTemplate?->name ?? '') }}', {{ $depositTotal }})">
+                                onclick="openRefundModal({{ $enrollment->enrollment_id }}, '{{ addslashes($enrollment->student?->full_name ?? 'Student') }}', '{{ addslashes($enrollment->courseTemplate?->name ?? '') }}', {{ $courseTotal }}, {{ $materialTotal }})">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
                                 Request Refund
                             </button>
@@ -364,6 +369,23 @@
                         <label class="rf-field-label">Student</label>
                         <input type="text" id="modal_student" class="form-control" readonly>
                     </div>
+
+                    {{-- Material refund choice --}}
+                    <div class="rf-field" id="modal_material_wrap" style="display:none;">
+                        <label class="rf-field-label">Material</label>
+                        <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);border-radius:9px;cursor:pointer;">
+                            <input type="checkbox" name="include_material" id="modal_include_material" value="1"
+                                   onchange="recalcRefund()" style="width:16px;height:16px;accent-color:var(--orange);">
+                            <span style="font-size:12px;color:var(--text);">
+                                Also refund the material cost
+                                (<span style="font-weight:700;" id="modal_material_amount">0</span> LE)
+                            </span>
+                        </label>
+                        <div style="font-size:10px;color:var(--muted);margin-top:6px;padding-left:2px;">
+                            The test fee is never refunded. Leave unchecked to refund the course deposit only.
+                        </div>
+                    </div>
+
                     <div class="rf-field">
                         <label class="rf-field-label">Refund Amount</label>
                         <input type="text" id="modal_amount" class="form-control" readonly>
@@ -400,13 +422,40 @@
 @endif
 
 <script>
-function openRefundModal(enrollmentId, student, course, amount) {
+let rfCourseAmount = 0;
+let rfMaterialAmount = 0;
+
+function openRefundModal(enrollmentId, student, course, courseAmount, materialAmount) {
+    rfCourseAmount   = Number(courseAmount) || 0;
+    rfMaterialAmount = Number(materialAmount) || 0;
+
     document.getElementById('modal_enrollment_id').value = enrollmentId;
     document.getElementById('modal_student').value       = student + (course ? ' — ' + course : '');
-    document.getElementById('modal_amount').value        = Number(amount).toLocaleString() + ' LE';
     document.getElementById('modal_reason').value        = '';
+
+    // Reset + show/hide the material option
+    const matWrap  = document.getElementById('modal_material_wrap');
+    const matCheck = document.getElementById('modal_include_material');
+    matCheck.checked = false;
+
+    if (rfMaterialAmount > 0) {
+        document.getElementById('modal_material_amount').textContent = rfMaterialAmount.toLocaleString();
+        matWrap.style.display = 'block';
+    } else {
+        matWrap.style.display = 'none';
+    }
+
+    recalcRefund();
     document.getElementById('refundModal').classList.add('open');
 }
+
+function recalcRefund() {
+    const includeMat = document.getElementById('modal_include_material').checked;
+    const total = rfCourseAmount + (includeMat ? rfMaterialAmount : 0);
+    document.getElementById('modal_amount').value = total.toLocaleString() + ' LE'
+        + (includeMat ? '  (course + material)' : '  (course deposit only)');
+}
+
 function closeRefundModal() {
     document.getElementById('refundModal').classList.remove('open');
 }
