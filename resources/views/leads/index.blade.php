@@ -5,513 +5,194 @@
 @section('content')
 
 @once
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
-<link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
-<meta name="csrf-token" content="{{ csrf_token() }}">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 @endonce
 
 <style>
-    
-    body, .leads-page * { font-family: 'DM Sans', sans-serif;}
-
-    .leads-page {
-        background: #F8F6F2;
-        min-height: 100vh;
-        padding: 36px 32px;
-        color: #1A2A4A;
+    :root {
+        --blue:#1B4FA8; --blue-2:#2D6FDB; --blue-l:rgba(27,79,168,0.06);
+        --orange:#F5911E; --orange-dk:#C47010; --orange-l:rgba(245,145,30,0.07);
+        --green:#059669; --green-dk:#15803D; --green-l:rgba(5,150,105,0.07);
+        --teal:#0EA5A5; --red:#DC2626; --red-l:rgba(220,38,38,0.05);
+        --dark:#0F1F3D; --text:#1A2A4A; --muted:#7A8A9A; --faint:#AAB8C8;
+        --bg:#F8F6F2; --card:#fff; --border:rgba(27,79,168,0.1);
     }
+    * { box-sizing:border-box; }
 
-    /* ── PAGE HEADER ── */
+    .leads-page { background:var(--bg); min-height:100vh; padding:28px 32px; color:var(--text); font-family:'DM Sans',sans-serif; }
+
+    /* ═══ HEADER ═══ */
     .page-header {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        margin-bottom: 28px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid rgba(27,79,168,0.1);
-        flex-wrap: wrap;
-        gap: 16px;
+        max-width:1280px; margin:0 auto 22px;
+        background:linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
+        border-radius:14px; padding:24px 30px;
+        display:flex; align-items:center; justify-content:space-between;
+        flex-wrap:wrap; gap:16px; position:relative; overflow:hidden;
+        box-shadow:0 8px 32px rgba(15,31,61,0.15);
     }
+    .page-header::before { content:''; position:absolute; top:-70px; right:-50px; width:220px; height:220px; border-radius:50%; background:rgba(245,145,30,0.06); }
+    .page-header::after { content:''; position:absolute; bottom:-60px; left:24%; width:150px; height:150px; border-radius:50%; background:rgba(27,79,168,0.15); }
+    .page-header > div:first-child { position:relative; z-index:1; }
+    .page-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin-bottom:5px; font-weight:600; display:flex; align-items:center; gap:8px; }
+    .page-eyebrow::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--orange); box-shadow:0 0 8px var(--orange); }
+    .page-title { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:4px; color:#fff; line-height:1; margin:0; }
+    .page-subtitle { font-size:11px; color:rgba(255,255,255,0.5); margin-top:5px; letter-spacing:0.5px; }
+    .btn-add { display:inline-flex; align-items:center; gap:8px; padding:12px 24px; background:var(--orange); border:none; border-radius:8px; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:3px; text-decoration:none; transition:all 0.25s; position:relative; z-index:1; box-shadow:0 4px 16px rgba(245,145,30,0.3); }
+    .btn-add:hover { background:#E8850F; transform:translateY(-2px); text-decoration:none; color:#fff; }
 
-    .page-eyebrow {
-        font-size: 10px;
-        letter-spacing: 4px;
-        text-transform: uppercase;
-        color: #F5911E;
-        margin-bottom: 4px;
-    }
+    .leads-wrap { max-width:1280px; margin:0 auto; }
 
-    .page-title {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 34px;
-        letter-spacing: 4px;
-        color: #1B4FA8;
-        line-height: 1;
-    }
-
-    .page-subtitle {
-        font-size: 12px;
-        color: #7A8A9A;
-        margin-top: 4px;
-    }
-
-    .btn-add {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 11px 24px;
-        background: transparent;
-        border: 1.5px solid #1B4FA8;
-        border-radius: 4px;
-        color: #1B4FA8;
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 13px;
-        letter-spacing: 4px;
-        text-decoration: none;
-        position: relative;
-        overflow: hidden;
-        transition: color 0.4s;
-        white-space: nowrap;
-    }
-
-    .btn-add::before {
-        content: '';
-        position: absolute; inset: 0;
-        background: linear-gradient(90deg, #1B4FA8, #2D6FDB);
-        transform: scaleX(0); transform-origin: left;
-        transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
-    }
-
-    .btn-add:hover::before { transform: scaleX(1); }
-    .btn-add:hover { color: #fff; text-decoration: none; }
-    .btn-add span, .btn-add svg { position: relative; z-index: 1; }
-
-    /* ── STATS ROW ── */
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 12px;
-        margin-bottom: 22px;
-    }
-
+    /* ═══ STATS ═══ */
+    .stats-row { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:20px; }
+    @media (max-width:900px){ .stats-row{ grid-template-columns:repeat(3,1fr); } }
+    @media (max-width:520px){ .stats-row{ grid-template-columns:1fr 1fr; } }
     .stat-card {
-        background: rgba(255,255,255,0.75);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(27,79,168,0.1);
-        border-radius: 6px;
-        padding: 14px 16px;
-        position: relative;
-        overflow: hidden;
-        box-shadow: 0 2px 10px rgba(27,79,168,0.04);
+        background:var(--card); border:1px solid var(--border); border-radius:12px;
+        padding:16px 18px; position:relative; overflow:hidden;
+        transition:transform 0.2s, box-shadow 0.2s;
+        box-shadow:0 2px 10px rgba(27,79,168,0.04);
     }
+    .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent,var(--blue)); }
+    .stat-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(27,79,168,0.1); }
+    .stat-card.active-filter { box-shadow:0 0 0 2px var(--accent), 0 8px 24px rgba(27,79,168,0.12); }
+    .stat-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
+    .stat-value { font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:1px; line-height:0.9; color:var(--accent,var(--blue)); }
 
-    .stat-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; height: 2px;
-        background: linear-gradient(90deg, transparent, var(--accent, #1B4FA8), transparent);
+    /* ═══ SEARCH ═══ */
+    .search-wrap { margin-bottom:18px; position:relative; max-width:400px; }
+    .search-wrap svg { position:absolute; left:15px; top:50%; transform:translateY(-50%); pointer-events:none; }
+    .search-input {
+        width:100%; padding:12px 16px 12px 42px;
+        background:var(--card); border:1px solid var(--border); border-radius:9px;
+        font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text);
+        outline:none; transition:border-color 0.25s, box-shadow 0.25s;
+        box-shadow:0 2px 8px rgba(27,79,168,0.03);
     }
+    .search-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.08); }
 
-    .stat-label {
-        font-size: 9px;
-        letter-spacing: 2px;
-        text-transform: uppercase;
-        color: #7A8A9A;
-        margin-bottom: 6px;
+    /* ═══ FILTER PILLS ═══ */
+    .filter-bar { display:flex; gap:8px; flex-wrap:wrap; }
+    .filter-pill {
+        padding:9px 16px; border-radius:8px; font-size:11px; font-weight:600;
+        letter-spacing:0.4px; cursor:pointer; transition:all 0.2s;
+        background:var(--card); border:1px solid var(--border); color:var(--muted);
+        white-space:nowrap;
     }
+    .filter-pill:hover { border-color:var(--blue); color:var(--blue); }
+    .filter-pill.active { background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 4px 12px rgba(27,79,168,0.2); }
+    .filter-pill-green.active { background:var(--green); border-color:var(--green); box-shadow:0 4px 12px rgba(5,150,105,0.2); }
 
-    .stat-value {
-        font-family: 'Bebas Neue', sans-serif;
-        font-size: 26px;
-        letter-spacing: 2px;
-        color: var(--accent, #1B4FA8);
-        line-height: 1;
+    /* ═══ SECTION HEADING (registered table) ═══ */
+    .reg-section-head { display:flex; align-items:center; gap:10px; margin:0 0 14px; }
+    .reg-section-head .rsh-dot { width:8px; height:8px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); }
+    .reg-section-head .rsh-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:2px; color:var(--green-dk); }
+    .reg-section-head .rsh-count { font-size:11px; color:var(--muted); background:var(--green-l); padding:3px 10px; border-radius:20px; font-weight:600; }
+
+    /* ═══ TABLE ═══ */
+    .table-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 2px 14px rgba(27,79,168,0.05); }
+    .table-scroll { overflow-x:auto; }
+    table { width:100%; border-collapse:collapse; min-width:1100px; }
+    thead th {
+        font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted);
+        padding:14px 16px; text-align:left; border-bottom:1px solid var(--border);
+        font-weight:600; background:var(--bg); white-space:nowrap; position:sticky; top:0;
     }
+    tbody td { padding:14px 16px; border-bottom:1px solid rgba(27,79,168,0.05); font-size:12px; color:var(--text); vertical-align:top; }
+    tbody tr { transition:background 0.15s; }
+    tbody tr:hover { background:var(--blue-l); }
+    tbody tr:last-child td { border-bottom:none; }
 
-    /* ── TABLE CARD ── */
-    .table-card {
-        min-height:400px;
-        background: rgba(255,255,255,0.75);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(27,79,168,0.1);
-        border-radius: 6px;
-        box-shadow: 0 4px 24px rgba(27,79,168,0.06);
-    }
+    .lead-name { font-weight:600; color:var(--text); font-size:13px; }
+    .lead-phone { font-size:11px; color:var(--muted); margin-top:2px; }
+    .lead-loc { font-size:10px; color:var(--faint); margin-top:3px; }
 
+    .src-chip { display:inline-block; padding:4px 11px; border-radius:6px; font-size:10px; font-weight:500; background:var(--bg); color:var(--muted); border:1px solid var(--border); white-space:nowrap; }
+    .degree-txt { font-size:11px; color:var(--muted); }
+    .course-name { font-weight:500; color:var(--text); }
+    .course-lvl { font-size:10px; color:var(--faint); margin-top:2px; }
+    .pref-text { font-size:11px; color:var(--text); }
+    .call-date { font-size:11px; font-weight:600; color:var(--text); }
+    .call-time { font-size:10px; color:var(--muted); margin-top:1px; }
+    .days-num { font-size:12px; font-weight:600; color:var(--text); }
+    .days-num.danger { color:var(--red); }
+    .days-lbl { font-size:10px; color:var(--faint); margin-top:1px; }
 
-    .table-card table {
-        width: 100%;
-        border-collapse: collapse;
-        min-width: 960px;
-    }
-
-    .table-card thead tr {
-        border-bottom: 1px solid rgba(27,79,168,0.08);
-    }
-
-    .table-card thead th {
-        padding: 12px 14px;
-        font-size: 9px;
-        letter-spacing: 2.5px;
-        text-transform: uppercase;
-        color: #7A8A9A;
-        font-weight: 500;
-        white-space: nowrap;
-        background: rgba(27,79,168,0.02);
-        text-align: left;
-    }
-
-    .table-card tbody tr {
-        border-bottom: 1px solid rgba(27,79,168,0.04);
-        transition: background 0.2s;
-    }
-
-    .table-card tbody tr:hover { background: rgba(27,79,168,0.025); }
-    .table-card tbody tr:last-child { border-bottom: none; }
-
-    .table-card tbody td {
-        padding: 12px 14px;
-        font-size: 13px;
-        color: #4A5A7A;
-        vertical-align: middle;
-    }
-    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-
-    .lead-name   { font-weight: 500; color: #1A2A4A; font-size: 13px; }
-    .lead-phone  { font-size: 11px; color: #7A8A9A; font-family: monospace; letter-spacing: 0.5px; margin-top: 2px; }
-    .lead-loc    { font-size: 10px; color: #9AAABB; margin-top: 2px; }
-
-    .tag {
-        display: inline-block;
-        font-size: 9px;
-        letter-spacing: 1px;
-        padding: 2px 8px;
-        border-radius: 3px;
-        white-space: nowrap;
-        text-transform: uppercase;
-        font-weight: 500;
-        margin-bottom: 3px;
-    }
-
-    .tag-course  { background: rgba(27,79,168,0.07);  border: 1px solid rgba(27,79,168,0.15);  color: #1B4FA8; }
-    .tag-level   { background: rgba(245,145,30,0.07); border: 1px solid rgba(245,145,30,0.2);  color: #C47010; }
-    .tag-sub     { background: rgba(245,145,30,0.04); border: 1px solid rgba(245,145,30,0.1);  color: #C47010; font-size: 8px; }
-    .tag-degree  { background: rgba(27,79,168,0.05);  border: 1px solid rgba(27,79,168,0.12);  color: #2D6FDB; }
-    .tag-source  { background: rgba(245,145,30,0.05); border: 1px solid rgba(245,145,30,0.15); color: #C47010; }
-
-    /* ── STATUS BADGES ── */
+    /* ═══ STATUS BADGE + DROPDOWN ═══ */
     .status-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 9px;
-        letter-spacing: 1.2px;
-        text-transform: uppercase;
-        padding: 4px 9px;
-        border-radius: 3px;
-        white-space: nowrap;
-        font-weight: 500;
+        display:inline-flex; align-items:center; gap:6px;
+        padding:6px 13px; border-radius:20px; font-size:11px; font-weight:600;
+        letter-spacing:0.3px; white-space:nowrap; transition:filter 0.2s;
     }
+    .status-badge:hover { filter:brightness(0.96); }
+    .status-waiting     { background:rgba(122,138,154,0.12); color:var(--muted); }
+    .status-call_again  { background:var(--orange-l); color:var(--orange-dk); }
+    .status-scheduled   { background:var(--blue-l); color:var(--blue); }
+    .status-registered  { background:var(--green-l); color:var(--green-dk); }
+    .status-not_interest{ background:var(--red-l); color:var(--red); }
+    .status-archived    { background:rgba(154,138,122,0.14); color:#9A8A7A; }
+    .status-default     { background:var(--bg); color:var(--muted); }
 
-    .status-badge::before {
-        content: '';
-        width: 4px; height: 4px;
-        border-radius: 50%;
-        background: currentColor;
-        flex-shrink: 0;
+    .status-dropdown {
+        display:none;
+        position:absolute; top:calc(100% + 6px); left:0; z-index:50;
+        background:var(--card); border:1px solid var(--border); border-radius:9px;
+        box-shadow:0 8px 28px rgba(15,31,61,0.14); padding:5px; min-width:150px;
     }
+    .status-dropdown-item {
+        display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:6px;
+        font-size:12px; color:var(--text); cursor:pointer; transition:background 0.15s; font-weight:500;
+    }
+    .status-dropdown-item:hover { background:var(--blue-l); }
+    .status-dropdown-item::before { content:''; width:8px; height:8px; border-radius:50%; }
+    .status-dropdown-item[data-status="Waiting"]::before       { background:#7A8A9A; }
+    .status-dropdown-item[data-status="Call_Again"]::before    { background:#C47010; }
+    .status-dropdown-item[data-status="Registered"]::before    { background:#15803D; }
+    .status-dropdown-item[data-status="Not_Interested"]::before{ background:#DC2626; }
+    .status-dropdown-item[data-status="Archived"]::before      { background:#9A8A7A; }
 
-    .status-waiting      { color: #7A8A9A; background: rgba(122,138,154,0.08); border: 1px solid rgba(122,138,154,0.2); }
-    .status-call_again   { color: #C47010; background: rgba(245,145,30,0.08);  border: 1px solid rgba(245,145,30,0.25); }
-    .status-scheduled    { color: #1B6FA8; background: rgba(27,111,168,0.08);  border: 1px solid rgba(27,111,168,0.2); }
-    .status-registered   { color: #15803D; background: rgba(21,128,61,0.08);   border: 1px solid rgba(21,128,61,0.2); }
-    .status-not_interest { color: #DC2626; background: rgba(220,38,38,0.06);   border: 1px solid rgba(220,38,38,0.2); }
-    .status-archived     { color: #9A8A7A; background: rgba(154,138,122,0.08); border: 1px solid rgba(154,138,122,0.2); }
-    .status-default      { color: #7A8A9A; background: rgba(122,138,154,0.06); border: 1px solid rgba(122,138,154,0.15); }
+    .notes-cell { font-size:11px; color:#4A5A7A; max-width:150px; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .dash-muted { color:var(--faint); }
 
-    .pref-text    { font-size: 12px; color: #7A8A9A; }
-    .call-date    { font-size: 12px; color: #1A2A4A; font-weight: 500; }
-    .call-time    { font-size: 10px; color: #7A8A9A; }
-    .days-lbl     { font-size: 10px; color: #7A8A9A; letter-spacing: 1px; }
-
-    /* ── ACTIONS ── */
-    .action-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-
+    /* ═══ ACTIONS ═══ */
+    .action-group { display:flex; gap:7px; flex-wrap:wrap; }
     .btn-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 5px 11px;
-        font-size: 9px;
-        letter-spacing: 1.5px;
-        text-transform: uppercase;
-        border-radius: 3px;
-        text-decoration: none;
-        font-family: 'DM Sans', sans-serif;
-        font-weight: 500;
-        border: 1px solid;
-        background: transparent;
-        cursor: pointer;
-        transition: all 0.25s;
-        white-space: nowrap;
+        display:inline-flex; align-items:center; gap:5px; padding:7px 13px;
+        border-radius:7px; font-size:10px; letter-spacing:0.4px; font-weight:600;
+        text-decoration:none; cursor:pointer; transition:all 0.2s;
+        background:transparent; border:1px solid var(--border);
     }
+    .btn-edit { color:var(--blue); border-color:rgba(27,79,168,0.25); }
+    .btn-edit:hover { background:var(--blue-l); border-color:var(--blue); text-decoration:none; color:var(--blue); }
+    .btn-log { color:var(--muted); border-color:rgba(122,138,154,0.25); }
+    .btn-log:hover { background:rgba(122,138,154,0.07); border-color:#4e5e6e; }
+    .btn-invoice { color:var(--green); border-color:rgba(5,150,105,0.25); }
+    .btn-invoice:hover { background:var(--green-l); border-color:var(--green); text-decoration:none; color:var(--green); }
 
-    .btn-edit   { color: #1B4FA8; border-color: rgba(27,79,168,0.25); }
-    .btn-edit:hover { background: rgba(27,79,168,0.07); border-color: #1B4FA8; color: #1B4FA8; text-decoration: none; }
+    /* ═══ EMPTY ═══ */
+    .empty-state { text-align:center; padding:60px 20px; }
+    .empty-state svg { opacity:0.35; margin-bottom:14px; }
+    .empty-title { font-size:16px; font-weight:600; color:var(--muted); margin-bottom:5px; }
+    .empty-sub { font-size:12px; color:var(--faint); }
 
-    .btn-delete { color: #DC2626; border-color: rgba(220,38,38,0.2); }
-    .btn-delete:hover { background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.5); color: #DC2626; }
+    /* ═══ MODALS ═══ */
+    .call-modal { display:none; position:fixed; inset:0; background:rgba(15,31,61,0.5); backdrop-filter:blur(4px); z-index:1000; align-items:center; justify-content:center; }
+    .call-modal-box { background:var(--card); border-radius:14px; padding:26px; width:90%; max-width:420px; box-shadow:0 20px 60px rgba(15,31,61,0.3); }
+    .call-modal-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; color:var(--text); margin-bottom:16px; }
+    .call-input { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none; margin-bottom:18px; }
+    .call-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.08); }
+    .modal-actions { display:flex; justify-content:flex-end; gap:10px; }
+    .btn-cancel { padding:10px 20px; background:transparent; border:1px solid var(--border); border-radius:7px; color:var(--muted); font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .btn-cancel:hover { border-color:var(--blue); color:var(--blue); }
+    .btn-save { padding:10px 22px; background:var(--blue); border:none; border-radius:7px; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; cursor:pointer; transition:background 0.2s; }
+    .btn-save:hover { background:var(--blue-2); }
 
-    /* ── EMPTY ── */
-    .empty-state { padding: 60px 24px; text-align: center; }
-    .empty-state svg { margin: 0 auto 14px; opacity: 0.2; }
-    .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 4px; color: #7A8A9A; margin-bottom: 6px; }
-    .empty-sub   { font-size: 12px; color: #AAB8C8; }
-
-    /* ── PAGINATION ── */
-    .pagination-wrap { margin-top: 20px; }
-    .pagination-wrap .page-link {
-        background: rgba(255,255,255,0.8) !important;
-        border: 1px solid rgba(27,79,168,0.12) !important;
-        color: #7A8A9A !important;
-        font-size: 11px; letter-spacing: 1px;
-        border-radius: 4px !important;
-        padding: 6px 12px;
-        transition: all 0.2s;
-    }
-    .pagination-wrap .page-link:hover {
-        background: rgba(27,79,168,0.06) !important;
-        color: #1B4FA8 !important;
-        border-color: rgba(27,79,168,0.3) !important;
-    }
-    .pagination-wrap .page-item.active .page-link {
-        background: transparent !important;
-        border-color: #1B4FA8 !important;
-        color: #1B4FA8 !important;
-        font-weight: 600 !important;
-    }
-    .status-select {
-        padding: 4px 8px;
-        border-radius: 4px;
-        border: 1px solid rgba(27,79,168,0.2);
-        font-size: 11px;
-        background: rgba(255,255,255,0.8);
-        color: #1A2A4A;
-        cursor: pointer;
-    }
-    .days-num {
-        font-family: 'Bebas Neue';
-        font-size: 16px;
-        color: #1B4FA8;
-    }
-
-    .days-num.danger {
-        color: #DC2626; /* 🔥 أحمر */
-    }
-
-.call-modal {
-    display:none;
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.5);
-    backdrop-filter: blur(6px);
-    z-index:999;
-    align-items:center;
-    justify-content:center;
-}
-
-.call-box {
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(20px);
-    padding: 32px;
-    border-radius: 12px;
-    width: 380px;
-    box-shadow: 0 24px 60px rgba(27,79,168,0.15), 0 4px 16px rgba(0,0,0,0.08);
-    border: 1px solid rgba(27,79,168,0.1);
-    border-top: 2px solid #F5911E;
-    animation: fadeIn 0.3s ease;
-}
-
-.call-header {
-    font-family: 'Bebas Neue';
-    letter-spacing: 4px;
-    font-size: 20px;
-    color: #1B4FA8;
-    margin-bottom: 6px;
-}
-
-/* ضيفي ده تحت الـ header */
-.call-subtext {
-    font-size: 11px;
-    color: #AAB8C8;
-    letter-spacing: 1px;
-    margin-bottom: 20px;
-}
-
-.call-label {
-    font-size: 9px;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    color: #7A8A9A;
-    margin-bottom: 7px;
-    display: block;
-}
-
-.call-input {
-    width: 100%;
-    padding: 11px 13px;
-    border: 1px solid rgba(27,79,168,0.15);
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    color: #1A2A4A;
-    background: rgba(248,246,242,0.8);
-    outline: none;
-    transition: border-color 0.3s, box-shadow 0.3s;
-    color-scheme: light;
-}
-
-.call-input:focus {
-    border-color: #1B4FA8;
-    box-shadow: 0 0 0 3px rgba(27,79,168,0.08);
-}
-
-.call-actions {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
-}
-
-.btn-cancel {
-    padding: 9px 20px;
-    background: transparent;
-    border: 1px solid rgba(27,79,168,0.15);
-    border-radius: 6px;
-    color: #7A8A9A;
-    font-size: 11px;
-    letter-spacing: 2px;
-    text-transform: uppercase;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: all 0.2s;
-}
-
-.btn-cancel:hover { border-color: rgba(27,79,168,0.3); color: #1B4FA8; }
-
-.btn-save {
-    padding: 9px 24px;
-    background: linear-gradient(90deg, #1B4FA8, #2D6FDB);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 14px;
-    letter-spacing: 4px;
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-.status-select {
-    padding: 4px 12px;
-    border-radius: 20px;
-    border: 1px solid rgba(27,79,168,0.2);
-    font-size: 9px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    font-weight: 500;
-    background: rgba(255,255,255,0.8);
-    color: #1A2A4A;
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    padding-right: 24px;
-    transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.status-select:hover {
-    border-color: rgba(27,79,168,0.4);
-}
-
-.status-select:focus {
-    outline: none;
-    border-color: #1B4FA8;
-    box-shadow: 0 0 0 3px rgba(27,79,168,0.08);
-}
-
-.btn-save:hover { opacity: 0.9; }
-
-/* ── STATUS DROPDOWN ── */
-.status-dropdown {
-    display: none;
-    top: calc(100% + 6px);
-    left: 0;
-    z-index: 100;
-    background: white;
-    border: 1px solid rgba(27,79,168,0.12);
-    border-radius: 8px;
-    box-shadow: 0 8px 24px rgba(27,79,168,0.12);
-    min-width: 150px;
-    padding: 4px 0;
-    overflow: hidden;
-}
-
-.status-dropdown-item {
-    padding: 9px 14px;
-    font-size: 10px;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    color: #4A5A7A;
-    cursor: pointer;
-    transition: background 0.15s, color 0.15s;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.status-dropdown-item::before {
-    content: '';
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    flex-shrink: 0;
-}
-
-.status-dropdown-item:hover { background: rgba(27,79,168,0.04); color: #1B4FA8; }
-
-.status-dropdown-item[data-status="Waiting"]::before       { background: #7A8A9A; }
-.status-dropdown-item[data-status="Call_Again"]::before    { background: #C47010; }
-.status-dropdown-item[data-status="Registered"]::before    { background: #15803D; }
-.status-dropdown-item[data-status="Not_Interested"]::before{ background: #DC2626; }
-.status-dropdown-item[data-status="Archived"]::before      { background: #9A8A7A; }
-
-.stat-card { transition: all 0.25s; }
-.stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(27,79,168,0.1); }
-.stat-card.active-filter {
-    box-shadow: 0 0 0 2px var(--accent);
-    transform: translateY(-2px);
-}
-@keyframes fadeIn {
-    from { opacity:0; transform:translateY(10px); }
-    to { opacity:1; transform:translateY(0); }
-}
-
-    /* ── MOBILE ── */
-    @media (max-width: 768px) {
-        .leads-page { padding: 20px 14px; }
-        .stat-value { font-size: 22px; }
-        .btn-add    { padding: 9px 16px; font-size: 12px; letter-spacing: 3px; }
-    }
-
-    @media (max-width: 480px) {
-        .page-header { flex-direction: column; align-items: flex-start; }
-        .stats-row   { grid-template-columns: 1fr 1fr; }
-    }
+    @media (max-width:600px){ .leads-page{ padding:16px; } }
 </style>
+
 <script src="{{ asset('js/leads/history-modal.js') }}"></script>
 <script src="{{ asset('js/leads/create-modal.js') }}"></script>
 <script src="{{ asset('js/register/register-modal.js') }}"></script>
+
 <div class="leads-page">
 
     {{-- ── HEADER ── --}}
@@ -522,308 +203,79 @@
             <p class="page-subtitle">Track and manage your active leads pipeline</p>
         </div>
         <a href="{{ route('leads.create') }}" class="btn-add">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <path d="M12 5v14M5 12h14"/>
-            </svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
             <span>Add Lead</span>
         </a>
     </div>
 
+    <div class="leads-wrap">
+
     {{-- ── STATS ── --}}
     <div class="stats-row">
-    <div class="stat-card" style="--accent:#1B4FA8;cursor:pointer;"
-        onclick="filterByStatus('all')"
-        data-filter="all">
-        <div class="stat-label">Total</div>
-        <div class="stat-value">{{ $stats['total'] }}</div>
+        <div class="stat-card" style="--accent:#1B4FA8;cursor:pointer;" onclick="filterByStatus('all')" data-filter="all">
+            <div class="stat-label">Total</div>
+            <div class="stat-value">{{ $stats['total'] }}</div>
+        </div>
+        <div class="stat-card" style="--accent:#15803D;cursor:pointer;" onclick="filterByStatus('Registered')" data-filter="Registered">
+            <div class="stat-label">Registered</div>
+            <div class="stat-value">{{ $stats['registered'] }}</div>
+        </div>
+        <div class="stat-card" style="--accent:#C47010;cursor:pointer;" onclick="filterByStatus('Call_Again')" data-filter="Call_Again">
+            <div class="stat-label">Call Again</div>
+            <div class="stat-value">{{ $stats['call_again'] }}</div>
+        </div>
+        <div class="stat-card" style="--accent:#7A8A9A;cursor:pointer;" onclick="filterByStatus('Waiting')" data-filter="Waiting">
+            <div class="stat-label">Waiting</div>
+            <div class="stat-value">{{ $stats['waiting'] }}</div>
+        </div>
+        <div class="stat-card" style="--accent:#9A8A7A;cursor:pointer;" onclick="window.location='{{ route('leads.archived') }}'">
+            <div class="stat-label">Archived</div>
+            <div class="stat-value">{{ $stats['archived'] }}</div>
+        </div>
     </div>
 
-    <div class="stat-card" style="--accent:#15803D;cursor:pointer;"
-        onclick="filterByStatus('Registered')"
-        data-filter="Registered">
-        <div class="stat-label">Register</div>
-        <div class="stat-value">{{ $stats['registered'] }}</div>
+    {{-- ── SEARCH + FILTER BAR ── --}}
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;">
+        <div class="search-wrap" style="margin-bottom:0;flex:1;min-width:240px;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="leadSearch" class="search-input" placeholder="Search by name or phone..." oninput="searchLeads(this.value)">
+        </div>
+        <div class="filter-bar" id="filterBar">
+            <button class="filter-pill active" data-lead-filter="all" onclick="applyLeadFilter('all', this)">All</button>
+            <button class="filter-pill" data-lead-filter="Waiting" onclick="applyLeadFilter('Waiting', this)">Waiting</button>
+            <button class="filter-pill" data-lead-filter="Call_Again" onclick="applyLeadFilter('Call_Again', this)">Call Again</button>
+            <button class="filter-pill" data-lead-filter="Not_Interested" onclick="applyLeadFilter('Not_Interested', this)">Not Interested</button>
+            <button class="filter-pill filter-pill-green" data-lead-filter="Registered" onclick="applyLeadFilter('Registered', this)">Registered</button>
+        </div>
     </div>
 
-    <div class="stat-card" style="--accent:#C47010;cursor:pointer;"
-        onclick="filterByStatus('Call_Again')"
-        data-filter="Call_Again">
-        <div class="stat-label">Call Again</div>
-        <div class="stat-value">{{ $stats['call_again'] }}</div>
-    </div>
-
-    <div class="stat-card" style="--accent:#7A8A9A;cursor:pointer;"
-        onclick="filterByStatus('Waiting')"
-        data-filter="Waiting">
-        <div class="stat-label">Waiting</div>
-        <div class="stat-value">{{ $stats['waiting'] }}</div>
-    </div>
-
-
-    <div class="stat-card" style="--accent:#9A8A7A;cursor:pointer;"
-        onclick="window.location='{{ route('leads.archived') }}'">
-        <div class="stat-label">Archived</div>
-        <div class="stat-value">{{ $stats['archived'] }}</div>
-    </div>
-    </div>
-
-    {{-- ── SEARCH ── --}}
-    <div style="margin-bottom:16px;position:relative;">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="2"
-            style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;">
-            <circle cx="11" cy="11" r="8"/>
-            <path d="m21 21-4.35-4.35"/>
-        </svg>
-        <input type="text" id="leadSearch"
-            placeholder="Search by name or phone..."
-            oninput="searchLeads(this.value)"
-            style="width:100%;max-width:360px;
-                    padding:10px 14px 10px 40px;
-                    background:rgba(255,255,255,0.8);
-                    border:1px solid rgba(27,79,168,0.12);
-                    border-radius:6px;
-                    font-family:'DM Sans',sans-serif;
-                    font-size:13px;color:#1A2A4A;
-                    outline:none;
-                    transition:border-color 0.3s,box-shadow 0.3s;"
-            onfocus="this.style.borderColor='#1B4FA8';this.style.boxShadow='0 0 0 3px rgba(27,79,168,0.08)'"
-            onblur="this.style.borderColor='rgba(27,79,168,0.12)';this.style.boxShadow=''">
-    </div>
-
-    {{-- ── TABLE ── --}}
-    <div class="table-card">
+    {{-- ══ MAIN TABLE (non-registered leads) ══ --}}
+    <div class="table-card" id="mainTableCard">
         <div class="table-scroll">
             <table>
                 <thead>
                     <tr>
-                        <th>Name & Contact</th>
+                        <th>Name &amp; Contact</th>
                         <th>Source</th>
                         <th>Degree</th>
-                        <th>Course & Level</th>
+                        <th>Course &amp; Level</th>
                         <th>Status</th>
                         <th>Start Pref.</th>
-                        <th>Start Pref. date</th>
+                        <th>Start Pref. Date</th>
                         <th>Next Call</th>
                         <th>Lead Age</th>
                         <th>Notes</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse($leads as $lead)
-                    <tr  data-status="{{ $lead->status }}">
-                        {{-- Name & Contact --}}
-                        <td>
-                            <div class="lead-name">{{ $lead->full_name }}</div>
-                            <div class="lead-phone">{{ $lead->phone }}</div>
-                            @if($lead->location)
-                                <div class="lead-loc">📍 {{ $lead->location }}</div>
-                            @endif
-                        </td>
-
-                        {{-- Source --}}
-                        <td>
-                            <span class="tag tag-source">{{ str_replace('_',' ',$lead->source) }}</span><br>
-                        </td>
-
-                        {{-- Degree --}}
-                        <td>
-                            <span class="tag tag-degree">{{ $lead->degree }}</span>
-                        </td>
-
-                        {{-- Course & Level --}}
-                        <td>
-                            @if($lead->courseTemplate)
-                                <span class="tag tag-course">{{ $lead->courseTemplate->name }}</span>
-                            @else
-                                <span style="color:#AAB8C8;font-size:11px;">—</span>
-                            @endif
-                            @if($lead->level)
-                                <br><span class="tag tag-level">{{ $lead->level->name ?? '' }}</span>
-                            @endif
-                            @if($lead->sublevel)
-                                <br><span class="tag tag-sub">{{ $lead->sublevel->name ?? '' }}</span>
-                            @endif
-                        </td>
-
-                        {{-- Status --}}
-                        <td>
-                            @php
-                                $statusClass = match($lead->status) {
-                                    'Waiting'        => 'status-waiting',
-                                    'Call_Again'     => 'status-call_again',
-                                    'Scheduled_Call' => 'status-scheduled',
-                                    'Registered'     => 'status-registered',
-                                    'Not_Interested' => 'status-not_interest',
-                                    'Archived'       => 'status-archived',
-                                    default          => 'status-default',
-                                };
-                                
-                            @endphp
-                            <div style="position:relative;display:inline-block;">
-<div class="status-badge {{ $statusClass }}"
-    style="cursor:pointer;user-select:none;{{ $lead->status === 'Registered' ? 'pointer-events:none;opacity:0.8;cursor:default;' : '' }}"
-    @if($lead->status !== 'Registered')
-        onclick="toggleDropdown(this)"
-    @endif>
-    {{ str_replace('_',' ',$lead->status) }}
-    @if($lead->status !== 'Registered')
-        <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M7 10l5 5 5-5z"/>
-        </svg>
-    @endif
-</div>
-<div class="status-dropdown">
-    @foreach(['Waiting','Call_Again','Registered'] as $s)
-@if($s === 'Registered')
-    <div class="status-dropdown-item"
-        style="{{ $lead->status === 'Registered' ? 'opacity:0.4;cursor:default;pointer-events:none;' : '' }}"
-        @if($lead->status !== 'Registered')
-            data-status="{{ $s }}"
-            onclick="updateLeadStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')"
-        @endif>
-        Registered
-    </div>
-@else
-    <div class="status-dropdown-item"
-        data-status="{{ $s }}"
-        onclick="updateLeadStatus(document.querySelector('.status-select[data-id=\'{{ $lead->lead_id }}\']') ?? this, {{ $lead->lead_id }}, '{{ $s }}')">
-        {{ str_replace('_',' ',$s) }}
-    </div>
-@endif
-    @endforeach
-</div>
-                            </div>
-                            {{-- hidden select للـ function --}}
-                            <select class="status-select" data-id="{{ $lead->lead_id }}" style="display:none;"
-                                    onchange="updateLeadStatus(this, {{ $lead->lead_id }})">
-                                @foreach(['Waiting','Call_Again','Registered','Not_Interested','Archived'] as $status)
-                                    <option value="{{ $status }}" {{ $lead->status == $status ? 'selected' : '' }}>
-                                        {{ str_replace('_',' ',$status) }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </td>
-
-                        {{-- Start Preference --}}
-                        <td>
-                            <span class="pref-text">{{ $lead->start_preference_type ?? '—' }}</span>
-                        </td>
-                        <td>
-                            @if($lead->start_preference_type === 'Specific Date' && $lead->start_preference_date)
-                                <div class="call-date" style="color:#F5911E;">
-                                    {{ $lead->start_preference_date->format('d M Y') }}
-                                </div>
-                                <div class="call-time">
-                                    {{ $lead->start_preference_date->format('H:i') }}
-                                </div>
-                            @else
-                                <span style="color:#AAB8C8;">—</span>
-                            @endif
-                        </td>
-
-                        {{-- Next Call --}}
-                        <td>
-                            @if($lead->next_call_at)
-                                <div class="call-date">{{ $lead->next_call_at->format('d M Y') }}</div>
-                                <div class="call-time">{{ $lead->next_call_at->format('H:i') }}</div>
-                            @else
-                                <span style="color:#AAB8C8;">—</span>
-                            @endif
-                        </td>
-
-                        {{-- Age --}}
-                        @php
-                            $totalHours = abs($lead->updated_at->diffInHours(now()));
-                            $days  = intval($totalHours / 24);
-                            $hours = $totalHours % 24;
-                        @endphp
-
-                        <td>
-                            <div class="days-num {{ $days >= 3 ? 'danger' : '' }}">{{ $days }} days</div>
-                            <div class="days-lbl">{{ $hours }} h</div>
-                        </td>
-
-                        {{-- Notes --}}
-                        <td>
-                            @if($lead->notes)
-                                <span style="font-size:11px;color:#4A5A7A;max-width:150px;display:block;
-                                            overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                                    title="{{ $lead->notes }}">
-                                    {{ $lead->notes }}
-                                </span>
-                            @else
-                                <span style="color:#AAB8C8;">—</span>
-                            @endif
-                        </td>
-
-                        {{-- Actions --}}
-                        <td>
-                            <div class="action-group">
-                                <a href="{{ route('leads.edit', $lead->lead_id) }}" class="btn-action btn-edit">
-                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                    Edit
-                                </a>
-                                <!-- <form action="{{ route('leads.destroy', $lead->lead_id) }}" method="POST"
-                                    style="display:inline;" class="delete-lead-form">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn-action btn-delete">
-                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <polyline points="3 6 5 6 21 6"/>
-                                            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
-                                        </svg>
-                                        Delete
-                                    </button>
-                                </form> -->
-
-                                <button class="btn-action"
-                                        onclick="openHistoryModal({{ $lead->lead_id }})"
-                                        style="color:#7A8A9A;border-color:rgba(122,138,154,0.25);"
-                                        onmouseover="this.style.background='rgba(122,138,154,0.07)';this.style.borderColor='#4e5e6e'"
-                                        onmouseout="this.style.background='';this.style.borderColor='rgba(122,138,154,0.25)'">
-                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <polyline points="14 2 14 8 20 8"/>
-                                        <line x1="16" y1="13" x2="8" y2="13"/>
-                                        <line x1="16" y1="17" x2="8" y2="17"/>
-                                    </svg>
-                                    Log
-                                </button>
-                                @if($lead->status === 'Registered' && $lead->student_id)
-                                <a href="{{ route('leads.invoice', $lead->lead_id) }}"
-                                   target="_blank"
-                                   class="btn-action"
-                                   style="color:#059669;border-color:rgba(5,150,105,0.25);"
-                                   onmouseover="this.style.background='rgba(5,150,105,0.08)';this.style.borderColor='#059669'"
-                                   onmouseout="this.style.background='';this.style.borderColor='rgba(5,150,105,0.25)'"
-                                   title="View / Print Invoice">
-                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                        <polyline points="14 2 14 8 20 8"/>
-                                        <line x1="16" y1="17" x2="8" y2="17"/>
-                                        <line x1="10" y1="9" x2="8" y2="9"/>
-                                        <line x1="16" y1="13" x2="8" y2="13"/>
-                                    </svg>
-                                    Invoice
-                                </a>
-                                @endif
-                            </div>
-                        </td>
-                    </tr>
-
+                <tbody id="mainTableBody">
+                    @forelse($leads->where('status', '!=', 'Registered') as $lead)
+                        @include('leads.lead-row', ['lead' => $lead])
                     @empty
-                    <tr>
-                        <td colspan="8">
+                    <tr data-empty-main>
+                        <td colspan="11">
                             <div class="empty-state">
-                                <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1">
-                                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                                    <circle cx="9" cy="7" r="4"/>
-                                    <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-                                </svg>
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                 <div class="empty-title">No Leads Found</div>
                                 <div class="empty-sub">Start by adding your first follow-up lead</div>
                             </div>
@@ -835,120 +287,100 @@
         </div>
     </div>
 
-    @if($leads->hasPages())
-    <div class="pagination-wrap">
-        {{ $leads->links() }}
+    {{-- ══ REGISTERED TABLE (hidden until "Registered" filter is clicked) ══ --}}
+    @php $registeredLeads = $leads->where('status', 'Registered'); @endphp
+    <div id="registeredSection" style="display:none;">
+        <div class="reg-section-head" style="margin-top:24px;">
+            <span class="rsh-dot"></span>
+            <span class="rsh-title">Registered Students</span>
+            <span class="rsh-count">{{ $registeredLeads->count() }} registered</span>
+        </div>
+        <div class="table-card">
+            <div class="table-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name &amp; Contact</th>
+                            <th>Source</th>
+                            <th>Degree</th>
+                            <th>Course &amp; Level</th>
+                            <th>Status</th>
+                            <th>Start Pref.</th>
+                            <th>Start Pref. Date</th>
+                            <th>Next Call</th>
+                            <th>Lead Age</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="registeredTableBody">
+                        @forelse($registeredLeads as $lead)
+                            @include('leads.lead-row', ['lead' => $lead])
+                        @empty
+                        <tr>
+                            <td colspan="11">
+                                <div class="empty-state">
+                                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                                    <div class="empty-title">No Registered Students</div>
+                                    <div class="empty-sub">Registered leads will appear here</div>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
+
+    @if($leads->hasPages())
+        <div style="margin-top:20px;">
+            {{ $leads->links() }}
+        </div>
     @endif
+
+    </div>{{-- /leads-wrap --}}
+
+    {{-- ── CALL MODAL ── --}}
     <div id="callModal" class="call-modal">
-        <div class="call-box">
-            <div class="call-header">Schedule Next Call</div>
-            <div class="call-subtext">Select date & time for the follow-up call</div>
-
-            <label class="call-label">Date & Time</label>
+        <div class="call-modal-box">
+            <div class="call-modal-title">Schedule Next Call</div>
             <input type="datetime-local" id="callDate" class="call-input">
-
-            <div class="call-actions">
+            <div class="modal-actions">
                 <button onclick="closeModal()" class="btn-cancel">Cancel</button>
                 <button onclick="confirmCall()" class="btn-save">Confirm</button>
             </div>
         </div>
     </div>
-</div>
 
-<div id="historyModal" class="call-modal">
-    <div class="call-box" style="width:540px;max-height:85vh;display:flex;flex-direction:column;padding:0;overflow:hidden;">
-
-        {{-- Header --}}
-        <div style="padding:24px 28px 20px;border-bottom:1px solid rgba(27,79,168,0.08);flex-shrink:0;">
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-                <div>
-                    <div class="call-header" style="margin-bottom:2px;">Lead History</div>
-                    <div class="call-subtext" style="margin-bottom:0;">All changes & activities</div>
-                </div>
-                <button onclick="closeHistoryModal()"
-                        style="background:none;border:none;cursor:pointer;
-                               color:#AAB8C8;padding:4px;border-radius:4px;
-                               transition:color 0.2s;"
-                        onmouseover="this.style.color='#DC2626'"
-                        onmouseout="this.style.color='#AAB8C8'">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="18" y1="6" x2="6" y2="18"/>
-                        <line x1="6" y1="6" x2="18" y2="18"/>
-                    </svg>
-                </button>
+    {{-- ── HISTORY MODAL ── --}}
+    <div id="historyModal" class="call-modal">
+        <div class="call-modal-box" style="max-width:520px;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+                <div class="call-modal-title" style="margin-bottom:0;">Lead History</div>
+                <button onclick="closeHistoryModal()" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;">&times;</button>
+            </div>
+            <div id="historyContent" style="max-height:400px;overflow-y:auto;font-size:13px;color:var(--text);">
+                {{-- filled by JS --}}
+            </div>
+            <div class="modal-actions" style="margin-top:18px;">
+                <button onclick="closeHistoryModal()" class="btn-cancel">Close</button>
             </div>
         </div>
-
-        {{-- Content --}}
-        <div id="historyContent"
-             style="flex:1;overflow-y:auto;padding:16px 28px;">
-            <div style="text-align:center;padding:32px 0;color:#AAB8C8;font-size:12px;letter-spacing:1px;">
-                Loading...
-            </div>
-        </div>
-
-        {{-- Footer --}}
-        <div style="padding:16px 28px;border-top:1px solid rgba(27,79,168,0.06);flex-shrink:0;display:flex;justify-content:flex-end;">
-            <button onclick="closeHistoryModal()" class="btn-cancel">Close</button>
-        </div>
-
     </div>
+
 </div>
 
-{{-- ── SUCCESS TOAST ── --}}
 @if(session('success'))
-<div id="successToast" style="
-    position: fixed;
-    top: 24px; right: 24px;
-    z-index: 9999;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 20px;
-    background: rgba(255,255,255,0.95);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(21,128,61,0.2);
-    border-left: 3px solid #15803D;
-    border-radius: 6px;
-    box-shadow: 0 8px 32px rgba(27,79,168,0.12), 0 2px 8px rgba(0,0,0,0.06);
-    animation: toastIn 0.4s cubic-bezier(0.16,1,0.3,1) both;
-    max-width: 340px;
-">
-    <div style="
-        width: 28px; height: 28px;
-        border-radius: 50%;
-        background: rgba(21,128,61,0.08);
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0;
-    ">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"/>
-        </svg>
-    </div>
-    <div style="flex: 1;">
-        <div style="font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: #15803D; margin-bottom: 2px; font-weight: 500;">Success</div>
-        <div style="font-size: 13px; color: #1A2A4A; font-weight: 300;">{{ session('success') }}</div>
-    </div>
-    <button onclick="document.getElementById('successToast').style.display='none'"
-        style="background: none; border: none; cursor: pointer; color: #AAB8C8; padding: 4px; flex-shrink: 0;"
-        onmouseover="this.style.color='#DC2626'"
-        onmouseout="this.style.color='#AAB8C8'">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-    </button>
+<div id="successToast" style="position:fixed;bottom:24px;right:24px;z-index:2000;background:var(--card);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:10px;padding:14px 20px;display:flex;align-items:center;gap:12px;box-shadow:0 12px 40px rgba(15,31,61,0.18);font-size:13px;color:var(--text);animation:toastIn 0.35s ease;">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5" style="flex-shrink:0;"><path d="M20 6L9 17l-5-5"/></svg>
+    {{ session('success') }}
+    <button onclick="document.getElementById('successToast').style.display='none'" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:18px;line-height:1;margin-left:8px;">&times;</button>
 </div>
 
 <style>
-@keyframes toastIn {
-    from { opacity: 0; transform: translateX(20px) scale(0.96); }
-    to   { opacity: 1; transform: none; }
-}
-@keyframes toastOut {
-    from { opacity: 1; transform: none; }
-    to   { opacity: 0; transform: translateX(20px) scale(0.96); }
-}
+@keyframes toastIn { from { opacity:0; transform:translateX(20px) scale(0.96); } to { opacity:1; transform:none; } }
+@keyframes toastOut { from { opacity:1; transform:none; } to { opacity:0; transform:translateX(20px) scale(0.96); } }
 </style>
 
 <script>
@@ -956,14 +388,12 @@ document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.delete-lead-form').forEach(form => {
         form.addEventListener('submit', async function (e) {
             e.preventDefault();
-
             const confirmed = await infConfirm.show({
                 label:   'Delete Lead',
                 title:   'Delete This Lead?',
                 message: 'This will permanently remove the lead and all its history. This action cannot be undone.',
                 okText:  'Delete',
             });
-
             if (confirmed) form.submit();
         });
     });
@@ -977,4 +407,87 @@ setTimeout(function() {
 }, 4000);
 </script>
 @endif
+
+<script>
+/**
+ * Master lead filter — controls the main table + the separate Registered table.
+ * - 'Registered'  → hide main table, show the Registered section only
+ * - anything else → show main table (filtered), hide Registered section
+ * - 'all'         → show main table (all non-registered), hide Registered section
+ */
+function applyLeadFilter(filter, btn) {
+    // Sync the filter-pill active state
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    if (btn) {
+        btn.classList.add('active');
+    } else {
+        const pill = document.querySelector('.filter-pill[data-lead-filter="' + filter + '"]');
+        if (pill) pill.classList.add('active');
+    }
+
+    // Sync the stat-card active state (so the two stay visually in sync)
+    document.querySelectorAll('.stat-card').forEach(c => {
+        c.classList.toggle('active-filter', c.dataset.filter === filter);
+    });
+
+    const mainCard   = document.getElementById('mainTableCard');
+    const regSection = document.getElementById('registeredSection');
+
+    if (filter === 'Registered') {
+        // Show only the registered table
+        if (mainCard)   mainCard.style.display   = 'none';
+        if (regSection) regSection.style.display = 'block';
+    } else {
+        // Show the main table, hide registered section
+        if (mainCard)   mainCard.style.display   = '';
+        if (regSection) regSection.style.display = 'none';
+
+        // Filter rows inside the main table
+        document.querySelectorAll('#mainTableBody tr[data-status]').forEach(row => {
+            if (filter === 'all') {
+                row.style.display = '';
+            } else {
+                row.style.display = row.dataset.status === filter ? '' : 'none';
+            }
+        });
+    }
+
+    // Clear any active search when switching filters
+    const searchBox = document.getElementById('leadSearch');
+    if (searchBox && searchBox.value) {
+        searchBox.value = '';
+    }
+}
+
+// Redirect the old stat-card filter calls to the new master filter,
+// so the top stat cards and the filter pills behave identically.
+function filterByStatus(status) {
+    applyLeadFilter(status, null);
+}
+
+// Search that respects the currently-active filter (main table + registered table)
+function searchLeads(query) {
+    const q = query.toLowerCase().trim();
+    const activePill = document.querySelector('.filter-pill.active');
+    const currentFilter = activePill ? activePill.dataset.leadFilter : 'all';
+
+    // Which tbody are we searching in?
+    const scope = (currentFilter === 'Registered')
+        ? '#registeredTableBody tr[data-status]'
+        : '#mainTableBody tr[data-status]';
+
+    document.querySelectorAll(scope).forEach(row => {
+        const name  = row.querySelector('.lead-name')?.textContent.toLowerCase() ?? '';
+        const phone = row.querySelector('.lead-phone')?.textContent.toLowerCase() ?? '';
+        const matchesSearch = q === '' || name.includes(q) || phone.includes(q);
+
+        let matchesFilter = true;
+        if (currentFilter !== 'all' && currentFilter !== 'Registered') {
+            matchesFilter = row.dataset.status === currentFilter;
+        }
+        row.style.display = (matchesSearch && matchesFilter) ? '' : 'none';
+    });
+}
+</script>
+
 @endsection
