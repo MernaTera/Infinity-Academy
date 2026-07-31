@@ -74,6 +74,8 @@
 @media(max-width:900px){
     .nav-desktop-links,.nav-desktop-user-name{display:none!important;}
     .nav-hamburger{display:flex!important;}
+    .sb-nav-toggle{display:none!important;}
+
 }
 @media(max-width:500px){#bellPanel{right:-60px;}}
 </style>
