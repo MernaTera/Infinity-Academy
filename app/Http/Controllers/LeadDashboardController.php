@@ -14,14 +14,11 @@ class LeadDashboardController extends Controller
     {
         $employeeId = Employee::where('user_id', auth()->id())->first()?->employee_id;
 
-        // ✅ Base = leads مملوكة للـ CS دي (حالياً أو كانت)
-        // الـ archived فقدوا الـ owner_cs_id — نجيبهم من الـ lead_history
         $base = Lead::where('owner_cs_id', $employeeId);
 
-        // ✅ Leads اللي كانت بتاعت الـ CS دي + اتأرشفت
         $myArchivedIds = DB::table('lead_history')
-            ->where('changed_by', $employeeId)  // employee_id مش user_id
-            ->where('new_status', 'Archived')   // new_status مش new_value
+            ->where('changed_by', $employeeId)  
+            ->where('new_status', 'Archived')  
             ->pluck('lead_id');
 
         $stats = [
@@ -34,17 +31,14 @@ class LeadDashboardController extends Controller
 
             'waiting'    => (clone $base)->where('status', 'Waiting')->count(),
 
-            // ✅ Archived = اللي أرشفتهم أنا
             'archived'   => Lead::whereIn('lead_id', $myArchivedIds)->count(),
 
-            // ✅ Public = active + بدون owner + مش archived
             'public'     => Lead::whereNull('owner_cs_id')
                                 ->where('is_active', true)
                                 ->whereNotIn('status', ['Archived', 'Registered'])
                                 ->count(),
         ];
 
-        // ── Period stats (my leads only) ─────────────────────────────
         $today = (clone $base)
             ->whereDate('updated_at', now()->toDateString())
             ->select('status', DB::raw('count(*) as count'))
@@ -60,7 +54,6 @@ class LeadDashboardController extends Controller
             ->select('status', DB::raw('count(*) as count'))
             ->groupBy('status')->pluck('count', 'status')->toArray();
 
-        // ── Distribution ──────────────────────────────────────────────
         $bySource = (clone $base)
             ->select('source', DB::raw('count(*) as count'))
             ->groupBy('source')->orderByDesc('count')
@@ -80,8 +73,7 @@ class LeadDashboardController extends Controller
             ->groupBy('users.name')->orderByDesc('count')
             ->pluck('count', 'users.name')->toArray();
 
-        // ── Recent leads ──────────────────────────────────────────────
-        $recentLeads = (clone $base)->with('courseTemplate')->latest()->limit(10)->get();
+        $recentLeads = (clone $base)->with(['courseTemplate', 'level', 'sublevel'])->latest()->limit(10)->get();
 
         return view('leads.dashboard', compact(
             'stats', 'today', 'week', 'month',
