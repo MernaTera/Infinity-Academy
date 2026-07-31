@@ -69,7 +69,8 @@
     .kpi-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; text-decoration:none; position:relative; overflow:hidden; transition:transform 0.2s, box-shadow 0.2s; display:block; box-shadow:0 2px 10px rgba(27,79,168,0.04); }
     .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc,var(--blue)); }
     .kpi-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(27,79,168,0.1); text-decoration:none; }
-    .kpi-icon { width:36px; height:36px; border-radius:9px; background:var(--kc,var(--blue)); opacity:0.12; margin-bottom:12px; }
+    .kpi-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; background:var(--bg); border:1px solid var(--border); }
+    .kpi-icon svg { width:18px; height:18px; stroke:var(--kc,var(--blue)); }
     .kpi-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:6px; }
     .kpi-val { font-family:'Bebas Neue',sans-serif; font-size:36px; letter-spacing:1px; line-height:0.9; color:var(--kc,var(--blue)); }
     .kpi-sub { font-size:10px; color:var(--faint); margin-top:5px; }
@@ -167,25 +168,25 @@
         <span class="sec-label">My Leads</span>
         <div class="kpi-grid">
             <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--blue)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                 <div class="kpi-label">Total Leads</div>
                 <div class="kpi-val">{{ $leadsStats['my_total'] }}</div>
                 <div class="kpi-sub">assigned to me</div>
             </a>
             <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--orange)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
                 <div class="kpi-label">Active</div>
                 <div class="kpi-val">{{ $leadsStats['my_active'] }}</div>
                 <div class="kpi-sub">in follow-up</div>
             </a>
             <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--green)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
                 <div class="kpi-label">Registered</div>
                 <div class="kpi-val">{{ $leadsStats['my_registered'] }}</div>
                 <div class="kpi-sub">converted</div>
             </a>
             <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--red)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
                 <div class="kpi-label">Overdue</div>
                 <div class="kpi-val">{{ $leadsStats['my_overdue'] }}</div>
                 <div class="kpi-sub">need attention</div>

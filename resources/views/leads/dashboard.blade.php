@@ -21,7 +21,7 @@
 
     /* ═══ HEADER ═══ */
     .dash-header {
-        margin:0 auto 24px;
+        max-width:1200px; margin:0 auto 24px;
         background:linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
         border-radius:14px; padding:26px 32px;
         display:flex; align-items:center; justify-content:space-between;
@@ -42,7 +42,7 @@
     .btn-h-solid { background:var(--orange); border:none; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:3px; }
     .btn-h-solid:hover { background:#E8850F; text-decoration:none; color:#fff; }
 
-    .dash-wrap { margin:0 auto; }
+    .dash-wrap { max-width:1200px; margin:0 auto; }
     .sec-label { display:block; font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin:26px 0 14px; font-weight:600; }
     .sec-label:first-child { margin-top:0; }
 
@@ -58,7 +58,8 @@
     }
     .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc,var(--blue)); }
     .kpi-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(27,79,168,0.1); text-decoration:none; }
-    .kpi-icon { width:34px; height:34px; border-radius:9px; background:var(--kc,var(--blue)); opacity:0.12; margin-bottom:10px; }
+    .kpi-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; margin-bottom:12px; background:var(--bg); border:1px solid var(--border); }
+    .kpi-icon svg { width:18px; height:18px; stroke:var(--kc,var(--blue)); }
     .kpi-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:6px; }
     .kpi-val { font-family:'Bebas Neue',sans-serif; font-size:38px; letter-spacing:1px; line-height:0.9; color:var(--kc,var(--blue)); }
     .kpi-sub { font-size:10px; color:var(--faint); margin-top:5px; letter-spacing:0.3px; }
@@ -184,37 +185,37 @@
         <span class="sec-label">Overview</span>
         <div class="kpi-grid">
             <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--blue)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                 <div class="kpi-label">Total Leads</div>
                 <div class="kpi-val">{{ $stats['total'] }}</div>
                 <div class="kpi-link">View all →</div>
             </a>
             <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--green)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
                 <div class="kpi-label">Registered</div>
                 <div class="kpi-val">{{ $stats['registered'] }}</div>
                 <div class="kpi-sub">converted</div>
             </a>
             <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--orange-dk)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg></div>
                 <div class="kpi-label">Call Again</div>
                 <div class="kpi-val">{{ $stats['call_again'] }}</div>
                 <div class="kpi-sub">needs follow-up</div>
             </a>
             <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--muted)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
                 <div class="kpi-label">Waiting</div>
                 <div class="kpi-val">{{ $stats['waiting'] }}</div>
                 <div class="kpi-sub">new / untouched</div>
             </a>
             <a href="{{ route('leads.archived') }}" class="kpi-card" style="--kc:#9A8A7A">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg></div>
                 <div class="kpi-label">Archived</div>
                 <div class="kpi-val">{{ $stats['archived'] }}</div>
                 <div class="kpi-sub">closed out</div>
             </a>
             <a href="{{ route('leads.public') }}" class="kpi-card" style="--kc:var(--blue-2)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
                 <div class="kpi-label">Public Pool</div>
                 <div class="kpi-val">{{ $stats['public'] }}</div>
                 <div class="kpi-link">Claim →</div>
@@ -450,17 +451,10 @@
                                 </td>
                                 <td><span class="lt-muted">{{ $lead->created_at?->format('d M Y') }}</span></td>
                                 <td style="text-align:right;">
-                                    @if($lead->status === 'Registered' && $lead->student_id)
-                                        <a href="{{ route('leads.invoice', $lead->lead_id) }}" class="lt-action" style="background:var(--green);">
-                                            Invoice
-                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                        </a>
-                                    @else
-                                        <a href="{{ route('leads.edit', $lead->lead_id) }}" class="lt-action">
-                                            Open
-                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-                                        </a>
-                                    @endif
+                                    <a href="{{ route('leads.edit', $lead->lead_id) }}" class="lt-action">
+                                        Open
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                                    </a>
                                 </td>
                             </tr>
                         @empty
