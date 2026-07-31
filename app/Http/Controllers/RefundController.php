@@ -27,19 +27,31 @@ class RefundController extends Controller
             'student',
             'courseTemplate',
             'level',
+            // ALL Course-category deposit payments (the deposit may be split
+            // across several payment methods: Cash + Instapay + Vodafone ...)
             'financialTransactions' => fn($q) => $q->where('transaction_type', 'Payment')
                                                     ->where('transaction_category', 'Course')
                                                     ->orderBy('created_at'),
+            'installmentSchedules',
             'refundRequests',
         ])
         ->where('created_by_cs_id', $employeeId)
         ->whereIn('status', ['Active', 'Pending_Approval', 'Waiting'])
         ->get()
         ->filter(function ($enrollment) {
-            $deposit = $enrollment->financialTransactions->first();
-            if (!$deposit) return false;
-            // Within 3 days of payment
-            return $deposit->created_at->diffInDays(now()) <= 3;
+            $deposits = $enrollment->financialTransactions;
+            if ($deposits->isEmpty()) return false;
+
+            // Within 3 days of the FIRST deposit payment
+            $firstPaid = $deposits->sortBy('created_at')->first();
+            if ($firstPaid->created_at->diffInDays(now()) > 3) return false;
+
+            // NOT eligible if any installment has already been paid
+            $hasPaidInstallment = $enrollment->installmentSchedules
+                ->firstWhere('status', 'Paid') !== null;
+            if ($hasPaidInstallment) return false;
+
+            return true;
         });
 
         // My pending refund requests
@@ -79,6 +91,7 @@ class RefundController extends Controller
         $enrollment = Enrollment::with([
             'financialTransactions' => fn($q) => $q->where('transaction_type', 'Payment')
                                                     ->where('transaction_category', 'Course'),
+            'installmentSchedules',
         ])->findOrFail($request->enrollment_id);
 
         // Verify ownership
@@ -86,13 +99,24 @@ class RefundController extends Controller
             return back()->with('error', 'You can only request refunds for your own enrollments.');
         }
 
-        // Check 3-day window
-        $deposit = $enrollment->financialTransactions->first();
-        if (!$deposit) {
-            return back()->with('error', 'No payment found for this enrollment.');
+        // Total Course deposit = sum of ALL Course-category payments (split methods)
+        $deposits = $enrollment->financialTransactions;
+        if ($deposits->isEmpty()) {
+            return back()->with('error', 'No deposit payment found for this enrollment.');
         }
-        if ($deposit->created_at->diffInDays(now()) > 3) {
+        $depositTotal = (float) $deposits->sum('amount');
+        $firstPaid    = $deposits->sortBy('created_at')->first();
+
+        // Check 3-day window (from first deposit payment)
+        if ($firstPaid->created_at->diffInDays(now()) > 3) {
             return back()->with('error', 'Refund window has expired (3 days from payment).');
+        }
+
+        // Block refund if any installment has already been paid
+        $hasPaidInstallment = $enrollment->installmentSchedules
+            ->firstWhere('status', 'Paid') !== null;
+        if ($hasPaidInstallment) {
+            return back()->with('error', 'This student has already paid an installment — deposit refund is no longer available.');
         }
 
         // Check no existing pending request
@@ -106,7 +130,7 @@ class RefundController extends Controller
         $refundRequest = RefundRequest::create([
             'enrollment_id' => $enrollment->enrollment_id,
             'requested_by'  => $employeeId,
-            'amount'        => $deposit->amount,
+            'amount'        => $depositTotal,
             'reason'        => $request->reason,
             'status'        => 'Pending',
         ]);
@@ -123,7 +147,7 @@ class RefundController extends Controller
             \App\Services\NotificationService::send(
                 $adminId,
                 'New Refund Request',
-                "Refund requested for {$studentName} — " . number_format($deposit->amount) . ' LE',
+                "Refund requested for {$studentName} — " . number_format($depositTotal) . ' LE',
                 'refund_request',
                 $refundRequest->request_id
             );

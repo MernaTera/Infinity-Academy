@@ -2,387 +2,353 @@
 @section('title', 'Dashboard')
 
 @section('content')
+
 @once
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 @endonce
 
 <style>
-:root{
-    --blue:#1B4FA8;--blue-l:rgba(27,79,168,0.08);
-    --orange:#F5911E;--orange-l:rgba(245,145,30,0.08);
-    --green:#059669;--green-l:rgba(5,150,105,0.08);
-    --red:#DC2626;--red-l:rgba(220,38,38,0.06);
-    --purple:#7F77DD;--purple-l:rgba(127,119,221,0.08);
-    --border:rgba(27,79,168,0.09);
-    --bg:#F8F6F2;--card:#fff;
-    --text:#1A2A4A;--muted:#7A8A9A;--faint:#AAB8C8;
-}
-*{box-sizing:border-box;}
+    :root {
+        --blue:#1B4FA8; --blue-2:#2D6FDB; --blue-l:rgba(27,79,168,0.06);
+        --orange:#F5911E; --orange-dk:#C47010; --orange-l:rgba(245,145,30,0.07);
+        --green:#059669; --green-dk:#15803D; --green-l:rgba(5,150,105,0.07);
+        --purple:#7C3AED; --purple-l:rgba(124,58,237,0.07);
+        --red:#DC2626; --red-l:rgba(220,38,38,0.05);
+        --dark:#0F1F3D; --text:#1A2A4A; --muted:#7A8A9A; --faint:#AAB8C8;
+        --bg:#F8F6F2; --card:#fff; --border:rgba(27,79,168,0.1);
+    }
+    * { box-sizing:border-box; }
 
-.dash-page{background:var(--bg);min-height:100vh;padding:36px 28px;font-family:'DM Sans',sans-serif;color:var(--text);}
+    .cs-page { background:var(--bg); min-height:100vh; padding:28px 32px; color:var(--text); font-family:'DM Sans',sans-serif; }
 
-/* ── HEADER ── */
-.dash-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:14px;}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:4px;}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:4px;color:var(--blue);line-height:1;}
-.page-sub{font-size:12px;color:var(--faint);margin-top:4px;}
-.btn-new-lead{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border:1.5px solid var(--blue);border-radius:4px;color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;text-decoration:none;transition:color 0.4s;position:relative;overflow:hidden;}
-.btn-new-lead::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--blue),#2D6FDB);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);}
-.btn-new-lead:hover::before{transform:scaleX(1);}
-.btn-new-lead:hover{color:#fff;text-decoration:none;}
-.btn-new-lead span,.btn-new-lead svg{position:relative;z-index:1;}
+    /* ═══ HEADER ═══ */
+    .cs-header {
+        margin:0 auto 22px;
+        background:linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
+        border-radius:14px; padding:24px 30px;
+        display:flex; align-items:center; justify-content:space-between;
+        flex-wrap:wrap; gap:16px; position:relative; overflow:hidden;
+        box-shadow:0 8px 32px rgba(15,31,61,0.15);
+    }
+    .cs-header::before { content:''; position:absolute; top:-70px; right:-50px; width:220px; height:220px; border-radius:50%; background:rgba(245,145,30,0.06); }
+    .cs-header::after { content:''; position:absolute; bottom:-60px; left:25%; width:150px; height:150px; border-radius:50%; background:rgba(27,79,168,0.15); }
+    .cs-header-left { position:relative; z-index:1; }
+    .cs-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin-bottom:5px; font-weight:600; display:flex; align-items:center; gap:8px; }
+    .cs-eyebrow::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--orange); box-shadow:0 0 8px var(--orange); }
+    .cs-title { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:3px; color:#fff; line-height:1; margin:0; }
+    .cs-sub { font-size:11px; color:rgba(255,255,255,0.5); margin-top:5px; letter-spacing:0.5px; }
+    .cs-actions { display:flex; gap:10px; position:relative; z-index:1; flex-wrap:wrap; }
+    .btn-h { display:inline-flex; align-items:center; gap:7px; padding:11px 20px; border-radius:7px; font-size:10px; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:all 0.25s; font-weight:600; }
+    .btn-h-ghost { background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15); color:rgba(255,255,255,0.85); }
+    .btn-h-ghost:hover { background:rgba(255,255,255,0.14); color:#fff; text-decoration:none; }
+    .btn-h-solid { background:var(--orange); border:none; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:3px; }
+    .btn-h-solid:hover { background:#E8850F; text-decoration:none; color:#fff; }
 
-/* ── HERO STRIP (Target) ── */
-.hero-strip{background:linear-gradient(135deg,#1A2A4A 0%,var(--blue) 60%,#2D6FDB 100%);border-radius:10px;padding:22px 28px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:18px;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(27,79,168,0.2);}
-.hero-strip::before{content:'';position:absolute;top:-50px;right:-50px;width:200px;height:200px;border-radius:50%;background:rgba(245,145,30,0.07);}
-.hero-strip::after{content:'';position:absolute;bottom:-30px;left:140px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.04);}
-.hero-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:5px;}
-.hero-name{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:#fff;line-height:1;}
-.hero-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;}
-.hero-prog-track{background:rgba(255,255,255,0.12);border-radius:4px;height:6px;overflow:hidden;margin:8px 0 4px;}
-.hero-prog-fill{height:6px;border-radius:4px;background:linear-gradient(90deg,var(--orange),#FFB347);transition:width 1s ease;}
-.hero-stat-val{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;letter-spacing:1px;line-height:1;}
-.hero-stat-label{font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-top:3px;}
+    .cs-wrap { margin:0 auto; }
+    .sec-label { display:block; font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin:26px 0 14px; font-weight:600; }
+    .sec-label:first-child { margin-top:0; }
 
-/* ── ALERT ── */
-.alert-card{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid rgba(245,145,30,0.2);border-left:3px solid var(--orange);border-radius:6px;padding:14px 18px;margin-bottom:20px;text-decoration:none;transition:all 0.2s;animation:fadeIn 0.4s ease both;}
-.alert-card:hover{box-shadow:0 4px 16px rgba(245,145,30,0.12);border-left-color:var(--blue);text-decoration:none;}
-.alert-card-text{font-size:13px;color:var(--text);}
-.alert-card-sub{font-size:11px;color:var(--faint);margin-top:2px;}
+    /* ═══ CALLS-DUE BANNER ═══ */
+    .calls-banner {
+        display:flex; align-items:center; gap:14px; padding:16px 20px; margin-bottom:6px;
+        background:linear-gradient(135deg, var(--orange-l), transparent);
+        border:1px solid rgba(245,145,30,0.2); border-left:3px solid var(--orange);
+        border-radius:12px; text-decoration:none; transition:all 0.2s;
+    }
+    .calls-banner:hover { background:linear-gradient(135deg, rgba(245,145,30,0.12), transparent); text-decoration:none; }
+    .calls-banner-icon { width:44px; height:44px; border-radius:11px; background:var(--orange); display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .calls-banner-text { flex:1; }
+    .calls-banner-title { font-size:14px; font-weight:700; color:var(--text); }
+    .calls-banner-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+    .calls-banner-count { font-family:'Bebas Neue',sans-serif; font-size:34px; color:var(--orange); letter-spacing:1px; }
 
-/* ── SECTION LABEL ── */
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);display:flex;align-items:center;gap:8px;margin-bottom:14px;margin-top:28px;}
-.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(245,145,30,0.2),transparent);}
+    /* ═══ KPI GRID ═══ */
+    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    @media (max-width:900px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+    @media (max-width:520px){ .kpi-grid{ grid-template-columns:1fr; } }
+    .kpi-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; text-decoration:none; position:relative; overflow:hidden; transition:transform 0.2s, box-shadow 0.2s; display:block; box-shadow:0 2px 10px rgba(27,79,168,0.04); }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc,var(--blue)); }
+    .kpi-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(27,79,168,0.1); text-decoration:none; }
+    .kpi-icon { width:36px; height:36px; border-radius:9px; background:var(--kc,var(--blue)); opacity:0.12; margin-bottom:12px; }
+    .kpi-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:6px; }
+    .kpi-val { font-family:'Bebas Neue',sans-serif; font-size:36px; letter-spacing:1px; line-height:0.9; color:var(--kc,var(--blue)); }
+    .kpi-sub { font-size:10px; color:var(--faint); margin-top:5px; }
 
-/* ── KPI CARDS ── */
-.kpi-grid{display:grid;gap:12px;margin-bottom:4px;}
-.kpi-grid-5{grid-template-columns:repeat(5,1fr);}
-.kpi-grid-4{grid-template-columns:repeat(4,1fr);}
-.kpi-grid-3{grid-template-columns:repeat(3,1fr);}
-.kpi-grid-2{grid-template-columns:repeat(2,1fr);}
+    /* ═══ TARGET PANEL ═══ */
+    .target-panel { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(27,79,168,0.05); }
+    .target-body { padding:24px; display:grid; grid-template-columns:1.4fr 1fr; gap:28px; align-items:center; }
+    @media (max-width:760px){ .target-body{ grid-template-columns:1fr; gap:20px; } }
+    .target-ring-wrap { display:flex; align-items:center; justify-content:center; }
+    .target-ring { position:relative; width:150px; height:150px; }
+    .target-ring svg { transform:rotate(-90deg); }
+    .target-ring-center { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .target-ring-pct { font-family:'Bebas Neue',sans-serif; font-size:38px; color:var(--green); line-height:1; letter-spacing:1px; }
+    .target-ring-lbl { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-top:2px; }
+    .target-stats { display:flex; flex-direction:column; gap:14px; }
+    .target-stat-row { display:flex; align-items:center; justify-content:space-between; padding-bottom:14px; border-bottom:1px solid var(--border); }
+    .target-stat-row:last-child { border-bottom:none; padding-bottom:0; }
+    .target-stat-label { font-size:11px; color:var(--muted); letter-spacing:0.3px; }
+    .target-stat-val { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; }
 
-.kpi-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden;text-decoration:none;display:block;transition:all 0.25s;animation:fadeIn 0.4s ease both;}
-.kpi-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(27,79,168,0.1);text-decoration:none;}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--blue));}
-.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:7px;}
-.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--kc,var(--blue));line-height:1;}
-.kpi-sub{font-size:10px;color:var(--faint);margin-top:5px;}
-.kpi-link{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--kc,var(--blue));margin-top:10px;display:block;opacity:0.6;transition:opacity 0.2s;}
-.kpi-card:hover .kpi-link{opacity:1;}
+    /* ═══ TWO COL ═══ */
+    .two-col { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+    @media (max-width:900px){ .two-col{ grid-template-columns:1fr; } }
 
-/* Progress in kpi */
-.kpi-prog{background:#F0F0F0;border-radius:3px;height:4px;overflow:hidden;margin-top:10px;}
-.kpi-prog-fill{height:4px;border-radius:3px;background:var(--kc,var(--blue));transition:width 1s ease;}
+    .mini-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(27,79,168,0.05); }
+    .mini-card-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg, rgba(27,79,168,0.02), transparent); }
+    .mini-card-title { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:2px; color:var(--text); }
+    .mini-card-link { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--blue); font-weight:600; text-decoration:none; }
+    .mini-card-link:hover { text-decoration:underline; }
+    .mini-card-body { padding:8px 20px; }
 
-/* ── TASK CARDS ── */
-.task-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:4px;}
-.task-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 18px;display:flex;align-items:center;gap:14px;text-decoration:none;transition:all 0.25s;animation:fadeIn 0.4s ease both;}
-.task-card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(27,79,168,0.1);text-decoration:none;}
-.task-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s;}
-.task-num{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px;line-height:1;}
-.task-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);margin-top:2px;}
+    .mini-row { display:flex; align-items:center; gap:12px; padding:13px 0; border-bottom:1px solid rgba(27,79,168,0.05); }
+    .mini-row:last-child { border-bottom:none; }
+    .mini-avatar { width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:16px; flex-shrink:0; }
+    .mini-row-name { font-size:13px; font-weight:600; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mini-row-sub { font-size:10px; color:var(--muted); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .mini-empty { text-align:center; padding:32px 20px; color:var(--faint); font-size:12px; }
 
-/* ── TWO-COL ── */
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+    /* Payment category badge */
+    .pay-cat { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:6px; font-size:9px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase; }
+    .cat-course   { background:var(--blue-l); color:var(--blue); }
+    .cat-test     { background:var(--purple-l); color:var(--purple); }
+    .cat-material { background:var(--orange-l); color:var(--orange-dk); }
+    .cat-install  { background:var(--green-l); color:var(--green-dk); }
+    .pay-method-tag { font-size:9px; color:var(--faint); margin-top:2px; }
 
-/* ── MINI CARD ── */
-.mini-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;animation:fadeIn 0.4s ease both;}
-.mini-card-header{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(27,79,168,0.01);}
-.mini-card-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--text);}
-.mini-card-link{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);text-decoration:none;transition:opacity 0.2s;}
-.mini-card-link:hover{text-decoration:none;opacity:0.7;}
-.mini-row{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(27,79,168,0.04);transition:background 0.15s;}
-.mini-row:last-child{border-bottom:none;}
-.mini-row:hover{background:rgba(27,79,168,0.02);}
-.mini-avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-l);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--blue);flex-shrink:0;}
-.mini-row-name{font-size:13px;color:var(--text);font-weight:500;}
-.mini-row-sub{font-size:10px;color:var(--faint);margin-top:1px;}
-.mini-empty{text-align:center;padding:28px;color:var(--faint);font-size:12px;}
+    /* Lead status mini badge */
+    .lead-mini-badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:600; }
+    .lmb-waiting { background:rgba(122,138,154,0.12); color:var(--muted); }
+    .lmb-call    { background:var(--orange-l); color:var(--orange-dk); }
+    .lmb-sched   { background:var(--blue-l); color:var(--blue); }
+    .lmb-reg     { background:var(--green-l); color:var(--green-dk); }
 
-/* ── BADGES ── */
-.badge{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-weight:600;}
-.badge-waiting{background:rgba(122,138,154,0.1);color:var(--muted);}
-.badge-call{background:var(--orange-l);color:#C47010;}
-.badge-registered{background:var(--green-l);color:var(--green);}
-.badge-archived{background:rgba(155,155,155,0.1);color:#9A8A7A;}
-.badge-overdue{background:var(--red-l);color:var(--red);}
-
-/* ── OUTSTANDING BAR ── */
-.os-row{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(27,79,168,0.04);}
-.os-row:last-child{border-bottom:none;}
-.os-bar-track{flex:1;background:#F0F0F0;border-radius:3px;height:4px;overflow:hidden;}
-.os-bar-fill{height:4px;border-radius:3px;background:var(--red);transition:width 0.8s ease;}
-
-/* ── ANIMATE ── */
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
-
-/* ── RESPONSIVE ── */
-@media(max-width:1100px){
-    .kpi-grid-5,.task-grid{grid-template-columns:repeat(3,1fr);}
-    .kpi-grid-4{grid-template-columns:repeat(2,1fr);}
-    .three-col{grid-template-columns:1fr 1fr;}
-}
-@media(max-width:768px){
-    .dash-page{padding:18px 14px;}
-    .kpi-grid-5,.kpi-grid-4,.kpi-grid-3,.task-grid{grid-template-columns:1fr 1fr;}
-    .two-col,.three-col{grid-template-columns:1fr;}
-    .hero-strip{flex-direction:column;}
-}
-@media(max-width:480px){
-    .kpi-grid-5,.kpi-grid-4,.kpi-grid-3,.kpi-grid-2,.task-grid{grid-template-columns:1fr;}
-}
+    @media (max-width:600px){ .cs-page{ padding:16px; } }
 </style>
 
-<div class="dash-page">
+<div class="cs-page">
 
     {{-- ── HEADER ── --}}
-    <div class="dash-header">
-        <div>
-            <div class="page-eyebrow">Customer Service</div>
-            <h1 class="page-title">Dashboard</h1>
-            <div class="page-sub">
-                {{ now()->format('l, d M Y') }}
-                @if(isset($currentPatch) && $currentPatch)
-                — <span style="color:var(--blue);font-weight:500;">{{ $currentPatch->name }}</span>
-                @endif
-            </div>
+    <div class="cs-header">
+        <div class="cs-header-left">
+            <div class="cs-eyebrow">Customer Service</div>
+            <h1 class="cs-title">Welcome back{{ $employee?->full_name ? ', '.explode(' ', $employee->full_name)[0] : '' }}</h1>
+            <div class="cs-sub">{{ now()->format('l, d M Y') }}@if($currentPatch) · {{ $currentPatch->name }}@endif</div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap;">
-            <a href="{{ route('leads.index') }}" class="btn-new-lead" style="border-color:rgba(27,79,168,0.2);color:var(--muted);">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-                <span>My Leads</span>
+        <div class="cs-actions">
+            <a href="{{ route('leads.public') }}" class="btn-h btn-h-ghost">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M17 11l2 2 4-4M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                Public Pool
             </a>
-            <a href="{{ route('leads.create') }}" class="btn-new-lead">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                <span>New Lead</span>
+            <a href="{{ route('leads.create') }}" class="btn-h btn-h-solid">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                New Lead
             </a>
         </div>
     </div>
 
-    {{-- ── ALERT: Calls Due Today ── --}}
-    @if($callsDueToday > 0)
-    <a href="{{ route('leads.index') }}" class="alert-card">
-        <div style="width:38px;height:38px;border-radius:10px;background:var(--orange-l);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        </div>
-        <div>
-            <div class="alert-card-text">You have <strong>{{ $callsDueToday }} follow-up call{{ $callsDueToday > 1 ? 's' : '' }}</strong> scheduled for today</div>
-            <div class="alert-card-sub">Tap to open your leads list and start calling →</div>
-        </div>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--faint)" stroke-width="2" style="margin-left:auto;flex-shrink:0;"><path d="M9 18l6-6-6-6"/></svg>
-    </a>
-    @endif
+    <div class="cs-wrap">
 
-    {{-- ── HERO: Sales Target ── --}}
-    <div class="hero-strip">
-        <div style="position:relative;z-index:1;">
-            <div class="hero-label">Monthly Target — {{ now()->format('F Y') }}</div>
-            <div class="hero-name">{{ $employee?->full_name ?? Auth::user()->name }}</div>
-            <div class="hero-sub">Customer Service · Infinity Academy</div>
-        </div>
-        <div style="flex:1;max-width:300px;position:relative;z-index:1;">
-            @php $pct = min(100, $salesStats['percentage']); @endphp
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.5);margin-bottom:6px;">
-                <span>Target Progress</span>
-                <span>{{ $pct }}%</span>
+        {{-- ── CALLS DUE BANNER ── --}}
+        @if($callsDueToday > 0)
+        <a href="{{ route('leads.index') }}" class="calls-banner">
+            <div class="calls-banner-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             </div>
-            <div class="hero-prog-track">
-                <div class="hero-prog-fill" style="width:{{ $pct }}%"></div>
+            <div class="calls-banner-text">
+                <div class="calls-banner-title">You have calls scheduled today</div>
+                <div class="calls-banner-sub">Follow up with your leads to keep them warm →</div>
             </div>
-            <div style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:4px;">
-                {{ number_format($salesStats['achieved']) }} / {{ number_format($salesStats['target']) }} LE
-            </div>
-        </div>
-        <div style="display:flex;gap:28px;position:relative;z-index:1;flex-wrap:wrap;">
-            <div>
-                <div class="hero-stat-val">{{ number_format($salesStats['achieved']) }}</div>
-                <div class="hero-stat-label">Achieved LE</div>
-            </div>
-            <div>
-                <div class="hero-stat-val" style="color:#FFB347;">{{ number_format($salesStats['remaining']) }}</div>
-                <div class="hero-stat-label">Remaining LE</div>
-            </div>
-            <div>
-                <div class="hero-stat-val">{{ $salesStats['registrations'] }}</div>
-                <div class="hero-stat-label">Registrations</div>
-            </div>
-        </div>
-    </div>
+            <div class="calls-banner-count">{{ $callsDueToday }}</div>
+        </a>
+        @endif
 
-    {{-- ── TASK QUICK VIEW ── --}}
-    <span class="sec-label">Your Tasks Right Now</span>
-    <div class="task-grid">
-        <a href="{{ route('leads.index') }}" class="task-card" style="border-color:rgba(220,38,38,0.2);">
-            <div class="task-icon" style="background:var(--red-l);">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-            </div>
-            <div>
-                <div class="task-num" style="color:var(--red);">{{ $callsDueToday }}</div>
-                <div class="task-label">Calls Today</div>
-            </div>
-        </a>
-        <a href="{{ route('outstanding.index') }}" class="task-card" style="border-color:rgba(245,145,30,0.2);">
-            <div class="task-icon" style="background:var(--orange-l);">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
-            <div>
-                <div class="task-num" style="color:var(--orange);">{{ $leadsStats['my_overdue'] }}</div>
-                <div class="task-label">Overdue Leads</div>
-            </div>
-        </a>
-        <a href="{{ route('outstanding.index') }}" class="task-card" style="border-color:rgba(220,38,38,0.15);">
-            <div class="task-icon" style="background:var(--red-l);">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            </div>
-            <div>
-                <div class="task-num" style="color:var(--red);">{{ $outstandingStats['restricted'] }}</div>
-                <div class="task-label">Restricted Students</div>
-            </div>
-        </a>
-        <a href="{{ route('leads.public') }}" class="task-card" style="border-color:rgba(27,79,168,0.15);">
-            <div class="task-icon" style="background:var(--blue-l);">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-            </div>
-            <div>
-                <div class="task-num" style="color:var(--blue);">{{ $leadsStats['public'] }}</div>
-                <div class="task-label">Public Leads</div>
-            </div>
-        </a>
-    </div>
-
-    {{-- ── SALES KPIs ── --}}
-    <span class="sec-label">Sales Performance — {{ now()->format('F Y') }}</span>
-    <div class="kpi-grid kpi-grid-4">
-        <div class="kpi-card" style="--kc:var(--blue)">
-            <div class="kpi-label">Monthly Target</div>
-            <div class="kpi-val">{{ number_format($salesStats['target']) }}</div>
-            <div class="kpi-sub">LE — set by admin</div>
+        {{-- ── MY LEADS KPIs ── --}}
+        <span class="sec-label">My Leads</span>
+        <div class="kpi-grid">
+            <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--blue)">
+                <div class="kpi-icon"></div>
+                <div class="kpi-label">Total Leads</div>
+                <div class="kpi-val">{{ $leadsStats['my_total'] }}</div>
+                <div class="kpi-sub">assigned to me</div>
+            </a>
+            <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--orange)">
+                <div class="kpi-icon"></div>
+                <div class="kpi-label">Active</div>
+                <div class="kpi-val">{{ $leadsStats['my_active'] }}</div>
+                <div class="kpi-sub">in follow-up</div>
+            </a>
+            <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--green)">
+                <div class="kpi-icon"></div>
+                <div class="kpi-label">Registered</div>
+                <div class="kpi-val">{{ $leadsStats['my_registered'] }}</div>
+                <div class="kpi-sub">converted</div>
+            </a>
+            <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--red)">
+                <div class="kpi-icon"></div>
+                <div class="kpi-label">Overdue</div>
+                <div class="kpi-val">{{ $leadsStats['my_overdue'] }}</div>
+                <div class="kpi-sub">need attention</div>
+            </a>
         </div>
-        <div class="kpi-card" style="--kc:var(--green)">
-            <div class="kpi-label">Achieved</div>
-            <div class="kpi-val">{{ number_format($salesStats['achieved']) }}</div>
-            <div class="kpi-sub">LE this month</div>
-            <div class="kpi-prog"><div class="kpi-prog-fill" style="width:{{ min(100,$salesStats['percentage']) }}%;background:var(--green)"></div></div>
-        </div>
-        <div class="kpi-card" style="--kc:var(--orange)">
-            <div class="kpi-label">Remaining</div>
-            <div class="kpi-val">{{ number_format($salesStats['remaining']) }}</div>
-            <div class="kpi-sub">LE to hit target</div>
-        </div>
-        <div class="kpi-card" style="--kc:var(--purple)">
-            <div class="kpi-label">Achievement Rate</div>
-            <div class="kpi-val">{{ $salesStats['percentage'] }}<span style="font-size:16px">%</span></div>
-            <div class="kpi-prog"><div class="kpi-prog-fill" style="width:{{ min(100,$salesStats['percentage']) }}%;background:var(--purple)"></div></div>
-        </div>
-    </div>
 
-    {{-- ── LEADS KPIs ── --}}
-    <span class="sec-label">Follow-up Pipeline</span>
-    <div class="kpi-grid kpi-grid-4">
-        <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--blue)">
-            <div class="kpi-label">My Total Leads</div>
-            <div class="kpi-val">{{ $leadsStats['my_total'] }}</div>
-            <div class="kpi-link">View List →</div>
-        </a>
-        <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--orange)">
-            <div class="kpi-label">Active Follow-ups</div>
-            <div class="kpi-val">{{ $leadsStats['my_active'] }}</div>
-            <div class="kpi-sub">waiting / call again</div>
-        </a>
-        <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--green)">
-            <div class="kpi-label">Registered</div>
-            <div class="kpi-val">{{ $leadsStats['my_registered'] }}</div>
-            <div class="kpi-sub">converted to students</div>
-        </a>
-        <a href="{{ route('leads.index') }}" class="kpi-card" style="--kc:var(--red)">
-            <div class="kpi-label">Overdue Calls</div>
-            <div class="kpi-val">{{ $leadsStats['my_overdue'] }}</div>
-            <div class="kpi-sub">past 4-day deadline</div>
-            <div class="kpi-link">Follow Up →</div>
-        </a>
-    </div>
-
-    {{-- ── OUTSTANDING ── --}}
-    <span class="sec-label">Outstanding Balances</span>
-    <div class="kpi-grid kpi-grid-3">
-        <a href="{{ route('outstanding.index') }}" class="kpi-card" style="--kc:var(--red)">
-            <div class="kpi-label">Outstanding Students</div>
-            <div class="kpi-val">{{ $outstandingStats['count'] }}</div>
-            <div class="kpi-sub">with unpaid balance</div>
-            <div class="kpi-link">View All →</div>
-        </a>
-        <a href="{{ route('outstanding.index') }}" class="kpi-card" style="--kc:var(--red)">
-            <div class="kpi-label">Restricted Students</div>
-            <div class="kpi-val">{{ $outstandingStats['restricted'] }}</div>
-            <div class="kpi-sub">attendance blocked</div>
-        </a>
-        <div class="kpi-card" style="--kc:var(--orange)">
-            <div class="kpi-label">Total Unpaid Balance</div>
-            <div class="kpi-val" style="font-size:22px;">{{ number_format($outstandingStats['total_le']) }}</div>
-            <div class="kpi-sub">LE outstanding</div>
-        </div>
-    </div>
-
-    {{-- ── RECENT ACTIVITY ── --}}
-    <span class="sec-label">Recent Activity</span>
-    <div class="two-col">
-
-        {{-- Recent Leads --}}
-        <div class="mini-card">
-            <div class="mini-card-header">
-                <div class="mini-card-title">Recent Leads</div>
-                <a href="{{ route('leads.index') }}" class="mini-card-link">View All →</a>
-            </div>
-            @forelse($recentLeads as $lead)
-            <div class="mini-row">
-                <div class="mini-avatar">{{ strtoupper(substr($lead->full_name, 0, 1)) }}</div>
-                <div style="flex:1;min-width:0;">
-                    <div class="mini-row-name">{{ $lead->full_name }}</div>
-                    <div class="mini-row-sub">
-                        {{ $lead->courseTemplate?->name ?? '—' }}
-                        · {{ $lead->created_at->diffForHumans() }}
+        {{-- ── SALES TARGET ── --}}
+        <span class="sec-label">Monthly Target</span>
+        <div class="target-panel">
+            <div class="target-body">
+                {{-- Ring --}}
+                <div class="target-ring-wrap">
+                    @php
+                        $pct = min($salesStats['percentage'], 100);
+                        $circumference = 2 * 3.14159 * 65;
+                        $offset = $circumference - ($pct / 100) * $circumference;
+                    @endphp
+                    <div class="target-ring">
+                        <svg width="150" height="150">
+                            <circle cx="75" cy="75" r="65" fill="none" stroke="var(--bg)" stroke-width="12"/>
+                            <circle cx="75" cy="75" r="65" fill="none" stroke="var(--green)" stroke-width="12"
+                                    stroke-linecap="round"
+                                    stroke-dasharray="{{ $circumference }}"
+                                    stroke-dashoffset="{{ $offset }}"/>
+                        </svg>
+                        <div class="target-ring-center">
+                            <div class="target-ring-pct">{{ $salesStats['percentage'] }}%</div>
+                            <div class="target-ring-lbl">Achieved</div>
+                        </div>
                     </div>
                 </div>
-                @php
-                    $bMap = ['Waiting'=>'badge-waiting','Call_Again'=>'badge-call','Registered'=>'badge-registered','Archived'=>'badge-archived'];
-                    $isOverdue = in_array($lead->status,['Waiting','Call_Again']) && $lead->updated_at->diffInDays(now()) >= 4;
-                @endphp
-                <span class="badge {{ $isOverdue ? 'badge-overdue' : ($bMap[$lead->status] ?? 'badge-waiting') }}">
-                    {{ $isOverdue ? 'Overdue' : str_replace('_',' ',$lead->status) }}
-                </span>
+                {{-- Stats --}}
+                <div class="target-stats">
+                    <div class="target-stat-row">
+                        <span class="target-stat-label">Target</span>
+                        <span class="target-stat-val" style="color:var(--text);">{{ number_format($salesStats['target']) }} LE</span>
+                    </div>
+                    <div class="target-stat-row">
+                        <span class="target-stat-label">Achieved</span>
+                        <span class="target-stat-val" style="color:var(--green);">{{ number_format($salesStats['achieved']) }} LE</span>
+                    </div>
+                    <div class="target-stat-row">
+                        <span class="target-stat-label">Remaining</span>
+                        <span class="target-stat-val" style="color:var(--orange);">{{ number_format($salesStats['remaining']) }} LE</span>
+                    </div>
+                    <div class="target-stat-row">
+                        <span class="target-stat-label">Registrations this month</span>
+                        <span class="target-stat-val" style="color:var(--blue);">{{ $salesStats['registrations'] }}</span>
+                    </div>
+                </div>
             </div>
-            @empty
-            <div class="mini-empty">No leads yet — add your first lead!</div>
-            @endforelse
         </div>
 
-        {{-- Recent Payments --}}
-        <div class="mini-card">
-            <div class="mini-card-header">
-                <div class="mini-card-title">Recent Payments</div>
-                <a href="{{ route('sales.index') }}" class="mini-card-link">Sales Table →</a>
-            </div>
-            @forelse($recentPayments as $tx)
-            <div class="mini-row">
-                <div class="mini-avatar" style="background:var(--green-l);color:var(--green);">
-                    {{ strtoupper(substr($tx->enrollment?->student?->full_name ?? '?', 0, 1)) }}
-                </div>
-                <div style="flex:1;min-width:0;">
-                    <div class="mini-row-name">{{ $tx->enrollment?->student?->full_name ?? '—' }}</div>
-                    <div class="mini-row-sub">{{ $tx->enrollment?->courseTemplate?->name ?? '—' }} · {{ $tx->created_at->diffForHumans() }}</div>
-                </div>
-                <div style="text-align:right;flex-shrink:0;">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--green);letter-spacing:1px;">+{{ number_format($tx->amount) }}</div>
-                    <div style="font-size:9px;color:var(--faint);margin-top:1px;">{{ $tx->payment_method }}</div>
-                </div>
-            </div>
-            @empty
-            <div class="mini-empty">No payments recorded yet.</div>
-            @endforelse
+        {{-- ── OUTSTANDING KPIs ── --}}
+        <span class="sec-label">Outstanding & Collections</span>
+        <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
+            <a href="{{ route('outstanding.index') }}" class="kpi-card" style="--kc:var(--red)">
+                <div class="kpi-icon"></div>
+                <div class="kpi-label">Outstanding Students</div>
+                <div class="kpi-val">{{ $outstandingStats['count'] }}</div>
+                <div class="kpi-sub">with balance due</div>
+            </a>
+            <a href="{{ route('outstanding.index') }}" class="kpi-card" style="--kc:var(--orange-dk)">
+                <div class="kpi-icon"></div>
+                <div class="kpi-label">Total Outstanding</div>
+                <div class="kpi-val">{{ number_format($outstandingStats['total_le']) }}</div>
+                <div class="kpi-sub">LE to collect</div>
+            </a>
+            <a href="{{ route('outstanding.index') }}" class="kpi-card" style="--kc:var(--red)">
+                <div class="kpi-icon"></div>
+                <div class="kpi-label">Restricted</div>
+                <div class="kpi-val">{{ $outstandingStats['restricted'] }}</div>
+                <div class="kpi-sub">access restricted</div>
+            </a>
         </div>
 
-    </div>
+        {{-- ── RECENT ACTIVITY ── --}}
+        <span class="sec-label">Recent Activity</span>
+        <div class="two-col">
+            {{-- Recent Leads --}}
+            <div class="mini-card">
+                <div class="mini-card-header">
+                    <div class="mini-card-title">Recent Leads</div>
+                    <a href="{{ route('leads.index') }}" class="mini-card-link">View All →</a>
+                </div>
+                <div class="mini-card-body">
+                    @forelse($recentLeads as $lead)
+                        @php
+                            $lmb = match($lead->status) {
+                                'Waiting'        => ['lmb-waiting','Waiting'],
+                                'Call_Again'     => ['lmb-call','Call Again'],
+                                'Scheduled_Call' => ['lmb-sched','Scheduled'],
+                                'Registered'     => ['lmb-reg','Registered'],
+                                default          => ['lmb-waiting', str_replace('_',' ',$lead->status)],
+                            };
+                        @endphp
+                        <div class="mini-row">
+                            <div class="mini-avatar" style="background:var(--blue-l);color:var(--blue);">{{ strtoupper(substr($lead->full_name,0,1)) }}</div>
+                            <div style="flex:1;min-width:0;">
+                                <div class="mini-row-name">{{ $lead->full_name }}</div>
+                                <div class="mini-row-sub">{{ $lead->phone }} · {{ $lead->courseTemplate?->name ?? 'No course' }}</div>
+                            </div>
+                            <span class="lead-mini-badge {{ $lmb[0] }}">{{ $lmb[1] }}</span>
+                        </div>
+                    @empty
+                        <div class="mini-empty">No leads yet. Start by adding one!</div>
+                    @endforelse
+                </div>
+            </div>
+
+            {{-- Recent Payments --}}
+            <div class="mini-card">
+                <div class="mini-card-header">
+                    <div class="mini-card-title">Recent Payments</div>
+                    <a href="{{ route('sales.index') }}" class="mini-card-link">Sales Table →</a>
+                </div>
+                <div class="mini-card-body">
+                    @forelse($recentPayments as $tx)
+                        @php
+                            // Distinguish the payment type so CS can tell Course / Test / Material / Installment apart
+                            if ($tx->transaction_type === 'Installment') {
+                                $catClass = 'cat-install'; $catLabel = 'Installment';
+                            } else {
+                                $catClass = match($tx->transaction_category) {
+                                    'Course'   => 'cat-course',
+                                    'Test'     => 'cat-test',
+                                    'Material' => 'cat-material',
+                                    default    => 'cat-course',
+                                };
+                                $catLabel = $tx->transaction_category;
+                            }
+                            $methodLabel = match($tx->payment_method) {
+                                'Transfer' => 'Instapay',
+                                'Online'   => 'Vodafone Cash',
+                                'Cash'     => 'Cash',
+                                'Card'     => 'Card',
+                                default    => $tx->payment_method,
+                            };
+                        @endphp
+                        <div class="mini-row">
+                            <div class="mini-avatar" style="background:var(--green-l);color:var(--green);">
+                                {{ strtoupper(substr($tx->enrollment?->student?->full_name ?? '?', 0, 1)) }}
+                            </div>
+                            <div style="flex:1;min-width:0;">
+                                <div class="mini-row-name">{{ $tx->enrollment?->student?->full_name ?? '—' }}</div>
+                                <div class="mini-row-sub">
+                                    <span class="pay-cat {{ $catClass }}">{{ $catLabel }}</span>
+                                    · {{ $tx->created_at->diffForHumans() }}
+                                </div>
+                            </div>
+                            <div style="text-align:right;flex-shrink:0;">
+                                <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--green);letter-spacing:1px;">+{{ number_format($tx->amount) }}</div>
+                                <div class="pay-method-tag">{{ $methodLabel }}</div>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="mini-empty">No payments recorded yet.</div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+
+    </div>{{-- /cs-wrap --}}
 
 </div>
 
@@ -392,14 +358,11 @@ document.querySelectorAll('.kpi-val').forEach(el => {
     const text = el.textContent.trim();
     const num  = parseFloat(text.replace(/[^0-9.]/g, ''));
     if (isNaN(num) || num === 0) return;
-    const suffix = text.replace(/[\d,. ]/g, '').trim();
     const dur = 700, start = performance.now();
-    const isFloat = text.includes('.');
     (function tick(now) {
         const pct = Math.min((now - start) / dur, 1);
         const ease = 1 - Math.pow(1 - pct, 3);
-        const v = num * ease;
-        el.textContent = (isFloat ? v.toFixed(1) : Math.round(v).toLocaleString()) + (suffix ? '' + suffix : '');
+        el.textContent = Math.round(num * ease).toLocaleString();
         if (pct < 1) requestAnimationFrame(tick);
     })(start);
 });
