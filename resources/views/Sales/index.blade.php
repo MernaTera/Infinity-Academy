@@ -2,280 +2,398 @@
 @section('title', 'Sales Table')
 
 @section('content')
+
 @once
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 @endonce
 
 <style>
-.sales-page { background:#F8F6F2; min-height:100vh; padding:40px 32px; font-family:'DM Sans',sans-serif; color:#1A2A4A; }
-.page-eyebrow { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:#F5911E; margin-bottom:4px; }
-.page-title { font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:4px; color:#1B4FA8; margin-bottom:20px; }
+    :root {
+        --blue:#1B4FA8; --blue-2:#2D6FDB; --blue-l:rgba(27,79,168,0.06);
+        --orange:#F5911E; --orange-dk:#C47010; --orange-l:rgba(245,145,30,0.07);
+        --green:#059669; --green-dk:#15803D; --green-l:rgba(5,150,105,0.07);
+        --purple:#7C3AED; --purple-l:rgba(124,58,237,0.07);
+        --dark:#0F1F3D; --text:#1A2A4A; --muted:#7A8A9A; --faint:#AAB8C8;
+        --bg:#F8F6F2; --card:#fff; --border:rgba(27,79,168,0.1);
+    }
+    * { box-sizing:border-box; }
 
-.filter-tabs { display:flex; gap:8px; margin-bottom:16px; }
-.filter-tab { padding:7px 20px; border-radius:4px; font-size:10px; letter-spacing:2px; text-transform:uppercase; text-decoration:none; border:1px solid; transition:all 0.2s; font-family:'DM Sans',sans-serif; }
-.filter-tab.active { background:#1B4FA8; color:#fff; border-color:#1B4FA8; }
-.filter-tab:not(.active) { color:#7A8A9A; border-color:rgba(27,79,168,0.2); background:#fff; }
-.filter-tab:not(.active):hover { border-color:#1B4FA8; color:#1B4FA8; text-decoration:none; }
+    .sl-page { background:var(--bg); min-height:100vh; padding:28px 32px; color:var(--text); font-family:'DM Sans',sans-serif; }
 
-.filter-bar { display:flex; align-items:center; gap:12px; margin-bottom:24px; }
-.filter-bar label { font-size:11px; color:#7A8A9A; white-space:nowrap; }
-.filter-sel { font-family:'DM Sans',sans-serif; font-size:12px; padding:8px 14px; border:1px solid rgba(27,79,168,0.15); border-radius:4px; background:#fff; color:#1A2A4A; cursor:pointer; outline:none; }
-.filter-sel:focus { border-color:#1B4FA8; }
+    .sl-header {
+        margin:0 auto 22px;
+        background:linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
+        border-radius:14px; padding:24px 30px;
+        display:flex; align-items:center; justify-content:space-between;
+        flex-wrap:wrap; gap:16px; position:relative; overflow:hidden;
+        box-shadow:0 8px 32px rgba(15,31,61,0.15);
+    }
+    .sl-header::before { content:''; position:absolute; top:-70px; right:-50px; width:220px; height:220px; border-radius:50%; background:rgba(245,145,30,0.06); }
+    .sl-header::after { content:''; position:absolute; bottom:-60px; left:28%; width:150px; height:150px; border-radius:50%; background:rgba(27,79,168,0.15); }
+    .sl-header-left { position:relative; z-index:1; }
+    .sl-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin-bottom:5px; font-weight:600; display:flex; align-items:center; gap:8px; }
+    .sl-eyebrow::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--orange); box-shadow:0 0 8px var(--orange); }
+    .sl-title { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:3px; color:#fff; line-height:1; margin:0; }
+    .sl-sub { font-size:11px; color:rgba(255,255,255,0.5); margin-top:5px; letter-spacing:0.5px; }
+    .sl-emp-badge { position:relative; z-index:1; display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); border-radius:10px; padding:10px 16px; }
+    .sl-emp-avatar { width:36px; height:36px; border-radius:50%; background:var(--orange); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:16px; color:#fff; }
+    .sl-emp-name { font-size:13px; font-weight:600; color:#fff; }
+    .sl-emp-role { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.5); }
 
-.kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:28px; }
-@media(max-width:900px) { .kpi-grid { grid-template-columns:repeat(3,1fr); } }
-@media(max-width:600px) { .kpi-grid { grid-template-columns:1fr 1fr; } }
-.kpi-card { background:#fff; border:1px solid rgba(27,79,168,0.1); border-radius:6px; padding:16px; position:relative; overflow:hidden; }
-.kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:var(--kc,#1B4FA8); }
-.kpi-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#7A8A9A; margin-bottom:6px; }
-.kpi-val { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:2px; color:var(--kc,#1B4FA8); line-height:1; }
-.kpi-na { font-family:'Bebas Neue',sans-serif; font-size:20px; color:#D0D8E4; letter-spacing:2px; }
-.kpi-sub { font-size:10px; color:#AAB8C8; margin-top:4px; }
-.prog { background:#F0F0F0; border-radius:4px; height:4px; margin-top:10px; overflow:hidden; }
-.prog-fill { height:4px; border-radius:4px; background:var(--kc); transition:width .5s; }
+    .sl-wrap { margin:0 auto; }
+    .sec-label { display:block; font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin:26px 0 14px; font-weight:600; }
 
-.sec-label { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:#F5911E; margin-bottom:14px; margin-top:8px; padding-bottom:9px; border-bottom:1px solid rgba(245,145,30,0.15); display:block; }
+    .filter-row { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:6px; }
+    .filter-tabs { display:inline-flex; gap:4px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:4px; box-shadow:0 2px 8px rgba(27,79,168,0.03); }
+    .filter-tab { padding:9px 20px; border-radius:7px; font-size:10px; letter-spacing:1.5px; text-transform:uppercase; text-decoration:none; transition:all 0.2s; font-weight:600; color:var(--muted); }
+    .filter-tab.active { background:var(--blue); color:#fff; box-shadow:0 3px 10px rgba(27,79,168,0.2); }
+    .filter-tab:not(.active):hover { color:var(--blue); text-decoration:none; }
+    .filter-picker { display:inline-flex; align-items:center; gap:10px; background:var(--card); border:1px solid var(--border); border-radius:10px; padding:8px 16px; box-shadow:0 2px 8px rgba(27,79,168,0.03); }
+    .filter-picker label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; }
+    .filter-sel { font-family:'DM Sans',sans-serif; font-size:13px; padding:6px 10px; border:1px solid var(--border); border-radius:7px; background:var(--bg); color:var(--text); cursor:pointer; outline:none; color-scheme:light; }
+    .filter-sel:focus { border-color:var(--blue); }
 
-.fu-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:10px; margin-bottom:28px; }
-@media(max-width:900px) { .fu-grid { grid-template-columns:repeat(3,1fr); } }
-.fu-card { background:#fff; border:1px solid rgba(27,79,168,0.1); border-radius:6px; padding:14px; text-align:center; }
-.fu-val { font-family:'Bebas Neue',sans-serif; font-size:24px; color:#1A2A4A; }
-.fu-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:#7A8A9A; margin-top:4px; }
+    .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+    @media (max-width:1000px){ .kpi-grid{ grid-template-columns:repeat(3,1fr); } }
+    @media (max-width:600px){ .kpi-grid{ grid-template-columns:1fr 1fr; } }
+    .kpi-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px; position:relative; overflow:hidden; box-shadow:0 2px 10px rgba(27,79,168,0.04); transition:transform 0.2s, box-shadow 0.2s; }
+    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc,var(--blue)); }
+    .kpi-card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(27,79,168,0.1); }
+    .kpi-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
+    .kpi-val { font-family:'Bebas Neue',sans-serif; font-size:34px; letter-spacing:1px; line-height:0.9; color:var(--kc,var(--blue)); }
+    .kpi-na { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:1px; color:var(--faint); line-height:1; padding:5px 0; }
+    .kpi-sub { font-size:10px; color:var(--faint); margin-top:5px; }
+    .prog { height:5px; background:var(--bg); border-radius:3px; overflow:hidden; margin-top:10px; }
+    .prog-fill { height:100%; background:var(--green); border-radius:3px; transition:width 0.7s cubic-bezier(0.16,1,0.3,1); }
 
-.tbl-card { background:#fff; border:1px solid rgba(27,79,168,0.1); border-radius:6px; overflow:hidden; margin-bottom:28px; }
-.tbl { width:100%; border-collapse:collapse; }
-.tbl thead th { padding:11px 14px; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:#7A8A9A; text-align:left; font-weight:500; background:rgba(27,79,168,0.02); border-bottom:1px solid rgba(27,79,168,0.07); white-space:nowrap; }
-.tbl tbody tr { border-bottom:1px solid rgba(27,79,168,0.05); transition:background 0.15s; }
-.tbl tbody tr:last-child { border-bottom:none; }
-.tbl tbody tr:hover { background:rgba(27,79,168,0.02); }
-.tbl td { padding:12px 14px; font-size:13px; color:#4A5A7A; }
-.tbl td.money { font-family:monospace; color:#1A2A4A; }
-.tbl td.total { font-family:monospace; color:#059669; font-weight:500; }
-.badge { font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:3px; }
-.badge-direct { background:rgba(5,150,105,0.1); color:#059669; }
-.badge-shared { background:rgba(27,79,168,0.08); color:#1B4FA8; }
+    .fu-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
+    @media (max-width:900px){ .fu-grid{ grid-template-columns:repeat(3,1fr); } }
+    @media (max-width:520px){ .fu-grid{ grid-template-columns:1fr 1fr; } }
+    .fu-card { background:var(--card); border:1px solid var(--border); border-radius:11px; padding:16px; text-align:center; box-shadow:0 2px 8px rgba(27,79,168,0.03); }
+    .fu-val { font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:1px; color:var(--blue); line-height:1; }
+    .fu-label { font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-top:6px; }
 
-.chart-card { background:#fff; border:1px solid rgba(27,79,168,0.1); border-radius:6px; padding:20px 22px; margin-bottom:28px; }
-.chart-wrap { position:relative; height:180px; margin-top:14px; }
+    .tbl-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(27,79,168,0.05); }
+    .tbl-scroll { overflow-x:auto; }
+    .tbl { width:100%; border-collapse:collapse; min-width:820px; }
+    .tbl thead th { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:14px 16px; text-align:left; border-bottom:1px solid var(--border); font-weight:600; background:var(--bg); white-space:nowrap; }
+    .tbl thead th.num { text-align:right; }
+    .tbl tbody td { padding:13px 16px; border-bottom:1px solid rgba(27,79,168,0.05); font-size:12px; color:var(--text); vertical-align:middle; }
+    .tbl tbody tr:last-child td { border-bottom:none; }
+    .tbl tbody tr:hover { background:var(--blue-l); }
+    .tbl .num { text-align:right; font-variant-numeric:tabular-nums; }
+    .money { color:var(--muted); font-variant-numeric:tabular-nums; }
+    .total { font-weight:700; color:var(--blue); font-variant-numeric:tabular-nums; }
+
+    .std-cell { display:flex; align-items:center; gap:11px; }
+    .std-avatar { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg, var(--blue-l), var(--orange-l)); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:13px; color:var(--blue); flex-shrink:0; }
+    .std-name { font-weight:600; color:var(--text); }
+
+    .badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:10px; font-weight:600; letter-spacing:0.3px; white-space:nowrap; }
+    .badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .badge-direct { background:var(--blue-l); color:var(--blue); }
+    .badge-shared { background:var(--orange-l); color:var(--orange-dk); }
+
+    .tbl tfoot td { padding:14px 16px; border-top:2px solid var(--border); background:var(--bg); font-variant-numeric:tabular-nums; }
+    .tfoot-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; }
+    .tfoot-num { text-align:right; font-weight:600; color:var(--text); }
+    .tfoot-total { text-align:right; font-family:'Bebas Neue',sans-serif; font-size:18px; color:var(--blue); letter-spacing:1px; }
+
+    .tbl-empty { text-align:center; padding:50px 20px; color:var(--faint); }
+    .tbl-empty svg { opacity:0.35; margin-bottom:12px; }
+    .tbl-empty-title { font-size:15px; font-weight:600; color:var(--muted); margin-bottom:4px; }
+
+    .chart-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:22px; box-shadow:0 2px 12px rgba(27,79,168,0.05); }
+    .chart-wrap { height:300px; }
+
+    @media (max-width:600px){ .sl-page{ padding:16px; } }
 </style>
 
-<div class="sales-page">
+<div class="sl-page">
 
-    <div class="page-eyebrow">Customer Service</div>
-    <h1 class="page-title">Sales Table</h1>
-
-    {{-- FILTER TABS --}}
-    <div class="filter-tabs">
-        <a href="{{ route('sales.index', ['filter' => 'month', 'month' => $month]) }}"
-        class="filter-tab {{ $filterType === 'month' ? 'active' : '' }}">By Month</a>
-        <a href="{{ route('sales.index', ['filter' => 'week', 'day' => $day]) }}"
-        class="filter-tab {{ $filterType === 'week' ? 'active' : '' }}">By Week</a>
-        <a href="{{ route('sales.index', ['filter' => 'day', 'day' => $day]) }}"
-        class="filter-tab {{ $filterType === 'day' ? 'active' : '' }}">By Day</a>
+    {{-- ── HEADER ── --}}
+    <div class="sl-header">
+        <div class="sl-header-left">
+            <div class="sl-eyebrow">Sales Performance</div>
+            <h1 class="sl-title">My Sales Table</h1>
+            <div class="sl-sub">Track your target, revenue, and conversions</div>
+        </div>
+        @if($employee)
+        <div class="sl-emp-badge">
+            <div class="sl-emp-avatar">{{ strtoupper(substr($employee->full_name, 0, 1)) }}</div>
+            <div>
+                <div class="sl-emp-name">{{ $employee->full_name }}</div>
+                <div class="sl-emp-role">Customer Service</div>
+            </div>
+        </div>
+        @endif
     </div>
 
-    {{-- ── FILTER INPUT ── --}}
-    @if($filterType === 'week')
-    <div class="filter-bar">
-        <label>Select Week:</label>
-        <input type="week" value="{{ \Carbon\Carbon::parse($day)->format('Y-\WW') }}" class="filter-sel"
-            onchange="
-                const [year, week] = this.value.split('-W');
-                const date = new Date(year, 0, 1 + (week - 1) * 7);
-                const d = date.toISOString().split('T')[0];
-                window.location.href='{{ route('sales.index') }}?filter=week&day='+d;
-            ">
-    </div>
-    @elseif($filterType === 'day')
-    <div class="filter-bar">
-        <label>Select Day:</label>
-        <input type="date" value="{{ $day }}" class="filter-sel" style="color-scheme:light;"
-               onchange="window.location.href='{{ route('sales.index') }}?filter=day&day='+this.value">
-    </div>
-    @else
-    
-    <div class="filter-bar">
-        <label>Select Month:</label>
-        <input type="month" value="{{ $month }}" class="filter-sel"
-               onchange="window.location.href='{{ route('sales.index') }}?filter=month&month='+this.value">
-    </div>
-    @endif
+    <div class="sl-wrap">
 
-    {{-- ── KPI CARDS ── --}}
-    <div class="kpi-grid">
+        {{-- ── FILTERS ── --}}
+        <span class="sec-label">Filter Period</span>
+        <div class="filter-row">
+            <div class="filter-tabs">
+                <a href="{{ route('sales.index', ['filter' => 'month', 'month' => $month]) }}"
+                   class="filter-tab {{ $filterType === 'month' ? 'active' : '' }}">By Month</a>
+                <a href="{{ route('sales.index', ['filter' => 'week', 'day' => $day]) }}"
+                   class="filter-tab {{ $filterType === 'week' ? 'active' : '' }}">By Week</a>
+                <a href="{{ route('sales.index', ['filter' => 'day', 'day' => $day]) }}"
+                   class="filter-tab {{ $filterType === 'day' ? 'active' : '' }}">By Day</a>
+            </div>
 
-        <div class="kpi-card" style="--kc:#1B4FA8">
-            <div class="kpi-label">Monthly Target</div>
-            @if($kpis['target'] > 0)
-                <div class="kpi-val">{{ number_format($kpis['target']) }}</div>
-                <div class="kpi-sub">LE — {{ \Carbon\Carbon::parse($kpis['target_month'].'-01')->format('M Y') }}</div>
+            @if($filterType === 'week')
+            <div class="filter-picker">
+                <label>Week</label>
+                <input type="week" value="{{ \Carbon\Carbon::parse($day)->format('Y-\WW') }}" class="filter-sel"
+                    onchange="
+                        var y=this.value.split('-W')[0];
+                        var w=this.value.split('-W')[1];
+                        var d=new Date(y,0,(w-1)*7+1);
+                        window.location.href='{{ route('sales.index') }}?filter=week&day='+d.toISOString().slice(0,10);">
+            </div>
+            @elseif($filterType === 'day')
+            <div class="filter-picker">
+                <label>Date</label>
+                <input type="date" value="{{ $day }}" class="filter-sel"
+                       onchange="window.location.href='{{ route('sales.index') }}?filter=day&day='+this.value">
+            </div>
             @else
-                <div class="kpi-na">No Target</div>
-                <div class="kpi-sub">Not set for this month</div>
+            <div class="filter-picker">
+                <label>Month</label>
+                <input type="month" value="{{ $month }}" class="filter-sel"
+                       onchange="window.location.href='{{ route('sales.index') }}?filter=month&month='+this.value">
+            </div>
             @endif
         </div>
 
-        <div class="kpi-card" style="--kc:#059669">
-            <div class="kpi-label">Achieved</div>
-            <div class="kpi-val">{{ number_format($kpis['achieved']) }}</div>
-            <div class="kpi-sub">LE
-                @if($filterType === 'day') today
-                @elseif($filterType === 'week') this week
-                @else this month
+        {{-- ── KPI CARDS ── --}}
+        <span class="sec-label">Target & Revenue</span>
+        <div class="kpi-grid">
+            <div class="kpi-card" style="--kc:var(--blue)">
+                <div class="kpi-label">Monthly Target</div>
+                @if($kpis['target'] > 0)
+                    <div class="kpi-val">{{ number_format($kpis['target']) }}</div>
+                    <div class="kpi-sub">LE — {{ \Carbon\Carbon::parse($kpis['target_month'].'-01')->format('M Y') }}</div>
+                @else
+                    <div class="kpi-na">No Target</div>
+                    <div class="kpi-sub">Not set for this month</div>
                 @endif
             </div>
-            @if($kpis['percentage'] !== null)
-            <div class="prog"><div class="prog-fill" style="width:{{ min($kpis['percentage'],100) }}%"></div></div>
-            @endif
-        </div>
 
-        <div class="kpi-card" style="--kc:#F5911E">
-            <div class="kpi-label">Remaining</div>
-            @if($kpis['remaining'] !== null)
-                <div class="kpi-val">{{ number_format($kpis['remaining']) }}</div>
-                <div class="kpi-sub">LE to monthly target</div>
-            @else
-                <div class="kpi-na">N/A</div>
-                <div class="kpi-sub">No target set</div>
-            @endif
-        </div>
-
-        <div class="kpi-card" style="--kc:#7F77DD">
-            <div class="kpi-label">Achievement</div>
-            @if($kpis['percentage'] !== null)
-                <div class="kpi-val">{{ $kpis['percentage'] }}%</div>
-                <div class="kpi-sub">of monthly target</div>
-            @else
-                <div class="kpi-na">N/A</div>
-                <div class="kpi-sub">No target set</div>
-            @endif
-        </div>
-
-        <div class="kpi-card" style="--kc:#1D9E75">
-            <div class="kpi-label">Registrations</div>
-            <div class="kpi-val">{{ $kpis['registrations'] }}</div>
-            <div class="kpi-sub">students {{ $filterType === 'day' ? 'today' : 'this month' }}</div>
-        </div>
-
-    </div>
-
-    {{-- ── FOLLOWUP STATS ── --}}
-    <span class="sec-label">Follow-up Statistics</span>
-    <div class="fu-grid">
-        @foreach([
-            ['val' => $followupStats['total_leads'],    'label' => 'Total Leads'],
-            ['val' => $followupStats['total_calls'],    'label' => 'Total Calls'],
-            ['val' => $followupStats['answered'],       'label' => 'Answered'],
-            ['val' => $followupStats['unanswered'],     'label' => 'Unanswered'],
-            ['val' => $followupStats['registered'],     'label' => 'Registered'],
-            ['val' => $followupStats['conversion'].'%', 'label' => 'Conversion Rate'],
-        ] as $stat)
-        <div class="fu-card">
-            <div class="fu-val">{{ $stat['val'] }}</div>
-            <div class="fu-label">{{ $stat['label'] }}</div>
-        </div>
-        @endforeach
-    </div>
-
-    {{-- ── REVENUE TABLE ── --}}
-    <span class="sec-label">Revenue Breakdown — Per Student</span>
-    <div class="tbl-card">
-        <div style="overflow-x:auto;">
-            <table class="tbl">
-                <thead>
-                    <tr>
-                        <th>Student</th>
-                        <th>Course</th>
-                        <th>Deposit</th>
-                        <th>Test Fee</th>
-                        <th>Material</th>
-                        <th>Total Revenue</th>
-                        <th>Type</th>
-                        <th>Date</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($revenueRows as $row)
-                    <tr>
-                        <td style="font-weight:500;color:#1A2A4A;">{{ $row['student_name'] }}</td>
-                        <td>{{ $row['course'] }}</td>
-                        <td class="money">{{ number_format($row['deposit']) }} LE</td>
-                        <td class="money">{{ number_format($row['test_fee']) }} LE</td>
-                        <td class="money">{{ number_format($row['material']) }} LE</td>
-                        <td class="total">{{ number_format($row['total']) }} LE</td>
-                        <td>
-                            <span class="badge {{ $row['material'] > 0 ? 'badge-shared' : 'badge-direct' }}">
-                                {{ $row['material'] > 0 ? 'Shared' : 'Direct' }}
-                            </span>
-                        </td>
-                        <td style="color:#7A8A9A;font-size:11px;">{{ $row['date'] }}</td>
-                    </tr>
-                    @empty
-                    <tr>
-                        <td colspan="7" style="text-align:center;color:#AAB8C8;padding:32px;font-size:12px;">
-                            No revenue recorded for this period.
-                        </td>
-                    </tr>
-                    @endforelse
-                </tbody>
-                @if($revenueRows->count() > 0)
-                <tfoot>
-                    <tr style="border-top:2px solid rgba(27,79,168,0.1);">
-                        <td colspan="2" style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;padding:10px 14px;">Total</td>
-                        <td class="money" style="font-weight:500;">{{ number_format($revenueRows->sum('deposit')) }} LE</td>
-                        <td class="money" style="font-weight:500;">{{ number_format($revenueRows->sum('test_fee')) }} LE</td>
-                        <td class="money" style="font-weight:500;">{{ number_format($revenueRows->sum('material')) }} LE</td>
-                        <td class="total" style="font-size:15px;">{{ number_format($revenueRows->sum('total')) }} LE</td>
-                        <td colspan="2"></td>
-                    </tr>
-                </tfoot>
+            <div class="kpi-card" style="--kc:var(--green)">
+                <div class="kpi-label">Achieved</div>
+                <div class="kpi-val">{{ number_format($kpis['achieved']) }}</div>
+                <div class="kpi-sub">LE
+                    @if($filterType === 'day') today
+                    @elseif($filterType === 'week') this week
+                    @else this month
+                    @endif
+                </div>
+                @if($kpis['percentage'] !== null)
+                <div class="prog"><div class="prog-fill" style="width:{{ min($kpis['percentage'],100) }}%"></div></div>
                 @endif
-            </table>
-        </div>
-    </div>
+            </div>
 
-    {{-- ── CHART ── --}}
-    <span class="sec-label">
-        @if($filterType === 'day')
-            Revenue — {{ \Carbon\Carbon::parse($day)->format('d M Y') }}
-        @elseif($filterType === 'week')
-            Revenue — Week of {{ \Carbon\Carbon::parse($day)->startOfWeek()->format('d M Y') }}
-        @else
-            Daily Revenue — {{ \Carbon\Carbon::parse($month.'-01')->format('F Y') }}
-        @endif
-    </span>
-    <div class="chart-card">
-        <div class="chart-wrap">
-            <canvas id="dailyChart"></canvas>
-        </div>
-    </div>
+            <div class="kpi-card" style="--kc:var(--orange)">
+                <div class="kpi-label">Remaining</div>
+                @if($kpis['remaining'] !== null)
+                    <div class="kpi-val">{{ number_format($kpis['remaining']) }}</div>
+                    <div class="kpi-sub">LE to monthly target</div>
+                @else
+                    <div class="kpi-na">N/A</div>
+                    <div class="kpi-sub">No target set</div>
+                @endif
+            </div>
 
+            <div class="kpi-card" style="--kc:var(--purple)">
+                <div class="kpi-label">Achievement</div>
+                @if($kpis['percentage'] !== null)
+                    <div class="kpi-val">{{ $kpis['percentage'] }}%</div>
+                    <div class="kpi-sub">of monthly target</div>
+                @else
+                    <div class="kpi-na">N/A</div>
+                    <div class="kpi-sub">No target set</div>
+                @endif
+            </div>
+
+            <div class="kpi-card" style="--kc:var(--green-dk)">
+                <div class="kpi-label">Registrations</div>
+                <div class="kpi-val">{{ $kpis['registrations'] }}</div>
+                <div class="kpi-sub">students
+                    @if($filterType === 'day') today
+                    @elseif($filterType === 'week') this week
+                    @else this month
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <!-- {{-- ── FOLLOWUP STATS ── --}}
+        <span class="sec-label">Follow-up Statistics</span>
+        <div class="fu-grid">
+            @foreach([
+                ['val' => $followupStats['total_leads'],    'label' => 'Total Leads'],
+                ['val' => $followupStats['total_calls'],    'label' => 'Total Calls'],
+                ['val' => $followupStats['answered'],       'label' => 'Answered'],
+                ['val' => $followupStats['unanswered'],     'label' => 'Unanswered'],
+                ['val' => $followupStats['registered'],     'label' => 'Registered'],
+                ['val' => $followupStats['conversion'].'%', 'label' => 'Conversion'],
+            ] as $stat)
+            <div class="fu-card">
+                <div class="fu-val">{{ $stat['val'] }}</div>
+                <div class="fu-label">{{ $stat['label'] }}</div>
+            </div>
+            @endforeach
+        </div> -->
+
+        {{-- ── REVENUE TABLE ── --}}
+        <span class="sec-label">Revenue Breakdown — Per Student</span>
+        <div class="tbl-card">
+            <div class="tbl-scroll">
+                <table class="tbl">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th class="num">Deposit</th>
+                            <th class="num">Material</th>
+                            <th class="num">Total Revenue</th>
+                            <th>Type</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($revenueRows as $row)
+                        <tr>
+                            <td>
+                                <div class="std-cell">
+                                    <div class="std-avatar">{{ strtoupper(substr($row['student_name'], 0, 1)) }}</div>
+                                    <span class="std-name">{{ $row['student_name'] }}</span>
+                                </div>
+                            </td>
+                            <td class="money" style="color:var(--text);">{{ $row['course'] }}</td>
+                            <td class="num money">{{ number_format($row['deposit']) }} LE</td>
+                            <td class="num money">{{ number_format($row['material']) }} LE</td>
+                            <td class="num total">{{ number_format($row['total']) }} LE</td>
+                            <td>
+                                <span class="badge {{ $row['material'] > 0 ? 'badge-shared' : 'badge-direct' }}">
+                                    {{ $row['material'] > 0 ? 'Shared' : 'Direct' }}
+                                </span>
+                            </td>
+                            <td style="color:var(--faint);font-size:11px;white-space:nowrap;">{{ $row['date'] }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="7">
+                                <div class="tbl-empty">
+                                    <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                                    <div class="tbl-empty-title">No Revenue This Period</div>
+                                    <div style="font-size:12px;">Registrations you make will appear here.</div>
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                    @if($revenueRows->count() > 0)
+                    <tfoot>
+                        <tr>
+                            <td colspan="2" class="tfoot-label">Total ({{ $revenueRows->count() }} {{ Str::plural('student', $revenueRows->count()) }})</td>
+                            <td class="num tfoot-num">{{ number_format($revenueRows->sum('deposit')) }} LE</td>
+                            <td class="num tfoot-num">{{ number_format($revenueRows->sum('material')) }} LE</td>
+                            <td class="num tfoot-total">{{ number_format($revenueRows->sum('total')) }} LE</td>
+                            <td colspan="2"></td>
+                        </tr>
+                    </tfoot>
+                    @endif
+                </table>
+            </div>
+        </div>
+
+        {{-- ── CHART ── --}}
+        <span class="sec-label">
+            @if($filterType === 'day')
+                Revenue — {{ \Carbon\Carbon::parse($day)->format('d M Y') }}
+            @elseif($filterType === 'week')
+                Revenue — Week of {{ \Carbon\Carbon::parse($day)->startOfWeek()->format('d M Y') }}
+            @else
+                Daily Revenue — {{ \Carbon\Carbon::parse($month.'-01')->format('F Y') }}
+            @endif
+        </span>
+        <div class="chart-card">
+            <div class="chart-wrap">
+                <canvas id="dailyChart"></canvas>
+            </div>
+        </div>
+
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-new Chart(document.getElementById('dailyChart'), {
-    type: 'bar',
-    data: {
-        labels: @json($dailyRevenue['labels']),
-        datasets: [{
-            label: 'Revenue (LE)',
-            data: @json($dailyRevenue['values']),
-            backgroundColor: 'rgba(27,79,168,0.65)',
-            borderRadius: 3,
-            borderSkipped: false,
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-            y: { grid: { color: 'rgba(27,79,168,0.05)' }, ticks: { font: { size: 11 } } },
-            x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+(function(){
+    const rawLabels = @json($dailyRevenue['labels']);
+    const rawValues = @json($dailyRevenue['values']);
+
+    // Format labels as short dates (d M) for readability
+    const labels = rawLabels.map(function(d){
+        const dt = new Date(d);
+        return isNaN(dt) ? d : dt.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' });
+    });
+    const values = rawValues.map(Number);
+
+    const ctx = document.getElementById('dailyChart');
+    const grad = ctx.getContext('2d').createLinearGradient(0, 0, 0, 300);
+    grad.addColorStop(0, 'rgba(27,79,168,0.85)');
+    grad.addColorStop(1, 'rgba(45,111,219,0.45)');
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Revenue (LE)',
+                data: values,
+                backgroundColor: grad,
+                borderRadius: 6,
+                borderSkipped: false,
+                maxBarThickness: 46,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#0F1F3D',
+                    padding: 12,
+                    titleFont: { size: 12 },
+                    bodyFont: { size: 13, weight: '600' },
+                    callbacks: {
+                        label: function(c){ return Number(c.parsed.y).toLocaleString() + ' LE'; }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(27,79,168,0.05)' },
+                    ticks: {
+                        font: { size: 11 },
+                        color: '#7A8A9A',
+                        callback: function(v){ return Number(v).toLocaleString(); }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 }, color: '#7A8A9A' }
+                }
+            }
         }
-    }
-});
+    });
+})();
 </script>
 
 @endsection

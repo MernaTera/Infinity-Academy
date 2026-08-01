@@ -19,9 +19,8 @@
 
     .dash-page { background:var(--bg); min-height:100vh; padding:28px 32px; color:var(--text); font-family:'DM Sans',sans-serif; }
 
-    /* ═══ HEADER ═══ */
     .dash-header {
-        max-width:1200px; margin:0 auto 24px;
+        margin:0 auto 24px;
         background:linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
         border-radius:14px; padding:26px 32px;
         display:flex; align-items:center; justify-content:space-between;
@@ -42,11 +41,10 @@
     .btn-h-solid { background:var(--orange); border:none; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:3px; }
     .btn-h-solid:hover { background:#E8850F; text-decoration:none; color:#fff; }
 
-    .dash-wrap { max-width:1200px; margin:0 auto; }
+    .dash-wrap { margin:0 auto; }
     .sec-label { display:block; font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin:26px 0 14px; font-weight:600; }
     .sec-label:first-child { margin-top:0; }
 
-    /* ═══ KPI CARDS ═══ */
     .kpi-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; }
     @media (max-width:1100px){ .kpi-grid{ grid-template-columns:repeat(3,1fr); } }
     @media (max-width:600px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
@@ -65,7 +63,6 @@
     .kpi-sub { font-size:10px; color:var(--faint); margin-top:5px; letter-spacing:0.3px; }
     .kpi-link { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--kc,var(--blue)); font-weight:600; margin-top:8px; opacity:0.85; }
 
-    /* ═══ TWO COLUMN ═══ */
     .two-col { display:grid; grid-template-columns:1.35fr 1fr; gap:20px; }
     @media (max-width:960px){ .two-col{ grid-template-columns:1fr; } }
 
@@ -75,7 +72,6 @@
     .panel-hint { font-size:10px; color:var(--muted); margin-left:auto; letter-spacing:0.4px; }
     .panel-body { padding:20px 22px; }
 
-    /* ═══ FUNNEL ═══ */
     .funnel-row { display:flex; align-items:center; gap:14px; margin-bottom:14px; }
     .funnel-row:last-child { margin-bottom:0; }
     .funnel-bar-wrap { flex:1; }
@@ -86,7 +82,6 @@
     .funnel-fill { height:100%; background:var(--fc,var(--blue)); border-radius:6px; transition:width 0.6s cubic-bezier(0.16,1,0.3,1); }
     .funnel-pct { font-size:10px; color:var(--muted); min-width:38px; text-align:right; font-weight:600; }
 
-    /* ═══ DISTRIBUTION LIST ═══ */
     .dist-item { display:flex; align-items:center; gap:12px; margin-bottom:13px; }
     .dist-item:last-child { margin-bottom:0; }
     .dist-name { font-size:11px; color:var(--text); font-weight:500; min-width:88px; letter-spacing:0.2px; }
@@ -94,14 +89,12 @@
     .dist-fill { height:100%; border-radius:5px; }
     .dist-val { font-size:11px; font-weight:600; color:var(--muted); min-width:24px; text-align:right; }
 
-    /* ═══ PERIOD PILLS ═══ */
     .period-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
     .period-box { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px 16px; text-align:center; }
     .period-box-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
     .period-box-val { font-family:'Bebas Neue',sans-serif; font-size:30px; color:var(--blue); line-height:0.9; }
     .period-box-sub { font-size:9px; color:var(--faint); margin-top:5px; }
 
-    /* ═══ FOLLOW-UP ═══ */
     .followup-item { display:flex; align-items:center; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
     .followup-item:last-child { border-bottom:none; }
     .followup-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg, var(--blue-l), var(--orange-l)); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:16px; color:var(--blue); flex-shrink:0; }
@@ -114,7 +107,6 @@
     .fw-past { background:var(--red-l); color:var(--red); }
     .empty-mini { text-align:center; padding:24px; color:var(--faint); font-size:12px; }
 
-    /* ═══ DETAILED TABLE ═══ */
     .table-panel { background:var(--card); border:1px solid var(--border); border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(27,79,168,0.04); }
     .table-scroll { overflow-x:auto; }
     .lead-table { width:100%; border-collapse:collapse; min-width:900px; }

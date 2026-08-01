@@ -98,18 +98,42 @@ public function getKPIs(Employee $employee, ?Patch $patch, string $filterType = 
     {
         $range = $this->getDateRange($filterType, $patch, $month, $day);
 
-        $baseLeads = Lead::where('owner_cs_id', $employee->employee_id)
-            ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]));
+        // ── Calls made BY this CS within the period ──
+        // Filter by the call's own timestamp (call_datetime) and the CS who made
+        // it (cs_id) — NOT by when the lead was created. This is what makes the
+        // numbers accurate: a call this month on an old lead still counts.
+        $callsQuery = LeadCallLog::where('cs_id', $employee->employee_id)
+            ->when($range['start'], fn($q) => $q->whereBetween('call_datetime', [$range['start'], $range['end']]));
 
-        $totalLeads = (clone $baseLeads)->count();
-        $registered = (clone $baseLeads)->where('status', 'Registered')->count();
-        $leadIds    = (clone $baseLeads)->pluck('lead_id');
-        $totalCalls = LeadCallLog::whereIn('lead_id', $leadIds)->count();
-        $unanswered = LeadCallLog::whereIn('lead_id', $leadIds)->where('outcome', 'No_Answer')->count();
+        $totalCalls = (clone $callsQuery)->count();
+        $unanswered = (clone $callsQuery)->whereIn('outcome', ['No_Answer', 'Wrong_Number'])->count();
         $answered   = $totalCalls - $unanswered;
-        $conversion = $totalLeads > 0 ? round(($registered / $totalLeads) * 100, 1) : 0;
 
-        return compact('totalLeads', 'totalCalls', 'answered', 'unanswered', 'registered', 'conversion') + [
+        // ── Leads owned by this CS ──
+        // "Total leads" here = leads this CS is responsible for. We do NOT filter
+        // these by created_at, otherwise old-but-active leads vanish and the whole
+        // panel reads zero. Registered = those converted (optionally within period).
+        $ownedLeads = Lead::where('owner_cs_id', $employee->employee_id);
+        $totalLeads = (clone $ownedLeads)->count();
+
+        // Registrations attributed to this CS within the period (accurate: uses
+        // the enrollment creation date, which is the real conversion moment).
+        $registered = Enrollment::where('created_by_cs_id', $employee->employee_id)
+            ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
+            ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
+            ->count();
+
+        $conversion = $totalCalls > 0
+            ? round(($registered / $totalCalls) * 100, 1)
+            : 0;
+
+        return [
+            'totalLeads'  => $totalLeads,
+            'totalCalls'  => $totalCalls,
+            'answered'    => $answered,
+            'unanswered'  => $unanswered,
+            'registered'  => $registered,
+            'conversion'  => $conversion,
             'total_leads' => $totalLeads,
             'total_calls' => $totalCalls,
         ];

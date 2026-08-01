@@ -14,7 +14,6 @@ class LeadDashboardController extends Controller
     {
         $employeeId = Employee::where('user_id', auth()->id())->first()?->employee_id;
 
-        // ✅ Base = leads currently owned by this CS
         $base = Lead::where('owner_cs_id', $employeeId);
 
         $totalArchived = Lead::where('status', 'Archived')
@@ -30,17 +29,13 @@ class LeadDashboardController extends Controller
 
             'waiting'    => (clone $base)->where('status', 'Waiting')->count(),
 
-            // ✅ Archived = matches the Archived table (repository logic)
             'archived'   => $totalArchived,
 
-            // ✅ Public = matches the Public Pool table exactly (repository logic):
-            //    no owner + is_active = true
             'public'     => Lead::whereNull('owner_cs_id')
                                 ->where('is_active', true)
                                 ->count(),
         ];
 
-        // ── Period stats (my leads only) ─────────────────────────────
         $today = (clone $base)
             ->whereDate('updated_at', now()->toDateString())
             ->select('status', DB::raw('count(*) as count'))
@@ -56,7 +51,6 @@ class LeadDashboardController extends Controller
             ->select('status', DB::raw('count(*) as count'))
             ->groupBy('status')->pluck('count', 'status')->toArray();
 
-        // ── Distribution ──────────────────────────────────────────────
         $bySource = (clone $base)
             ->select('source', DB::raw('count(*) as count'))
             ->groupBy('source')->orderByDesc('count')
@@ -76,7 +70,6 @@ class LeadDashboardController extends Controller
             ->groupBy('users.name')->orderByDesc('count')
             ->pluck('count', 'users.name')->toArray();
 
-        // ── Recent leads ──────────────────────────────────────────────
         $recentLeads = (clone $base)->with('courseTemplate')->latest()->limit(10)->get();
 
         return view('leads.dashboard', compact(
