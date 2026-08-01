@@ -166,7 +166,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
 
         Route::get('/dashboard',     [StudentCareController::class, 'dashboard'])->name('dashboard');
         Route::get('/waiting-list',  [StudentCareController::class, 'waitingList'])->name('waiting-list');
-        Route::get('/outstanding',   [StudentCareController::class, 'outstanding'])->name('outstanding');
+Route::post('/waiting-list/{id}/cancel', [StudentCareController::class, 'cancelWaiting'])->name('waiting.cancel');        Route::get('/outstanding',   [StudentCareController::class, 'outstanding'])->name('outstanding');
         Route::get('/postponed',     [StudentCareController::class, 'postponed'])->name('postponed');
 
         Route::get('/course-instances/create', [CourseInstanceController::class, 'create'])->name('instances.create');

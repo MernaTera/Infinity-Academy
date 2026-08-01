@@ -213,6 +213,19 @@
 
                 <span class="assign-label">Select Course Instance</span>
 
+                {{-- Type filter banner (populated by JS) --}}
+                <div id="assign_type_banner" style="display:none;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+                            color:#1B4FA8;background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.15);
+                            padding:7px 12px;border-radius:5px;margin:8px 0 4px;font-weight:600;"></div>
+
+                {{-- Shown when the student's type has no matching course --}}
+                <div id="assign_no_type_match" style="display:none;text-align:center;padding:28px 20px;color:#DC2626;
+                            background:rgba(220,38,38,0.04);border:1px dashed rgba(220,38,38,0.3);border-radius:6px;
+                            margin-top:8px;font-size:12px;line-height:1.5;">
+                    No course instance of this student's type is available.<br>
+                    <span style="color:#7A8A9A;font-size:11px;">A Private student needs a Private course, and a Group student needs a Group course.</span>
+                </div>
+
                 <div class="assign-instance-list">
                     @forelse($instances as $instance)
                     @php
@@ -226,6 +239,7 @@
                         $capColor        = $isFull ? '#DC2626' : ($pct >= 80 ? '#C47010' : '#1B4FA8');
                     @endphp
                     <label class="assign-instance-card {{ $isDisabled ? 'is-full' : '' }}"
+                        data-course-type="{{ $instance->type }}"
                         onclick="{{ $isDisabled ? '' : "selectInstance(this, '{$instance->course_instance_id}')" }}">
 
                         <input class="assign-card-radio" type="radio"
@@ -312,17 +326,9 @@
 </div>
 
 <script>
-function openAssignModal(waitingId) {
-    document.getElementById('assign_waiting_id').value  = waitingId;
-    document.getElementById('assign_instance_hidden').value = '';
-    document.querySelectorAll('.assign-instance-card').forEach(c => c.classList.remove('selected'));
-    document.querySelectorAll('.assign-card-radio').forEach(r => r.checked = false);
-    document.getElementById('assignModal').style.display = 'flex';
-}
-
-function closeAssignModal() {
-    document.getElementById('assignModal').style.display = 'none';
-}
+// NOTE: openAssignModal() and closeAssignModal() are defined in the parent
+// waiting-list view (they handle the Private/Group type filtering there).
+// This partial only defines the selection + submit helpers.
 
 function selectInstance(card, instanceId) {
     document.querySelectorAll('.assign-instance-card').forEach(c => c.classList.remove('selected'));

@@ -214,10 +214,10 @@
             <div class="stat-label">Assigned</div>
             <div class="stat-value">{{ $countAssigned }}</div>
         </div>
-        <div class="stat-card" style="--accent:#DC2626;" onclick="filterByStatus('Cancelled')" data-filter="Cancelled">
+        <!-- <div class="stat-card" style="--accent:#DC2626;" onclick="filterByStatus('Cancelled')" data-filter="Cancelled">
             <div class="stat-label">Cancelled</div>
             <div class="stat-value">{{ $countCancelled }}</div>
-        </div>
+        </div> -->
         <div class="stat-card" style="--accent:#2D6FDB;" onclick="filterByDeliveryType('Group')" data-filter-dtype="Group">
             <div class="stat-label">Group</div>
             <div class="stat-value">{{ $countGroup }}</div>
@@ -251,7 +251,7 @@
             <option value="">All Statuses</option>
             <option value="Active">Active</option>
             <option value="Assigned">Assigned</option>
-            <option value="Cancelled">Cancelled</option>
+            <!-- <option value="Cancelled">Cancelled</option> -->
         </select>
 
         <select class="filter-select" id="dtypeFilter" onchange="filterByDeliveryTypeSelect(this.value)">
@@ -396,9 +396,9 @@
                         {{-- Actions --}}
                         <td>
                             <div class="action-group">
-                                @if($item->status !== 'Assigned')
+                                @if($item->status !== 'Assigned' && $item->status !== 'Cancelled')
                                 <button class="btn-action btn-assign"
-                                        onclick="openAssignModal({{ $item->waiting_id }})">
+                                        onclick="openAssignModal({{ $item->waiting_id }}, '{{ $item->enrollment->enrollment_type ?? '' }}')">
                                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                         <polyline points="22 4 12 14.01 9 11.01"/>
@@ -407,15 +407,24 @@
                                 </button>
                                 @endif
 
-                                @if($item->status !== 'Cancelled')
-                                <button class="btn-action btn-cancel-wl"
-                                        onclick="cancelWaiting({{ $item->waiting_id }})">
-                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <line x1="18" y1="6" x2="6" y2="18"/>
-                                        <line x1="6" y1="6" x2="18" y2="18"/>
-                                    </svg>
-                                    Cancel
-                                </button>
+                                @if($item->status !== 'Cancelled' && $item->status !== 'Assigned')
+                                <!-- <form method="POST" action="{{ route('student-care.waiting.cancel', $item->waiting_id) }}"
+                                      class="wl-cancel-form" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn-action btn-cancel-wl">
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <line x1="18" y1="6" x2="6" y2="18"/>
+                                            <line x1="6" y1="6" x2="18" y2="18"/>
+                                        </svg>
+                                        Cancel
+                                    </button>
+                                </form> -->
+                                @endif
+
+                                @if($item->status === 'Assigned')
+                                    <span style="font-size:10px;color:#15803D;font-weight:600;letter-spacing:0.3px;">✓ Assigned</span>
+                                @elseif($item->status === 'Cancelled')
+                                    <span style="font-size:10px;color:#DC2626;font-weight:600;letter-spacing:0.3px;">Cancelled</span>
                                 @endif
                             </div>
                         </td>
@@ -513,8 +522,43 @@ function filterByPrefTypeSelect(val)     { activePtype  = val; applyFilters(); }
 //         }).then(res => { if (res.ok) location.reload(); });
 //     }
 // }
-function openAssignModal(id) {
+function openAssignModal(id, studentType) {
     document.getElementById('assign_waiting_id').value = id;
+
+    // Reset any prior selection
+    document.getElementById('assign_instance_hidden').value = '';
+    document.querySelectorAll('.assign-instance-card').forEach(c => c.classList.remove('selected'));
+    document.querySelectorAll('.assign-card-radio').forEach(r => r.checked = false);
+
+    // ── Type validation: only show course instances whose type matches the
+    //    student's enrollment type (Private student → Private courses only,
+    //    Group student → Group courses only). ──
+    let visibleCount = 0;
+    document.querySelectorAll('.assign-instance-card').forEach(card => {
+        const courseType = card.dataset.courseType || '';
+        // If we know the student's type, hide mismatched courses entirely.
+        if (studentType && courseType && courseType !== studentType) {
+            card.style.display = 'none';
+        } else {
+            card.style.display = '';
+            if (!card.classList.contains('is-full')) visibleCount++;
+        }
+    });
+
+    // Show a type banner + handle the "no matching type" case
+    const banner = document.getElementById('assign_type_banner');
+    if (banner) {
+        banner.textContent = studentType
+            ? `Showing ${studentType} course instances only`
+            : 'Showing all course instances';
+        banner.style.display = 'block';
+    }
+
+    const noMatch = document.getElementById('assign_no_type_match');
+    if (noMatch) {
+        noMatch.style.display = (studentType && visibleCount === 0) ? 'block' : 'none';
+    }
+
     document.getElementById('assignModal').style.display = 'flex';
 }
 
@@ -522,17 +566,16 @@ function closeAssignModal() {
     document.getElementById('assignModal').style.display = 'none';
 }
 
-function cancelWaiting(id) {
-    if (confirm('Cancel this student from the waiting list?')) {
-        fetch(`/student-care/waiting-list/${id}/cancel`, {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
+// Confirm before cancelling (the Cancel button is a real POST form now)
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.wl-cancel-form').forEach(form => {
+        form.addEventListener('submit', function (e) {
+            if (!confirm('Cancel this student from the waiting list? This cannot be undone.')) {
+                e.preventDefault();
             }
-        }).then(res => { if (res.ok) location.reload(); });
-    }
-}
+        });
+    });
+});
 </script>
 
 @endsection

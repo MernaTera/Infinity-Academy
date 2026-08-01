@@ -63,6 +63,18 @@ class StudentCareController extends Controller
             ])
             ->findOrFail($request->course_instance_id);
 
+        // Business rule: enrollment type must match the course instance type.
+        // A Private student cannot be placed into a Group course and vice-versa.
+        $studentType = $waiting->enrollment->enrollment_type;   // 'Group' | 'Private'
+        $courseType  = $instance->type;                          // 'Group' | 'Private'
+
+        if ($studentType && $courseType && $studentType !== $courseType) {
+            return back()->with('error',
+                "Type mismatch: this is a {$studentType} student and cannot be assigned to a {$courseType} course. " .
+                "Please assign them to a {$studentType} course instance."
+            );
+        }
+
         // Business rule: A student cannot join a group course that has completed more than 3 sessions
         if ($instance->completed_sessions_count > 2) {
             return back()->with('error',
@@ -101,6 +113,29 @@ class StudentCareController extends Controller
         ]);
 
         return back()->with('success', 'Student assigned successfully');
+    }
+
+    /**
+     * Cancel a waiting-list entry.
+     * Marks the waiting record as Cancelled so it drops out of the active queue.
+     * The enrollment itself is left intact (still awaiting a course) unless you
+     * choose to cancel it too — here we only cancel the waiting-list placement.
+     */
+    public function cancelWaiting(Request $request, $id)
+    {
+        $waiting = WaitingList::with('enrollment')->findOrFail($id);
+
+        if ($waiting->status === 'Assigned') {
+            return back()->with('error', 'This student has already been assigned and cannot be cancelled.');
+        }
+
+        if ($waiting->status === 'Cancelled') {
+            return back()->with('error', 'This waiting-list entry is already cancelled.');
+        }
+
+        $waiting->update(['status' => 'Cancelled']);
+
+        return back()->with('success', 'Waiting-list entry cancelled.');
     }
 
     public function show($id)
