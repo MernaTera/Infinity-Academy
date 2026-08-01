@@ -1,5 +1,4 @@
 <style>
-/* ── SIDEBAR VARIABLES ── */
 :root {
     --sb-w: 230px;
     --sb-w-collapsed: 64px;
@@ -15,7 +14,6 @@
     --sb-transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ── SIDEBAR BASE ── */
 #mainSidebar {
     width: var(--sb-w);
     flex-shrink: 0;
@@ -263,7 +261,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     <span class="sl-link-text">Outstanding</span>
                 </a>
-                <a href="{{ route('refunds.index') }}" class="sl-link {{ request()->routeIs('student-care.refunds.*') ? 'active' : '' }}" data-label="Refunds">
+                <a href="{{ route('refunds.index') }}" class="sl-link {{ request()->routeIs('refunds.*') ? 'active' : '' }}" data-label="Refunds">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"/></svg>
                     <span class="sl-link-text">Refunds</span>
                 </a>

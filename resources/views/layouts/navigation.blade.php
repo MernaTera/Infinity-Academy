@@ -109,6 +109,7 @@
             <a href="{{ route('leads.index') }}"        class="nav-link {{ request()->routeIs('leads.*') ? 'active' : '' }}">Leads</a>
             <a href="{{ route('sales.index') }}"        class="nav-link {{ request()->routeIs('sales.*') ? 'active' : '' }}">Sales</a>
             <a href="{{ route('outstanding.index') }}"  class="nav-link {{ request()->routeIs('outstanding.*') ? 'active' : '' }}">Outstanding</a>
+            <a href="{{ route('refunds.index') }}"      class="nav-link {{ request()->routeIs('refunds.*') ? 'active' : '' }}">Refunds</a>
             @endcando
         </div>
 
