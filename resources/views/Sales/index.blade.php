@@ -230,23 +230,22 @@
             </div>
         </div>
 
-        <!-- {{-- ── FOLLOWUP STATS ── --}}
+        {{-- ── FOLLOWUP STATS ── --}}
         <span class="sec-label">Follow-up Statistics</span>
         <div class="fu-grid">
-            @foreach([
-                ['val' => $followupStats['total_leads'],    'label' => 'Total Leads'],
-                ['val' => $followupStats['total_calls'],    'label' => 'Total Calls'],
-                ['val' => $followupStats['answered'],       'label' => 'Answered'],
-                ['val' => $followupStats['unanswered'],     'label' => 'Unanswered'],
-                ['val' => $followupStats['registered'],     'label' => 'Registered'],
-                ['val' => $followupStats['conversion'].'%', 'label' => 'Conversion'],
-            ] as $stat)
+        @foreach([
+                    ['val' => $followupStats['total_leads'],    'label' => 'Total Leads'],
+                    ['val' => $followupStats['total_calls'],    'label' => 'Call Again'],
+                    ['val' => $followupStats['registered'],     'label' => 'Registered'],
+                    ['val' => $followupStats['refunded'],       'label' => 'Refunded'],
+                    ['val' => $followupStats['conversion'].'%', 'label' => 'Conversion'],
+                ] as $stat)
             <div class="fu-card">
                 <div class="fu-val">{{ $stat['val'] }}</div>
                 <div class="fu-label">{{ $stat['label'] }}</div>
             </div>
             @endforeach
-        </div> -->
+        </div>
 
         {{-- ── REVENUE TABLE ── --}}
         <span class="sec-label">Revenue Breakdown — Per Student</span>

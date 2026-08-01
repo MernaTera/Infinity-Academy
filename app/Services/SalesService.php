@@ -51,88 +51,82 @@ class SalesService
         ];
     }
 
-public function getKPIs(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = ''): array
-{
-    $range = $this->getDateRange($filterType, $patch, $month, $day);
+    public function getKPIs(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = ''): array
+    {
+        $range = $this->getDateRange($filterType, $patch, $month, $day);
 
-    // ── Target by month ──
-    $targetMonth = match($filterType) {
-        'patch' => $patch?->start_date
-                    ? \Carbon\Carbon::parse($patch->start_date)->format('Y-m')
-                    : now()->format('Y-m'),
-        'month' => $month,
-        'week'  => \Carbon\Carbon::parse($day)->format('Y-m'), 
-        'day'   => \Carbon\Carbon::parse($day)->format('Y-m'),
-    };
+        // ── Target by month ──
+        $targetMonth = match($filterType) {
+            'patch' => $patch?->start_date
+                        ? \Carbon\Carbon::parse($patch->start_date)->format('Y-m')
+                        : now()->format('Y-m'),
+            'month' => $month,
+            'week'  => \Carbon\Carbon::parse($day)->format('Y-m'), 
+            'day'   => \Carbon\Carbon::parse($day)->format('Y-m'),
+        };
 
-    $target = CsTarget::where('employee_id', $employee->employee_id)
-        ->where('month', $targetMonth)
-        ->first();
+        $target = CsTarget::where('employee_id', $employee->employee_id)
+            ->where('month', $targetMonth)
+            ->first();
 
-    $achieved = RevenueSplit::where('employee_id', $employee->employee_id)
-        ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
-        ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
-        ->sum('amount_allocated');
+        $achieved = RevenueSplit::where('employee_id', $employee->employee_id)
+            ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
+            ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
+            ->sum('amount_allocated');
 
-    $registrations = Enrollment::where('created_by_cs_id', $employee->employee_id)
-        ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
-        ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
-        ->count();
+        $registrations = Enrollment::where('created_by_cs_id', $employee->employee_id)
+            ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
+            ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
+            ->count();
 
-    $targetAmount = $target?->target_amount ?? 0;
-    $remaining    = $targetAmount > 0 ? max(0, $targetAmount - $achieved) : null;
-    $pct          = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : null;
+        $targetAmount = $target?->target_amount ?? 0;
+        $remaining    = $targetAmount > 0 ? max(0, $targetAmount - $achieved) : null;
+        $pct          = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : null;
 
-    return [
-        'target'        => $targetAmount,
-        'achieved'      => $achieved,
-        'remaining'     => $remaining,
-        'percentage'    => $pct,
-        'registrations' => $registrations,
-        'filter_type'   => $filterType,
-        'target_month'  => $targetMonth,
-    ];
-}
+        return [
+            'target'        => $targetAmount,
+            'achieved'      => $achieved,
+            'remaining'     => $remaining,
+            'percentage'    => $pct,
+            'registrations' => $registrations,
+            'filter_type'   => $filterType,
+            'target_month'  => $targetMonth,
+        ];
+    }
 
     public function getFollowupStats(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = ''): array
     {
         $range = $this->getDateRange($filterType, $patch, $month, $day);
 
-        // ── Calls made BY this CS within the period ──
-        // Filter by the call's own timestamp (call_datetime) and the CS who made
-        // it (cs_id) — NOT by when the lead was created. This is what makes the
-        // numbers accurate: a call this month on an old lead still counts.
-        $callsQuery = LeadCallLog::where('cs_id', $employee->employee_id)
-            ->when($range['start'], fn($q) => $q->whereBetween('call_datetime', [$range['start'], $range['end']]));
+        $totalLeads = Lead::where('owner_cs_id', $employee->employee_id)->count();
 
-        $totalCalls = (clone $callsQuery)->count();
-        $unanswered = (clone $callsQuery)->whereIn('outcome', ['No_Answer', 'Wrong_Number'])->count();
-        $answered   = $totalCalls - $unanswered;
+        $totalCalls = DB::table('lead_history')
+            ->where('changed_by', $employee->employee_id)
+            ->where('new_status', 'Call_Again')
+            ->when($range['start'], fn($q) => $q->whereBetween('changed_at', [$range['start'], $range['end']]))
+            ->count();
 
-        // ── Leads owned by this CS ──
-        // "Total leads" here = leads this CS is responsible for. We do NOT filter
-        // these by created_at, otherwise old-but-active leads vanish and the whole
-        // panel reads zero. Registered = those converted (optionally within period).
-        $ownedLeads = Lead::where('owner_cs_id', $employee->employee_id);
-        $totalLeads = (clone $ownedLeads)->count();
-
-        // Registrations attributed to this CS within the period (accurate: uses
-        // the enrollment creation date, which is the real conversion moment).
         $registered = Enrollment::where('created_by_cs_id', $employee->employee_id)
+            ->where('status', '!=', 'Cancelled')
             ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
             ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
             ->count();
 
-        $conversion = $totalCalls > 0
-            ? round(($registered / $totalCalls) * 100, 1)
+        $refunded = Enrollment::where('created_by_cs_id', $employee->employee_id)
+            ->where('status', 'Cancelled')
+            ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
+            ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
+            ->count();
+
+        $conversion = $totalLeads > 0
+            ? round(($registered / $totalLeads) * 100, 1)
             : 0;
 
         return [
             'totalLeads'  => $totalLeads,
             'totalCalls'  => $totalCalls,
-            'answered'    => $answered,
-            'unanswered'  => $unanswered,
             'registered'  => $registered,
+            'refunded'    => $refunded,
             'conversion'  => $conversion,
             'total_leads' => $totalLeads,
             'total_calls' => $totalCalls,
