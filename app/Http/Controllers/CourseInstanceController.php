@@ -316,6 +316,410 @@ class CourseInstanceController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────
+    // EDIT — show the form pre-filled with the instance's current data
+    // ─────────────────────────────────────────────────────────────────
+    public function edit($id)
+    {
+        $instance = CourseInstance::with(['instanceSchedules', 'sessions'])->findOrFail($id);
+
+        $templates  = CourseTemplate::orderBy('name')->get();
+        $patches    = Patch::whereIn('status', ['Active', 'Upcoming'])->orderBy('start_date')->get();
+        $branches   = Branch::orderBy('name')->get();
+        $rooms      = Room::where('is_active', true)->orderBy('name')->get();
+        $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
+        $employee   = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+        $userBranch = Branch::find($employee->branch_id);
+
+        // How many sessions are already completed (locked — cannot be changed)
+        $completedCount = $instance->sessions->where('status', 'Completed')->count();
+
+        // Current day pairs + start times, so the form can pre-select them
+        $currentPairs      = $instance->instanceSchedules->pluck('day_of_week')->unique()->values();
+        $currentStartTimes = [];
+        foreach ($instance->instanceSchedules as $sch) {
+            $currentStartTimes[$sch->day_of_week] = \Carbon\Carbon::parse($sch->start_time)->format('H:i');
+        }
+
+        return view('student-care.course-instances.create', compact(
+            'instance', 'templates', 'patches', 'branches', 'rooms', 'breakSlots', 'userBranch',
+            'completedCount', 'currentPairs', 'currentStartTimes'
+        ));
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // UPDATE — re-validate everything (like create) and rebuild the
+    // scheduled (not completed) sessions with the new teacher/time/days.
+    // ─────────────────────────────────────────────────────────────────
+    public function updateInstance(Request $request, $id)
+    {
+        $instance = CourseInstance::with(['sessions', 'instanceSchedules'])->findOrFail($id);
+
+        $data = $request->validate([
+            'course_template_id' => 'required|exists:course_template,course_template_id',
+            'level_id'           => 'nullable|exists:level,level_id',
+            'sublevel_id'        => 'nullable|exists:sublevel,sublevel_id',
+            'patch_id'           => 'required|exists:patch,patch_id',
+            'teacher_id'         => 'required|exists:teacher,teacher_id',
+            'branch_id'          => 'required|exists:branch,branch_id',
+            'room_id'            => 'nullable|exists:room,room_id',
+            'capacity'           => 'required|integer|min:1',
+            'delivery_mood'      => 'required|in:Online,Offline',
+            'type'               => 'required|in:Group,Private',
+            'total_hours'        => 'required|numeric|min:1',
+            'session_duration'   => 'required|numeric|min:0.5',
+            'start_date'         => 'required|date',
+            'end_date'           => 'required|date|after_or_equal:start_date',
+            'day_of_week'        => 'required|array|min:1',
+            'day_of_week.*'      => 'in:sun_wed,sat_tue,mon_thu',
+            'start_times'        => 'required|array',
+            'start_times.*'      => 'required|date_format:H:i',
+            'time_slot_ids'      => 'nullable|array',
+            'time_slot_ids.*'    => 'nullable|exists:time_slot,time_slot_id',
+        ]);
+
+        $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+
+        // ── Completed sessions are locked ──────────────────────────────
+        // They keep their original dates/times. We only rebuild the
+        // scheduled (not-yet-held) sessions, and generate exactly the
+        // remaining count so the total stays correct.
+        $completedSessions = $instance->sessions->where('status', 'Completed');
+        $completedCount    = $completedSessions->count();
+        $totalSessions     = (int) ceil((float)$data['total_hours'] / (float)$data['session_duration']);
+        $remainingToMake   = max(0, $totalSessions - $completedCount);
+
+        // The new scheduled sessions must start AFTER the last completed session
+        $lastCompletedDate = $completedSessions->max('session_date');
+
+        // ── 1. Patch date validation ──────────────────────────────────
+        $patch = Patch::findOrFail($data['patch_id']);
+        if ($data['end_date'] > $patch->end_date) {
+            return back()->withInput()->withErrors([
+                'end_date' => "End date ({$data['end_date']}) exceeds the patch end date ({$patch->end_date})."
+            ]);
+        }
+
+        // ── 2. Auto-adjust the (re)generation start date ──────────────
+        // Begin from either the requested start date or the day after the
+        // last completed session, whichever is later, then snap to the
+        // first valid day for the chosen pair(s).
+        $allTargetDays = array_merge(...array_map(fn($p) => $dayMap[$p] ?? [], $data['day_of_week']));
+
+        $genStart = \Carbon\Carbon::parse($data['start_date']);
+        if ($lastCompletedDate) {
+            $afterCompleted = \Carbon\Carbon::parse($lastCompletedDate)->addDay();
+            if ($afterCompleted->gt($genStart)) {
+                $genStart = $afterCompleted;
+            }
+        }
+
+        $patchEnd = \Carbon\Carbon::parse($patch->end_date);
+        $found    = false;
+        $cursor   = $genStart->copy();
+        while ($cursor->lte($patchEnd)) {
+            if (in_array($cursor->dayOfWeek, $allTargetDays)) {
+                $regenStartDate = $cursor->toDateString();
+                $found = true;
+                break;
+            }
+            $cursor->addDay();
+        }
+
+        if ($remainingToMake > 0 && !$found) {
+            return back()->withInput()->withErrors([
+                'day_of_week' => 'No sessions possible for the selected day pair(s) within this patch after the completed sessions.'
+            ]);
+        }
+
+        // ── 3. Room conflict check (exclude THIS instance's own sessions) ──
+        if (!empty($data['room_id'])) {
+            foreach ($data['day_of_week'] as $pair) {
+                $startTime = $data['start_times'][$pair] ?? null;
+                if (!$startTime) continue;
+
+                $dur        = (float) $data['session_duration'];
+                [$h, $m]    = explode(':', $startTime);
+                $endMins    = ((int)$h * 60 + (int)$m) + (int)($dur * 60);
+                $endTime    = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
+                $startFull  = $startTime . ':00';
+                $targetDays = $dayMap[$pair] ?? [];
+
+                $conflict = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
+                    $q->where('room_id', $data['room_id'])
+                      ->where('course_instance_id', '!=', $instance->course_instance_id) // not myself
+                      ->whereIn('status', ['Active', 'Upcoming'])
+                )
+                ->whereBetween('session_date', [$regenStartDate ?? $data['start_date'], $data['end_date']])
+                ->where('status', '!=', 'Cancelled')
+                ->where('start_time', '<', $endTime)
+                ->where('end_time',   '>', $startFull)
+                ->get()
+                ->first(fn($s) => in_array(\Carbon\Carbon::parse($s->session_date)->dayOfWeek, $targetDays));
+
+                if ($conflict) {
+                    $course = $conflict->courseInstance?->courseTemplate?->name ?? 'another course';
+                    return back()->withInput()->withErrors([
+                        'room_id' => "Room already booked on {$pair} at {$startTime} — overlaps with \"{$course}\"."
+                    ]);
+                }
+            }
+        }
+
+        // ── 4. Main transaction ───────────────────────────────────────
+        $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id');
+        $teacherChanged = (int)$instance->teacher_id !== (int)$data['teacher_id'];
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use (
+                $data, $employeeId, $instance, $completedCount, $remainingToMake,
+                $regenStartDate, $teacherChanged
+            ) {
+
+                // ── Teacher contract limit check (exclude this instance's
+                //    own current sessions so we don't double-count them) ──
+                $contract = \App\Models\HR\TeacherContract::with('contractType')
+                    ->where('teacher_id', $data['teacher_id'])
+                    ->where('patch_id',   $data['patch_id'])
+                    ->where('is_active',  true)
+                    ->first();
+
+                $sessionCount = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
+                    $q->where('teacher_id', $data['teacher_id'])
+                      ->where('patch_id',   $data['patch_id'])
+                      ->where('course_instance_id', '!=', $instance->course_instance_id)
+                      ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+                )->where('status', '!=', 'Cancelled')->count();
+
+                $pendingSessionsCount = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
+                    ->where('patch_id', $data['patch_id'])
+                    ->where('course_instance_id', '!=', $instance->course_instance_id)
+                    ->whereIn('status', ['Upcoming', 'Pending_Approval'])
+                    ->whereDoesntHave('sessions')
+                    ->get()
+                    ->sum(fn($ci) => (int) ceil((float)$ci->total_hours / (float)$ci->session_duration));
+
+                $existingSessions = $sessionCount + $pendingSessionsCount;
+                $maxSessions      = $contract?->contractType?->max_sessions_allowed ?? null;
+                // Count the whole instance (completed + the ones we'll regenerate)
+                $thisInstanceTotal = $completedCount + $remainingToMake;
+                $needsApproval    = $maxSessions && ($existingSessions + $thisInstanceTotal) > $maxSessions;
+                $overBy           = $needsApproval ? ($existingSessions + $thisInstanceTotal) - $maxSessions : 0;
+
+                // ── Update the instance core fields ───────────────────
+                $instance->update([
+                    'course_template_id' => $data['course_template_id'],
+                    'level_id'           => $data['level_id']   ?? null,
+                    'sublevel_id'        => $data['sublevel_id'] ?? null,
+                    'patch_id'           => $data['patch_id'],
+                    'teacher_id'         => $data['teacher_id'],
+                    'branch_id'          => $data['branch_id']  ?? null,
+                    'room_id'            => $data['room_id']    ?? null,
+                    'capacity'           => $data['capacity'],
+                    'delivery_mood'      => $data['delivery_mood'],
+                    'type'               => $data['type'],
+                    'total_hours'        => $data['total_hours'],
+                    'session_duration'   => $data['session_duration'],
+                    // Keep the real start_date (first completed session) if any;
+                    // otherwise use the regeneration start.
+                    'start_date'         => $instance->sessions->where('status','Completed')->min('session_date')
+                                            ?? ($regenStartDate ?? $data['start_date']),
+                    'end_date'           => $data['end_date'],
+                    'status'             => $needsApproval ? 'Pending_Approval' : 'Upcoming',
+                ]);
+
+                // ── Rebuild scheduled sessions ────────────────────────
+                // Delete only the not-completed sessions + all schedules,
+                // then regenerate exactly the remaining count with the new
+                // day pairs / times, starting after the completed ones.
+                \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+                    ->where('status', '!=', 'Completed')
+                    ->delete();
+
+                \App\Models\Academic\InstanceSchedule::where('course_instance_id', $instance->course_instance_id)
+                    ->delete();
+
+                if ($remainingToMake > 0 && $regenStartDate) {
+                    // Validate each schedule against its time slot
+                    foreach ($data['day_of_week'] as $pair) {
+                        $startTime  = $data['start_times'][$pair]  ?? null;
+                        $timeSlotId = $data['time_slot_ids'][$pair] ?? null;
+                        if (!$startTime) continue;
+                        $slot = TimeSlot::find($timeSlotId);
+                        if ($slot) {
+                            $this->schedulingService->validateSchedule([
+                                'start_time'       => $startTime,
+                                'session_duration' => $data['session_duration'],
+                                'time_slot'        => $slot,
+                            ]);
+                        }
+                    }
+
+                    $schedules = $this->schedulingService->storeMultipleSchedules(
+                        $instance->course_instance_id,
+                        $data['day_of_week'],
+                        $data['start_times'],
+                        $data['time_slot_ids'] ?? null
+                    );
+
+                    // Temporarily set the instance window to the regeneration
+                    // range so the generator produces the remaining sessions.
+                    $instance->start_date = $regenStartDate;
+                    $this->generateRemainingSessions($instance, $schedules, $completedCount, $remainingToMake);
+                }
+
+                // ── Reattach Pending installments to the new session dates ──
+                // Paid installments are left untouched.
+                $this->resyncInstallmentDueDates($instance);
+
+                // ── Notify the (new) teacher ──────────────────────────
+                $teacher = \App\Models\HR\Teacher::with('employee')->find($data['teacher_id']);
+
+                if ($needsApproval && $teacher?->employee) {
+                    \DB::table('user_notification')->insert([
+                        'employee_id'         => $teacher->employee->employee_id,
+                        'title'               => 'Course Approval Required',
+                        'message'             => 'An updated course "' . ($instance->courseTemplate?->name ?? 'a course') . '" now exceeds your contract limit by ' . $overBy . ' session(s). Please approve or reject.',
+                        'related_entity_type' => 'course_instance',
+                        'related_entity_id'   => $instance->course_instance_id,
+                        'is_read'             => false,
+                        'created_at'          => now(),
+                        'updated_at'          => now(),
+                    ]);
+
+                    $adminEmployees = \App\Models\HR\Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))->get();
+                    foreach ($adminEmployees as $admin) {
+                        \DB::table('user_notification')->insert([
+                            'employee_id'         => $admin->employee_id,
+                            'title'               => 'Teacher Contract Limit Exceeded',
+                            'message'             => ($teacher->employee->full_name ?? 'A teacher') . ' will exceed their contract limit by ' . $overBy . ' session(s) on an updated course. Awaiting teacher approval.',
+                            'related_entity_type' => 'course_instance',
+                            'related_entity_id'   => $instance->course_instance_id,
+                            'is_read'             => false,
+                            'created_at'          => now(),
+                            'updated_at'          => now(),
+                        ]);
+                    }
+                } elseif ($teacherChanged && $teacher?->employee) {
+                    \DB::table('user_notification')->insert([
+                        'employee_id'         => $teacher->employee->employee_id,
+                        'title'               => 'Course Assigned',
+                        'message'             => 'You have been assigned to teach "' . ($instance->courseTemplate?->name ?? 'a course') . '" (updated schedule).',
+                        'related_entity_type' => 'course_instance',
+                        'related_entity_id'   => $instance->course_instance_id,
+                        'is_read'             => false,
+                        'created_at'          => now(),
+                        'updated_at'          => now(),
+                    ]);
+                }
+            });
+
+        } catch (\Exception $e) {
+            return back()->withInput()->withErrors(['schedule' => $e->getMessage()]);
+        }
+
+        return redirect()->route('student-care.instances')
+            ->with('success', 'Course instance updated successfully.');
+    }
+
+    /**
+     * Generate the remaining (non-completed) sessions, numbering them so they
+     * continue after the already-completed ones.
+     */
+    private function generateRemainingSessions(CourseInstance $instance, array $schedules, int $completedCount, int $remainingToMake): void
+    {
+        $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+
+        $pairCount = count($schedules);
+        if ($pairCount === 0) return;
+
+        $perPair   = (int) floor($remainingToMake / $pairCount);
+        $remainder = $remainingToMake % $pairCount;
+
+        // Start numbering after the HIGHEST existing session number (not just
+        // completedCount) so we never collide with the unique(instance, number)
+        // constraint if completed numbers happen to be non-contiguous.
+        $maxExisting = (int) \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+            ->max('session_number');
+        $sessionNum = max($completedCount, $maxExisting) + 1;
+        $made       = 0;
+
+        foreach ($schedules as $i => $schedule) {
+            $need       = $perPair + ($i === 0 ? $remainder : 0);
+            $targetDays = $dayMap[$schedule->day_of_week] ?? [];
+            if (empty($targetDays) || $need <= 0) continue;
+
+            $cursor = \Carbon\Carbon::parse($instance->start_date);
+            $end    = \Carbon\Carbon::parse($instance->end_date);
+            $count  = 0;
+
+            while ($cursor->lte($end) && $count < $need && $made < $remainingToMake) {
+                if (in_array($cursor->dayOfWeek, $targetDays)) {
+                    $startDateTime = \Carbon\Carbon::parse(
+                        $cursor->toDateString() . ' ' . \Carbon\Carbon::parse($schedule->start_time)->format('H:i:s')
+                    );
+                    $endDateTime = $startDateTime->copy()->addHours((float) $instance->session_duration);
+
+                    \App\Models\Academic\CourseSession::create([
+                        'course_instance_id'      => $instance->course_instance_id,
+                        'session_date'            => $cursor->toDateString(),
+                        'start_time'              => $startDateTime->format('H:i:s'),
+                        'end_time'                => $endDateTime->format('H:i:s'),
+                        'session_number'          => $sessionNum,
+                        'room_id'                 => $instance->room_id,
+                        'generated_from_schedule' => true,
+                        'status'                  => 'Scheduled',
+                    ]);
+
+                    $sessionNum++;
+                    $count++;
+                    $made++;
+                }
+                $cursor->addDay();
+            }
+        }
+
+        // Renumber everything by date so completed + new sessions are sequential
+        $all = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+            ->orderBy('session_date')->orderBy('start_time')->get();
+        foreach ($all as $s) {
+            \DB::table('course_session')->where('course_session_id', $s->course_session_id)
+                ->update(['session_number' => -$s->course_session_id]);
+        }
+        foreach ($all as $idx => $s) {
+            \DB::table('course_session')->where('course_session_id', $s->course_session_id)
+                ->update(['session_number' => $idx + 1]);
+        }
+    }
+
+    /**
+     * Re-map each enrollment's PENDING installment due dates onto the instance's
+     * current (post-edit) session dates. Paid installments are never touched.
+     */
+    private function resyncInstallmentDueDates(CourseInstance $instance): void
+    {
+        $sessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+            ->orderBy('session_date')->orderBy('start_time')
+            ->get()
+            ->values();
+
+        if ($sessions->isEmpty()) return;
+
+        foreach ($instance->enrollments as $enrollment) {
+            $pending = \App\Models\Finance\InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)
+                ->where('status', 'Pending')
+                ->orderBy('installment_number')
+                ->get();
+
+            foreach ($pending as $i => $schedule) {
+                $session = $sessions[$i] ?? null;
+                if ($session) {
+                    $schedule->update(['due_date' => $session->session_date]);
+                }
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
     public function show($id)
     {
         $instance = CourseInstance::with([
@@ -457,6 +861,7 @@ class CourseInstanceController extends Controller
     {
         $teacherId = $request->query('teacher_id');
         $patchId   = $request->query('patch_id');
+        $excludeId = $request->query('exclude_instance_id'); // ignore self in edit mode
         if (!$teacherId || !$patchId) return response()->json([]);
 
         $patch = Patch::find($patchId);
@@ -478,6 +883,7 @@ class CourseInstanceController extends Controller
             $q->where('teacher_id', $teacherId)
             ->where('patch_id', $patchId)
             ->whereIn('status', ['Active','Upcoming','Pending_Approval'])
+            ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
         )->where('status','!=','Cancelled')
         ->pluck('session_date')
         ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'))
@@ -507,14 +913,18 @@ class CourseInstanceController extends Controller
     // ─────────────────────────────────────────────────────────────────
     public function getOccupiedSlots(Request $request)
     {
-        $teacherId = $request->query('teacher_id');
-        $startDate = $request->query('start_date');
-        $endDate   = $request->query('end_date', '2099-12-31');
+        $teacherId  = $request->query('teacher_id');
+        $startDate  = $request->query('start_date');
+        $endDate    = $request->query('end_date', '2099-12-31');
+        // In edit mode, ignore the sessions of the instance being edited —
+        // they're about to be rebuilt, so they must not block their own times.
+        $excludeId  = $request->query('exclude_instance_id');
 
         if (!$teacherId || !$startDate) return response()->json([]);
 
         $occupied = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
             $q->where('teacher_id', $teacherId)
+              ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
         )
         ->whereBetween('session_date', [$startDate, $endDate])
         ->where('status', '!=', 'Cancelled')
@@ -534,6 +944,8 @@ class CourseInstanceController extends Controller
         $pairs      = (array) $request->day_of_week;
         $startTime  = $request->start_time;
         $sessionDur = (float) $request->session_duration;
+        // Edit mode: ignore this instance's own sessions (being rebuilt).
+        $excludeId  = $request->exclude_instance_id;
 
         if (!$teacherId || !$startDate || !$pairs || !$startTime) {
             return response()->json(['conflicts' => []]);
@@ -545,7 +957,10 @@ class CourseInstanceController extends Controller
         $newEnd        = $newStart->copy()->addHours($sessionDur);
 
         $existingSessions = \App\Models\Academic\CourseSession::with('courseInstance.courseTemplate')
-            ->whereHas('courseInstance', fn($q) => $q->where('teacher_id', $teacherId))
+            ->whereHas('courseInstance', fn($q) =>
+                $q->where('teacher_id', $teacherId)
+                  ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
+            )
             ->whereBetween('session_date', [$startDate, $endDate])
             ->where('status', '!=', 'Cancelled')
             ->get();

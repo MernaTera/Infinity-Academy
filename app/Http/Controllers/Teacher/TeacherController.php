@@ -246,16 +246,38 @@ class TeacherController extends Controller
             \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id')
         )->first();
 
-        $instance = CourseInstance::with('instanceSchedules')
+        $instance = CourseInstance::with(['instanceSchedules', 'sessions'])
             ->where('teacher_id', $teacher->teacher_id)
             ->where('status', 'Pending_Approval')
             ->findOrFail($id);
 
-        $schedulingService = app(\App\Services\SchedulingService::class);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($instance) {
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($instance, $schedulingService) {
+            // Completed sessions are locked — they already exist with their own
+            // dates/times. Generate ONLY the remaining sessions, numbered after
+            // the completed ones, starting after the last completed date. This
+            // prevents duplicate (room, date, time) rows when a course that had
+            // some completed sessions is edited and then re-approved.
+            $completedSessions = $instance->sessions->where('status', 'Completed');
+            $completedCount    = $completedSessions->count();
+            $totalSessions     = (int) ceil((float)$instance->total_hours / (float)$instance->session_duration);
+            $remainingToMake   = max(0, $totalSessions - $completedCount);
 
-        $schedulingService->generateSessionsMultiPair($instance, $instance->instanceSchedules->all());
+            // Remove any leftover non-completed sessions before regenerating,
+            // so we never collide with an existing scheduled row either.
+            \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+                ->where('status', '!=', 'Completed')
+                ->delete();
+
+            if ($remainingToMake > 0) {
+                $this->generateApprovedSessions(
+                    $instance,
+                    $instance->instanceSchedules->all(),
+                    $completedCount,
+                    $remainingToMake,
+                    $completedSessions->max('session_date')
+                );
+            }
 
             $instance->update(['status' => 'Upcoming']);
 
@@ -277,25 +299,122 @@ class TeacherController extends Controller
         return back()->with('success', 'Course approved — sessions generated successfully.');
     }
 
+    /**
+     * Generate the remaining (non-completed) sessions for an approved instance.
+     * Numbers them after the completed sessions and starts after the last
+     * completed date, so it never duplicates an existing (room, date, time) row.
+     */
+    private function generateApprovedSessions(CourseInstance $instance, array $schedules, int $completedCount, int $remainingToMake, ?string $lastCompletedDate): void
+    {
+        $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+
+        $pairCount = count($schedules);
+        if ($pairCount === 0 || $remainingToMake <= 0) return;
+
+        $perPair   = (int) floor($remainingToMake / $pairCount);
+        $remainder = $remainingToMake % $pairCount;
+
+        // Start numbering after the HIGHEST existing number (safety against a
+        // non-contiguous completed sequence colliding with unique(instance,number)).
+        $maxExisting = (int) \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+            ->max('session_number');
+        $startNum = max($completedCount, $maxExisting);
+
+        // Start no earlier than the day after the last completed session.
+        $floorDate = \Carbon\Carbon::parse($instance->start_date);
+        if ($lastCompletedDate) {
+            $afterCompleted = \Carbon\Carbon::parse($lastCompletedDate)->addDay();
+            if ($afterCompleted->gt($floorDate)) $floorDate = $afterCompleted;
+        }
+
+        // Collect dates already used by completed sessions (extra safety).
+        $usedDates = $instance->sessions->where('status', 'Completed')
+            ->map(fn($s) => \Carbon\Carbon::parse($s->session_date)->toDateString())
+            ->flip();
+
+        $sessionNum = $startNum + 1;
+        $made       = 0;
+
+        foreach ($schedules as $i => $schedule) {
+            $need       = $perPair + ($i === 0 ? $remainder : 0);
+            $targetDays = $dayMap[$schedule->day_of_week] ?? [];
+            if (empty($targetDays) || $need <= 0) continue;
+
+            $cursor = $floorDate->copy();
+            $end    = \Carbon\Carbon::parse($instance->end_date);
+            $count  = 0;
+
+            while ($cursor->lte($end) && $count < $need && $made < $remainingToMake) {
+                $dateStr = $cursor->toDateString();
+                if (in_array($cursor->dayOfWeek, $targetDays) && !$usedDates->has($dateStr)) {
+                    $startDateTime = \Carbon\Carbon::parse(
+                        $dateStr . ' ' . \Carbon\Carbon::parse($schedule->start_time)->format('H:i:s')
+                    );
+                    $endDateTime = $startDateTime->copy()->addHours((float) $instance->session_duration);
+
+                    \App\Models\Academic\CourseSession::create([
+                        'course_instance_id'      => $instance->course_instance_id,
+                        'session_date'            => $dateStr,
+                        'start_time'              => $startDateTime->format('H:i:s'),
+                        'end_time'                => $endDateTime->format('H:i:s'),
+                        'session_number'          => $sessionNum,
+                        'room_id'                 => $instance->room_id,
+                        'generated_from_schedule' => true,
+                        'status'                  => 'Scheduled',
+                    ]);
+
+                    $sessionNum++;
+                    $count++;
+                    $made++;
+                }
+                $cursor->addDay();
+            }
+        }
+
+        // Renumber all sessions by date so completed + new are sequential.
+        $all = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+            ->orderBy('session_date')->orderBy('start_time')->get();
+        foreach ($all as $s) {
+            \DB::table('course_session')->where('course_session_id', $s->course_session_id)
+                ->update(['session_number' => -$s->course_session_id]);
+        }
+        foreach ($all as $idx => $s) {
+            \DB::table('course_session')->where('course_session_id', $s->course_session_id)
+                ->update(['session_number' => $idx + 1]);
+        }
+    }
+
     public function rejectInstance(Request $request, $id)
     {
         $teacher = \App\Models\HR\Teacher::where('employee_id',
             \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id')
         )->first();
 
-        $instance = CourseInstance::with(['instanceSchedules', 'courseTemplate'])
+        $instance = CourseInstance::with(['instanceSchedules', 'courseTemplate', 'sessions', 'enrollments'])
             ->where('teacher_id', $teacher->teacher_id)
             ->where('status', 'Pending_Approval')
             ->findOrFail($id);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($instance, $request) {
+        // If this instance already has enrollments or completed sessions, it is
+        // an EXISTING course that was edited — it must NOT be deleted. We only
+        // reject the pending change and put it back to Upcoming (its completed
+        // sessions and students stay intact). A brand-new instance with neither
+        // is safe to remove entirely.
+        $hasHistory = $instance->enrollments->isNotEmpty()
+            || $instance->sessions->where('status', 'Completed')->isNotEmpty();
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($instance, $request, $hasHistory) {
 
             $scEmployee = \App\Models\HR\Employee::find($instance->created_by_employee_id);
             if ($scEmployee) {
+                $msg = $hasHistory
+                    ? 'Teacher rejected the schedule change to "' . ($instance->courseTemplate?->name ?? 'the course') . '". The course was kept as-is. Reason: ' . ($request->reason ?? 'No reason provided.')
+                    : 'Teacher rejected "' . ($instance->courseTemplate?->name ?? 'the course') . '". Reason: ' . ($request->reason ?? 'No reason provided.');
+
                 \DB::table('user_notification')->insert([
                     'employee_id'         => $scEmployee->employee_id,
                     'title'               => 'Course Instance Rejected',
-                    'message'             => 'Teacher rejected "' . ($instance->courseTemplate?->name ?? 'the course') . '". Reason: ' . ($request->reason ?? 'No reason provided.'),
+                    'message'             => $msg,
                     'related_entity_type' => 'course_instance',
                     'related_entity_id'   => $instance->course_instance_id,
                     'is_read'             => false,
@@ -304,11 +423,20 @@ class TeacherController extends Controller
                 ]);
             }
 
-            $instance->instanceSchedules()->delete();
-            $instance->delete();
+            if ($hasHistory) {
+                // Existing course — keep it. Just clear the pending flag.
+                // (Sessions were rebuilt at edit time; leaving status Upcoming
+                //  keeps the course usable. SC can edit again if needed.)
+                $instance->update(['status' => 'Upcoming']);
+            } else {
+                // Brand-new instance with no students/history — safe to remove.
+                $instance->instanceSchedules()->delete();
+                \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();
+                $instance->delete();
+            }
         });
 
-        return back()->with('success', 'Course instance rejected and removed.');
+        return back()->with('success', 'Course instance rejected.');
     }
     // ─── course show ────────────────────────────────────────────────────────
     public function courseShow($id)

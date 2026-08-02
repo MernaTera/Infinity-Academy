@@ -166,7 +166,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
 
         Route::get('/dashboard',     [StudentCareController::class, 'dashboard'])->name('dashboard');
         Route::get('/waiting-list',  [StudentCareController::class, 'waitingList'])->name('waiting-list');
-Route::post('/waiting-list/{id}/cancel', [StudentCareController::class, 'cancelWaiting'])->name('waiting.cancel');        Route::get('/outstanding',   [StudentCareController::class, 'outstanding'])->name('outstanding');
+        Route::post('/waiting-list/{id}/cancel', [StudentCareController::class, 'cancelWaiting'])->name('waiting.cancel');        Route::get('/outstanding',   [StudentCareController::class, 'outstanding'])->name('outstanding');
         Route::get('/postponed',     [StudentCareController::class, 'postponed'])->name('postponed');
 
         Route::get('/course-instances/create', [CourseInstanceController::class, 'create'])->name('instances.create');
@@ -196,6 +196,8 @@ Route::middleware(['auth', 'permission:enrollment.create'])
     ->group(function () {
         Route::post('/assign',                        [StudentCareController::class, 'assign'])->name('assign');
         Route::post('/course-instances/store',        [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
+        Route::get('/course-instances/{id}/edit',    [CourseInstanceController::class, 'edit'])->name('instances.edit');
+        Route::put('/course-instances/{id}',         [CourseInstanceController::class, 'updateInstance'])->name('instance.update');
         Route::post('/enrollments/{id}/postpone',     [CourseInstanceController::class, 'postponeEnrollment'])->name('instance.postpone');
         Route::post('/attendance/{sessionId}', [AttendanceController::class, 'store'])->name('attendance.store');          Route::post('/instance/{id}/preview',         [CourseInstanceController::class, 'previewSchedule'])->name('instance.preview');
         Route::post('/instance/{id}/schedule',        [CourseInstanceController::class, 'storeSchedule'])->name('instance.schedule');

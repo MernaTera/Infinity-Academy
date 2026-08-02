@@ -1,5 +1,5 @@
 @extends('student-care.layouts.app')
-@section('title', 'New Course Instance')
+@section('title', isset($instance) ? 'Edit Course Instance' : 'New Course Instance')
 
 @section('content')
 @once
@@ -130,13 +130,27 @@
     <div class="page-header">
         <div>
             <div class="page-eyebrow">Student Care — Course Management</div>
-            <h1 class="page-title">New Course Instance</h1>
+            <h1 class="page-title">{{ isset($instance) ? 'Edit Course Instance' : 'New Course Instance' }}</h1>
         </div>
         <a href="{{ route('student-care.instances') }}" class="btn-back">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back
         </a>
     </div>
+
+    @isset($instance)
+        @if(($completedCount ?? 0) > 0)
+        <div style="background:rgba(245,145,30,0.06);border:1px solid rgba(245,145,30,0.25);border-left:3px solid var(--orange);color:#C47010;padding:13px 18px;border-radius:6px;margin-bottom:20px;font-size:13px;line-height:1.5;">
+            <strong>{{ $completedCount }} completed session(s) are locked.</strong>
+            They keep their original dates and times. Only the remaining (not-yet-held) sessions will be rescheduled with your changes. Paid installments are also kept as-is.
+        </div>
+        @else
+        <div style="background:var(--blue-l);border:1px solid rgba(27,79,168,0.2);border-left:3px solid var(--blue);color:var(--blue);padding:13px 18px;border-radius:6px;margin-bottom:20px;font-size:13px;line-height:1.5;">
+            <strong>Editing this course instance.</strong>
+            No sessions have been completed yet, so all sessions will be rebuilt with your changes. Paid installments (if any) are kept as-is.
+        </div>
+        @endif
+    @endisset
 
     @if($errors->any())
     <div style="background:var(--red-l);border:1px solid rgba(220,38,38,0.2);color:var(--red);padding:14px 18px;border-radius:6px;margin-bottom:20px;font-size:13px;">
@@ -145,8 +159,11 @@
     </div>
     @endif
 
-    <form method="POST" action="{{ route('student-care.instance.store') }}" id="mainForm">
+    <form method="POST"
+          action="{{ isset($instance) ? route('student-care.instance.update', $instance->course_instance_id) : route('student-care.instance.store') }}"
+          id="mainForm">
         @csrf
+        @isset($instance) @method('PUT') @endisset
         <div class="form-layout">
             <div>
 
@@ -163,7 +180,8 @@
                                     data-english-level="{{ $t->english_level_id ?? '' }}"
                                     data-hours="{{ $t->total_hours ?? '' }}"
                                     data-session="{{ $t->default_session_duration ?? '' }}"
-                                    data-capacity="{{ $t->max_capacity ?? '' }}">
+                                    data-capacity="{{ $t->max_capacity ?? '' }}"
+                                    {{ (isset($instance) && $instance->course_template_id == $t->course_template_id) ? 'selected' : '' }}>
                                     {{ $t->name }}
                                 </option>
                                 @endforeach
@@ -195,7 +213,8 @@
                             <select name="patch_id" id="ci_patch" class="field-select" required onchange="onPatchChange()">
                                 <option value="">— Select Patch —</option>
                                 @foreach($patches as $p)
-                                <option value="{{ $p->patch_id }}" data-start="{{ $p->start_date }}" data-end="{{ $p->end_date }}">
+                                <option value="{{ $p->patch_id }}" data-start="{{ $p->start_date }}" data-end="{{ $p->end_date }}"
+                                    {{ (isset($instance) && $instance->patch_id == $p->patch_id) ? 'selected' : '' }}>
                                     {{ $p->name }} ({{ $p->status }})
                                 </option>
                                 @endforeach
@@ -215,15 +234,15 @@
                         <div class="field">
                             <label class="field-label">Type <span class="req">*</span></label>
                             <select name="type" class="field-select" required onchange="updateSummary()">
-                                <option value="Group">Group</option>
-                                <option value="Private">Private</option>
+                                <option value="Group" {{ (isset($instance) && $instance->type == 'Group') ? 'selected' : '' }}>Group</option>
+                                <option value="Private" {{ (isset($instance) && $instance->type == 'Private') ? 'selected' : '' }}>Private</option>
                             </select>
                         </div>
                         <div class="field">
                             <label class="field-label">Mode <span class="req">*</span></label>
                             <select name="delivery_mood" class="field-select" required onchange="onModeChange()">
-                                <option value="Offline">Offline</option>
-                                <option value="Online">Online</option>
+                                <option value="Offline" {{ (isset($instance) && $instance->delivery_mood == 'Offline') ? 'selected' : '' }}>Offline</option>
+                                <option value="Online" {{ (isset($instance) && $instance->delivery_mood == 'Online') ? 'selected' : '' }}>Online</option>
                             </select>
                         </div>
                     </div>
@@ -233,7 +252,8 @@
                             <select name="room_id" id="ci_room" class="field-select" onchange="onRoomChange()">
                                 <option value="">— No Room —</option>
                                 @foreach($rooms as $room)
-                                <option value="{{ $room->room_id }}" data-capacity="{{ $room->capacity }}" data-type="{{ $room->room_type }}">
+                                <option value="{{ $room->room_id }}" data-capacity="{{ $room->capacity }}" data-type="{{ $room->room_type }}"
+                                    {{ (isset($instance) && $instance->room_id == $room->room_id) ? 'selected' : '' }}>
                                     {{ $room->name }} ({{ $room->room_type }}) — Cap: {{ $room->capacity }}
                                 </option>
                                 @endforeach
@@ -241,7 +261,7 @@
                         </div>
                         <div class="field">
                             <label class="field-label">Capacity <span class="req">*</span></label>
-                            <input type="number" name="capacity" id="ci_capacity" class="field-input" placeholder="e.g. 12" min="1" required oninput="updateSummary()">
+                            <input type="number" name="capacity" id="ci_capacity" class="field-input" placeholder="e.g. 12" min="1" required oninput="updateSummary()" value="{{ $instance->capacity ?? '' }}">
                             <div id="capacityHint" style="display:none;" class="capacity-badge">
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
                                 <span id="capacityText">—</span>
@@ -256,11 +276,11 @@
                     <div class="field-grid field-grid-2">
                         <div class="field">
                             <label class="field-label">Total Hours <span class="req">*</span></label>
-                            <input type="number" name="total_hours" id="ci_total_hours" class="field-input" step="0.5" placeholder="e.g. 24" min="1" required oninput="recalculate()">
+                            <input type="number" name="total_hours" id="ci_total_hours" class="field-input" step="0.5" placeholder="e.g. 24" min="1" required oninput="recalculate()" value="{{ $instance->total_hours ?? '' }}">
                         </div>
                         <div class="field">
                             <label class="field-label">Session Duration (hrs) <span class="req">*</span></label>
-                            <input type="number" name="session_duration" id="ci_session_duration" class="field-input" step="0.5" placeholder="e.g. 2" min="0.5" required oninput="recalculate()">
+                            <input type="number" name="session_duration" id="ci_session_duration" class="field-input" step="0.5" placeholder="e.g. 2" min="0.5" required oninput="recalculate()" value="{{ $instance->session_duration ?? '' }}">
                         </div>
                     </div>
                     <div id="sessionsInfo" class="sessions-info">
@@ -279,8 +299,8 @@
                 {{-- Dates --}}
                 <div style="margin-bottom:20px;">
                     <label class="field-label">Start Date <span class="req">*</span></label>
-                    <input type="hidden" name="start_date" id="ci_start_date">
-                    <input type="hidden" name="end_date"   id="ci_end_date">
+                    <input type="hidden" name="start_date" id="ci_start_date" value="{{ isset($instance) ? \Carbon\Carbon::parse($instance->start_date)->toDateString() : '' }}">
+                    <input type="hidden" name="end_date"   id="ci_end_date" value="{{ isset($instance) ? \Carbon\Carbon::parse($instance->end_date)->toDateString() : '' }}">
 
                     {{-- chips --}}
                     <div id="datechipsLocked" style="font-size:11px;color:var(--faint);padding:12px 0;">
@@ -367,7 +387,7 @@
                         <div class="sum-row"><span class="sum-key">End</span><span class="sum-val" id="sum-end">—</span></div>
                     </div>
                     <div class="submit-area">
-                        <button type="submit" class="btn-submit"><span>Create Course Instance</span></button>
+                        <button type="submit" class="btn-submit"><span>{{ isset($instance) ? 'Update Course Instance' : 'Create Course Instance' }}</span></button>
                         <div style="font-size:10px;color:var(--faint);text-align:center;margin-top:10px;">Sessions generated automatically</div>
                     </div>
                 </div>
@@ -694,7 +714,7 @@ async function loadFreeDates() {
     if (!teacherId || !patchId) return;
 
     try {
-        const res   = await fetch(`/student-care/teacher-free-dates?teacher_id=${teacherId}&patch_id=${patchId}`);
+        const res   = await fetch(`/student-care/teacher-free-dates?teacher_id=${teacherId}&patch_id=${patchId}${editExcludeParam()}`);
         _freeDates  = res.ok ? await res.json() : [];
     } catch { _freeDates = []; }
 
@@ -826,7 +846,7 @@ async function renderTimeSlots(pair) {
     } catch {}
     if (!slots.length) slots = generateGenericSlots();
     try {
-        const r2 = await fetch(`/student-care/occupied-slots?teacher_id=${teacherId}&pair=${pair}&start_date=${startDate}&end_date=${endDate}`);
+        const r2 = await fetch(`/student-care/occupied-slots?teacher_id=${teacherId}&pair=${pair}&start_date=${startDate}&end_date=${endDate}${editExcludeParam()}`);
         if (r2.ok) occupied = await r2.json();
     } catch {}
 
@@ -976,7 +996,11 @@ async function fetchPreview() {
             const res = await fetch('/student-care/check-conflicts', {
                 method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                body: JSON.stringify({ teacher_id:teacherId, start_date:startDate, end_date:endDate, day_of_week:pairs, start_time:startTime, session_duration:sessionDur }),
+                body: JSON.stringify({
+                    teacher_id:teacherId, start_date:startDate, end_date:endDate,
+                    day_of_week:pairs, start_time:startTime, session_duration:sessionDur,
+                    exclude_instance_id: (typeof EDIT_INSTANCE_ID !== 'undefined' ? EDIT_INSTANCE_ID : null)
+                }),
             });
             if (res.ok) {
                 const data = await res.json();
@@ -1118,6 +1142,95 @@ document.addEventListener('DOMContentLoaded', function() {
     onModeChange();
     renderPairGrid([]);
     checkScheduleReady();
+
+    @isset($instance)
+        // ══ EDIT MODE — pre-populate the async cascade with saved values ══
+        prefillEditForm();
+    @endisset
 });
+
+@isset($instance)
+// The id of the instance being edited — appended to availability lookups so
+// this instance's own (soon-to-be-rebuilt) sessions don't block themselves.
+const EDIT_INSTANCE_ID = @json($instance->course_instance_id);
+@endisset
+
+// Returns the "&exclude_instance_id=.." suffix in edit mode, else ''.
+function editExcludeParam() {
+    return (typeof EDIT_INSTANCE_ID !== 'undefined' && EDIT_INSTANCE_ID)
+        ? `&exclude_instance_id=${EDIT_INSTANCE_ID}`
+        : '';
+}
+
+@isset($instance)
+// Saved values for edit mode
+const EDIT_DATA = {
+    level_id:     @json($instance->level_id),
+    sublevel_id:  @json($instance->sublevel_id),
+    teacher_id:   @json($instance->teacher_id),
+    pairs:        @json($currentPairs ?? []),
+    start_times:  @json($currentStartTimes ?? (object)[]),
+    start_date:   @json(isset($instance) ? \Carbon\Carbon::parse($instance->start_date)->toDateString() : null),
+    end_date:     @json(isset($instance) ? \Carbon\Carbon::parse($instance->end_date)->toDateString() : null),
+    completed:    @json($completedCount ?? 0),
+};
+
+async function prefillEditForm() {
+    try {
+        // 1. Course is already selected in HTML → trigger its cascade
+        //    (loads levels + teachers for the course).
+        await onCourseChange();
+
+        // 2. Select the saved level, then load sublevels + teachers.
+        if (EDIT_DATA.level_id) {
+            const levelSel = document.getElementById('ci_level');
+            if (levelSel) { levelSel.value = EDIT_DATA.level_id; await onLevelChange(); }
+        }
+        if (EDIT_DATA.sublevel_id) {
+            const subSel = document.getElementById('ci_sublevel');
+            if (subSel) { subSel.value = EDIT_DATA.sublevel_id; onSublevelChange(); }
+        }
+
+        // 3. Patch is already selected → trigger its handler.
+        await onPatchChange();
+
+        // 4. Select the saved teacher, then load the day-pair grid.
+        if (EDIT_DATA.teacher_id) {
+            const tSel = document.getElementById('ci_teacher');
+            if (tSel) { tSel.value = EDIT_DATA.teacher_id; await onTeacherChange(); }
+        }
+
+        // 5. Restore the saved date window.
+        if (EDIT_DATA.start_date) document.getElementById('ci_start_date').value = EDIT_DATA.start_date;
+        if (EDIT_DATA.end_date)   document.getElementById('ci_end_date').value   = EDIT_DATA.end_date;
+
+        // 6. Check the saved day pairs, then build their time rows.
+        (EDIT_DATA.pairs || []).forEach(pair => {
+            const cb = document.querySelector(`input[name="day_of_week[]"][value="${pair}"]`);
+            if (cb) cb.checked = true;
+        });
+        if (typeof onPairChange === 'function') await onPairChange();
+
+        // 7. Fill in the saved start time for each pair + render its slots.
+        for (const pair of (EDIT_DATA.pairs || [])) {
+            const timeInput = document.getElementById(`ci_start_time_${pair}`);
+            const saved     = EDIT_DATA.start_times[pair];
+            if (timeInput && saved) {
+                timeInput.value = saved;
+                if (typeof renderTimeSlots === 'function') await renderTimeSlots(pair);
+                if (typeof onTimeChange === 'function') onTimeChange(pair);
+            }
+        }
+
+        // 8. Refresh derived UI (summary, sessions count, contract/room checks).
+        if (typeof recalculate === 'function') recalculate();
+        if (typeof updateSummary === 'function') updateSummary();
+        if (typeof checkTeacherContract === 'function') checkTeacherContract();
+        if (typeof checkScheduleReady === 'function') checkScheduleReady();
+    } catch (e) {
+        console.error('Edit pre-fill error:', e);
+    }
+}
+@endisset
 </script>
 @endsection

@@ -427,17 +427,33 @@
 
                         {{-- Actions --}}
                         <td>
-                            <a href="{{ route('student-care.instances.show', $instance->course_instance_id) }}"
-                            class="btn-action"
-                            style="color:#1B4FA8;border-color:rgba(27,79,168,0.25);text-decoration:none;"
-                            onmouseover="this.style.background='rgba(27,79,168,0.07)';this.style.borderColor='#1B4FA8'"
-                            onmouseout="this.style.background='';this.style.borderColor='rgba(27,79,168,0.25)'">
-                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                    <circle cx="12" cy="12" r="3"/>
-                                </svg>
-                                View
-                            </a>
+                            <div style="display:flex;gap:6px;align-items:center;">
+                                <a href="{{ route('student-care.instances.show', $instance->course_instance_id) }}"
+                                class="btn-action"
+                                style="color:#1B4FA8;border-color:rgba(27,79,168,0.25);text-decoration:none;"
+                                onmouseover="this.style.background='rgba(27,79,168,0.07)';this.style.borderColor='#1B4FA8'"
+                                onmouseout="this.style.background='';this.style.borderColor='rgba(27,79,168,0.25)'">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    View
+                                </a>
+                                @if(!in_array($instance->status, ['Completed', 'Cancelled']))
+                                <a href="{{ route('student-care.instances.edit', $instance->course_instance_id) }}"
+                                class="btn-action"
+                                style="color:#C47010;border-color:rgba(245,145,30,0.3);text-decoration:none;"
+                                onmouseover="this.style.background='rgba(245,145,30,0.08)';this.style.borderColor='#F5911E'"
+                                onmouseout="this.style.background='';this.style.borderColor='rgba(245,145,30,0.3)'">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                    </svg>
+                                    Edit
+                                </a>
+                                @endif
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>

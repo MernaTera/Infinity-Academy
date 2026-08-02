@@ -244,7 +244,7 @@
             <button class="filter-pill active" data-lead-filter="all" onclick="applyLeadFilter('all', this)">All</button>
             <button class="filter-pill" data-lead-filter="Waiting" onclick="applyLeadFilter('Waiting', this)">Waiting</button>
             <button class="filter-pill" data-lead-filter="Call_Again" onclick="applyLeadFilter('Call_Again', this)">Call Again</button>
-            <button class="filter-pill" data-lead-filter="Not_Interested" onclick="applyLeadFilter('Not_Interested', this)">Not Interested</button>
+            <!-- <button class="filter-pill" data-lead-filter="Not_Interested" onclick="applyLeadFilter('Not_Interested', this)">Not Interested</button> -->
             <button class="filter-pill filter-pill-green" data-lead-filter="Registered" onclick="applyLeadFilter('Registered', this)">Registered</button>
         </div>
     </div>
