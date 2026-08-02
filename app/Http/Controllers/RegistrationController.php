@@ -128,8 +128,19 @@ class RegistrationController extends Controller
 
         $plan          = \App\Models\Finance\PaymentPlan::find($request->payment_plan_id);
         $finalPrice    = (float) $request->final_price;
-        $materialPrice = (float) $request->material_price;
         $testFee       = (float) $request->test_fee;
+
+        // Material total = sum of the selected materials' real prices (from DB),
+        // supporting multiple materials per course. Falls back to the posted
+        // material_price only if no ids were sent.
+        $selectedMaterialIds = collect($request->input('material_ids', []))
+            ->map(fn($id) => (int) $id)->filter()->unique();
+        if ($selectedMaterialIds->isNotEmpty()) {
+            $materialPrice = (float) \App\Models\Enrollment\Material::whereIn('material_id', $selectedMaterialIds)
+                ->where('is_active', true)->sum('price');
+        } else {
+            $materialPrice = (float) $request->material_price;
+        }
 
         if ($plan && $plan->deposit_percentage > 0 && $finalPrice > 0) {
             $depositOnCourse = round($finalPrice * $plan->deposit_percentage / 100, 2);
@@ -293,38 +304,51 @@ class RegistrationController extends Controller
         $levelId    = $request->level_id    ?: null;
         $courseId   = $request->course_template_id ?: null;
 
-        $material = null;
+        // Return ALL materials assigned at the most specific matching level.
+        // Priority: sublevel → level → course. Within the first level that
+        // has any assignments, return every material (mandatory + optional).
+        $materials = collect();
 
         if ($sublevelId) {
-            $material = DB::table('material_assignment')
+            $materials = DB::table('material_assignment')
                 ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
                 ->where('materials.is_active', true)
                 ->where('material_assignment.sublevel_id', $sublevelId)
-                ->select('materials.material_id', 'materials.name', 'materials.price', 'materials.revenue_type', 'material_assignment.is_mandatory')                ->first();
+                ->select('materials.material_id', 'materials.name', 'materials.price', 'materials.revenue_type', 'material_assignment.is_mandatory')
+                ->get();
         }
 
-        if (!$material && $levelId) {
-            $material = DB::table('material_assignment')
+        if ($materials->isEmpty() && $levelId) {
+            $materials = DB::table('material_assignment')
                 ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
                 ->where('materials.is_active', true)
                 ->where('material_assignment.level_id', $levelId)
                 ->whereNull('material_assignment.sublevel_id')
                 ->select('materials.material_id', 'materials.name', 'materials.price', 'materials.revenue_type', 'material_assignment.is_mandatory')
-                ->first();
+                ->get();
         }
 
-        if (!$material && $courseId) {
-            $material = DB::table('material_assignment')
+        if ($materials->isEmpty() && $courseId) {
+            $materials = DB::table('material_assignment')
                 ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
                 ->where('materials.is_active', true)
                 ->where('material_assignment.course_template_id', $courseId)
                 ->whereNull('material_assignment.level_id')
                 ->whereNull('material_assignment.sublevel_id')
                 ->select('materials.material_id', 'materials.name', 'materials.price', 'materials.revenue_type', 'material_assignment.is_mandatory')
-                ->first();
+                ->get();
         }
 
-        return response()->json($material);
+        // Normalise types (is_mandatory as bool, price as float)
+        $materials = $materials->map(fn($m) => [
+            'material_id'  => (int) $m->material_id,
+            'name'         => $m->name,
+            'price'        => (float) $m->price,
+            'revenue_type' => $m->revenue_type,
+            'is_mandatory' => (bool) $m->is_mandatory,
+        ])->values();
+
+        return response()->json($materials);
     }
 
     public function getTeacherSchedule(Request $request)

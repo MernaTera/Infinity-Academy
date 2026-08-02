@@ -529,45 +529,32 @@ class RegistrationService
 
     private function attachMaterials($enrollment, $data)
     {
+        // Selected material ids come from the form as material_ids[] (mandatory
+        // ones are always included). Fall back gracefully if none provided.
+        $selectedIds = collect($data['material_ids'] ?? [])
+            ->map(fn($id) => (int) $id)
+            ->filter()
+            ->unique()
+            ->values();
 
-        $materialAssignment = null;
-    
-        if (!empty($data['sublevel_id'])) {
-            $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('sublevel_id', $data['sublevel_id'])
-                ->with('material')
-                ->first();
+        if ($selectedIds->isEmpty()) {
+            return;
         }
-    
-        if (!$materialAssignment && !empty($data['level_id'])) {
-            $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('level_id', $data['level_id'])
-                ->whereNull('sublevel_id')
-                ->with('material')
-                ->first();
+
+        // Load the actual materials (price + revenue_type) from the DB — never
+        // trust prices from the request.
+        $materials = \App\Models\Enrollment\Material::whereIn('material_id', $selectedIds)
+            ->where('is_active', true)
+            ->get();
+
+        foreach ($materials as $material) {
+            \App\Models\Enrollment\EnrollmentMaterial::create([
+                'enrollment_id' => $enrollment->enrollment_id,
+                'material_id'   => $material->material_id,
+                'price'         => $material->price ?? 0,
+                'status'        => 'Pending',
+            ]);
         }
-    
-        if (!$materialAssignment && !empty($data['course_template_id'])) {
-            $materialAssignment = \App\Models\Enrollment\MaterialAssignment::where('course_template_id', $data['course_template_id'])
-                ->whereNull('level_id')
-                ->whereNull('sublevel_id')
-                ->with('material')
-                ->first();
-        }
-    
-        if (!$materialAssignment || !$materialAssignment->material) {
-            return; 
-        }
-    
-        $materialPrice = floatval($data['material_price'] ?? 0);
-        if ($materialPrice <= 0) {
-            return; 
-        }
-    
-        \App\Models\Enrollment\EnrollmentMaterial::create([
-            'enrollment_id' => $enrollment->enrollment_id,
-            'material_id'   => $materialAssignment->material_id,
-            'price'         => $materialAssignment->material->price ?? 0,
-            'status'        => 'Pending',
-        ]);
     }
 
 private function createFinancialRecords($enrollment, $data, $pricing, $patch)
@@ -590,7 +577,21 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
         $depositPct    = $this->getDepositPct($data);
         $courseDeposit = round($courseFinal * $depositPct / 100, 2);
         $testFee       = floatval($data['test_fee'] ?? 0);
-        $materialPrice = floatval($data['material_price'] ?? 0);
+
+        // ─── Materials: load the selected ones with their real prices + types ───
+        // Material component total = sum of all selected material prices.
+        // Revenue for each material is split by ITS OWN revenue_type:
+        //   Individual → Direct to the registering CS
+        //   Shared     → split equally among all Active CS in the branch
+        $selectedMaterialIds = collect($data['material_ids'] ?? [])
+            ->map(fn($id) => (int) $id)->filter()->unique()->values();
+
+        $selectedMaterials = $selectedMaterialIds->isNotEmpty()
+            ? \App\Models\Enrollment\Material::whereIn('material_id', $selectedMaterialIds)
+                ->where('is_active', true)->get()
+            : collect();
+
+        $materialPrice = (float) $selectedMaterials->sum('price');
 
         $methodMap = [
             'Instapay'      => 'Transfer',
@@ -600,6 +601,21 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
             'Transfer'      => 'Transfer',
             'Online'        => 'Online',
         ];
+
+        // Active CS in the branch (for Shared material revenue)
+        $activeBranchCsIds = \App\Models\HR\Employee::whereHas('user.role',
+                fn($q) => $q->where('role_name', 'Customer Service'))
+            ->where('status', 'Active')
+            ->where('branch_id', $branchId)
+            ->pluck('employee_id')
+            ->all();
+        if (empty($activeBranchCsIds)) {
+            $activeBranchCsIds = [$csEmployee->employee_id]; // fallback: at least the registrar
+        }
+
+        // Split totals per material type across ALL selected materials
+        $individualMaterialTotal = (float) $selectedMaterials->where('revenue_type', 'Individual')->sum('price');
+        $sharedMaterialTotal     = (float) $selectedMaterials->where('revenue_type', 'Shared')->sum('price');
 
         // Components in FILL ORDER (Course first, then Test, then Material)
         $components = [
@@ -618,18 +634,14 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
             ->values()
             ->toArray();
 
-        // ─── Helper: create a Payment ft (NO revenue split here) ───
-        // Revenue splits are handled separately per category:
-        //   Course   → Direct to the registering CS
-        //   Test     → NO revenue split (not counted toward CS revenue)
-        //   Material → by revenue_type (Individual = Direct, Shared = split)
-        // We collect the created transactions per category so we can attach
-        // the correct split afterwards.
-        $courseTxs   = [];
-        $materialTxs = [];
-
+        // ─── Helper: create a Payment ft + revenue split(s) ───
+        // Course/Test → Direct to the registering CS.
+        // Material    → split within this chunk proportionally between the
+        //   Individual portion (Direct) and the Shared portion (divided equally
+        //   among all Active branch CS), based on the overall material mix.
         $createPaymentTx = function ($category, $amount, $rawMethod) use (
-            $enrollment, $patchId, $branchId, $csEmployee, $methodMap, &$courseTxs, &$materialTxs
+            $enrollment, $patchId, $branchId, $csEmployee, $methodMap,
+            $materialPrice, $individualMaterialTotal, $sharedMaterialTotal, $activeBranchCsIds
         ) {
             if ($amount <= 0.001) return;
 
@@ -644,8 +656,8 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
                 'created_by_employee_id' => $csEmployee->employee_id,
             ]);
 
-            // Course deposit → Direct revenue to the registering CS
-            if ($category === 'Course') {
+            if ($category !== 'Material' || $materialPrice <= 0.001) {
+                // Course / Test → single Direct split to the registrar.
                 RevenueSplit::create([
                     'transaction_id'   => $tx->transaction_id,
                     'employee_id'      => $csEmployee->employee_id,
@@ -654,14 +666,48 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
                     'amount_allocated' => round($amount, 2),
                     'allocation_type'  => 'Direct',
                 ]);
+                return;
             }
 
-            // Track material transactions so we can split them by revenue_type
-            if ($category === 'Material') {
-                $materialTxs[] = $tx;
+            // ── Material chunk → split by type ──
+            // What fraction of the whole material total is Individual vs Shared,
+            // applied to this chunk's amount.
+            $indivShare  = $materialPrice > 0 ? ($individualMaterialTotal / $materialPrice) : 0;
+            $indivAmount = round($amount * $indivShare, 2);
+            $sharedAmount = round($amount - $indivAmount, 2);
+
+            // Individual portion → Direct to the registrar
+            if ($indivAmount > 0.001) {
+                RevenueSplit::create([
+                    'transaction_id'   => $tx->transaction_id,
+                    'employee_id'      => $csEmployee->employee_id,
+                    'branch_id'        => $branchId,
+                    'patch_id'         => $patchId,
+                    'amount_allocated' => $indivAmount,
+                    'allocation_type'  => 'Direct',
+                ]);
             }
 
-            // Test → intentionally NO revenue split (not CS revenue)
+            // Shared portion → divided equally among all Active branch CS
+            if ($sharedAmount > 0.001 && !empty($activeBranchCsIds)) {
+                $n     = count($activeBranchCsIds);
+                $each  = round($sharedAmount / $n, 2);
+                $acc   = 0;
+                foreach ($activeBranchCsIds as $i => $empId) {
+                    // Give the rounding remainder to the last person so the
+                    // splits sum exactly to the shared amount.
+                    $alloc = ($i === $n - 1) ? round($sharedAmount - $acc, 2) : $each;
+                    $acc  += $alloc;
+                    RevenueSplit::create([
+                        'transaction_id'   => $tx->transaction_id,
+                        'employee_id'      => $empId,
+                        'branch_id'        => $branchId,
+                        'patch_id'         => $patchId,
+                        'amount_allocated' => $alloc,
+                        'allocation_type'  => 'Shared',
+                    ]);
+                }
+            }
         };
 
         // ─── Fill each component from the method queue, in order ───
@@ -686,65 +732,6 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
         }
         unset($comp);
 
-        // ─── Material revenue split by revenue_type ───
-        // Individual → full amount Direct to the registering CS.
-        // Shared     → split equally among ALL active CS in the branch.
-        if (!empty($materialTxs)) {
-            $enrollmentMaterial = \App\Models\Enrollment\EnrollmentMaterial::where('enrollment_id', $enrollment->enrollment_id)->first();
-            $material     = $enrollmentMaterial
-                ? \App\Models\Enrollment\Material::find($enrollmentMaterial->material_id)
-                : null;
-            $revenueType  = $material?->revenue_type ?? 'Shared';
-
-            if ($revenueType === 'Individual') {
-                // Full material revenue → registering CS (Direct)
-                foreach ($materialTxs as $mtx) {
-                    RevenueSplit::create([
-                        'transaction_id'   => $mtx->transaction_id,
-                        'employee_id'      => $csEmployee->employee_id,
-                        'branch_id'        => $branchId,
-                        'patch_id'         => $patchId,
-                        'amount_allocated' => (float) $mtx->amount,
-                        'allocation_type'  => 'Direct',
-                    ]);
-                }
-            } else {
-                // Shared → split each material tx equally among all active branch CS
-                $branchCS = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
-                    ->where('branch_id', $branchId)
-                    ->where('status', 'Active')
-                    ->get();
-
-                $csCount = $branchCS->count();
-
-                foreach ($materialTxs as $mtx) {
-                    if ($csCount > 0) {
-                        $share = round((float) $mtx->amount / $csCount, 2);
-                        foreach ($branchCS as $cs) {
-                            RevenueSplit::create([
-                                'transaction_id'   => $mtx->transaction_id,
-                                'employee_id'      => $cs->employee_id,
-                                'branch_id'        => $branchId,
-                                'patch_id'         => $patchId,
-                                'amount_allocated' => $share,
-                                'allocation_type'  => 'Shared',
-                            ]);
-                        }
-                    } else {
-                        // No branch CS found → fall back to registering CS
-                        RevenueSplit::create([
-                            'transaction_id'   => $mtx->transaction_id,
-                            'employee_id'      => $csEmployee->employee_id,
-                            'branch_id'        => $branchId,
-                            'patch_id'         => $patchId,
-                            'amount_allocated' => (float) $mtx->amount,
-                            'allocation_type'  => 'Shared',
-                        ]);
-                    }
-                }
-            }
-        }
-
         // ─── Record the raw payment-method split for audit (once) ───
         foreach (($data['deposit_methods'] ?? []) as $m) {
             $amt = (float) ($m['amount'] ?? 0);
@@ -760,16 +747,7 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
         }
 
         // ═══════════════════════════════════════════════════════════
-        // INSTALLMENT SCHEDULE
-        //
-        // For each installment we create a FinancialTransaction (type
-        // Installment) AND a schedule row linked to it, with status 'Pending'.
-        // The transaction EXISTS so the enrollment shows correctly in the
-        // Outstanding page and BalanceCalculator can link paid installments,
-        // but it is NOT counted as received revenue while the schedule is
-        // Pending — the dashboard/BalanceCalculator only count installments
-        // whose schedule status is 'Paid'. This matches the approval path in
-        // InstallmentApprovalController exactly, keeping the two consistent.
+        // INSTALLMENT SCHEDULE (no ft until actually paid)
         // ═══════════════════════════════════════════════════════════
         $plan = PaymentPlan::find($data['payment_plan_id']);
 
@@ -790,17 +768,27 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
             return;
         }
 
-        $remaining   = $courseFinal - $courseDeposit;
-        $installmentAmt = round($remaining / $plan->installment_count, 2);
+        $remaining  = $courseFinal - $courseDeposit;
+        $instAmount = round($remaining / $plan->installment_count, 2);
 
+        // Each installment schedule links to its own Installment transaction,
+        // created up-front (schema requires transaction_id). The schedule stays
+        // Pending, so BalanceCalculator/Outstanding do NOT count it as paid
+        // until its schedule is marked Paid at payment time.
         for ($i = 1; $i <= $plan->installment_count; $i++) {
+            // Spread any rounding remainder onto the last installment so the
+            // installments sum exactly to the remaining balance.
+            $thisAmount = ($i === $plan->installment_count)
+                ? round($remaining - ($instAmount * ($plan->installment_count - 1)), 2)
+                : $instAmount;
+
             $instTx = FinancialTransaction::create([
                 'enrollment_id'          => $enrollment->enrollment_id,
                 'patch_id'               => $patchId,
                 'branch_id'              => $branchId,
                 'transaction_type'       => 'Installment',
                 'transaction_category'   => 'Course',
-                'amount'                 => $installmentAmt,
+                'amount'                 => $thisAmount,
                 'payment_method'         => 'Cash',
                 'created_by_employee_id' => $csEmployee->employee_id,
             ]);
@@ -809,8 +797,8 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
                 'enrollment_id'      => $enrollment->enrollment_id,
                 'transaction_id'     => $instTx->transaction_id,
                 'installment_number' => $i,
-                'due_date'           => null,   // set when SC assigns the course
-                'amount'             => $installmentAmt,
+                'due_date'           => null,
+                'amount'             => $thisAmount,
                 'status'             => 'Pending',
             ]);
         }

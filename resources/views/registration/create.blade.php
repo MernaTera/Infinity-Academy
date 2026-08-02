@@ -183,6 +183,31 @@
     .mode-select-wrap { position:relative; }
 
     /* ═══════════════ MATERIAL TOGGLE ═══════════════ */
+    /* Multiple materials list */
+    .mat-item {
+        display:flex; align-items:center; gap:12px; padding:12px 14px; margin-bottom:8px;
+        border:1px solid var(--border); border-radius:8px; background:var(--card); transition:all 0.2s; cursor:pointer;
+    }
+    .mat-item:has(input:checked) { border-color:var(--blue); background:var(--blue-l); }
+    .mat-item.mandatory { border-color:rgba(245,145,30,0.3); background:rgba(245,145,30,0.04); cursor:default; }
+    .mat-item input[type="checkbox"] { accent-color:var(--blue); width:16px; height:16px; flex-shrink:0; }
+    .mat-item input:disabled { accent-color:#C47010; }
+    .mat-item-body { flex:1; min-width:0; }
+    .mat-item-name { font-size:13px; font-weight:600; color:var(--text); }
+    .mat-item-meta { font-size:10px; color:var(--muted); margin-top:2px; display:flex; gap:8px; align-items:center; }
+    .mat-item-price { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:0.5px; color:var(--blue); white-space:nowrap; }
+    .mat-tag { font-size:8px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:3px; font-weight:600; }
+    .mat-tag-mand { color:#C47010; background:rgba(245,145,30,0.12); }
+    .mat-tag-shared { color:#7C3AED; background:rgba(124,58,237,0.1); }
+    .mat-tag-indiv { color:#1B4FA8; background:rgba(27,79,168,0.08); }
+    .mat-total-row {
+        display:flex; align-items:center; justify-content:space-between;
+        padding:12px 14px; margin-top:6px; border-top:2px solid var(--border);
+        font-size:12px;
+    }
+    .mat-total-label { color:var(--muted); letter-spacing:0.5px; font-weight:600; }
+    .mat-total-val { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:1px; color:var(--green-dk); }
+
     .material-toggle {
         display:flex; align-items:center; gap:11px;
         padding:14px 16px; background:var(--blue-l);
@@ -610,31 +635,13 @@
                     <div class="sec-hint">Optional add-ons</div>
                 </div>
                 <div class="sec-body">
-                    {{-- Material --}}
+                    {{-- Materials (supports multiple per course) --}}
                     <div id="material_section" style="display:none;">
-                        <div class="sub-label">Study Material</div>
-                        <label class="material-toggle">
-                            <input type="checkbox" id="material_check">
-                            Include Study Material
-                        </label>
-                        <div id="material_price_block" style="display:none;">
-                            <div class="form-grid">
-                                <div class="form-field">
-                                    <label class="form-label">Material Name</label>
-                                    <input type="text" id="material_name" class="form-control-inf" readonly>
-                                </div>
-                                <div class="form-field">
-                                    <label class="form-label">Material Price</label>
-                                    <input type="text" id="material_price" class="form-control-inf" readonly>
-                                </div>
-                            </div>
-                            <div id="material_split_badge" class="material-split" style="display:none;">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-                                </svg>
-                                <span id="material_split_text"></span>
-                            </div>
-                        </div>
+                        <div class="sub-label">Study Materials</div>
+                        <div id="materials_list"></div>
+                        {{-- selected material ids are injected here as hidden inputs by JS --}}
+                        <div id="material_ids_container"></div>
+                        <input type="hidden" name="material_price" id="material_price_hidden" value="0">
                     </div>
 
                     {{-- Package --}}

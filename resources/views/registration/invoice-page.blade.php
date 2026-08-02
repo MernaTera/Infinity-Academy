@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -58,6 +57,23 @@
     .inv-row-value.money{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;}
     .inv-row-value.green{color:#059669;}
     .inv-row-value.red{color:#DC2626;}
+
+    /* Line-items pricing table (mirrors the registration preview) */
+    .inv-items-table{width:100%;border-collapse:collapse;margin-bottom:16px;}
+    .inv-items-table th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;padding:9px 12px;text-align:left;border-bottom:2px solid rgba(27,79,168,0.08);font-weight:400;background:rgba(27,79,168,0.02);}
+    .inv-items-table th:last-child{text-align:right;}
+    .inv-items-table td{padding:10px 12px;font-size:12px;color:#1A2A4A;border-bottom:1px solid rgba(27,79,168,0.04);vertical-align:middle;}
+    .inv-items-table td:last-child{text-align:right;font-weight:600;color:#1B4FA8;}
+    .inv-items-table tr:last-child td{border-bottom:none;}
+    .inv-items-table td small{color:#7A8A9A;font-size:10px;}
+    .price-tag{display:inline-block;font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-weight:500;}
+    .price-tag.course  {background:rgba(27,79,168,0.08);color:#1B4FA8;}
+    .price-tag.material{background:rgba(245,145,30,0.08);color:#C47010;}
+    .price-tag.test    {background:rgba(5,150,105,0.08);color:#059669;}
+    .price-tag.discount{background:rgba(5,150,105,0.08);color:#059669;}
+    .inv-grand-row td{background:rgba(27,79,168,0.03);font-weight:700!important;}
+    .inv-grand-row td:first-child{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#1A2A4A;}
+    .inv-grand-row td:last-child{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:#1B4FA8;}
     .inv-row-value.orange{color:#F5911E;}
     .inv-row-value.blue{color:#1B4FA8;}
 
@@ -140,13 +156,36 @@
     $paidAmount = \DB::table('deposit_payment')
         ->where('enrollment_id', $enrollment->enrollment_id)
         ->sum('amount');
-    $remaining  = max(0, $finalPrice - $paidAmount);
+    // NOTE: remaining is computed against the grand total (course + materials
+    // + test) further below, once those are known — see $remaining reassignment.
 
     $depositPayments = \DB::table('deposit_payment')
         ->where('enrollment_id', $enrollment->enrollment_id)
         ->get();
 
     $installments = $enrollment->installmentSchedules ?? collect();
+
+    // ── Line items (to mirror the registration invoice preview) ──
+    // Materials attached to this enrollment (supports multiple).
+    $invMaterials = \DB::table('enrollment_material')
+        ->join('materials', 'materials.material_id', '=', 'enrollment_material.material_id')
+        ->where('enrollment_material.enrollment_id', $enrollment->enrollment_id)
+        ->select('materials.name', 'enrollment_material.price')
+        ->get();
+    $materialTotal = (float) $invMaterials->sum('price');
+
+    // Test fee (from the Test transaction, if any).
+    $testFee = (float) ($enrollment->financialTransactions
+        ->where('transaction_category', 'Test')
+        ->whereIn('transaction_type', ['Payment'])
+        ->sum('amount'));
+
+    // Course base + discount already computed above ($basePrice / $discountValue).
+    $grandTotal = $finalPrice + $materialTotal + $testFee;
+
+    // Remaining is the grand total (course + materials + test) minus everything
+    // paid so far, so it reflects the true balance — not just the course.
+    $remaining  = max(0, $grandTotal - $paidAmount);
 
     $statusColor = match($enrollment->status){
         'Active'           => 'green',
@@ -254,16 +293,44 @@
         {{-- Section 3: Financials --}}
         <div class="inv-section">
             <div class="inv-section-title"><span class="inv-num">3</span> Financial Summary</div>
-            <div class="inv-row">
-                <span class="inv-row-label">Base Price</span>
-                <span class="inv-row-value money">{{ number_format($basePrice) }} LE</span>
-            </div>
-            @if($discountValue > 0)
-            <div class="inv-row">
-                <span class="inv-row-label">Discount</span>
-                <span class="inv-row-value money orange">− {{ number_format($discountValue) }} LE</span>
-            </div>
-            @endif
+
+            {{-- Line items (Course + Materials + Test) --}}
+            <table class="inv-items-table">
+                <thead><tr><th style="width:50%;">Item</th><th>Type</th><th>Amount</th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Course Fee</strong><br><small>{{ $courseName }}{{ $levelName !== '—' ? ' · '.$levelName : '' }}</small></td>
+                        <td><span class="price-tag course">Course</span></td>
+                        <td>{{ number_format($basePrice) }} LE</td>
+                    </tr>
+                    @if($discountValue > 0)
+                    <tr>
+                        <td><strong>Discount Applied</strong></td>
+                        <td><span class="price-tag discount">Offer</span></td>
+                        <td style="color:#059669;">− {{ number_format($discountValue) }} LE</td>
+                    </tr>
+                    @endif
+                    @foreach($invMaterials as $mat)
+                    <tr>
+                        <td><strong>{{ $mat->name }}</strong><br><small>Full payment required</small></td>
+                        <td><span class="price-tag material">Material</span></td>
+                        <td>{{ number_format($mat->price) }} LE</td>
+                    </tr>
+                    @endforeach
+                    @if($testFee > 0)
+                    <tr>
+                        <td><strong>Placement Test</strong><br><small>Full payment required</small></td>
+                        <td><span class="price-tag test">Test</span></td>
+                        <td>{{ number_format($testFee) }} LE</td>
+                    </tr>
+                    @endif
+                    <tr class="inv-grand-row">
+                        <td colspan="2">Grand Total</td>
+                        <td>{{ number_format($grandTotal) }} LE</td>
+                    </tr>
+                </tbody>
+            </table>
+
             <div class="inv-row">
                 <span class="inv-row-label">Payment Plan</span>
                 <span class="inv-row-value">
@@ -277,7 +344,7 @@
             <div class="inv-total-box">
                 <div class="inv-total-row">
                     <span class="inv-row-label">Total Price</span>
-                    <span class="inv-row-value money blue">{{ number_format($finalPrice) }} LE</span>
+                    <span class="inv-row-value money blue">{{ number_format($grandTotal) }} LE</span>
                 </div>
                 <div class="inv-total-row">
                     <span class="inv-row-label">Amount Paid</span>

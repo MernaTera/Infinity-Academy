@@ -486,7 +486,6 @@ window.buildInvoice = function() {
     const courseEl    = document.getElementById('course_select');
     const levelEl     = document.getElementById('level_select');
     const sublevelEl  = document.getElementById('sublevel_select');
-    const matCheckEl  = document.getElementById('material_check');
     const matPriceHid = document.getElementById('material_price_hidden');
     const paySelectEl = document.getElementById('payment_plan_id');
     const teacherEl   = document.getElementById('teacher_select');
@@ -524,7 +523,9 @@ window.buildInvoice = function() {
         infRow('Start',    patchEl?.options[patchEl?.selectedIndex]?.text || '—');
 
     const p         = typeof pricing !== 'undefined' ? pricing : {courseBasePrice:0,courseDiscount:0,courseFinalPrice:0,isPackage:false};
-    const matPrice  = matCheckEl?.checked ? parseFloat(matPriceHid?.value || 0) : 0;
+    // Materials: total comes from the hidden input that recalcMaterials keeps
+    // updated (sum of all selected materials). No single checkbox anymore.
+    const matPrice  = parseFloat(matPriceHid?.value || 0);
     const testFee   = parseFloat(document.querySelector('[name="test_fee"]')?.value || 0);
     const courseAmt = p.courseFinalPrice;
 
@@ -536,8 +537,22 @@ window.buildInvoice = function() {
         if (p.courseDiscount > 0) tbody += `<tr><td><strong>Discount Applied</strong></td><td><span class="inf-price-tag discount">Offer</span></td><td style="color:#059669;">− ${fmtLE(p.courseDiscount)}</td></tr>`;
     }
     if (matPrice > 0) {
-        const mn = document.getElementById('material_name')?.value || 'Study Material';
-        tbody += `<tr><td><strong>${mn}</strong><br><small style="color:#7A8A9A;font-size:11px;">Full payment required</small></td><td><span class="inf-price-tag material">Material</span></td><td>${fmtLE(matPrice)}</td></tr>`;
+        // List each selected material as its own line (name + price).
+        const checks = document.querySelectorAll('.mat-checkbox');
+        let anyListed = false;
+        checks.forEach(cb => {
+            if (cb.checked) {
+                anyListed = true;
+                const label = cb.closest('.mat-item');
+                const nm    = label?.querySelector('.mat-item-name')?.textContent?.trim() || 'Study Material';
+                const pr    = parseFloat(cb.dataset.price || 0);
+                tbody += `<tr><td><strong>${nm}</strong><br><small style="color:#7A8A9A;font-size:11px;">Full payment required</small></td><td><span class="inf-price-tag material">Material</span></td><td>${fmtLE(pr)}</td></tr>`;
+            }
+        });
+        // Fallback (if the list isn't in the DOM for any reason): single line.
+        if (!anyListed) {
+            tbody += `<tr><td><strong>Study Materials</strong><br><small style="color:#7A8A9A;font-size:11px;">Full payment required</small></td><td><span class="inf-price-tag material">Material</span></td><td>${fmtLE(matPrice)}</td></tr>`;
+        }
     }
     if (testFee > 0) tbody += `<tr><td><strong>Placement Test</strong><br><small style="color:#7A8A9A;font-size:11px;">Full payment required</small></td><td><span class="inf-price-tag test">Test</span></td><td>${fmtLE(testFee)}</td></tr>`;
 

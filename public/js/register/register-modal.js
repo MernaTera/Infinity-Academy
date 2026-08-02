@@ -116,8 +116,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const teacherBlock   = document.getElementById('teacher_block');
     const bundle         = document.getElementById('bundle_select');
     const materialSection     = document.getElementById('material_section');
-    const materialCheck       = document.getElementById('material_check');
-    const materialPriceBlock  = document.getElementById('material_price_block');
     const materialPriceHidden = document.getElementById('material_price_hidden');
     const paymentSelect       = document.getElementById('payment_plan_id');
 
@@ -289,72 +287,92 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 function applyMaterial(data) {
-    if (!data?.material_id) {
+    // data is now an ARRAY of materials (mandatory + optional) for the course.
+    const list          = document.getElementById('materials_list');
+    const idsContainer  = document.getElementById('material_ids_container');
+
+    // Normalise: accept array; tolerate a single object or null for safety.
+    let materials = Array.isArray(data) ? data : (data && data.material_id ? [data] : []);
+
+    if (!materials.length) {
         if (materialSection) materialSection.style.display = 'none';
+        if (list) list.innerHTML = '';
+        if (idsContainer) idsContainer.innerHTML = '';
         pricing.materialPrice = 0;
-        if (materialCheck)      materialCheck.checked = false;
-        if (materialPriceBlock) materialPriceBlock.style.display = 'none';
+        if (materialPriceHidden) materialPriceHidden.value = 0;
         updatePriceDisplay();
         return;
     }
 
     if (materialSection) materialSection.style.display = 'block';
 
-    const nameEl     = document.getElementById('material_name');
-    const priceEl    = document.getElementById('material_price');
-    const splitBadge = document.getElementById('material_split_badge');
-    const splitText  = document.getElementById('material_split_text');
+    // Build the list UI
+    let html = '';
+    materials.forEach((m, i) => {
+        const mandatory = !!m.is_mandatory;
+        const typeTag = m.revenue_type === 'Shared'
+            ? '<span class="mat-tag mat-tag-shared">Shared</span>'
+            : '<span class="mat-tag mat-tag-indiv">Individual</span>';
+        const mandTag = mandatory ? '<span class="mat-tag mat-tag-mand">Mandatory</span>' : '';
+        html += `
+            <label class="mat-item ${mandatory ? 'mandatory' : ''}" data-mat-id="${m.material_id}" data-price="${m.price}">
+                <input type="checkbox" class="mat-checkbox"
+                       value="${m.material_id}"
+                       data-price="${m.price}"
+                       ${mandatory ? 'checked disabled' : ''}>
+                <div class="mat-item-body">
+                    <div class="mat-item-name">${m.name}</div>
+                    <div class="mat-item-meta">${mandTag}${typeTag}</div>
+                </div>
+                <div class="mat-item-price">${parseFloat(m.price).toFixed(0)} LE</div>
+            </label>`;
+    });
 
-    if (nameEl)  nameEl.value  = data.name;
-    if (priceEl) priceEl.value = parseFloat(data.price).toFixed(2) + ' LE';
-    if (materialPriceHidden) materialPriceHidden.value = data.price;
+    // Total row
+    html += `
+        <div class="mat-total-row">
+            <span class="mat-total-label">Selected Materials Total</span>
+            <span class="mat-total-val" id="mat_total_val">0 LE</span>
+        </div>`;
 
-    if (data.is_mandatory) {
-        if (materialCheck) {
-            materialCheck.checked  = true;
-            materialCheck.disabled = true;
+    if (list) list.innerHTML = html;
+    if (idsContainer) idsContainer.innerHTML = '';
+
+    // Bind change listeners programmatically so recalcMaterials stays inside
+    // this closure (where pricing / updatePriceDisplay live) — inline onchange
+    // would require a global function.
+    list.querySelectorAll('.mat-checkbox').forEach(cb => {
+        cb.addEventListener('change', recalcMaterials);
+    });
+
+    // Compute initial total (mandatory ones are pre-checked)
+    recalcMaterials();
+}
+
+// Recompute the selected materials total, sync hidden inputs + pricing.
+function recalcMaterials() {
+    const checks = document.querySelectorAll('.mat-checkbox');
+    const idsContainer = document.getElementById('material_ids_container');
+    let total = 0;
+    let idsHtml = '';
+
+    checks.forEach(cb => {
+        if (cb.checked) {
+            total += parseFloat(cb.dataset.price || 0);
+            idsHtml += `<input type="hidden" name="material_ids[]" value="${cb.value}">`;
         }
-        if (materialPriceBlock) materialPriceBlock.style.display = 'block';
-        pricing.materialPrice = parseFloat(data.price || 0);
+    });
 
-        const toggle = document.querySelector('.material-toggle');
-        if (toggle) {
-            toggle.style.borderColor = 'rgba(245,145,30,0.3)';
-            toggle.style.background  = 'rgba(245,145,30,0.04)';
-            if (!toggle.querySelector('.mandatory-tag')) {
-                const tag = document.createElement('span');
-                tag.className = 'mandatory-tag';
-                tag.style.cssText = 'font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#C47010;background:rgba(245,145,30,0.1);padding:2px 7px;border-radius:3px;margin-left:auto;';
-                tag.textContent = 'Mandatory';
-                toggle.appendChild(tag);
-            }
-        }
-    } else {
-        if (materialCheck) {
-            materialCheck.checked  = false;
-            materialCheck.disabled = false;
-        }
-        if (materialPriceBlock) materialPriceBlock.style.display = 'none';
-        pricing.materialPrice = 0;
+    if (idsContainer) idsContainer.innerHTML = idsHtml;
 
-        const tag = document.querySelector('.mandatory-tag');
-        if (tag) tag.remove();
-        const toggle = document.querySelector('.material-toggle');
-        if (toggle) { toggle.style.borderColor = ''; toggle.style.background = ''; }
-    }
+    const totalEl = document.getElementById('mat_total_val');
+    if (totalEl) totalEl.textContent = total.toFixed(0) + ' LE';
 
-    if (splitBadge && splitText && data.revenue_type) {
-        if (data.revenue_type === 'Individual') {
-            splitText.textContent = 'Full revenue credited to you (CS)';
-        } else {
-            splitText.textContent = 'Revenue shared equally among all CS in your branch';
-        }
-        splitBadge.style.display = 'flex';
-    } else if (splitBadge) {
-        splitBadge.style.display = 'none';
-    }
+    const materialPriceHidden = document.getElementById('material_price_hidden');
+    if (materialPriceHidden) materialPriceHidden.value = total;
 
-    updatePriceDisplay();
+    if (typeof pricing !== 'undefined') pricing.materialPrice = total;
+    if (typeof updatePriceDisplay === 'function') updatePriceDisplay();
 }
 
 
@@ -373,18 +391,9 @@ function applyMaterial(data) {
     }
 
     // ─────────────────────────────────────────
-    // Material checkbox toggle
+    // (Materials are handled by applyMaterial / recalcMaterials — multiple
+    //  materials per course, each checkbox wired up on render.)
     // ─────────────────────────────────────────
-    materialCheck?.addEventListener('change', function () {
-        if (this.checked) {
-            pricing.materialPrice = parseFloat(materialPriceHidden?.value || 0);
-            if (materialPriceBlock) materialPriceBlock.style.display = 'block';
-        } else {
-            pricing.materialPrice = 0;
-            if (materialPriceBlock) materialPriceBlock.style.display = 'none';
-        }
-        updatePriceDisplay();
-    });
 
 
     // ─────────────────────────────────────────
