@@ -19,6 +19,7 @@ use App\Http\Controllers\Admin\EmployeeController;
 use App\Http\Controllers\Admin\AdminStudentController;
 use App\Http\Controllers\Admin\AdminReportController;
 use App\Http\Controllers\Admin\CourseAdminController;
+use App\Http\Controllers\Admin\AdminCourseInstanceController;
 use App\Http\Controllers\Admin\EnglishLevelController;
 use App\Http\Controllers\Admin\MaterialController;
 use App\Http\Controllers\Admin\PatchAdminController;
@@ -259,6 +260,9 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::get('/courses/{id}/edit',       [CourseAdminController::class, 'edit'])->name('courses.edit');
         Route::put('/courses/{id}',            [CourseAdminController::class, 'update'])->name('courses.update');
         Route::patch('/courses/{id}/archive',  [CourseAdminController::class, 'archive'])->name('courses.archive');
+        Route::get('/course-instances',            [AdminCourseInstanceController::class, 'index'])->name('course-instances.index');
+        Route::get('/course-instances/{id}',       [AdminCourseInstanceController::class, 'show'])->name('course-instances.show');
+        Route::patch('/course-instances/{id}/cancel', [AdminCourseInstanceController::class, 'cancel'])->name('course-instances.cancel');
 
         //English Levels
         Route::get('/english-levels',          [EnglishLevelController::class, 'index'])->name('english-levels.index');
