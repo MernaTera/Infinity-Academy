@@ -296,6 +296,14 @@ class RegistrationService
             ?? $currentPatch?->branch_id
             ?? \App\Models\Core\Branch::first()?->branch_id;
 
+        // ── Private hours: seed hours_remaining from the chosen bundle ──
+        // Private bundles are a free pool of hours (not tied to one course).
+        // Group enrollments don't use hours, so this stays null for them.
+        $hoursRemaining = null;
+        if (strtolower($data['type']) === 'private' && !empty($data['bundle_id'])) {
+            $bundle = PrivateBundle::find($data['bundle_id']);
+            $hoursRemaining = $bundle ? (float) $bundle->hours : null;
+        }
 
         return Enrollment::create([
 
@@ -318,6 +326,7 @@ class RegistrationService
             'payment_plan_id' => $data['payment_plan_id'],
 
             'bundle_id' => $data['bundle_id'] ?? null,
+            'hours_remaining' => $hoursRemaining,
             'discount_value' => $data['discount_value'] ?? 0,
 
             'status' => $this->determineStatus($data, $patchData),

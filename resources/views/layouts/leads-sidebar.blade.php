@@ -265,6 +265,10 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"/></svg>
                     <span class="sl-link-text">Refunds</span>
                 </a>
+                <a href="{{ route('private-hours.index') }}" class="sl-link {{ request()->routeIs('private-hours.*') ? 'active' : '' }}" data-label="Private Hours">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Private Hours</span>
+                </a>
                 <a href="{{ route('near-completion') }}"
                 class="sl-link {{ request()->routeIs('near-completion') ? 'active' : '' }}"
                 data-label="Near Completion">

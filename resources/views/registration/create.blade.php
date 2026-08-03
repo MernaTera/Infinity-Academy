@@ -498,6 +498,7 @@
                                 <option value="">— Select Course —</option>
                                 @foreach($courses as $course)
                                     <option value="{{ $course->course_template_id }}"
+                                        data-hours="{{ $course->total_hours ?? '' }}"
                                         {{ $lead->interested_course_template_id == $course->course_template_id ? 'selected' : '' }}>
                                         {{ $course->name }}
                                     </option>
@@ -616,11 +617,15 @@
                                 <select id="bundle_select" name="bundle_id" class="form-control-inf">
                                     <option value="">— Select Bundle —</option>
                                     @foreach($bundles as $b)
-                                        <option value="{{ $b->bundle_id }}" data-price="{{ $b->price }}">
+                                        <option value="{{ $b->bundle_id }}" data-price="{{ $b->price }}" data-hours="{{ $b->hours }}">
                                             {{ $b->hours }} hrs — {{ $b->price }} LE
                                         </option>
                                     @endforeach
                                 </select>
+                                {{-- Warning when the selected course needs more hours than the bundle --}}
+                                <div id="bundle_hours_warning" style="display:none;margin-top:8px;padding:10px 13px;border-radius:7px;background:rgba(245,145,30,0.07);border:1px solid rgba(245,145,30,0.25);border-left:3px solid #F5911E;color:#C47010;font-size:11px;line-height:1.5;">
+                                    <strong>Heads up:</strong> <span id="bundle_hours_warning_text"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -887,6 +892,39 @@
         [matSection, pkgSection].forEach(el => {
             if (el) observer.observe(el, { attributes:true, attributeFilter:['style'] });
         });
+    })();
+</script>
+
+<script>
+    (function() {
+        const courseSel = document.getElementById('course_select');
+        const bundleSel = document.getElementById('bundle_select');
+        const warnBox   = document.getElementById('bundle_hours_warning');
+        const warnText  = document.getElementById('bundle_hours_warning_text');
+        if (!courseSel || !bundleSel || !warnBox) return;
+
+        function checkBundleHours() {
+            const courseOpt = courseSel.options[courseSel.selectedIndex];
+            const bundleOpt = bundleSel.options[bundleSel.selectedIndex];
+
+            const courseHours = parseFloat(courseOpt?.dataset.hours || 0);
+            const bundleHours = parseFloat(bundleOpt?.dataset.hours || 0);
+
+            if (!courseHours || !bundleHours) { warnBox.style.display = 'none'; return; }
+
+            if (bundleHours < courseHours) {
+                const diff = (courseHours - bundleHours).toFixed(courseHours % 1 === 0 && bundleHours % 1 === 0 ? 0 : 1);
+                warnText.textContent =
+                    `This course needs ${courseHours} hours but the selected bundle only has ${bundleHours}. `
+                    + `The student will need ${diff} more hour(s) (another bundle) to finish the course.`;
+                warnBox.style.display = 'block';
+            } else {
+                warnBox.style.display = 'none';
+            }
+        }
+
+        courseSel.addEventListener('change', checkBundleHours);
+        bundleSel.addEventListener('change', checkBundleHours);
     })();
 </script>
 
