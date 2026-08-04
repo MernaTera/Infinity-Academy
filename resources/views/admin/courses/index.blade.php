@@ -80,12 +80,12 @@
             <div class="page-eyebrow">Admin Panel</div>
             <h1 class="page-title">Courses</h1>
         </div>
+        <a href="{{ route('admin.course-instances.index') }}" class="btn-primary">
+            <span>Active Courses</span>
+        </a>
         <a href="{{ route('admin.courses.create') }}" class="btn-primary">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             <span>New Course</span>
-        </a>
-        <a href="{{ route('admin.course-instances.index') }}" class="btn-primary">
-            <span>Active Courses</span>
         </a>
     </div>
 

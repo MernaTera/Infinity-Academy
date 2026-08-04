@@ -18,7 +18,7 @@
     background: var(--sb-bg);
     border-right: 1px solid var(--sb-border);
     position: sticky;
-    top: 62px;
+    top: 64px;
     height: calc(100vh - 62px);
     display: flex;
     flex-direction: column;
@@ -47,7 +47,7 @@
     text-transform: uppercase;
     color: var(--sb-label);
     font-weight: 700;
-    padding: 8px 14px 1px;
+    padding: 4px 14px 1px;
     white-space: nowrap;
     overflow: hidden;
     transition: opacity var(--sb-ease);
@@ -291,10 +291,10 @@
             <span class="sl-txt">Postponed</span>
             @if($pp > 0)<span class="sl-bdg">{{ $pp }}</span>@endif
         </a>
-        <a href="{{ route('private-hours.index') }}" data-tip="Private Hours"
-        class="sl {{ request()->routeIs('private-hours.*') ? 'active' : '' }}">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <span>Private Hours</span>
+        <a href="{{ route('private-hours.index') }}" data-tip="Outstanding"
+           class="sl {{ request()->routeIs('private-hours.*') ? 'active' : '' }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span class="sl-txt">Private Hours</span>
         </a>
     </div>
 
