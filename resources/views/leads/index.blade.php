@@ -91,7 +91,7 @@
     /* ═══ TABLE ═══ */
     .table-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 2px 14px rgba(27,79,168,0.05); }
     .table-scroll { overflow-x:auto; }
-    table { width:100%; border-collapse:collapse; min-width:1100px; }
+    table { width:100%; border-collapse:collapse; }
     thead th {
         font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted);
         padding:14px 16px; text-align:left; border-bottom:1px solid var(--border);
