@@ -613,9 +613,17 @@
                                 </select>
                             </div>
                             <div class="form-field">
+                                @if(!empty($leftoverHours) && $leftoverHours > 0)
+                                {{-- Student has leftover hours carried from finished courses --}}
+                                <div style="margin-bottom:12px;padding:12px 15px;border-radius:8px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.25);border-left:3px solid #059669;color:#15803D;font-size:12px;line-height:1.5;">
+                                    <strong>{{ rtrim(rtrim(number_format($leftoverHours, 2), '0'), '.') }} hours</strong> carried over from this student's completed courses. These will be added to the new enrollment automatically — a new bundle is optional.
+                                </div>
+                                <label class="form-label">Bundle <span style="color:#7A8A9A;font-weight:400;">(optional — student already has {{ rtrim(rtrim(number_format($leftoverHours, 2), '0'), '.') }}h)</span></label>
+                                @else
                                 <label class="form-label">Bundle</label>
-                                <select id="bundle_select" name="bundle_id" class="form-control-inf">
-                                    <option value="">— Select Bundle —</option>
+                                @endif
+                                <select id="bundle_select" name="bundle_id" class="form-control-inf" data-leftover="{{ $leftoverHours ?? 0 }}">
+                                    <option value="">@if(!empty($leftoverHours) && $leftoverHours > 0)— No extra bundle (use existing hours) —@else— Select Bundle —@endif</option>
                                     @foreach($bundles as $b)
                                         <option value="{{ $b->bundle_id }}" data-price="{{ $b->price }}" data-hours="{{ $b->hours }}">
                                             {{ $b->hours }} hrs — {{ $b->price }} LE
@@ -876,7 +884,6 @@
 <script src="{{ asset('js/register/register-modal.js') }}"></script>
 
 <script>
-    // Toggle the add-on empty hint based on whether material/package sections are visible
     (function() {
         const hint = document.getElementById('addon_empty_hint');
         const matSection = document.getElementById('material_section');
@@ -909,14 +916,20 @@
 
             const courseHours = parseFloat(courseOpt?.dataset.hours || 0);
             const bundleHours = parseFloat(bundleOpt?.dataset.hours || 0);
+            const leftover    = parseFloat(bundleSel.dataset.leftover || 0);
 
-            if (!courseHours || !bundleHours) { warnBox.style.display = 'none'; return; }
+            const totalAvailable = leftover + bundleHours;
 
-            if (bundleHours < courseHours) {
-                const diff = (courseHours - bundleHours).toFixed(courseHours % 1 === 0 && bundleHours % 1 === 0 ? 0 : 1);
+            if (!courseHours || totalAvailable <= 0) { warnBox.style.display = 'none'; return; }
+
+            if (totalAvailable < courseHours) {
+                const diff = (courseHours - totalAvailable).toFixed(courseHours % 1 === 0 && totalAvailable % 1 === 0 ? 0 : 1);
+                const haveStr = leftover > 0
+                    ? `${totalAvailable} hours available (${leftover} carried + ${bundleHours} bundle)`
+                    : `the selected bundle only has ${bundleHours}`;
                 warnText.textContent =
-                    `This course needs ${courseHours} hours but the selected bundle only has ${bundleHours}. `
-                    + `The student will need ${diff} more hour(s) (another bundle) to finish the course.`;
+                    `This course needs ${courseHours} hours but ${haveStr}. `
+                    + `The student will need ${diff} more hour(s) to finish the course.`;
                 warnBox.style.display = 'block';
             } else {
                 warnBox.style.display = 'none';
@@ -925,6 +938,8 @@
 
         courseSel.addEventListener('change', checkBundleHours);
         bundleSel.addEventListener('change', checkBundleHours);
+
+        checkBundleHours();
     })();
 </script>
 

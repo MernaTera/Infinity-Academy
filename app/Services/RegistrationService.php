@@ -296,13 +296,38 @@ class RegistrationService
             ?? $currentPatch?->branch_id
             ?? \App\Models\Core\Branch::first()?->branch_id;
 
-        // ── Private hours: seed hours_remaining from the chosen bundle ──
-        // Private bundles are a free pool of hours (not tied to one course).
+        // ── Private hours: seed hours_remaining ────────────────────────
+        // Private = free pool of hours. A private enrolment starts with:
+        //   (carried-over leftover hours from finished courses) + (new bundle,
+        //    if one was chosen — the bundle is optional when leftover exists).
         // Group enrollments don't use hours, so this stays null for them.
         $hoursRemaining = null;
-        if (strtolower($data['type']) === 'private' && !empty($data['bundle_id'])) {
-            $bundle = PrivateBundle::find($data['bundle_id']);
-            $hoursRemaining = $bundle ? (float) $bundle->hours : null;
+        if (strtolower($data['type']) === 'private') {
+
+            // Carry over any leftover hours from this student's completed
+            // private courses, then zero those out so they aren't double-counted.
+            $carried = (float) Enrollment::where('student_id', $student->student_id)
+                ->where('enrollment_type', 'Private')
+                ->where('status', 'Completed')
+                ->where('hours_remaining', '>', 0)
+                ->sum('hours_remaining');
+
+            if ($carried > 0) {
+                Enrollment::where('student_id', $student->student_id)
+                    ->where('enrollment_type', 'Private')
+                    ->where('status', 'Completed')
+                    ->where('hours_remaining', '>', 0)
+                    ->update(['hours_remaining' => 0]);
+            }
+
+            // Add the new bundle's hours if one was selected (optional).
+            $bundleHours = 0;
+            if (!empty($data['bundle_id'])) {
+                $bundle = PrivateBundle::find($data['bundle_id']);
+                $bundleHours = $bundle ? (float) $bundle->hours : 0;
+            }
+
+            $hoursRemaining = $carried + $bundleHours;
         }
 
         return Enrollment::create([

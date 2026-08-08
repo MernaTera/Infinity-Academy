@@ -63,6 +63,19 @@ class RegistrationController extends Controller
             $lead->interested_sublevel_id = null;
         }
 
+        // ── Leftover private hours ─────────────────────────────────────
+        // If this lead's student finished previous private courses with hours
+        // still on them, sum those up so the form can carry them into the new
+        // enrolment. The new bundle then becomes optional.
+        $leftoverHours = 0;
+        if ($lead->student_id) {
+            $leftoverHours = (float) \App\Models\Enrollment\Enrollment::where('student_id', $lead->student_id)
+                ->where('enrollment_type', 'Private')
+                ->where('status', 'Completed')
+                ->where('hours_remaining', '>', 0)
+                ->sum('hours_remaining');
+        }
+
         return view('registration.create', compact(
             'lead',
             'courses',
@@ -72,6 +85,7 @@ class RegistrationController extends Controller
             'bundles',
             'timeSlots',
             'testFees',
+            'leftoverHours',
         ));
     }
 
@@ -89,6 +103,7 @@ class RegistrationController extends Controller
                     'course_template_id' => 'required|exists:course_template,course_template_id',
                     'level_id'           => 'nullable|exists:level,level_id',
                     'sublevel_id'        => 'nullable|exists:sublevel,sublevel_id',
+                    'package_id'         => 'nullable|exists:level_package,package_id',
                     'payment_plan_id'    => 'required|exists:payment_plan,payment_plan_id',
                     'patch_option'       => 'required|in:current,next,custom',
                     'patch_id'           => 'nullable|exists:patch,patch_id',
@@ -102,8 +117,8 @@ class RegistrationController extends Controller
                     'test_score'         => 'nullable|string|max:50',
 
                     'deposit_methods'            => 'nullable|array',
-                    'deposit_methods.*.method'   => 'required_with:deposit_methods|in:Cash,Instapay,Vodafone_Cash',
-                    'deposit_methods.*.amount'   => 'required_with:deposit_methods|numeric|min:0',
+                    'deposit_methods.*.method'   => 'nullable|in:Cash,Instapay,Vodafone_Cash',
+                    'deposit_methods.*.amount'   => 'nullable|numeric|min:0',
                 ], [
                     'mode.required'                    => 'Please select a delivery mode (Online or Offline).',
                     'mode.in'                          => 'Invalid delivery mode selected.',
@@ -115,6 +130,30 @@ class RegistrationController extends Controller
                 ]);
         $discountValue = (float) ($request->discount_value ?? 0);
         $finalPriceVal = (float) $request->final_price;
+
+        // ── Level package validation ───────────────────────────────────
+        // A package is billed per unit: by sublevel when the chosen level has
+        // sublevels, otherwise by level. So a package registration must pin
+        // down the exact starting unit (level, and sublevel where applicable).
+        if (!empty($request->package_id)) {
+            if (strtolower($request->type) !== 'group') {
+                return back()->withInput()->withErrors([
+                    'package_id' => 'Level packages are only available for group courses.'
+                ]);
+            }
+            if (empty($request->level_id)) {
+                return back()->withInput()->withErrors([
+                    'level_id' => 'Please select the starting level for this package.'
+                ]);
+            }
+            // If the selected level has sublevels, a starting sublevel is required.
+            $levelHasSublevels = \App\Models\Academic\Sublevel::where('level_id', $request->level_id)->exists();
+            if ($levelHasSublevels && empty($request->sublevel_id)) {
+                return back()->withInput()->withErrors([
+                    'sublevel_id' => 'This level has sublevels — please select the starting sublevel for the package.'
+                ]);
+            }
+        }
 
         if ($discountValue > 0) {
             $basePrice = $finalPriceVal + $discountValue;
