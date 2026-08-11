@@ -58,9 +58,22 @@ class AdminStudentController extends Controller
         ->withQueryString();
 
         $students->getCollection()->transform(function ($s) {
-            $s->total_paid      = $s->enrollments->flatMap->financialTransactions
-                ->whereIn('transaction_type', ['Payment', 'Installment'])->sum('amount');
-            $s->total_fees      = $s->enrollments->sum('final_price');
+        $s->total_paid = $s->enrollments->sum(function ($e) {
+            $payments = $e->financialTransactions
+                ->where('transaction_type', 'Payment')->sum('amount');
+            $paidInstallmentTxIds = $e->installmentSchedules
+                ->where('status', 'Paid')->pluck('transaction_id')->filter()->all();
+            $installments = $e->financialTransactions
+                ->where('transaction_type', 'Installment')
+                ->whereIn('transaction_id', $paidInstallmentTxIds)
+                ->sum('amount');
+            return $payments + $installments;
+        });
+            $s->total_fees = $s->enrollments->sum(function ($e) {
+                return $e->final_price
+                    + $e->financialTransactions->where('transaction_category', 'Material')->sum('amount')
+                    + $e->financialTransactions->where('transaction_category', 'Test')->sum('amount');
+            });
             $s->remaining       = max(0, $s->total_fees - $s->total_paid);
             $s->active_enrollment = $s->enrollments->firstWhere('status', 'Active');
             $s->deposit_methods = \DB::table('deposit_payment')

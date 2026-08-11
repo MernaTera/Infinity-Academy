@@ -102,16 +102,28 @@
                 + $e->financialTransactions->where('transaction_category','Test')->sum('amount');
         });
 
-        $totalPaid = $allTx
-            ->whereIn('transaction_type', ['Payment','Installment'])
-            ->sum('amount');
+        $totalPaid = $student->enrollments->sum(function($e) {
+            $payments = $e->financialTransactions
+                ->where('transaction_type', 'Payment')->sum('amount');
+            $paidInstallmentTxIds = $e->installmentSchedules
+                ->where('status', 'Paid')->pluck('transaction_id')->filter()->all();
+            $installments = $e->financialTransactions
+                ->where('transaction_type', 'Installment')
+                ->whereIn('transaction_id', $paidInstallmentTxIds)
+                ->sum('amount');
+            return $payments + $installments;
+        });
 
         $remaining = $student->enrollments->sum(function($e) {
             $depositAmt = $e->paymentPlan
                 ? ($e->final_price * $e->paymentPlan->deposit_percentage / 100)
                 : $e->final_price;
+            $paidInstTxIds = $e->installmentSchedules
+                ->where('status','Paid')->pluck('transaction_id')->filter()->all();
             $instPaid = $e->financialTransactions
-                ->where('transaction_type','Installment')->sum('amount');
+                ->where('transaction_type','Installment')
+                ->whereIn('transaction_id', $paidInstTxIds)
+                ->sum('amount');
             return max(0, $e->final_price - $depositAmt - $instPaid);
         });
     @endphp
