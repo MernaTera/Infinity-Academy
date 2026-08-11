@@ -158,14 +158,14 @@ class SalesService
                                 ->filter(fn($r) => $r->financialTransaction?->transaction_category === 'Test')
                                 ->sum('amount_allocated');
 
-                $material = $splits->where('allocation_type', 'Shared')
+                $material = $splits->filter(fn($r) => $r->financialTransaction?->transaction_category === 'Material')
                                 ->sum('amount_allocated');
 
                 return [
                     'student_name' => $enrollment?->student?->full_name ?? '—',
                     'course'       => $enrollment?->courseTemplate?->name ?? '—',
                     'deposit'      => $deposit,
-                    'test_fee'     => $testFee,   // ← جديد
+                    'test_fee'     => $testFee,   
                     'material'     => $material,
                     'total'        => $splits->sum('amount_allocated'),
                     'date'         => $first->created_at?->format('d M Y'),
