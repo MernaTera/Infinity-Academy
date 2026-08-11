@@ -267,7 +267,7 @@
                 </a>
                 <a href="{{ route('private-hours.index') }}" class="sl-link {{ request()->routeIs('private-hours.*') ? 'active' : '' }}" data-label="Private Hours">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span>Private Hours</span>
+                    <span class="sl-link-text">Private Hours</span>
                 </a>
                 <a href="{{ route('near-completion') }}"
                 class="sl-link {{ request()->routeIs('near-completion') ? 'active' : '' }}"
