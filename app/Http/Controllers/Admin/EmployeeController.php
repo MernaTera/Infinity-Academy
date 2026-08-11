@@ -150,14 +150,24 @@ public function store(Request $request)
             }
 
             // ── CS Target ─────────────────────────────────────────────
-            if ($role?->role_name === 'Customer Service' && $request->target_amount && $request->cs_patch_id) {
-                CsTarget::create([
-                    'employee_id'         => $employee->employee_id,
-                    'patch_id'            => $request->cs_patch_id,
-                    'target_amount'       => $request->target_amount,
-                    'is_locked'           => false,
-                    'created_by_admin_id' => $adminId,
-                ]);
+            // Save the target keyed by month (same as the edit flow and what
+            // the dashboard/sales reports read). Defaults to the current month
+            // when the form doesn't specify one. Previously this required a
+            // patch and saved no month, so the target never showed up until the
+            // employee was edited and re-saved.
+            if ($role?->role_name === 'Customer Service' && $request->filled('target_amount')) {
+                CsTarget::updateOrCreate(
+                    [
+                        'employee_id' => $employee->employee_id,
+                        'month'       => $request->target_month ?: now()->format('Y-m'),
+                    ],
+                    [
+                        'patch_id'            => $request->cs_patch_id ?: null,
+                        'target_amount'       => $request->target_amount,
+                        'is_locked'           => false,
+                        'created_by_admin_id' => $adminId,
+                    ]
+                );
             }
         });
 
