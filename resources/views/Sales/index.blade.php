@@ -257,6 +257,7 @@
                             <th>Student</th>
                             <th>Course</th>
                             <th class="num">Deposit</th>
+                            <th class="num">Test</th>
                             <th class="num">Material</th>
                             <th class="num">Total Revenue</th>
                             <th>Type</th>
@@ -274,6 +275,13 @@
                             </td>
                             <td class="money" style="color:var(--text);">{{ $row['course'] }}</td>
                             <td class="num money">{{ number_format($row['deposit']) }} LE</td>
+                            <td class="num money">
+                                @if(($row['test_fee'] ?? 0) > 0)
+                                    {{ number_format($row['test_fee']) }} LE
+                                @else
+                                    <span style="color:var(--faint);">—</span>
+                                @endif
+                            </td>
                             <td class="num money">{{ number_format($row['material']) }} LE</td>
                             <td class="num total">{{ number_format($row['total']) }} LE</td>
                             <td>
@@ -285,7 +293,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 <div class="tbl-empty">
                                     <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
                                     <div class="tbl-empty-title">No Revenue This Period</div>
@@ -300,6 +308,7 @@
                         <tr>
                             <td colspan="2" class="tfoot-label">Total ({{ $revenueRows->count() }} {{ Str::plural('student', $revenueRows->count()) }})</td>
                             <td class="num tfoot-num">{{ number_format($revenueRows->sum('deposit')) }} LE</td>
+                            <td class="num tfoot-num">{{ number_format($revenueRows->sum('test_fee')) }} LE</td>
                             <td class="num tfoot-num">{{ number_format($revenueRows->sum('material')) }} LE</td>
                             <td class="num tfoot-total">{{ number_format($revenueRows->sum('total')) }} LE</td>
                             <td colspan="2"></td>
