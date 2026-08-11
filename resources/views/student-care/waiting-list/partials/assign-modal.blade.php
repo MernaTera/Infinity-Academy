@@ -256,6 +256,18 @@
                                 <span>{{ $instance->teacher?->employee?->full_name ?? '—' }}</span>
                                 <span>·</span>
                                 <span>{{ $count }}/{{ $capacity }}</span>
+                                <span>·</span>
+                                @if($instance->delivery_mood === 'Online')
+                                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:#15803D;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);padding:2px 8px;border-radius:4px;">
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                        Online
+                                    </span>
+                                @else
+                                    <span style="display:inline-flex;align-items:center;gap:4px;font-size:9px;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;color:#C47010;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2);padding:2px 8px;border-radius:4px;">
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+                                        Offline
+                                    </span>
+                                @endif
                             </div>
 
                             {{-- ══ SESSION PROGRESS INDICATOR ══ --}}
