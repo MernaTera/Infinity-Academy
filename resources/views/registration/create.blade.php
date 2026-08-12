@@ -481,6 +481,20 @@
         <input type="hidden" name="discount_value" id="discount_hidden">
         <input type="hidden" name="material_price" id="material_price_hidden">
 
+        @if(!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0)
+        {{-- Student is on a level package with prepaid levels remaining. The next
+             group level is already paid for, so this enrolment should be free. --}}
+        <div style="margin-bottom:18px;padding:14px 18px;border-radius:10px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.25);border-left:3px solid #7C3AED;color:#6D28D9;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" style="flex-shrink:0;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <div>
+                This student is on the <strong>{{ $packageInfo['name'] }}</strong> package with
+                <strong>{{ $packageInfo['remaining'] }} {{ \Illuminate\Support\Str::plural('level', $packageInfo['remaining']) }}</strong>
+                still prepaid ({{ ($packageInfo['total'] ?? 0) - ($packageInfo['remaining'] ?? 0) }} of {{ $packageInfo['total'] ?? 0 }} used).
+                Register the next <strong>group</strong> level below — it will be added at no charge (FREE) and won't count as a new paid level.
+            </div>
+        </div>
+        @endif
+
         <div class="reg-layout">
 
             {{-- ═══════════ 1 · COURSE SETUP ═══════════ --}}
@@ -881,6 +895,11 @@
 
 </div>
 
+<script>
+    // True when this student is continuing a level package (next prepaid group
+    // level). The registration JS uses it to show the price as free.
+    window.__pkgContinuation = {{ (!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0) ? 'true' : 'false' }};
+</script>
 <script src="{{ asset('js/register/register-modal.js') }}"></script>
 
 <script>

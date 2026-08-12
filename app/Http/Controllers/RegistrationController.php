@@ -76,6 +76,29 @@ class RegistrationController extends Controller
                 ->sum('hours_remaining');
         }
 
+        // ── Active level package ───────────────────────────────────────
+        // If this lead's student is on a level package with prepaid levels
+        // still remaining, surface it so the form can show that the next
+        // group enrolment is already paid for (free) — mirroring how leftover
+        // private hours are surfaced above.
+        $packageInfo = null;
+        if ($lead->student_id) {
+            $pkgEnrollment = \App\Models\Enrollment\Enrollment::with('levelPackage')
+                ->where('student_id', $lead->student_id)
+                ->whereNotNull('package_id')
+                ->where('package_units_remaining', '>', 0)
+                ->orderByDesc('enrollment_id')
+                ->first();
+
+            if ($pkgEnrollment && $pkgEnrollment->levelPackage) {
+                $packageInfo = [
+                    'name'      => $pkgEnrollment->levelPackage->name,
+                    'remaining' => (int) $pkgEnrollment->package_units_remaining,
+                    'total'     => (int) $pkgEnrollment->levelPackage->levels_count,
+                ];
+            }
+        }
+
         return view('registration.create', compact(
             'lead',
             'courses',
@@ -86,6 +109,7 @@ class RegistrationController extends Controller
             'timeSlots',
             'testFees',
             'leftoverHours',
+            'packageInfo',
         ));
     }
 
@@ -380,6 +404,9 @@ class RegistrationController extends Controller
         $levelId    = $request->level_id    ?: null;
         $courseId   = $request->course_template_id ?: null;
 
+        // Return ALL materials assigned at the most specific matching level.
+        // Priority: sublevel → level → course. Within the first level that
+        // has any assignments, return every material (mandatory + optional).
         $materials = collect();
 
         if ($sublevelId) {
@@ -412,6 +439,7 @@ class RegistrationController extends Controller
                 ->get();
         }
 
+        // Normalise types (is_mandatory as bool, price as float)
         $materials = $materials->map(fn($m) => [
             'material_id'  => (int) $m->material_id,
             'name'         => $m->name,

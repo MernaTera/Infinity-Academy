@@ -1,6 +1,6 @@
 <style>
 :root {
-    --sb-w: 200px;
+    --sb-w: 180px;
     --sb-w-col: 56px;
     --sb-bg: #fff;
     --sb-border: rgba(27,79,168,0.08);
@@ -42,7 +42,7 @@
 /* ── GROUP ── */
 .sb-group { margin-bottom: 1px; }
 .sb-group-label {
-    font-size: 8.5px;
+    font-size: 7.8px;
     letter-spacing: 2.5px;
     text-transform: uppercase;
     color: var(--sb-label);
@@ -61,7 +61,7 @@
     align-items: center;
     gap: 9px;
     padding: 7px 14px;
-    font-size: 12px;
+    font-size: 11px;
     letter-spacing: 0.5px;
     color: var(--sb-text);
     text-decoration: none;
@@ -295,6 +295,11 @@
            class="sl {{ request()->routeIs('private-hours.*') ? 'active' : '' }}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             <span class="sl-txt">Private Hours</span>
+        </a>
+        <a href="{{ route('packages-tracking.index') }}" data-tip="Level Packages"
+        class="sl {{ request()->routeIs('packages-tracking.*') ? 'active' : '' }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <span class="sl-txt">Level Packages</span>
         </a>
     </div>
 

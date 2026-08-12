@@ -92,10 +92,37 @@ class RegistrationService
                     ->get();
             }
 
+            // ── Level-package continuation ─────────────────────────────
+            // If this student is already on a level package with prepaid units
+            // remaining and is now registering their next GROUP level, that
+            // level is already paid for. Force the price to zero and remember
+            // the source enrolment so createEnrollment can carry the package
+            // over and decrement the units. (A brand-new package purchase comes
+            // through data['package_id'] instead and is handled separately.)
+            $data['_pkg_continue_from'] = null;
+            if (empty($data['package_id']) && strtolower($data['type'] ?? '') === 'group') {
+                $priorPkg = Enrollment::with('levelPackage')
+                    ->where('student_id', $student->student_id)
+                    ->whereNotNull('package_id')
+                    ->where('package_units_remaining', '>', 0)
+                    ->orderByDesc('enrollment_id')
+                    ->first();
+
+                if ($priorPkg) {
+                    $data['final_price'] = 0;
+                    $data['_pkg_continue_from'] = $priorPkg->enrollment_id;
+                }
+            }
+
             $pricing        = app(\App\Services\PricingService::class)->calculate($data);
             $formFinalPrice = (float) ($data['final_price'] ?? 0);
             if ($formFinalPrice > 0) {
                 $pricing['final_price'] = $formFinalPrice;
+            }
+            // A package continuation is explicitly free — don't let pricing
+            // put a course price back on it.
+            if (!empty($data['_pkg_continue_from'])) {
+                $pricing['final_price'] = 0;
             }
             $data['final_price'] = $pricing['final_price'];
 
@@ -357,10 +384,24 @@ class RegistrationService
         $packageId    = null;
         $packageUnits = null;
         if (!empty($data['package_id'])) {
+            // Brand-new package purchase — first level of the package.
             $package = \App\Models\Finance\LevelPackage::find($data['package_id']);
             if ($package) {
                 $packageId    = $package->package_id;
                 $packageUnits = max(0, (int) $package->levels_count - 1);
+            }
+        } elseif (!empty($data['_pkg_continue_from'])) {
+            // Continuation — the student already owns this package and is taking
+            // their next prepaid level. Carry the same package onto the new
+            // enrolment with one fewer unit, and zero out the source enrolment's
+            // remaining units so it drops off the "ready to continue" list.
+            $source = Enrollment::find($data['_pkg_continue_from']);
+            if ($source && $source->package_id) {
+                $packageId    = $source->package_id;
+                $packageUnits = max(0, (int) $source->package_units_remaining - 1);
+
+                $source->package_units_remaining = 0;
+                $source->save();
             }
         }
 

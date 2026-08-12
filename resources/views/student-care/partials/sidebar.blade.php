@@ -278,6 +278,10 @@
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                     <span class="scsl-link-text">Private Hours</span>
                 </a>
+                <a href="{{ route('packages-tracking.index') }}" class="scsl-link {{ request()->routeIs('packages-tracking.*') ? 'active' : '' }}" data-label="Level Packages">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <span class="sl-link-text">Level Packages</span>
+                </a>
             </div>
         </div>
 

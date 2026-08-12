@@ -177,6 +177,16 @@ document.addEventListener('DOMContentLoaded', function() {
             pricing.courseBasePrice  = parseFloat(data.base_price  || 0);
             pricing.courseDiscount   = parseFloat(data.discount     || 0);
             pricing.courseFinalPrice = parseFloat(data.final_price  || 0);
+
+            // Package continuation: this student already owns the package and is
+            // taking their next prepaid GROUP level, so it's free. Show 0 in the
+            // form to match what the backend will actually save.
+            if (window.__pkgContinuation && typeInput.value === 'group') {
+                pricing.courseBasePrice  = 0;
+                pricing.courseDiscount   = 0;
+                pricing.courseFinalPrice = 0;
+            }
+
             updatePriceDisplay();
         });
     }

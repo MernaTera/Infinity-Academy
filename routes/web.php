@@ -450,7 +450,7 @@ Route::post('/notifications/{id}/read', function($id) {
 })->middleware('auth');
 
 // ─────────────────────────────────────────────────────────────────
-// Private Hours for admin, SC, and CS
+// Private Hours and Packages Tracking for admin, SC, and CS
 // ─────────────────────────────────────────────────────────────────
 Route::get('/private-hours', [\App\Http\Controllers\PrivateHoursController::class, 'index'])
     ->middleware(['auth', 'permission:enrollment.view'])
@@ -458,5 +458,8 @@ Route::get('/private-hours', [\App\Http\Controllers\PrivateHoursController::clas
 Route::post('/private-hours/{enrollmentId}/charge-bundle', [\App\Http\Controllers\PrivateHoursController::class, 'chargeBundle'])
     ->middleware(['auth', 'permission:enrollment.create'])
     ->name('private-hours.charge-bundle');
+Route::get('/packages-tracking', [\App\Http\Controllers\PackagesController::class, 'index'])
+    ->middleware(['auth', 'permission:enrollment.view'])
+    ->name('packages-tracking.index');
 // ────────────────────────────────────────────────────────────────
 require __DIR__ . '/auth.php';
