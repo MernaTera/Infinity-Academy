@@ -225,6 +225,12 @@ class RegistrationService
                     'preferred_start_date'    => $preferredType === 'Specific_Date'
                         ? ($patchData['date'] ?? $data['custom_date'] ?? null)
                         : null,
+                    // Private students pick a day-pair (e.g. sat_tue); keep it so
+                    // Student Care sees which days they asked for. Group entries
+                    // have no day preference.
+                    'preferred_days'   => ($enrollment->enrollment_type === 'Private')
+                        ? ($data['day'] ?? null)
+                        : null,
                     'status'           => 'Active',
                     'notes'            => $data['notes'] ?? null,
                     'created_by_cs_id' => auth()->user()?->employee?->employee_id,

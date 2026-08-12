@@ -383,7 +383,7 @@
                             <th>Start Pref.</th>
                             <th>Next Call</th>
                             <th>Added</th>
-                            <th style="text-align:right;">Action</th>
+                            <!-- <th style="text-align:right;">Action</th> -->
                         </tr>
                     </thead>
                     <tbody>
@@ -442,12 +442,12 @@
                                     @endif
                                 </td>
                                 <td><span class="lt-muted">{{ $lead->created_at?->format('d M Y') }}</span></td>
-                                <td style="text-align:right;">
+                                <!-- <td style="text-align:right;">
                                     <a href="{{ route('leads.edit', $lead->lead_id) }}" class="lt-action">
                                         Open
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
                                     </a>
-                                </td>
+                                </td> -->
                             </tr>
                         @empty
                             <tr>

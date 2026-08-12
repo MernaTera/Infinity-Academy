@@ -51,6 +51,7 @@ class WaitingList extends Model
 		'preferred_type',
 		'preferred_delivery_mood',
 		'preferred_start_date',
+		'preferred_days',
 		'status',
 		'notes',
 		'created_by_cs_id'

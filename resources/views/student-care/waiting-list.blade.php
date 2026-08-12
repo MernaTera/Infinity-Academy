@@ -243,7 +243,7 @@
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input type="text" id="wlSearch" class="search-input"
-                   placeholder="Search by student name or ID..."
+                   placeholder="Search by name, ID, or days..."
                    oninput="searchWaiting(this.value)">
         </div>
 
@@ -287,6 +287,7 @@
                         <th>Patch Preference</th>
                         <th>Requested Patch</th>
                         <th>Preferred Date</th>
+                        <th>Preferred Days</th>
                         <th>Status</th>
                         <th>Notes</th>
                         <th>Actions</th>
@@ -317,7 +318,8 @@
                         data-mode="{{ $item->preferred_delivery_mood }}"
                         data-ptype="{{ $item->preferred_type }}"
                         data-name="{{ strtolower($item->enrollment->student->full_name ?? '') }}"
-                        data-sid="{{ $item->enrollment->student_id ?? '' }}">
+                        data-sid="{{ $item->enrollment->student_id ?? '' }}"
+                        data-days="{{ str_replace('_',' ',$item->preferred_days ?? '') }}">
 
                         {{-- Student --}}
                         <td>
@@ -375,6 +377,23 @@
                             @endif
                         </td>
 
+                        {{-- Preferred Days (private only) --}}
+                        <td>
+                            @php
+                                $dayLabel = match($item->preferred_days ?? '') {
+                                    'sat_tue' => 'Sat · Tue',
+                                    'sun_wed' => 'Sun · Wed',
+                                    'mon_thu' => 'Mon · Thu',
+                                    default   => null,
+                                };
+                            @endphp
+                            @if($dayLabel)
+                                <span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(245,145,30,0.08);color:#C47010;white-space:nowrap;">{{ $dayLabel }}</span>
+                            @else
+                                <span style="color:#AAB8C8;">—</span>
+                            @endif
+                        </td>
+
                         {{-- Status --}}
                         <td>
                             <span class="status-badge {{ $statusClass }}">{{ $item->status }}</span>
@@ -383,9 +402,8 @@
                         {{-- Notes --}}
                         <td>
                             @if($item->notes)
-                                <span style="font-size:11px;color:#4A5A7A;max-width:120px;display:block;
-                                             overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
-                                      title="{{ $item->notes }}">
+                                <span style="font-size:11px;color:#4A5A7A;max-width:220px;min-width:160px;display:block;
+                                             white-space:normal;word-break:break-word;line-height:1.45;">
                                     {{ $item->notes }}
                                 </span>
                             @else
@@ -431,7 +449,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10">
+                        <td colspan="11">
                             <div class="empty-state">
                                 <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1">
                                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -469,7 +487,8 @@ function applyFilters() {
         const matchPtype  = !activePtype  || row.dataset.ptype  === activePtype;
         const name        = row.dataset.name || '';
         const sid         = row.dataset.sid  || '';
-        const matchSearch = !searchQuery || name.includes(searchQuery) || sid.includes(searchQuery);
+        const days        = row.dataset.days || '';
+        const matchSearch = !searchQuery || name.includes(searchQuery) || sid.includes(searchQuery) || days.includes(searchQuery);
         row.style.display = (matchStatus && matchDtype && matchMode && matchPtype && matchSearch) ? '' : 'none';
     });
 }
