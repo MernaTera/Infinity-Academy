@@ -368,6 +368,10 @@ Route::middleware(['auth', 'permission:hr.view'])
         //Sales Tables
         Route::get('/sales', [AdminSalesController::class, 'index'])->name('sales.index');
 
+        //Manual Transaction
+        Route::get('/manual-transactions',  [\App\Http\Controllers\Admin\ManualTransactionController::class, 'index'])->name('manual-transactions.index');
+        Route::post('/manual-transactions', [\App\Http\Controllers\Admin\ManualTransactionController::class, 'store'])->name('manual-transactions.store');
+
         // Audit
         Route::get('/audit', [AuditController::class, 'index'])->name('audit.index');
 

@@ -315,6 +315,10 @@
             <span class="sl-txt">Reports</span>
             @if($prp > 0)<span class="sl-bdg">{{ $prp }}</span>@endif
         </a>
+        <a href="{{ route('admin.manual-transactions.index') }}" class="sl {{ request()->routeIs('admin.manual-transactions.*') ? 'active' : '' }}" data-tip="Manual Transactions">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            <span class="sl-txt">Manual Transactions</span>
+        </a>
         <a href="{{ route('admin.sales.index') }}" data-tip="Sales"
            class="sl {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>

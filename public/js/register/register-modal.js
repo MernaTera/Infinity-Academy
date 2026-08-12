@@ -415,6 +415,19 @@ function recalcMaterials() {
         if (!section || !container) return;
         if (!courseId) { section.style.display='none'; return; }
 
+        // Level packages apply to GROUP enrolments only. If the current type is
+        // private (or none picked), hide the section and clear any selection so
+        // no package is submitted.
+        const typeVal = document.querySelector('input[name="type"]:checked')?.value;
+        if (typeVal !== 'group') {
+            section.style.display = 'none';
+            const pkgHidden = document.getElementById('package_id_hidden');
+            if (pkgHidden) pkgHidden.value = '';
+            pricing.isPackage = false;
+            pricing.packageId = null;
+            return;
+        }
+
         fetch(`/level-packages/${courseId}`)
             .then(r=>r.json())
             .then(packages => {
