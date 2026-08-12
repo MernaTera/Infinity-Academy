@@ -27,7 +27,7 @@ class CourseInstanceController extends Controller
     public function index()
     {
         $instances = CourseInstance::with([
-            'courseTemplate','level','sublevel','teacher','patch','enrollments','sessions','instanceSchedules',
+            'courseTemplate','level','sublevel','teacher','patch','enrollments','sessions','instanceSchedules','room',
         ])->latest()->paginate(10);
 
         $templates = CourseTemplate::all();

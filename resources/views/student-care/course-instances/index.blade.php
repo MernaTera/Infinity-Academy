@@ -16,7 +16,7 @@
 
 <style>
     body, .ci-page * { font-family: 'DM Sans', sans-serif; }
-    /* body { min-width: fit-content; } */
+    body { min-width: fit-content; }
 
     .ci-page {
         min-height: 100vh;
@@ -313,6 +313,7 @@
                         <th>Patch</th>
                         <th>Type</th>
                         <th>Mode</th>
+                        <th>Room</th>
                         <th>Capacity</th>
                         <th>Schedule</th>
                         <th>Hours</th>
@@ -394,6 +395,18 @@
                             <span class="tag {{ $modeClass }}">{{ $instance->delivery_mood }}</span>
                         </td>
 
+                        {{-- Room --}}
+                        <td>
+                            @if($instance->room)
+                                <span style="display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#1A2A4A;font-weight:500;white-space:nowrap;">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#7A8A9A" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+                                    {{ $instance->room->name }}
+                                </span>
+                            @else
+                                <span style="color:#AAB8C8;">—</span>
+                            @endif
+                        </td>
+
                         {{-- Capacity --}}
                         <td style="min-width:120px;">
                             <div class="cap-wrap">
@@ -457,7 +470,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9">
+                        <td colspan="11">
                             <div class="empty-state">
                                 <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1">
                                     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
