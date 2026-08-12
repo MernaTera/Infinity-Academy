@@ -120,6 +120,8 @@ class Enrollment extends Model
 		'final_price',
 		'payment_plan_id',
 		'bundle_id',
+		'package_id',
+		'package_units_remaining',
 		'discount_value',
 		'status',
 		'restriction_flag',
@@ -129,6 +131,11 @@ class Enrollment extends Model
 	public function privateBundle()
 	{
 		return $this->belongsTo(PrivateBundle::class, 'bundle_id');
+	}
+
+	public function levelPackage()
+	{
+		return $this->belongsTo(\App\Models\Finance\LevelPackage::class, 'package_id');
 	}
 
 	public function employee()

@@ -288,12 +288,11 @@
     </div>
 
     {{-- ══ REGISTERED TABLE (hidden until "Registered" filter is clicked) ══ --}}
-    @php $registeredLeads = $leads->where('status', 'Registered'); @endphp
     <div id="registeredSection" style="display:none;">
         <div class="reg-section-head" style="margin-top:24px;">
             <span class="rsh-dot"></span>
             <span class="rsh-title">Registered Students</span>
-            <span class="rsh-count">{{ $registeredLeads->count() }} registered</span>
+            <span class="rsh-count">{{ $registeredRows->count() }} enrollment{{ $registeredRows->count() === 1 ? '' : 's' }}</span>
         </div>
         <div class="table-card">
             <div class="table-scroll">
@@ -301,28 +300,115 @@
                     <thead>
                         <tr>
                             <th>Name &amp; Contact</th>
-                            <th>Source</th>
-                            <th>Degree</th>
                             <th>Course &amp; Level</th>
+                            <th>Type</th>
+                            <th>Enrollment</th>
                             <th>Status</th>
-                            <th>Start Pref.</th>
-                            <th>Start Pref. Date</th>
-                            <th>Next Call</th>
-                            <th>Lead Age</th>
-                            <th>Notes</th>
+                            <th>Price</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="registeredTableBody">
-                        @forelse($registeredLeads as $lead)
-                            @include('leads.lead-row', ['lead' => $lead])
+                        @forelse($registeredRows as $row)
+                            @php $lead = $row['lead']; $enr = $row['enrollment']; @endphp
+                            <tr data-status="Registered">
+                                {{-- Name & Contact --}}
+                                <td>
+                                    <div class="lead-name">{{ $lead->full_name }}</div>
+                                    <div class="lead-phone">{{ $lead->phone }}</div>
+                                </td>
+
+                                {{-- Course & Level (from the enrollment itself) --}}
+                                <td>
+                                    @if($enr && $enr->courseTemplate)
+                                        <div class="course-name">{{ $enr->courseTemplate->name }}</div>
+                                        @if($enr->level)
+                                            <div class="course-lvl">{{ $enr->level->name }}@if($enr->sublevel) · {{ $enr->sublevel->name }}@endif</div>
+                                        @endif
+                                    @elseif($lead->courseTemplate)
+                                        <div class="course-name">{{ $lead->courseTemplate->name }}</div>
+                                    @else
+                                        <span class="dash-muted">—</span>
+                                    @endif
+                                </td>
+
+                                {{-- Type (Group / Private, + package/bundle hint) --}}
+                                <td>
+                                    @if($enr)
+                                        <span class="src-chip">{{ $enr->enrollment_type }}</span>
+                                        @if($enr->package_id)
+                                            <div style="font-size:9px;color:#7C3AED;margin-top:3px;">Package</div>
+                                        @elseif($enr->enrollment_type === 'Private' && $enr->hours_remaining !== null)
+                                            <div style="font-size:9px;color:#C47010;margin-top:3px;">{{ rtrim(rtrim(number_format($enr->hours_remaining,2),'0'),'.') }}h left</div>
+                                        @endif
+                                    @else
+                                        <span class="dash-muted">—</span>
+                                    @endif
+                                </td>
+
+                                {{-- Enrollment id --}}
+                                <td>
+                                    @if($enr)
+                                        <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#1B4FA8;">#{{ $enr->enrollment_id }}</span>
+                                    @else
+                                        <span class="dash-muted">—</span>
+                                    @endif
+                                </td>
+
+                                {{-- Status --}}
+                                <td>
+                                    @if($enr)
+                                        @php
+                                            $enrStatusColor = match($enr->status) {
+                                                'Active' => '#15803D', 'Completed' => '#1B4FA8',
+                                                'Waiting' => '#C47010', 'Restricted' => '#DC2626',
+                                                'Pending_Approval' => '#7C3AED', default => '#7A8A9A',
+                                            };
+                                        @endphp
+                                        <span class="status-badge" style="background:{{ $enrStatusColor }}1a;color:{{ $enrStatusColor }};pointer-events:none;">
+                                            {{ str_replace('_',' ',$enr->status) }}
+                                        </span>
+                                    @else
+                                        <span class="status-badge status-registered" style="pointer-events:none;">Registered</span>
+                                    @endif
+                                </td>
+
+                                {{-- Price --}}
+                                <td>
+                                    @if($enr)
+                                        @if((float)$enr->final_price == 0)
+                                            <span style="color:#15803D;font-size:11px;font-weight:600;">FREE</span>
+                                        @else
+                                            <span style="font-variant-numeric:tabular-nums;">{{ number_format($enr->final_price) }} LE</span>
+                                        @endif
+                                    @else
+                                        <span class="dash-muted">—</span>
+                                    @endif
+                                </td>
+
+                                {{-- Actions --}}
+                                <td>
+                                    <div class="action-group">
+                                        @if($enr)
+                                            <a href="{{ route('cs.enrollment.invoice', $enr->enrollment_id) }}" target="_blank" class="btn-action btn-invoice" title="View / Print Invoice">
+                                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+                                                Invoice
+                                            </a>
+                                        @endif
+                                        <button class="btn-action btn-log" onclick="openHistoryModal({{ $lead->lead_id }})">
+                                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                            Log
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
                         @empty
                         <tr>
-                            <td colspan="11">
+                            <td colspan="7">
                                 <div class="empty-state">
                                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                                     <div class="empty-title">No Registered Students</div>
-                                    <div class="empty-sub">Registered leads will appear here</div>
+                                    <div class="empty-sub">Registered enrollments will appear here</div>
                                 </div>
                             </td>
                         </tr>

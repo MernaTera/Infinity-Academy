@@ -45,15 +45,35 @@ class RegistrationService
 
             $lead = Lead::findOrFail($data['lead_id']);
 
-            $student = Student::create([
-                'full_name'     => $lead->full_name,
-                'email'         => $lead->email,
-                'birthdate'     => $lead->birthdate,
-                'degree'        => $lead->degree,
-                'location'      => $lead->location,
-                'global_status' => 'Active',
-                'is_active'     => true,
-            ]);
+            // Reuse the student this lead is already linked to (e.g. a private
+            // leftover "New Course", a package continuation, or any re-
+            // registration). Only create a brand-new student the first time.
+            // Creating a new one each time would split the same person across
+            // multiple student_ids and scatter their enrolments/hours.
+            $student = $lead->student_id ? Student::find($lead->student_id) : null;
+
+            if ($student) {
+                // Keep the student's details fresh from the lead, without
+                // touching their identity or history.
+                $student->update([
+                    'full_name' => $lead->full_name,
+                    'email'     => $lead->email,
+                    'birthdate' => $lead->birthdate,
+                    'degree'    => $lead->degree,
+                    'location'  => $lead->location,
+                    'is_active' => true,
+                ]);
+            } else {
+                $student = Student::create([
+                    'full_name'     => $lead->full_name,
+                    'email'         => $lead->email,
+                    'birthdate'     => $lead->birthdate,
+                    'degree'        => $lead->degree,
+                    'location'      => $lead->location,
+                    'global_status' => 'Active',
+                    'is_active'     => true,
+                ]);
+            }
 
             StudentPhone::where('phone_number', $lead->phone)->delete();
             StudentPhone::create([
@@ -330,6 +350,20 @@ class RegistrationService
             $hoursRemaining = $carried + $bundleHours;
         }
 
+        // ── Level package: record the package + how many prepaid units remain.
+        // A package covers `levels_count` units (sublevels when the level has
+        // sublevels, otherwise levels). This first enrolment consumes one unit,
+        // so the rest are prepaid and become free in later enrolments.
+        $packageId    = null;
+        $packageUnits = null;
+        if (!empty($data['package_id'])) {
+            $package = \App\Models\Finance\LevelPackage::find($data['package_id']);
+            if ($package) {
+                $packageId    = $package->package_id;
+                $packageUnits = max(0, (int) $package->levels_count - 1);
+            }
+        }
+
         return Enrollment::create([
 
             'student_id' => $student->student_id,
@@ -351,6 +385,8 @@ class RegistrationService
             'payment_plan_id' => $data['payment_plan_id'],
 
             'bundle_id' => $data['bundle_id'] ?? null,
+            'package_id' => $packageId,
+            'package_units_remaining' => $packageUnits,
             'hours_remaining' => $hoursRemaining,
             'discount_value' => $data['discount_value'] ?? 0,
 
@@ -382,7 +418,7 @@ class RegistrationService
 
         if (!empty($data['custom_date'])) {
             if ($data['custom_date'] <= now()->toDateString()) {
-                throw new \BusinessValidationException('The start date must be a future date (tomorrow or later).');
+                throw new \App\Exceptions\BusinessValidationException('The start date must be a future date (tomorrow or later).');
             }
         }
     }
@@ -492,22 +528,39 @@ class RegistrationService
         if (($data['patch_option'] ?? '') !== 'current') return;
         if (empty($data['patch_id'])) return;
 
-        $day        = $data['day']          ?? null;
-        $timeSlotId = $data['time_slot_id'] ?? null;
-        if (!$day && !$timeSlotId) return;
+        // A private pair (e.g. sat_tue) recurs weekly across the patch, and a
+        // teacher can hold many instances in the same pair — so there is no
+        // per-pair clash. The only real limit is the teacher's contract cap on
+        // TOTAL sessions in the patch. If they've already reached that cap,
+        // block it; otherwise it's fine. (Same rule the teacher dropdown uses
+        // to decide who is selectable, so the two stay consistent.)
+        $teacherId = (int) $data['teacher_id'];
+        $patchId   = (int) $data['patch_id'];
 
-        $conflict = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
-            ->where('patch_id', $data['patch_id'])
-            ->whereIn('status', ['Active', 'Upcoming'])
-            ->whereHas('instanceSchedules', function ($q) use ($day, $timeSlotId) {
-                if ($day)        $q->where('day_of_week', $day);
-                if ($timeSlotId) $q->where('time_slot_id', $timeSlotId);
-            })
-            ->exists();
+        $contract = \App\Models\HR\TeacherContract::with('contractType')
+            ->where('teacher_id', $teacherId)
+            ->where('patch_id', $patchId)
+            ->where('is_active', true)
+            ->first();
 
-        if ($conflict) {
-            throw new \BusinessValidationException(
-                'The selected teacher is already booked for this day/time slot in this patch.'
+        $maxAllowed = (int) ($contract?->contractType?->max_sessions_allowed ?? 0);
+        if ($maxAllowed <= 0) return; // no readable cap → nothing to enforce here
+
+        $existing = \App\Models\Academic\CourseInstance::where('teacher_id', $teacherId)
+            ->where('patch_id', $patchId)
+            ->whereIn('status', ['Active', 'Upcoming', 'Completed'])
+            ->get();
+
+        $used = 0;
+        foreach ($existing as $inst) {
+            if ($inst->session_duration > 0) {
+                $used += (int) ceil((float) $inst->total_hours / (float) $inst->session_duration);
+            }
+        }
+
+        if ($used >= $maxAllowed) {
+            throw new \App\Exceptions\BusinessValidationException(
+                'The selected teacher has reached their maximum number of sessions for this patch. Please pick another teacher.'
             );
         }
     }

@@ -53,7 +53,7 @@
 </style>
 
 <div class="nc-page">
-    <div class="page-eyebrow">Student Care</div>
+    <div class="page-eyebrow">Customer Service</div>
     <h1 class="page-title">Near Completion</h1>
 
     {{-- KPIs --}}
@@ -195,7 +195,17 @@
                             <div style="font-size:9px;color:#AAB8C8;margin-top:3px;">{{ $pct }}%</div>
                         </td>
                         <td>
-                            @if($e->student?->lead)
+                            @if($e->package_id && (int)$e->package_units_remaining > 0)
+                                {{-- Student is on a level package with prepaid units left --}}
+                                <form method="POST" action="{{ route('student-care.package.continue', $e->enrollment_id) }}" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn-renew" style="background:rgba(124,58,237,0.08);color:#7C3AED;border-color:rgba(124,58,237,0.3);"
+                                        onclick="return confirm('Create the next package level for this student (free)?')">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                                        Continue Package ({{ $e->package_units_remaining }} left)
+                                    </button>
+                                </form>
+                            @elseif($e->student?->lead)
                             <a href="{{ $e->student?->lead ? route('registration.from.lead', $e->student->lead->lead_id) . '?renew=1' : '#' }}"
                                class="btn-renew">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>

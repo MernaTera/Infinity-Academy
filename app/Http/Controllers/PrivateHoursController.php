@@ -31,7 +31,18 @@ class PrivateHoursController extends Controller
             ])
             ->where('enrollment_type', 'Private')
             ->whereNotNull('hours_remaining')
-            ->whereIn('status', ['Active', 'Restricted', 'Completed'])
+            ->where(function ($q) {
+                // Active + Restricted always need attention (current course, or
+                // depleted and awaiting a top-up). Completed enrolments only
+                // matter here while they still hold leftover hours that haven't
+                // been carried into a new course yet — once carried, their
+                // hours are zeroed and they should drop off this screen.
+                $q->whereIn('status', ['Active', 'Restricted'])
+                  ->orWhere(function ($q2) {
+                      $q2->where('status', 'Completed')
+                         ->where('hours_remaining', '>', 0);
+                  });
+            })
             ->orderByDesc('updated_at')
             ->get();
 

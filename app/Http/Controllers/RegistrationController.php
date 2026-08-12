@@ -96,7 +96,7 @@ class RegistrationController extends Controller
     */
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $validator = \Validator::make($request->all(), [
                     'lead_id'            => 'required|exists:lead,lead_id',
                     'type'               => 'required|in:group,private',
                     'mode'               => 'required|in:Online,Offline',             
@@ -128,6 +128,26 @@ class RegistrationController extends Controller
                     'custom_date.after'                => 'The start date must be in the future.',
                     'final_price.required'             => 'Course price could not be determined. Please re-select the course.',
                 ]);
+
+        // Return validation errors as JSON for ajax (the registration form
+        // submits via fetch expecting JSON); fall back to a redirect otherwise.
+        // Previously a failed validation always redirected (302 → HTML), which
+        // the fetch caller saw as "Response is not JSON".
+        $failValidation = function ($errors) use ($request) {
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => is_string($errors) ? $errors : collect($errors)->flatten()->first(),
+                    'errors'  => is_string($errors) ? ['error' => [$errors]] : $errors,
+                ], 422);
+            }
+            return back()->withInput()->withErrors($errors);
+        };
+
+        if ($validator->fails()) {
+            return $failValidation($validator->errors()->toArray());
+        }
+
         $discountValue = (float) ($request->discount_value ?? 0);
         $finalPriceVal = (float) $request->final_price;
 
@@ -137,19 +157,19 @@ class RegistrationController extends Controller
         // down the exact starting unit (level, and sublevel where applicable).
         if (!empty($request->package_id)) {
             if (strtolower($request->type) !== 'group') {
-                return back()->withInput()->withErrors([
+                return $failValidation([
                     'package_id' => 'Level packages are only available for group courses.'
                 ]);
             }
             if (empty($request->level_id)) {
-                return back()->withInput()->withErrors([
+                return $failValidation([
                     'level_id' => 'Please select the starting level for this package.'
                 ]);
             }
             // If the selected level has sublevels, a starting sublevel is required.
             $levelHasSublevels = \App\Models\Academic\Sublevel::where('level_id', $request->level_id)->exists();
             if ($levelHasSublevels && empty($request->sublevel_id)) {
-                return back()->withInput()->withErrors([
+                return $failValidation([
                     'sublevel_id' => 'This level has sublevels — please select the starting sublevel for the package.'
                 ]);
             }
@@ -159,7 +179,7 @@ class RegistrationController extends Controller
             $basePrice = $finalPriceVal + $discountValue;
 
             if ($discountValue >= $basePrice) {
-                return back()->withInput()->withErrors([
+                return $failValidation([
                     'discount_value' => "Discount ({$discountValue} LE) cannot be equal to or greater than the course price ({$basePrice} LE)."
                 ]);
             }
@@ -189,7 +209,7 @@ class RegistrationController extends Controller
             $validMethods = collect($methods)->filter(fn($m) => (float)($m['amount'] ?? 0) > 0);
 
             if ($validMethods->isEmpty()) {
-                return back()->withInput()->withErrors([
+                return $failValidation([
                     'deposit_methods' => "At least one payment method with a positive amount is required (required deposit: {$requiredDeposit} LE)."
                 ]);
             }
@@ -197,7 +217,7 @@ class RegistrationController extends Controller
             $totalPaid = round($validMethods->sum(fn($m) => (float)($m['amount'] ?? 0)), 2);
 
             if (abs($totalPaid - $requiredDeposit) > 0.01) {
-                return back()->withInput()->withErrors([
+                return $failValidation([
                     'deposit_methods' => "Deposit total ({$totalPaid} LE) must equal required ({$requiredDeposit} LE)."
                 ]);
             }
@@ -249,7 +269,7 @@ class RegistrationController extends Controller
                     ->notes('Waiting for admin approval before status changes to Registered.')
                     ->record();
 
-                if ($request->ajax()) {
+                if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                     return response()->json([
                         'success'       => true,
                         'enrollment_id' => $enrollment->enrollment_id,
@@ -266,7 +286,7 @@ class RegistrationController extends Controller
                 ->reason("Registered in \"{$courseName}\" (Enrollment #{$enrollment->enrollment_id})")
                 ->record();
 
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success'       => true,
                     'enrollment_id' => $enrollment->enrollment_id,
@@ -277,6 +297,16 @@ class RegistrationController extends Controller
             return redirect()->route('leads.index')->with('success', 'Student registered successfully.');
 
             } catch (\App\Exceptions\BusinessValidationException $e) {
+                \Log::info('Registration validation blocked', [
+                    'message' => $e->getMessage(),
+                    'lead_id' => $request->lead_id ?? null,
+                ]);
+                if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $e->getMessage(),
+                    ], 422);
+                }
                 return back()
                     ->withInput()
                     ->with('error', $e->getMessage());
@@ -289,6 +319,13 @@ class RegistrationController extends Controller
                     'lead_id' => $request->lead_id ?? null,
                     'trace'   => $e->getTraceAsString(),
                 ]);
+                if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Something went wrong while processing the registration. Please try again, or contact support if the problem persists.',
+                        'detail'  => $e->getMessage(),
+                    ], 500);
+                }
                 return back()
                     ->withInput()
                     ->with('error', 'Something went wrong while processing the registration. Please try again, or contact support if the problem persists.');
@@ -343,9 +380,6 @@ class RegistrationController extends Controller
         $levelId    = $request->level_id    ?: null;
         $courseId   = $request->course_template_id ?: null;
 
-        // Return ALL materials assigned at the most specific matching level.
-        // Priority: sublevel → level → course. Within the first level that
-        // has any assignments, return every material (mandatory + optional).
         $materials = collect();
 
         if ($sublevelId) {
@@ -378,7 +412,6 @@ class RegistrationController extends Controller
                 ->get();
         }
 
-        // Normalise types (is_mandatory as bool, price as float)
         $materials = $materials->map(fn($m) => [
             'material_id'  => (int) $m->material_id,
             'name'         => $m->name,

@@ -61,7 +61,39 @@ class LeadController extends Controller
         ];
 
         $leads = $this->leadRepository->myLeads($employeeId);
-        return view('leads.index', compact('leads', 'stats'));
+
+        // Registered leads: expand to ONE ROW PER ENROLMENT, so a student with
+        // multiple enrolments (a level package, or private renewals) shows a
+        // separate row + invoice for each. Each row carries its lead plus the
+        // specific enrolment it represents.
+        $registeredRows = collect();
+        $registeredLeads = $leads->where('status', 'Registered')
+            ->filter(fn($l) => $l->student_id);
+
+        if ($registeredLeads->isNotEmpty()) {
+            $studentIds = $registeredLeads->pluck('student_id')->unique()->all();
+
+            $enrollments = \App\Models\Enrollment\Enrollment::whereIn('student_id', $studentIds)
+                ->whereIn('status', ['Active', 'Pending_Approval', 'Waiting', 'Completed', 'Restricted'])
+                ->with(['courseTemplate', 'level', 'sublevel'])
+                ->orderByDesc('enrollment_id')
+                ->get()
+                ->groupBy('student_id');
+
+            foreach ($registeredLeads as $lead) {
+                $studentEnrollments = $enrollments->get($lead->student_id, collect());
+                if ($studentEnrollments->isEmpty()) {
+                    // Registered but no enrolment row yet — still show the lead.
+                    $registeredRows->push(['lead' => $lead, 'enrollment' => null]);
+                } else {
+                    foreach ($studentEnrollments as $enr) {
+                        $registeredRows->push(['lead' => $lead, 'enrollment' => $enr]);
+                    }
+                }
+            }
+        }
+
+        return view('leads.index', compact('leads', 'stats', 'registeredRows'));
     }
 
     /*
