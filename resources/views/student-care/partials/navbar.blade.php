@@ -12,6 +12,10 @@
 *::before,*::after{pointer-events:none;}
 #scNav.scrolled{background:rgba(255,255,255,0.99)!important;box-shadow:0 2px 20px rgba(27,79,168,0.08);}
 
+.sc-nav-toggle{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
+    padding:6px 8px;color:#AAB8C8;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
+.sc-nav-toggle:hover{background:rgba(27,79,168,0.04);color:#1B4FA8;border-color:rgba(27,79,168,0.2);}
+
 .sc-nav-link{font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:#7A8A9A;
     text-decoration:none;padding:6px 0;position:relative;transition:color 0.2s;white-space:nowrap;}
 .sc-nav-link::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:1.5px;
@@ -53,32 +57,29 @@
 .sc-ham-line{display:block;width:22px;height:1.5px;background:#7A8A9A;
     transition:all 0.3s;transform-origin:center;}
 
-.sc-mobile-menu{display:none;border-top:1px solid rgba(27,79,168,0.07);background:rgba(255,255,255,0.99);}
-.sc-mobile-menu.open{display:block;animation:scSlide 0.25s ease both;}
-@keyframes scSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-
-.sc-mobile-link{display:flex;align-items:center;gap:10px;padding:13px 20px;font-size:10px;
-    letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-decoration:none;
-    border-bottom:1px solid rgba(27,79,168,0.04);transition:all 0.2s;}
-.sc-mobile-link svg{flex-shrink:0;opacity:0.6;}
-.sc-mobile-link:hover,.sc-mobile-link.active{color:#1B4FA8;background:rgba(27,79,168,0.03);text-decoration:none;}
-.sc-mobile-link:hover svg,.sc-mobile-link.active svg{opacity:1;}
-
 @keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(0.96)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateX(20px) scale(0.96)}}
 
 @media(max-width:900px){
     .sc-nav-desktop-links,.sc-nav-desktop-name{display:none!important;}
     .sc-hamburger{display:flex!important;}
+    .sc-nav-toggle{display:none!important;}
 }
 @media(max-width:500px){#scBellPanel{right:-60px;}}
 </style>
 
-<div style="max-width:1600px;margin:0 auto;padding:0 20px;">
+<div style="margin:0 auto;padding:0 20px;">
     <div style="display:flex;align-items:center;height:62px;gap:12px;">
 
-        {{-- Hamburger --}}
-        <button class="sc-hamburger" onclick="scToggleMobile()" id="scHamburger">
+        {{-- Sidebar toggle (desktop) --}}
+        <button class="sc-nav-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+        </button>
+
+        {{-- Hamburger (mobile) — opens the slide-in sidebar --}}
+        <button class="sc-hamburger" onclick="scOpenSidebar()" id="scHamburger">
             <span class="sc-ham-line" id="schl1"></span>
             <span class="sc-ham-line" id="schl2"></span>
             <span class="sc-ham-line" id="schl3"></span>
@@ -214,10 +215,6 @@
                         <div style="font-size:11px;color:#AAB8C8;margin-top:2px;">{{ Auth::user()->email ?? '' }}</div>
                     </div>
                     <div style="padding:6px 0;">
-                        <!-- <a href="{{ route('profile.edit') }}" class="sc-dropdown-item">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            Profile
-                        </a> -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="sc-dropdown-item danger">
@@ -233,71 +230,10 @@
     </div>
 </div>
 
-{{-- Mobile Menu --}}
-<div class="sc-mobile-menu" id="scMobileMenu">
-    <div style="padding:4px 0;">
-        <a href="{{ route('student-care.dashboard') }}"    class="sc-mobile-link {{ request()->routeIs('student-care.dashboard') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Dashboard
-        </a>
-        <a href="{{ route('student-care.waiting-list') }}" class="sc-mobile-link {{ request()->routeIs('student-care.waiting-list') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            Waiting List
-        </a>
-        <a href="{{ route('student-care.instances') }}"    class="sc-mobile-link {{ request()->routeIs('student-care.instances*') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Courses
-        </a>
-        <a href="{{ route('student-care.outstanding') }}"  class="sc-mobile-link {{ request()->routeIs('student-care.outstanding') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Outstanding
-        </a>
-        <a href="{{ route('student-care.postponed') }}"    class="sc-mobile-link {{ request()->routeIs('student-care.postponed') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Postponed
-        </a>
-    </div>
-    <div style="padding:14px 20px;border-top:1px solid rgba(27,79,168,0.06);display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-            <div class="sc-avatar" style="width:38px;height:38px;">
-                <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#1B4FA8;">{{ strtoupper(substr(Auth::user()->name ?? 'S', 0, 1)) }}</span>
-            </div>
-            <div>
-                <div style="font-size:13px;color:#1A2A4A;font-weight:600;">{{ Auth::user()->name ?? '' }}</div>
-                <div style="font-size:10px;color:#AAB8C8;">{{ Auth::user()->email ?? '' }}</div>
-            </div>
-        </div>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" style="background:none;border:1px solid rgba(220,38,38,0.2);border-radius:4px;
-                    padding:6px 12px;cursor:pointer;font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                    color:#DC2626;font-family:'DM Sans',sans-serif;transition:all 0.2s;"
-                    onmouseover="this.style.background='rgba(220,38,38,0.04)'"
-                    onmouseout="this.style.background='none'">Logout</button>
-        </form>
-    </div>
-</div>
-
-</nav>
-
 <script>
 window.addEventListener('scroll',()=>{
     document.getElementById('scNav')?.classList.toggle('scrolled',window.scrollY>10);
 },{passive:true});
-
-let scMobileOpen=false;
-function scToggleMobile(){
-    scMobileOpen=!scMobileOpen;
-    document.getElementById('scMobileMenu').classList.toggle('open',scMobileOpen);
-    const[h1,h2,h3]=['schl1','schl2','schl3'].map(id=>document.getElementById(id));
-    if(scMobileOpen){
-        h1.style.cssText='transform:translateY(6.5px) rotate(45deg);background:#1B4FA8';
-        h2.style.opacity='0';
-        h3.style.cssText='transform:translateY(-6.5px) rotate(-45deg);background:#1B4FA8';
-    }else{[h1,h2,h3].forEach(l=>l.style.cssText='');}
-    document.getElementById('scUserMenu')?.classList.remove('open');
-    document.getElementById('scBellPanel').style.display='none';
-}
 
 function scToggleBell(){
     const p=document.getElementById('scBellPanel');
@@ -349,3 +285,4 @@ if(scUnread>scPrevUnread){
     setTimeout(()=>{t.firstElementChild.style.animation='toastOut 0.3s ease forwards';setTimeout(()=>t.remove(),300);},4500);
 }
 </script>
+</nav>
