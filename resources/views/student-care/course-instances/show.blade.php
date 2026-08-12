@@ -11,7 +11,7 @@
 
 <style>
     body, .ci-show * { font-family: 'DM Sans', sans-serif; }
-    body { min-width: fit-content; }
+    /* body { min-width: fit-content; } */
 
     .ci-show {
         background: #F8F6F2;
