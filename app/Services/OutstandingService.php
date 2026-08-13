@@ -69,10 +69,15 @@ class OutstandingService
 
             $daysOverdue = null;
             if ($nextInstallment && $nextInstallment->due_date) {
-                $due   = \Carbon\Carbon::parse($nextInstallment->due_date)->startOfDay();
-                $today = now()->startOfDay();
-                if ($today->gt($due)) {
-                    $daysOverdue = (int) abs($today->diffInDays($due));
+                // An installment isn't overdue the moment its due date passes —
+                // the payment plan gives a grace period first. Count overdue
+                // days from the END of that grace window, so the screen matches
+                // the restriction job (which only marks/restricts after grace).
+                $grace     = (int) ($e->paymentPlan?->grace_period_days ?? 0);
+                $graceEnds = \Carbon\Carbon::parse($nextInstallment->due_date)->startOfDay()->addDays($grace);
+                $today     = now()->startOfDay();
+                if ($today->gt($graceEnds)) {
+                    $daysOverdue = (int) abs($today->diffInDays($graceEnds));
                 }
             }
 

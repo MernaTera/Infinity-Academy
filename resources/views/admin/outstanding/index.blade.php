@@ -214,10 +214,15 @@
                         $nextDue     = $enrollment->installmentSchedules->whereIn('status', ['Pending', 'Overdue'])->sortBy('due_date')->first();
                         $daysOverdue = 0;
                         if ($nextDue && $nextDue->due_date) {
-                            $dueDate = \Carbon\Carbon::parse($nextDue->due_date)->startOfDay();
-                            $today   = now()->startOfDay();
-                            if ($today->gt($dueDate)) {
-                                $daysOverdue = (int) abs($today->diffInDays($dueDate));
+                            // Not overdue the instant the due date passes — the
+                            // payment plan grants a grace period first. Count
+                            // overdue days from the END of that grace window so
+                            // this matches the restriction job.
+                            $grace     = (int) ($enrollment->paymentPlan?->grace_period_days ?? 0);
+                            $graceEnds = \Carbon\Carbon::parse($nextDue->due_date)->startOfDay()->addDays($grace);
+                            $today     = now()->startOfDay();
+                            if ($today->gt($graceEnds)) {
+                                $daysOverdue = (int) abs($today->diffInDays($graceEnds));
                             }
                         }
                         $hasPendingInstallment = $enrollment->installmentSchedules->whereIn('status', ['Pending', 'Overdue'])->isNotEmpty();

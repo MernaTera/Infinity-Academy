@@ -17,6 +17,7 @@ class ProcessOutstandingStatuses extends Command
         $pendingSchedules = InstallmentSchedule::with(['enrollment.paymentPlan'])
             ->where('status', 'Pending')
             ->whereNotNull('due_date')
+            ->whereHas('enrollment', fn($q) => $q->where('status', 'Active'))
             ->get();
 
         $markedOverdue = 0;
@@ -41,7 +42,11 @@ class ProcessOutstandingStatuses extends Command
             $enrollment = Enrollment::find($enrollmentId);
 
             if (!$enrollment || $enrollment->status === 'Restricted') continue;
-            if (!in_array($enrollment->status, ['Active', 'Waiting'])) continue;
+            // Only restrict students who are actually in a course. A Waiting
+            // enrolment hasn't started yet — its installment due dates aren't
+            // real until Student Care assigns it to a course, so it can't be
+            // genuinely overdue.
+            if ($enrollment->status !== 'Active') continue;
 
             $enrollment->update([
                 'status'             => 'Restricted',

@@ -21,6 +21,6 @@ Schedule::call(function () {
 
 Schedule::command('patches:update-statuses')->dailyAt('00:01');
 
-Schedule::command('outstanding:process')->dailyAt('00:05');
+Schedule::command('outstanding:process')->hourly();
 
 Schedule::command('reports:check-deadlines')->hourly();
