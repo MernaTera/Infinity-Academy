@@ -166,11 +166,11 @@
                             </select>
                         </div>
 
-                        <div class="fld">
+                        <!-- <div class="fld">
                             <label class="fld-label">Reference No. <span style="color:var(--faint);font-weight:400;">(optional)</span></label>
                             <input type="text" name="reference_number" class="fld-input"
                                    placeholder="e.g. receipt / transfer ref" value="{{ old('reference_number') }}">
-                        </div>
+                        </div> -->
 
                         <div class="fld">
                             <label class="fld-label">Notes <span style="color:var(--faint);font-weight:400;">(optional)</span></label>

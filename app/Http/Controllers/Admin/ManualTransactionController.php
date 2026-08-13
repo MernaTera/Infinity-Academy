@@ -65,20 +65,18 @@ class ManualTransactionController extends Controller
 
         $enrollment = Enrollment::findOrFail($data['enrollment_id']);
 
-        // Derive a sensible transaction_type from the category so the record
-        // stays consistent with the rest of the system.
-        $typeMap = [
-            'Course'   => 'Payment',
-            'Material' => 'Material',
-            'Test'     => 'Test_Fee',
-            'Other'    => 'Adjustment',
-        ];
-
+        // The admin revenue total and the payment-method breakdown both sum
+        // FinancialTransaction rows where transaction_type is Payment or
+        // Installment. So record every manual entry as a Payment — that's what
+        // makes it show up in revenue and in the Cash/Instapay/Vodafone split.
+        // The chosen category (Course/Material/Test/Other) is kept separately
+        // for classification; nothing keys revenue off the type beyond the
+        // Payment/Installment filter.
         FinancialTransaction::create([
             'enrollment_id'          => $enrollment->enrollment_id,
             'patch_id'               => $enrollment->patch_id,
             'branch_id'              => $enrollment->branch_id,
-            'transaction_type'       => $typeMap[$data['transaction_category']] ?? 'Payment',
+            'transaction_type'       => 'Payment',
             'transaction_category'   => $data['transaction_category'],
             'amount'                 => (float) $data['amount'],
             'payment_method'         => $methodMap[$data['payment_method']] ?? 'Cash',
