@@ -248,10 +248,10 @@
             <div class="stat-label">Completed</div>
             <div class="stat-value">{{ $countCompleted }}</div>
         </div>
-        <div class="stat-card" style="--accent:#DC2626;" onclick="filterByCiStatus('Cancelled')" data-filter="Cancelled">
+        <!-- <div class="stat-card" style="--accent:#DC2626;" onclick="filterByCiStatus('Cancelled')" data-filter="Cancelled">
             <div class="stat-label">Cancelled</div>
             <div class="stat-value">{{ $countCancelled }}</div>
-        </div>
+        </div> -->
         <div class="stat-card" style="--accent:#2D6FDB;" onclick="filterByCiType('Group')" data-filter-type="Group">
             <div class="stat-label">Group</div>
             <div class="stat-value">{{ $countGroup }}</div>
@@ -286,7 +286,7 @@
             <option value="Upcoming">Upcoming</option>
             <option value="Active">Active</option>
             <option value="Completed">Completed</option>
-            <option value="Cancelled">Cancelled</option>
+            <!-- <option value="Cancelled">Cancelled</option> -->
         </select>
 
         <select class="filter-select" id="ciTypeFilter" onchange="filterByCiTypeSelect(this.value)">
