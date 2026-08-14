@@ -99,6 +99,20 @@ function confirmCall() {
     });
 }
 
+// ── Notes popup ──
+function openNotes(btn){
+    const note    = btn.getAttribute('data-note') || '';
+    const student = btn.getAttribute('data-student') || 'Note';
+    document.getElementById('notesModalBody').textContent = note;
+    document.getElementById('notesModalStudent').textContent = student;
+    document.getElementById('notesOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeNotes(){
+    document.getElementById('notesOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', e => { if(e.key === 'Escape') closeNotes(); });
 
 function openHistoryModal(leadId) {
     document.getElementById('historyModal').style.display = 'flex';

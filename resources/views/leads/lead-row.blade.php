@@ -1,4 +1,61 @@
 {{-- Single lead row — used by both the main table and the registered table --}}
+
+{{-- Notes popup --}}
+<style>
+    .notes-pill {
+        display:inline-flex; align-items:center; gap:6px; max-width:200px;
+        padding:5px 11px; border-radius:16px; cursor:pointer;
+        background:rgba(27,79,168,0.06); border:1px solid rgba(27,79,168,0.15);
+        color:#1B4FA8; font-size:11px; font-family:'DM Sans',sans-serif;
+        transition:all 0.18s; text-align:left;
+    }
+    .notes-pill:hover { background:rgba(27,79,168,0.1); border-color:rgba(27,79,168,0.3); }
+    .notes-pill-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .notes-overlay {
+        display:none; position:fixed; inset:0; z-index:1000;
+        background:rgba(10,20,40,0.5); backdrop-filter:blur(3px);
+        align-items:center; justify-content:center; padding:20px;
+    }
+    .notes-overlay.open { display:flex; animation:notesFade 0.2s ease both; }
+    @keyframes notesFade { from{opacity:0} to{opacity:1} }
+
+    .notes-modal {
+        background:#fff; border-radius:14px; max-width:520px; width:100%;
+        max-height:80vh; display:flex; flex-direction:column; overflow:hidden;
+        box-shadow:0 20px 60px rgba(15,31,61,0.3); animation:notesPop 0.25s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes notesPop { from{opacity:0;transform:scale(0.96) translateY(10px)} to{opacity:1;transform:none} }
+
+    .notes-modal-head {
+        background:linear-gradient(135deg,#0F1F3D,#243B69); padding:18px 22px;
+        display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .notes-modal-head-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; color:#fff; }
+    .notes-modal-head-sub { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:#F5911E; margin-top:2px; }
+    .notes-modal-close {
+        background:rgba(255,255,255,0.1); border:none; width:30px; height:30px; border-radius:8px;
+        color:#fff; cursor:pointer; font-size:18px; line-height:1; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; transition:background 0.2s;
+    }
+    .notes-modal-close:hover { background:rgba(255,255,255,0.2); }
+    .notes-modal-body {
+        padding:22px; overflow-y:auto; font-size:14px; line-height:1.65; color:#1A2A4A;
+        white-space:pre-wrap; word-break:break-word;
+    }
+</style>
+<div class="notes-overlay" id="notesOverlay" onclick="if(event.target===this)closeNotes()">
+    <div class="notes-modal">
+        <div class="notes-modal-head">
+            <div>
+                <div class="notes-modal-head-sub">Waiting List Note</div>
+                <div class="notes-modal-head-title" id="notesModalStudent">Note</div>
+            </div>
+            <button type="button" class="notes-modal-close" onclick="closeNotes()">&times;</button>
+        </div>
+        <div class="notes-modal-body" id="notesModalBody"></div>
+    </div>
+</div>
                     <tr data-status="{{ $lead->status }}">
                         {{-- Name & Contact --}}
                         <td>
@@ -116,9 +173,16 @@
                         {{-- Notes --}}
                         <td>
                             @if($lead->notes)
-                                <span class="notes-cell" title="{{ $lead->notes }}">{{ $lead->notes }}</span>
+                                <button type="button"
+                                        class="notes-pill"
+                                        onclick="openNotes(this)"
+                                        data-note="{{ e($lead->notes) }}"
+                                        data-student="{{ e($lead->enrollment->student->full_name ?? 'Student') }}">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                    <span class="notes-pill-text">{{ \Illuminate\Support\Str::limit($lead->notes, 28) }}</span>
+                                </button>
                             @else
-                                <span class="dash-muted">—</span>
+                                <span style="color:#AAB8C8;">—</span>
                             @endif
                         </td>
 

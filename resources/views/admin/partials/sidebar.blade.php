@@ -61,7 +61,7 @@
     align-items: center;
     gap: 9px;
     padding: 7px 14px;
-    font-size: 11px;
+    font-size: 10.5px;
     letter-spacing: 0.5px;
     color: var(--sb-text);
     text-decoration: none;
