@@ -1042,7 +1042,7 @@ async function checkTeacherContract() {
     const patchId   = document.getElementById('ci_patch').value;
     if (!teacherId || !patchId) { hideContractAlert(); return; }
     try {
-        const res  = await fetch(`/student-care/teacher-contract-info?teacher_id=${teacherId}&patch_id=${patchId}`);
+        const res  = await fetch(`/student-care/teacher-contract-info?teacher_id=${teacherId}&patch_id=${patchId}${editExcludeParam()}`);
         const data = await res.json();
         _contractInfo = (data && typeof data.max_sessions !== 'undefined') ? data : null;
         evaluateContractAlert();
@@ -1096,7 +1096,7 @@ async function checkRoomAvailability() {
     }
     if (!roomId || !startDate || !startTime || !pairs.length) { el.style.display='none'; return; }
     try {
-        const res  = await fetch(`/student-care/check-room-availability?room_id=${roomId}&start_date=${startDate}&end_date=${endDate}&pairs=${pairs.join(',')}&start_time=${startTime}&duration=${dur}`);
+        const res  = await fetch(`/student-care/check-room-availability?room_id=${roomId}&start_date=${startDate}&end_date=${endDate}&pairs=${pairs.join(',')}&start_time=${startTime}&duration=${dur}${editExcludeParam()}`);
         const data = await res.json();
         el.style.cssText = data.available
             ? 'padding:10px 14px;border-radius:4px;margin-top:8px;font-size:12px;border-left:3px solid;background:rgba(5,150,105,0.06);border-color:#059669;color:#059669;display:block;'

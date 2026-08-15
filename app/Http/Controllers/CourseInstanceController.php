@@ -987,6 +987,10 @@ class CourseInstanceController extends Controller
     {
         $teacherId = $request->query('teacher_id');
         $patchId   = $request->query('patch_id');
+        // In edit mode, don't count the instance being edited — its sessions
+        // are about to be rebuilt, so counting them would look like the teacher
+        // used those sessions twice.
+        $excludeId = $request->query('exclude_instance_id');
 
         if (!$teacherId || !$patchId) return response()->json(null);
 
@@ -1002,11 +1006,13 @@ class CourseInstanceController extends Controller
             $q->where('teacher_id', $teacherId)
               ->where('patch_id', $patchId)
               ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+              ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
         )->where('status', '!=', 'Cancelled')->count();
 
         $pendingCount = \App\Models\Academic\CourseInstance::where('teacher_id', $teacherId)
             ->where('patch_id', $patchId)
             ->whereIn('status', ['Upcoming', 'Pending_Approval'])
+            ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
             ->whereDoesntHave('sessions')
             ->get()
             ->sum(fn($ci) => (int) ceil((float)$ci->total_hours / (float)$ci->session_duration));
@@ -1031,6 +1037,9 @@ class CourseInstanceController extends Controller
         $pairs     = $request->query('pairs', '');
         $startTime = $request->query('start_time');
         $duration  = (float) $request->query('duration', 2);
+        // Edit mode: ignore this instance's own sessions — they're about to be
+        // rebuilt, so they must not flag their own room as occupied.
+        $excludeId = $request->query('exclude_instance_id');
 
         if (!$roomId || !$startDate || !$startTime) {
             return response()->json(['available' => true]);
@@ -1047,6 +1056,7 @@ class CourseInstanceController extends Controller
 
         $conflict = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
             $q->where('room_id', $roomId)->whereIn('status', ['Active','Upcoming'])
+              ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
         )
         ->whereBetween('session_date', [$startDate, $endDate])
         ->where('status', '!=', 'Cancelled')
