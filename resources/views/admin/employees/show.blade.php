@@ -209,6 +209,19 @@
                 <div><div class="slabel" style="font-size:8px;letter-spacing:2px;">Last Login</div><div style="font-size:13px;font-weight:500;">{{ $employee->user?->last_login_at ? \Carbon\Carbon::parse($employee->user->last_login_at)->diffForHumans() : 'Never' }}</div></div>
                 <div><div class="slabel" style="font-size:8px;letter-spacing:2px;">Account</div><div style="font-size:13px;font-weight:500;">{{ $employee->user?->is_active ? '✓ Active' : '✗ Suspended' }}</div></div>
             </div>
+            @if(in_array($roleName, ['Customer Service', 'Student Care']) && ($employee->work_start_time || $employee->work_end_time))
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(27,79,168,0.08);">
+                <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;background:var(--orange-l);">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--orange-dk)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--faint);">Working Hours</span>
+                    <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--orange-dk);letter-spacing:1px;">
+                        {{ $employee->work_start_time ? \Carbon\Carbon::parse($employee->work_start_time)->format('g:i A') : '—' }}
+                        <span style="color:var(--faint);">→</span>
+                        {{ $employee->work_end_time ? \Carbon\Carbon::parse($employee->work_end_time)->format('g:i A') : '—' }}
+                    </span>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 
@@ -350,6 +363,16 @@
                         <label class="field-label">Salary (LE)</label>
                         <input type="number" name="salary" value="{{ $employee->salary }}" class="form-control" min="0" step="0.01">
                     </div>
+                    @if(in_array($roleName, ['Customer Service', 'Student Care']))
+                    <div class="field-group">
+                        <label class="field-label">Shift Start</label>
+                        <input type="time" name="work_start_time" value="{{ $employee->work_start_time ? \Carbon\Carbon::parse($employee->work_start_time)->format('H:i') : '' }}" class="form-control">
+                    </div>
+                    <div class="field-group">
+                        <label class="field-label">Shift End</label>
+                        <input type="time" name="work_end_time" value="{{ $employee->work_end_time ? \Carbon\Carbon::parse($employee->work_end_time)->format('H:i') : '' }}" class="form-control">
+                    </div>
+                    @endif
                     <div class="field-group">
                         <label class="field-label">New Password (Optional)</label>
                         <input type="password" name="new_password" placeholder="Leave blank to keep current" class="form-control">

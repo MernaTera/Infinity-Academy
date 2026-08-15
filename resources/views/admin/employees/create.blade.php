@@ -113,6 +113,23 @@
                     </div>
                 </div>
 
+                {{-- ══ WORK HOURS (CS / Student Care) ══ --}}
+                <div id="workHoursSection" style="display:none">
+                    <div style="margin:8px 0 14px;padding-top:14px;border-top:1px solid rgba(27,79,168,0.08);">
+                        <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#F5911E;font-weight:600;margin-bottom:10px;">Working Hours</div>
+                        <div class="form-row">
+                            <div class="form-field">
+                                <label class="form-label">Shift Start</label>
+                                <input type="time" name="work_start_time" class="form-control" value="{{ old('work_start_time') }}">
+                            </div>
+                            <div class="form-field">
+                                <label class="form-label">Shift End</label>
+                                <input type="time" name="work_end_time" class="form-control" value="{{ old('work_end_time') }}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- ══ TEACHER SECTION ══ --}}
                 <div id="teacherSection" style="display:none">
                     <div class="form-divider"></div>
@@ -232,6 +249,7 @@ function onRoleChange() {
     const roleName = sel.options[sel.selectedIndex]?.dataset.name ?? '';
     document.getElementById('teacherSection').style.display = roleName === 'Teacher'           ? 'block' : 'none';
     document.getElementById('csSection').style.display      = roleName === 'Customer Service'  ? 'block' : 'none';
+    document.getElementById('workHoursSection').style.display = (roleName === 'Customer Service' || roleName === 'Student Care') ? 'block' : 'none';
 }
 
 function fillMaxSessions() {

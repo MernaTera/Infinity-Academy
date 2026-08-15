@@ -31,6 +31,7 @@ class DashboardController extends Controller
 
     private function showCsDashboard()
     {
+        $me         = Employee::where('user_id', auth()->id())->first();
         $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
         $currentPatch = Patch::active()->latest('start_date')->first();
 
@@ -115,6 +116,7 @@ class DashboardController extends Controller
             ->get();
 
         return view('dashboard', compact(
+            'me',
             'employee',
             'currentPatch',
             'leadsStats',

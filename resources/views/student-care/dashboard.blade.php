@@ -95,6 +95,19 @@
             <h1 class="page-title">Dashboard</h1>
             <p class="page-sub">{{ now()->format('l, d M Y') }}</p>
         </div>
+        @if(!empty($me) && ($me->work_start_time || $me->work_end_time))
+        <div style="display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:12px;background:#fff;border:1px solid rgba(27,79,168,0.1);box-shadow:0 2px 10px rgba(27,79,168,0.05);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div>
+                <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;font-weight:600;">Your Shift</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:19px;color:#C47010;letter-spacing:1px;line-height:1.1;">
+                    {{ $me->work_start_time ? \Carbon\Carbon::parse($me->work_start_time)->format('g:i A') : '—' }}
+                    <span style="color:#AAB8C8;">→</span>
+                    {{ $me->work_end_time ? \Carbon\Carbon::parse($me->work_end_time)->format('g:i A') : '—' }}
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 
     {{-- Alerts --}}

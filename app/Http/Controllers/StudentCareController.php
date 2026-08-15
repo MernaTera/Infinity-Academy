@@ -267,6 +267,9 @@ class StudentCareController extends Controller
 
     public function dashboard()
     {
+        // Current logged-in Student Care employee (for the work-hours banner).
+        $me = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
+
         $currentPatch = \App\Models\Academic\Patch::where('status', 'Active')
             ->latest('start_date')->first();
 
@@ -329,6 +332,7 @@ class StudentCareController extends Controller
         ->get();
 
         return view('student-care.dashboard', compact(
+            'me',
             'currentPatch', 'upcomingPatch',
             'activeCourses', 'upcomingCourses', 'totalStudents',
             'restrictedStudents', 'postponedStudents', 'waitingList',

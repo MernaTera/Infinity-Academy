@@ -53,6 +53,8 @@ class Employee extends Model
 		'user_id',
 		'branch_id',
 		'salary',
+		'work_start_time',
+		'work_end_time',
 		'status',
 		'hired_at'
 	];

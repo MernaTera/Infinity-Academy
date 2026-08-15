@@ -146,6 +146,19 @@
                 New Lead
             </a>
         </div>
+        @if(!empty($me) && ($me->work_start_time || $me->work_end_time))
+        <div style="position:relative;z-index:1;display:inline-flex;align-items:center;gap:9px;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.18);margin-top:12px;">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <div>
+                <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.6);font-weight:600;">Your Shift</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#fff;letter-spacing:1px;line-height:1.1;">
+                    {{ $me->work_start_time ? \Carbon\Carbon::parse($me->work_start_time)->format('g:i A') : '—' }}
+                    <span style="color:rgba(255,255,255,0.5);">→</span>
+                    {{ $me->work_end_time ? \Carbon\Carbon::parse($me->work_end_time)->format('g:i A') : '—' }}
+                </div>
+            </div>
+        </div>
+        @endif
     </div>
 
     <div class="cs-wrap">

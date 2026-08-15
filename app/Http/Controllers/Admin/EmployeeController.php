@@ -87,6 +87,8 @@ public function store(Request $request)
             'role_id'          => 'required|exists:role,role_id',
             'branch_id'        => 'required|exists:branch,branch_id',
             'salary'           => 'nullable|numeric|min:0',
+            'work_start_time'  => 'nullable|date_format:H:i',
+            'work_end_time'    => 'nullable|date_format:H:i',
             'english_level_id' => 'nullable|exists:english_level,english_level_id',
             'contract_type_id' => 'nullable|exists:contract_type,contract_type_id',
             'max_sessions'     => 'nullable|integer|min:1',
@@ -111,6 +113,11 @@ public function store(Request $request)
                 'user_id'   => $user->id,
                 'branch_id' => $request->branch_id,
                 'salary'    => $request->salary,
+                // Fixed daily shift window — only meaningful for CS / Student Care.
+                'work_start_time' => in_array(Role::find($request->role_id)?->role_name, ['Customer Service', 'Student Care'])
+                    ? $request->work_start_time : null,
+                'work_end_time'   => in_array(Role::find($request->role_id)?->role_name, ['Customer Service', 'Student Care'])
+                    ? $request->work_end_time : null,
                 'status'    => 'Active',
                 'hired_at'  => now(),
             ]);
@@ -427,6 +434,8 @@ public function store(Request $request)
         $request->validate([
             'full_name'        => 'required|string|max:255',
             'salary'           => 'nullable|numeric|min:0',
+            'work_start_time'  => 'nullable|date_format:H:i',
+            'work_end_time'    => 'nullable|date_format:H:i',
             'english_level_id' => 'nullable|exists:english_level,english_level_id',
             'contract_type_id' => 'nullable|exists:contract_type,contract_type_id',
             'patch_id'         => 'nullable|exists:patch,patch_id',
@@ -439,6 +448,13 @@ public function store(Request $request)
 
         // Basic
         $employee->update(['full_name' => $request->full_name, 'salary' => $request->salary]);
+        // Fixed daily shift window — CS / Student Care only.
+        if (in_array($request->role_name, ['Customer Service', 'Student Care'])) {
+            $employee->update([
+                'work_start_time' => $request->work_start_time ?: null,
+                'work_end_time'   => $request->work_end_time ?: null,
+            ]);
+        }
         $employee->user->update(['name' => $request->full_name]);
         if ($request->filled('new_password')) {
             $employee->user->update(['password' => \Hash::make($request->new_password)]);
