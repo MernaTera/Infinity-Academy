@@ -42,6 +42,7 @@ class InstanceSchedule extends Model
 	protected $fillable = [
 		'course_instance_id',
 		'day_of_week',
+		'single_day',
 		'time_slot_id',
 		'start_time',
 		'created_by_employee_id'

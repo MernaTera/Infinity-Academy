@@ -77,6 +77,9 @@ class CourseInstanceController extends Controller
             'end_date'           => 'required|date|after_or_equal:start_date',
             'day_of_week'        => 'required|array|min:1',
             'day_of_week.*'      => 'in:sun_wed,sat_tue,mon_thu',
+            'schedule_type'      => 'nullable|in:single,double',
+            'single_days'        => 'nullable|array',
+            'single_days.*'      => 'nullable|integer|between:0,6',
             'start_times'        => 'required|array',
             'start_times.*'      => 'required|date_format:H:i',
             'time_slot_ids'      => 'nullable|array',
@@ -84,6 +87,18 @@ class CourseInstanceController extends Controller
         ]);
 
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+
+        // Single-day mode: the course runs on only ONE day of each chosen pair.
+        $isSingle    = ($data['schedule_type'] ?? 'double') === 'single';
+        $singleDays  = $isSingle ? ($data['single_days'] ?? []) : [];
+        $resolveDays = function ($pair) use ($dayMap, $singleDays) {
+            $pairDays = $dayMap[$pair] ?? [];
+            $sd       = $singleDays[$pair] ?? null;
+            if ($sd !== null && $sd !== '' && in_array((int) $sd, $pairDays, true)) {
+                return [(int) $sd];
+            }
+            return $pairDays;
+        };
 
         // ── 1. Patch date validation ──────────────────────────────────
         $patch = Patch::findOrFail($data['patch_id']);
@@ -99,7 +114,7 @@ class CourseInstanceController extends Controller
         }
 
         // ── 2. Auto-adjust start_date to first valid session day ──────
-        $allTargetDays = array_merge(...array_map(fn($p) => $dayMap[$p] ?? [], $data['day_of_week']));
+        $allTargetDays = array_merge(...array_map(fn($p) => $resolveDays($p), $data['day_of_week']));
         $current       = \Carbon\Carbon::parse($data['start_date']);
         $patchEnd      = \Carbon\Carbon::parse($patch->end_date);
         $found         = false;
@@ -133,7 +148,7 @@ class CourseInstanceController extends Controller
                 $endMins    = ((int)$h * 60 + (int)$m) + (int)($dur * 60);
                 $endTime    = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
                 $startFull  = $startTime . ':00';
-                $targetDays = $dayMap[$pair] ?? [];
+                $targetDays = $resolveDays($pair);
 
                 $conflict = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
                     $q->where('room_id', $data['room_id'])
@@ -282,7 +297,8 @@ class CourseInstanceController extends Controller
                     $instance->course_instance_id,
                     $data['day_of_week'],
                     $data['start_times'],
-                    $data['time_slot_ids'] ?? null
+                    $data['time_slot_ids'] ?? null,
+                    (($data['schedule_type'] ?? 'double') === 'single') ? ($data['single_days'] ?? []) : []
                 );
 
                 $generated = $this->schedulingService->generateSessionsMultiPair($instance, $schedules);
@@ -336,13 +352,19 @@ class CourseInstanceController extends Controller
         // Current day pairs + start times, so the form can pre-select them
         $currentPairs      = $instance->instanceSchedules->pluck('day_of_week')->unique()->values();
         $currentStartTimes = [];
+        $currentSingleDays = [];   // pair => chosen single day number (if any)
         foreach ($instance->instanceSchedules as $sch) {
             $currentStartTimes[$sch->day_of_week] = \Carbon\Carbon::parse($sch->start_time)->format('H:i');
+            if ($sch->single_day !== null) {
+                $currentSingleDays[$sch->day_of_week] = (int) $sch->single_day;
+            }
         }
+        // If any schedule row carries a single_day, the course is single-day.
+        $scheduleType = count($currentSingleDays) > 0 ? 'single' : 'double';
 
         return view('student-care.course-instances.create', compact(
             'instance', 'templates', 'patches', 'branches', 'rooms', 'breakSlots', 'userBranch',
-            'completedCount', 'currentPairs', 'currentStartTimes'
+            'completedCount', 'currentPairs', 'currentStartTimes', 'currentSingleDays', 'scheduleType'
         ));
     }
 
@@ -371,6 +393,9 @@ class CourseInstanceController extends Controller
             'end_date'           => 'required|date|after_or_equal:start_date',
             'day_of_week'        => 'required|array|min:1',
             'day_of_week.*'      => 'in:sun_wed,sat_tue,mon_thu',
+            'schedule_type'      => 'nullable|in:single,double',
+            'single_days'        => 'nullable|array',
+            'single_days.*'      => 'nullable|integer|between:0,6',
             'start_times'        => 'required|array',
             'start_times.*'      => 'required|date_format:H:i',
             'time_slot_ids'      => 'nullable|array',
@@ -378,6 +403,18 @@ class CourseInstanceController extends Controller
         ]);
 
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+
+        // Single-day mode: course runs on only ONE day of each chosen pair.
+        $isSingle    = ($data['schedule_type'] ?? 'double') === 'single';
+        $singleDays  = $isSingle ? ($data['single_days'] ?? []) : [];
+        $resolveDays = function ($pair) use ($dayMap, $singleDays) {
+            $pairDays = $dayMap[$pair] ?? [];
+            $sd       = $singleDays[$pair] ?? null;
+            if ($sd !== null && $sd !== '' && in_array((int) $sd, $pairDays, true)) {
+                return [(int) $sd];
+            }
+            return $pairDays;
+        };
 
         // ── Completed sessions are locked ──────────────────────────────
         // They keep their original dates/times. We only rebuild the
@@ -403,7 +440,7 @@ class CourseInstanceController extends Controller
         // Begin from either the requested start date or the day after the
         // last completed session, whichever is later, then snap to the
         // first valid day for the chosen pair(s).
-        $allTargetDays = array_merge(...array_map(fn($p) => $dayMap[$p] ?? [], $data['day_of_week']));
+        $allTargetDays = array_merge(...array_map(fn($p) => $resolveDays($p), $data['day_of_week']));
 
         $genStart = \Carbon\Carbon::parse($data['start_date']);
         if ($lastCompletedDate) {
@@ -442,7 +479,7 @@ class CourseInstanceController extends Controller
                 $endMins    = ((int)$h * 60 + (int)$m) + (int)($dur * 60);
                 $endTime    = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
                 $startFull  = $startTime . ':00';
-                $targetDays = $dayMap[$pair] ?? [];
+                $targetDays = $resolveDays($pair);
 
                 $conflict = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
                     $q->where('room_id', $data['room_id'])
@@ -558,7 +595,8 @@ class CourseInstanceController extends Controller
                         $instance->course_instance_id,
                         $data['day_of_week'],
                         $data['start_times'],
-                        $data['time_slot_ids'] ?? null
+                        $data['time_slot_ids'] ?? null,
+                        (($data['schedule_type'] ?? 'double') === 'single') ? ($data['single_days'] ?? []) : []
                     );
 
                     // Temporarily set the instance window to the regeneration
@@ -645,7 +683,11 @@ class CourseInstanceController extends Controller
 
         foreach ($schedules as $i => $schedule) {
             $need       = $perPair + ($i === 0 ? $remainder : 0);
-            $targetDays = $dayMap[$schedule->day_of_week] ?? [];
+            $pairDays   = $dayMap[$schedule->day_of_week] ?? [];
+            // Single-day schedules generate on just their one chosen day.
+            $targetDays = ($schedule->single_day !== null && in_array((int) $schedule->single_day, $pairDays, true))
+                ? [(int) $schedule->single_day]
+                : $pairDays;
             if (empty($targetDays) || $need <= 0) continue;
 
             $cursor = \Carbon\Carbon::parse($instance->start_date);
@@ -919,6 +961,17 @@ class CourseInstanceController extends Controller
         // In edit mode, ignore the sessions of the instance being edited —
         // they're about to be rebuilt, so they must not block their own times.
         $excludeId  = $request->query('exclude_instance_id');
+        // Only consider sessions that fall on the SAME weekday(s) we're
+        // scheduling. Without this, a 12:00 class on Sunday would wrongly mark
+        // 12:00 as taken for a Wednesday-only course. `single_day` (0-6) narrows
+        // a pair to one day; otherwise both days of the pair are considered.
+        $pair       = $request->query('pair');
+        $singleDay  = $request->query('single_day');
+        $dayMap     = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+        $targetDays = $dayMap[$pair] ?? [];
+        if ($singleDay !== null && $singleDay !== '' && in_array((int) $singleDay, $targetDays, true)) {
+            $targetDays = [(int) $singleDay];
+        }
 
         if (!$teacherId || !$startDate) return response()->json([]);
 
@@ -928,8 +981,12 @@ class CourseInstanceController extends Controller
         )
         ->whereBetween('session_date', [$startDate, $endDate])
         ->where('status', '!=', 'Cancelled')
-        ->pluck('start_time')
-        ->map(fn($t) => \Carbon\Carbon::parse($t)->format('H:i'))
+        ->get()
+        // Keep only sessions on the weekday(s) we're actually scheduling.
+        ->when(!empty($targetDays), fn($rows) => $rows->filter(fn($s) =>
+            in_array(\Carbon\Carbon::parse($s->session_date)->dayOfWeek, $targetDays, true)
+        ))
+        ->map(fn($s) => \Carbon\Carbon::parse($s->start_time)->format('H:i'))
         ->unique()->values()->toArray();
 
         return response()->json($occupied);
@@ -952,7 +1009,18 @@ class CourseInstanceController extends Controller
         }
 
         $dayMap        = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
-        $allTargetDays = array_merge(...array_map(fn($p) => $dayMap[$p] ?? [], $pairs));
+        // Honor single-day mode: narrow each pair to its chosen single day.
+        $singleDays    = (array) $request->single_days;
+        $isSingle      = ($request->schedule_type ?? 'double') === 'single';
+        $resolveDays   = function ($pair) use ($dayMap, $singleDays, $isSingle) {
+            $pd = $dayMap[$pair] ?? [];
+            $sd = $singleDays[$pair] ?? null;
+            if ($isSingle && $sd !== null && $sd !== '' && in_array((int) $sd, $pd, true)) {
+                return [(int) $sd];
+            }
+            return $pd;
+        };
+        $allTargetDays = array_merge(...array_map(fn($p) => $resolveDays($p), $pairs));
         $newStart      = \Carbon\Carbon::createFromTimeString($startTime);
         $newEnd        = $newStart->copy()->addHours($sessionDur);
 
@@ -1047,7 +1115,18 @@ class CourseInstanceController extends Controller
 
         $pairsArr   = array_filter(explode(',', $pairs));
         $dayMap     = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
-        $targetDays = array_merge(...array_map(fn($p) => $dayMap[$p] ?? [], $pairsArr));
+        // single_days arrives as JSON {pair: dayNum}; narrow each pair to its
+        // chosen day so a single-day course only checks the room on that day.
+        $singleDays = json_decode($request->query('single_days', '{}'), true) ?: [];
+        $isSingle   = ($request->query('schedule_type') ?? 'double') === 'single';
+        $targetDays = array_merge(...array_map(function ($p) use ($dayMap, $singleDays, $isSingle) {
+            $pd = $dayMap[$p] ?? [];
+            $sd = $singleDays[$p] ?? null;
+            if ($isSingle && $sd !== null && $sd !== '' && in_array((int) $sd, $pd, true)) {
+                return [(int) $sd];
+            }
+            return $pd;
+        }, $pairsArr));
 
         [$h, $m]   = explode(':', $startTime);
         $endMins   = ((int)$h * 60 + (int)$m) + (int)($duration * 60);

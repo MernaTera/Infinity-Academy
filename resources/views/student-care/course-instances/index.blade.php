@@ -16,7 +16,7 @@
 
 <style>
     body, .ci-page * { font-family: 'DM Sans', sans-serif; }
-    body { min-width: fit-content; }
+    /* body { min-width: fit-content; } */
 
     .ci-page {
         min-height: 100vh;

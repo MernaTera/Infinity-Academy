@@ -42,6 +42,16 @@
 
 /* ── Pair Cards ── */
 .pair-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.stype-card{background:var(--card);}
+input[name="schedule_type"]:checked + .stype-card{border-color:var(--blue)!important;background:var(--blue-l);}
+input[name="schedule_type"]:checked + .stype-card > div:first-child{color:var(--blue)!important;}
+.single-day-picker{margin-top:10px;padding-top:10px;border-top:1px dashed rgba(27,79,168,0.15);}
+.single-day-picker-title{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--orange);margin-bottom:6px;font-weight:600;}
+.sd-day-opts{display:flex;gap:6px;}
+.sd-day-opt{flex:1;position:relative;cursor:pointer;}
+.sd-day-opt input{position:absolute;opacity:0;width:0;height:0;}
+.sd-day-label{display:block;padding:7px 4px;text-align:center;font-size:11px;font-weight:600;border:1.5px solid var(--border);border-radius:6px;color:var(--text);transition:all 0.15s;background:#fff;}
+.sd-day-opt input:checked + .sd-day-label{border-color:var(--blue);background:var(--blue);color:#fff;}
 .pair-option{position:relative;}
 .pair-option input[type="checkbox"]{position:absolute;opacity:0;width:0;height:0;}
 .pair-card{display:flex;flex-direction:column;padding:14px 12px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s;background:var(--card);}
@@ -332,6 +342,27 @@
 
                     {{-- Pairs grid — shown when ready --}}
                     <div id="scheduleReady" style="display:none;">
+                        {{-- Single vs Double day toggle --}}
+                        <div id="scheduleTypeToggle" style="margin-bottom:16px;">
+                            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--orange);font-weight:600;margin-bottom:8px;">Days per week</div>
+                            <div style="display:flex;gap:10px;">
+                                <label style="flex:1;position:relative;cursor:pointer;">
+                                    <input type="radio" name="schedule_type" value="double" {{ (!isset($scheduleType) || $scheduleType !== 'single') ? 'checked' : '' }} onchange="onScheduleTypeChange()" style="position:absolute;opacity:0;width:0;height:0;">
+                                    <div class="stype-card" data-type="double" style="padding:12px;border:1.5px solid var(--border);border-radius:8px;text-align:center;transition:all 0.2s;">
+                                        <div style="font-size:13px;font-weight:600;color:var(--text);">Both days</div>
+                                        <div style="font-size:10px;color:var(--faint);margin-top:2px;">Full pair (e.g. Sat + Tue)</div>
+                                    </div>
+                                </label>
+                                <label style="flex:1;position:relative;cursor:pointer;">
+                                    <input type="radio" name="schedule_type" value="single" {{ (isset($scheduleType) && $scheduleType === 'single') ? 'checked' : '' }} onchange="onScheduleTypeChange()" style="position:absolute;opacity:0;width:0;height:0;">
+                                    <div class="stype-card" data-type="single" style="padding:12px;border:1.5px solid var(--border);border-radius:8px;text-align:center;transition:all 0.2s;">
+                                        <div style="font-size:13px;font-weight:600;color:var(--text);">Single day</div>
+                                        <div style="font-size:10px;color:var(--faint);margin-top:2px;">One day of the pair only</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
                         <div class="pair-grid" id="pairGrid">
                             {{-- populated by JS --}}
                         </div>
@@ -405,6 +436,23 @@ let _teacherPairs = []; // available pairs from teacher with existing course inf
 const dayMap     = { sun_wed:[0,3], sat_tue:[6,2], mon_thu:[1,4] };
 const pairLabels = { sun_wed:'Sun & Wed', sat_tue:'Sat & Tue', mon_thu:'Mon & Thu' };
 const allPairs   = ['sat_tue','sun_wed','mon_thu'];
+// Each pair's two day numbers (Carbon: 0=Sun … 6=Sat) and their short labels,
+// for the single-day picker.
+const pairDayNums   = { sat_tue:[6,2], sun_wed:[0,3], mon_thu:[1,4] };
+const dayNumLabels  = { 0:'Sun', 1:'Mon', 2:'Tue', 3:'Wed', 4:'Thu', 5:'Fri', 6:'Sat' };
+// Pre-selected single days when editing (pair => day number), injected below.
+const initialSingleDays = @json($currentSingleDays ?? new stdClass());
+function scheduleType() {
+    return document.querySelector('input[name="schedule_type"]:checked')?.value || 'double';
+}
+// Label for a pair honoring single-day mode: "Wed" instead of "Sun & Wed".
+function pairLabelFor(pair) {
+    if (scheduleType() === 'single') {
+        const sd = document.querySelector(`input[name="single_days[${pair}]"]:checked`);
+        if (sd) return dayNumLabels[Number(sd.value)] || pairLabels[pair];
+    }
+    return pairLabels[pair] || pair;
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────
 function getCheckedPairs() {
@@ -617,6 +665,23 @@ function renderPairGrid(pairsData) {
 
         const slotInfo = pairInfo ? `${pairInfo.slot_name} · ${pairInfo.slot_start}–${pairInfo.slot_end}` : 'Not available';
 
+        // Single-day picker (only in single mode, only for available pairs)
+        let singleDayHtml = '';
+        if (isAvailable && scheduleType() === 'single') {
+            const days = pairDayNums[pair] || [];
+            const preSel = (initialSingleDays && initialSingleDays[pair] !== undefined) ? Number(initialSingleDays[pair]) : days[0];
+            singleDayHtml = `<div class="single-day-picker">
+                <div class="single-day-picker-title">Which day?</div>
+                <div class="sd-day-opts">
+                    ${days.map(dn => `
+                        <label class="sd-day-opt">
+                            <input type="radio" name="single_days[${pair}]" value="${dn}" ${dn===preSel?'checked':''} onchange="recalculate()">
+                            <span class="sd-day-label">${dayNumLabels[dn]}</span>
+                        </label>`).join('')}
+                </div>
+            </div>`;
+        }
+
         const div = document.createElement('div');
         div.className = 'pair-option';
         div.innerHTML = `
@@ -631,7 +696,8 @@ function renderPairGrid(pairsData) {
                 <div class="pair-name">${pairLabels[pair]}</div>
                 <div class="pair-slot">${slotInfo}</div>
                 ${coursesHtml}
-            </label>`;
+            </label>
+            ${singleDayHtml}`;
         grid.appendChild(div);
     });
 
@@ -644,12 +710,20 @@ function renderPairGrid(pairsData) {
     onPairChange();
 }
 
+// ── Schedule type (single / double) change ─────────────────────────────────
+// Re-render the pair grid so the single-day pickers appear or disappear.
+// Checked pairs and their chosen times are preserved by renderPairGrid.
+function onScheduleTypeChange() {
+    renderPairGrid(_teacherPairs);
+    onPairChange();
+}
+
 // ── Pair change ───────────────────────────────────────────────────────────
 function onPairChange() {
     const pairs   = getCheckedPairs();
     const section = document.getElementById('timePickerSection');
 
-    document.getElementById('sum-days').textContent = pairs.map(p => pairLabels[p]).join(' + ') || '—';
+    document.getElementById('sum-days').textContent = pairs.map(p => pairLabelFor(p)).join(' + ') || '—';
 
     // Auto-adjust start date to first valid day
     adjustStartDateForPairs();
@@ -846,7 +920,14 @@ async function renderTimeSlots(pair) {
     } catch {}
     if (!slots.length) slots = generateGenericSlots();
     try {
-        const r2 = await fetch(`/student-care/occupied-slots?teacher_id=${teacherId}&pair=${pair}&start_date=${startDate}&end_date=${endDate}${editExcludeParam()}`);
+        // In single-day mode, tell the server which one day of the pair we use,
+        // so it only treats that weekday's sessions as occupied.
+        let sdParam = '';
+        if (scheduleType() === 'single') {
+            const sd = document.querySelector(`input[name="single_days[${pair}]"]:checked`);
+            if (sd) sdParam = `&single_day=${sd.value}`;
+        }
+        const r2 = await fetch(`/student-care/occupied-slots?teacher_id=${teacherId}&pair=${pair}&start_date=${startDate}&end_date=${endDate}${sdParam}${editExcludeParam()}`);
         if (r2.ok) occupied = await r2.json();
     } catch {}
 
@@ -897,7 +978,7 @@ function onTimeChange(pair) {
         document.getElementById(`ci_end_time_${pair}`).value = et;
         const times = getCheckedPairs().map(p => {
             const st = document.getElementById(`ci_start_time_${p}`)?.value;
-            return st ? `${pairLabels[p]}: ${st}` : null;
+            return st ? `${pairLabelFor(p)}: ${st}` : null;
         }).filter(Boolean);
         document.getElementById('sum-time').textContent = times.join(' | ') || '—';
     }
@@ -939,7 +1020,18 @@ function recalculate() {
 
 function calcEndDate(startDate, pairs, sessions) {
     if (!startDate || !pairs.length || !sessions) return '';
-    const targetDays = pairs.flatMap(p => dayMap[p] || []);
+    // Respect single-day mode: each pair contributes only its chosen day, so
+    // the date range stretches far enough to fit all sessions (a Wed-only
+    // course needs ~3 weeks for 3 sessions, not ~1½).
+    const single = scheduleType() === 'single';
+    const targetDays = pairs.flatMap(p => {
+        const pd = dayMap[p] || [];
+        if (single) {
+            const sd = document.querySelector(`input[name="single_days[${p}]"]:checked`);
+            if (sd) return [Number(sd.value)];
+        }
+        return pd;
+    });
     if (!targetDays.length) return '';
     const date = new Date(startDate + 'T00:00:00');
     let count = 0, last = null;
@@ -992,6 +1084,15 @@ async function fetchPreview() {
 
     const teacherId = document.getElementById('ci_teacher').value;
     if (teacherId && startDate && pairs.length && startTime) {
+        // Collect the single-day choices (pair => day number) when in single mode.
+        const stype = scheduleType();
+        const singleDaysPayload = {};
+        if (stype === 'single') {
+            pairs.forEach(p => {
+                const sd = document.querySelector(`input[name="single_days[${p}]"]:checked`);
+                if (sd) singleDaysPayload[p] = sd.value;
+            });
+        }
         try {
             const res = await fetch('/student-care/check-conflicts', {
                 method: 'POST',
@@ -999,6 +1100,7 @@ async function fetchPreview() {
                 body: JSON.stringify({
                     teacher_id:teacherId, start_date:startDate, end_date:endDate,
                     day_of_week:pairs, start_time:startTime, session_duration:sessionDur,
+                    schedule_type: stype, single_days: singleDaysPayload,
                     exclude_instance_id: (typeof EDIT_INSTANCE_ID !== 'undefined' ? EDIT_INSTANCE_ID : null)
                 }),
             });
@@ -1096,7 +1198,17 @@ async function checkRoomAvailability() {
     }
     if (!roomId || !startDate || !startTime || !pairs.length) { el.style.display='none'; return; }
     try {
-        const res  = await fetch(`/student-care/check-room-availability?room_id=${roomId}&start_date=${startDate}&end_date=${endDate}&pairs=${pairs.join(',')}&start_time=${startTime}&duration=${dur}${editExcludeParam()}`);
+        // Pass single-day choices so the room is only checked on the days we use.
+        const stype = scheduleType();
+        const sdObj = {};
+        if (stype === 'single') {
+            pairs.forEach(p => {
+                const sd = document.querySelector(`input[name="single_days[${p}]"]:checked`);
+                if (sd) sdObj[p] = sd.value;
+            });
+        }
+        const sdQ = `&schedule_type=${stype}&single_days=${encodeURIComponent(JSON.stringify(sdObj))}`;
+        const res  = await fetch(`/student-care/check-room-availability?room_id=${roomId}&start_date=${startDate}&end_date=${endDate}&pairs=${pairs.join(',')}&start_time=${startTime}&duration=${dur}${sdQ}${editExcludeParam()}`);
         const data = await res.json();
         el.style.cssText = data.available
             ? 'padding:10px 14px;border-radius:4px;margin-top:8px;font-size:12px;border-left:3px solid;background:rgba(5,150,105,0.06);border-color:#059669;color:#059669;display:block;'

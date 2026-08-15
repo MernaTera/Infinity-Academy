@@ -24,6 +24,23 @@ class SchedulingService
         'mon_thu' => 'Mon & Thu',
     ];
 
+    /**
+     * The day numbers a schedule should generate sessions on. Normally that's
+     * both days of the pair (e.g. sat_tue → [6,2]). If the schedule is marked
+     * single-day, it's just that one day (e.g. [6]) — but only when that day is
+     * actually part of the pair, otherwise we fall back to the full pair.
+     */
+    private function targetDaysForSchedule(InstanceSchedule $schedule): array
+    {
+        $pairDays = self::DAY_MAP[$schedule->day_of_week] ?? [];
+
+        if ($schedule->single_day !== null && in_array((int) $schedule->single_day, $pairDays, true)) {
+            return [(int) $schedule->single_day];
+        }
+
+        return $pairDays;
+    }
+
 
     public function getTeacherAvailablePairs($teacherId): array
     {
@@ -89,6 +106,7 @@ class SchedulingService
         return InstanceSchedule::create([
             'course_instance_id'     => $instanceId,
             'day_of_week'            => $data['day_of_week'],
+            'single_day'             => $data['single_day'] ?? null,
             'time_slot_id'           => $data['time_slot_id'] ?? null,
             'start_time'             => $data['start_time'],
             'created_by_employee_id' => auth()->user()->employee->first()?->employee_id,
@@ -100,17 +118,20 @@ class SchedulingService
         int $instanceId, 
         array $pairs, 
         array|string $startTimes,  // ✅ array أو string
-        array|int|null $timeSlotIds = null
+        array|int|null $timeSlotIds = null,
+        array $singleDays = []     // per-pair chosen single day (0-6) or absent = both days
     ): array {
         $schedules = [];
         foreach ($pairs as $pair) {
             $startTime  = is_array($startTimes)  ? ($startTimes[$pair]  ?? null) : $startTimes;
             $timeSlotId = is_array($timeSlotIds) ? ($timeSlotIds[$pair] ?? null) : $timeSlotIds;
+            $singleDay  = $singleDays[$pair] ?? null;
 
             if (!$startTime) continue; // ✅ skip لو مفيش وقت للـ pair دي
 
             $schedules[] = $this->storeSchedule($instanceId, [
                 'day_of_week'  => $pair,
+                'single_day'   => ($singleDay === '' || $singleDay === null) ? null : (int) $singleDay,
                 'time_slot_id' => $timeSlotId,
                 'start_time'   => $startTime,
             ]);
@@ -124,7 +145,7 @@ class SchedulingService
         int &$sessionNum = 1,
         int $remainingSessions = 0
     ): int {
-        $targetDays = self::DAY_MAP[$schedule->day_of_week] ?? [];
+        $targetDays = $this->targetDaysForSchedule($schedule);
 
         if (empty($targetDays)) {
             throw new \Exception('Invalid day pair: ' . $schedule->day_of_week);
