@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
 use App\Models\Finance\InstallmentApprovalLog;
 use App\Models\Enrollment\Enrollment;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class PaymentPlan
@@ -30,6 +31,7 @@ use App\Models\Enrollment\Enrollment;
  */
 class PaymentPlan extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'payment_plan';
 	protected $primaryKey = 'payment_plan_id';
 	public $timestamps = false;
@@ -44,6 +46,7 @@ class PaymentPlan extends Model
 	];
 
 	protected $fillable = [
+        'branch_id',
 		'name',
 		'deposit_percentage',
 		'installment_count',

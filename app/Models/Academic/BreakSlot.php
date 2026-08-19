@@ -9,6 +9,7 @@ namespace App\Models\Academic;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class BreakSlot
@@ -27,6 +28,7 @@ use App\Models\HR\Employee;
  */
 class BreakSlot extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'break_slot';
 	protected $primaryKey = 'break_slot_id';
 	public $timestamps = true;
@@ -40,6 +42,7 @@ class BreakSlot extends Model
 	];
 
 	protected $fillable = [
+        'branch_id',
 		'name',
 		'start_time',
 		'end_time',

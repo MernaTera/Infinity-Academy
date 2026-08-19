@@ -43,6 +43,26 @@ trait BelongsToBranch
                 $query->where($table . '.branch_id', $branchId);
             }
         });
+
+        // Stamp the current branch on new rows automatically. Without this,
+        // forms that predate multi-branch (which never sent a branch_id) would
+        // save rows with branch_id = null — and the global scope above would
+        // then hide those rows from everyone. Setting it here means every
+        // controller and form gets correct branch ownership for free, and it's
+        // impossible to forget on a new one.
+        //
+        // We only fill it when it's still empty (so an explicit branch_id, e.g.
+        // a deliberate cross-branch admin action, is never overwritten) and only
+        // when there's a current branch (console/jobs and branchless users leave
+        // it untouched rather than forcing a wrong value).
+        static::creating(function ($model) {
+            if ($model->branch_id === null) {
+                $branchId = BranchContext::currentBranchId();
+                if ($branchId !== null) {
+                    $model->branch_id = $branchId;
+                }
+            }
+        });
     }
 
     /**

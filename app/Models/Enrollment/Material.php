@@ -3,13 +3,16 @@
 namespace App\Models\Enrollment;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Concerns\BelongsToBranch;
 
 class Material extends Model
 {
+	use BelongsToBranch;
     protected $table = 'materials';
     protected $primaryKey = 'material_id';
 
     protected $fillable = [
+        'branch_id',
         'name',
         'price',
         'revenue_type',

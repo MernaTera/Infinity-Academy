@@ -225,11 +225,13 @@ select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http:
                     </thead>
                     <tbody>
                         @php
+                            $currentBranchId = \App\Support\BranchContext::currentBranchId();
                             $allAssignments = DB::table('material_assignment')
                                 ->join('materials', 'materials.material_id', '=', 'material_assignment.material_id')
                                 ->leftJoin('course_template', 'course_template.course_template_id', '=', 'material_assignment.course_template_id')
                                 ->leftJoin('level', 'level.level_id', '=', 'material_assignment.level_id')
                                 ->leftJoin('sublevel', 'sublevel.sublevel_id', '=', 'material_assignment.sublevel_id')
+                                ->when($currentBranchId !== null, fn($q) => $q->where('materials.branch_id', $currentBranchId))
                                 ->select('material_assignment.*', 'materials.name as mat_name', 'course_template.name as course_name', 'level.name as level_name', 'sublevel.name as sub_name')
                                 ->orderByDesc('material_assignment.created_at')
                                 ->get();

@@ -13,6 +13,7 @@ use App\Models\Academic\CourseInstance;
 use App\Models\Academic\Level;
 use App\Models\Finance\Offer;
 use App\Models\Academic\EnglishLevel;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class CourseTemplate
@@ -35,6 +36,7 @@ use App\Models\Academic\EnglishLevel;
  */
 class CourseTemplate extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'course_template';
 	protected $primaryKey = 'course_template_id';
 	public $timestamps = true;
@@ -48,6 +50,7 @@ class CourseTemplate extends Model
 	];
 
 	protected $fillable = [
+        'branch_id',
 		'name',
 		'price',
 		'english_level_id',

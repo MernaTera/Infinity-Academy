@@ -6,17 +6,25 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\HR\Employee;
+use App\Models\Enrollment\Material;
+use App\Models\Academic\CourseTemplate;
 use App\Services\AuditService;
 
 class MaterialController extends Controller
 {
     public function index()
     {
-        $materials = DB::table('materials')
-            ->orderByDesc('created_at')
-            ->get();
+        // Eloquent (not DB::table) so the branch scope applies — an admin sees
+        // only their own branch's materials and courses.
+        $materials = Material::orderByDesc('created_at')->get();
+
+        // Assignments belong to a branch through their material. We keep the
+        // join query (for the course/level/sublevel names) but restrict it to
+        // this branch's materials, which we already fetched above.
+        $branchMaterialIds = $materials->pluck('material_id')->all();
 
         $assignments = DB::table('material_assignment')
+            ->whereIn('material_assignment.material_id', $branchMaterialIds)
             ->leftJoin('course_template', 'course_template.course_template_id', '=', 'material_assignment.course_template_id')
             ->leftJoin('level', 'level.level_id', '=', 'material_assignment.level_id')
             ->leftJoin('sublevel', 'sublevel.sublevel_id', '=', 'material_assignment.sublevel_id')
@@ -29,12 +37,14 @@ class MaterialController extends Controller
             ->get()
             ->groupBy('material_id');
 
-        $courses = DB::table('course_template')->where('is_active', true)->orderBy('name')->get();
+        $courses = CourseTemplate::where('is_active', true)->orderBy('name')->get();
 
         $stats = [
             'total'  => $materials->count(),
             'active' => $materials->where('is_active', 1)->count(),
-            'assigned' => DB::table('material_assignment')->distinct('material_id')->count('material_id'),
+            'assigned' => DB::table('material_assignment')
+                ->whereIn('material_id', $branchMaterialIds)
+                ->distinct('material_id')->count('material_id'),
         ];
 
         return view('admin.materials.index', compact('materials', 'assignments', 'courses', 'stats'));
@@ -50,14 +60,13 @@ class MaterialController extends Controller
 
         $adminId = Employee::where('user_id', auth()->id())->value('employee_id');
 
-        DB::table('materials')->insert([
+        // Eloquent create so the trait stamps the admin's branch_id automatically.
+        Material::create([
             'name'                => $request->name,
             'price'               => $request->price,
             'revenue_type'        => $request->revenue_type,
             'is_active'           => true,
             'created_by_admin_id' => $adminId,
-            'created_at'          => now(),
-            'updated_at'          => now(),
         ]);
 
         return back()->with('success', 'Material created successfully.');
@@ -71,11 +80,13 @@ class MaterialController extends Controller
             'revenue_type' => 'required|in:Individual,Shared',
         ]);
 
-        DB::table('materials')->where('material_id', $id)->update([
+        // Eloquent so an admin can only update their own branch's material
+        // (findOrFail respects the scope and 404s on another branch's row).
+        $material = Material::findOrFail($id);
+        $material->update([
             'name'          => $request->name,
             'price'         => $request->price,
             'revenue_type'  => $request->revenue_type,
-            'updated_at'    => now(),
         ]);
 
         return back()->with('success', 'Material updated successfully.');
@@ -83,11 +94,8 @@ class MaterialController extends Controller
 
     public function toggle($id)
     {
-        $material = DB::table('materials')->where('material_id', $id)->first();
-        DB::table('materials')->where('material_id', $id)->update([
-            'is_active'  => !$material->is_active,
-            'updated_at' => now(),
-        ]);
+        $material = Material::findOrFail($id);
+        $material->update(['is_active' => !$material->is_active]);
         return back()->with('success', 'Material status updated.');
     }
 
@@ -100,6 +108,13 @@ class MaterialController extends Controller
             'sublevel_id'        => 'nullable|exists:sublevel,sublevel_id',
             'is_mandatory'       => 'boolean',
         ]);
+
+        // The material must belong to the current admin's branch. Material::find
+        // respects the branch scope, so a material from another branch resolves
+        // to null and is rejected.
+        if (Material::find($request->material_id) === null) {
+            return back()->with('error', 'This material is not available for your branch.');
+        }
 
         $exists = DB::table('material_assignment')
             ->where('material_id', $request->material_id)

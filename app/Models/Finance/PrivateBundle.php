@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
 use App\Models\Enrollment\Enrollment;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class PrivateBundle
@@ -26,6 +27,7 @@ use App\Models\Enrollment\Enrollment;
  */
 class PrivateBundle extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'private_bundle';
 	protected $primaryKey = 'bundle_id';
 	public $timestamps = true;
@@ -39,6 +41,7 @@ class PrivateBundle extends Model
 	];
 
 	protected $fillable = [
+        'branch_id',
 		'hours',
 		'price',
 		'is_active',

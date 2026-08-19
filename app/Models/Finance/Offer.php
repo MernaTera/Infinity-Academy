@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
 use App\Models\Academic\CourseTemplate;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class Offer
@@ -29,6 +30,7 @@ use App\Models\Academic\CourseTemplate;
  */
 class Offer extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'offer';
 	protected $primaryKey = 'offer_id';
 	public $timestamps = true;
@@ -44,6 +46,7 @@ class Offer extends Model
 	];
 
 	protected $fillable = [
+        'branch_id',
 		'offer_name',
 		'discount_type',
 		'discount_value',

@@ -5,9 +5,11 @@ namespace App\Models\Finance;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\Academic\CourseTemplate;
 use App\Models\HR\Employee;
+use App\Models\Concerns\BelongsToBranch;
 
 class LevelPackage extends Model
 {
+	use BelongsToBranch;
     protected $table      = 'level_package';
     protected $primaryKey = 'package_id';
     public $timestamps    = true;
@@ -20,6 +22,7 @@ class LevelPackage extends Model
     ];
 
     protected $fillable = [
+        'branch_id',
         'course_template_id',
         'name',
         'levels_count',

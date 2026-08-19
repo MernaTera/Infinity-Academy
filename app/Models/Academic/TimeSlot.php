@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
 use App\Models\HR\TeacherAvailability;
 use App\Models\InstanceSchedule;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class TimeSlot
@@ -30,6 +31,7 @@ use App\Models\InstanceSchedule;
  */
 class TimeSlot extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'time_slot';
 	protected $primaryKey = 'time_slot_id';
 	public $timestamps = true;
@@ -43,6 +45,7 @@ class TimeSlot extends Model
 	];
 
 	protected $fillable = [
+        'branch_id',
 		'name',
 		'start_time',
 		'end_time',

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
 use App\Models\Academic\Patch;
 use App\Models\HR\Teacher;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class ContractType
@@ -29,6 +30,7 @@ use App\Models\HR\Teacher;
  */
 class ContractType extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'contract_type';
 	protected $primaryKey = 'contract_type_id';
 	public $timestamps = true;
@@ -43,6 +45,7 @@ class ContractType extends Model
 	];
 
 	protected $fillable = [
+        'branch_id',
 		'teacher_id',
 		'patch_id',
 		'contract_type',
