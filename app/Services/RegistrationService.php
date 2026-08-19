@@ -157,8 +157,13 @@ class RegistrationService
                 ]);
 
                 // ── Collect notifications instead of sending immediately ──
+                // Only notify admins in the SAME branch as this enrollment —
+                // each branch is isolated, so another branch's admin should
+                // neither see nor be pinged about this request.
                 $admins = \App\Models\Auth\User::whereHas('role', fn($q) =>
                     $q->where('role_name', 'Admin')
+                )->whereHas('employee', fn($q) =>
+                    $q->where('branch_id', $enrollment->branch_id)
                 )->get();
 
                 $csName      = auth()->user()->name ?? 'CS';

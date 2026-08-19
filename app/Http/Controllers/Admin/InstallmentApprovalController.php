@@ -17,7 +17,12 @@ class InstallmentApprovalController extends Controller
 {
     public function index()
     {
-        $pending = InstallmentApprovalLog::with([
+        // These approval logs have no branch_id of their own; they belong to a
+        // branch through their enrollment. whereHas('enrollment') runs against
+        // the branch-scoped Enrollment model, so each admin only sees requests
+        // whose enrollment is in their branch.
+        $pending = InstallmentApprovalLog::whereHas('enrollment')
+        ->with([
             'enrollment.student',
             'enrollment.courseTemplate',
             'enrollment.patch',
@@ -28,7 +33,8 @@ class InstallmentApprovalController extends Controller
         ->latest()
         ->get();
 
-        $history = InstallmentApprovalLog::with([
+        $history = InstallmentApprovalLog::whereHas('enrollment')
+        ->with([
             'enrollment.student',
             'approvedBy',
         ])
@@ -38,9 +44,9 @@ class InstallmentApprovalController extends Controller
         ->get();
 
         $stats = [
-            'pending'  => InstallmentApprovalLog::where('status', 'Pending')->count(),
-            'approved' => InstallmentApprovalLog::where('status', 'Approved')->count(),
-            'rejected' => InstallmentApprovalLog::where('status', 'Rejected')->count(),
+            'pending'  => InstallmentApprovalLog::whereHas('enrollment')->where('status', 'Pending')->count(),
+            'approved' => InstallmentApprovalLog::whereHas('enrollment')->where('status', 'Approved')->count(),
+            'rejected' => InstallmentApprovalLog::whereHas('enrollment')->where('status', 'Rejected')->count(),
         ];
 
         return view('admin.installments.index', compact('pending', 'history', 'stats'));
@@ -57,6 +63,14 @@ class InstallmentApprovalController extends Controller
 
         if ($log->status !== 'Pending') {
             return back()->with('error', 'This request has already been processed.');
+        }
+
+        // The enrollment is loaded through the branch-scoped relationship, so it
+        // resolves to null when it belongs to another branch (or was removed).
+        // An admin should only ever act on their own branch's requests, so fail
+        // gracefully instead of crashing on a null enrollment.
+        if ($log->enrollment === null) {
+            return back()->with('error', 'This request is not available for your branch.');
         }
 
         DB::transaction(function () use ($log) {
@@ -200,6 +214,12 @@ class InstallmentApprovalController extends Controller
 
         if ($log->status !== 'Pending') {
             return back()->with('error', 'This request has already been processed.');
+        }
+
+        // Same branch-scope guard as approve(): the enrollment is null when it
+        // belongs to another branch, so fail gracefully instead of crashing.
+        if ($log->enrollment === null) {
+            return back()->with('error', 'This request is not available for your branch.');
         }
 
         DB::transaction(function () use ($log, $request) {

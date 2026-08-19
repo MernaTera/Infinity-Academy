@@ -27,6 +27,7 @@ use App\Models\Enrollment\RestrictionLog;
 use App\Models\Enrollment\WaitingList;
 use App\Models\Finance\PaymentPlan;
 use App\Models\Finance\PrivateBundle;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class Enrollment
@@ -76,6 +77,8 @@ use App\Models\Finance\PrivateBundle;
  */
 class Enrollment extends Model
 {
+	use BelongsToBranch;
+
 	protected $table = 'enrollment';
 	protected $primaryKey = 'enrollment_id';
 	public $timestamps = true;

@@ -269,7 +269,7 @@
         </a>
         <a href="{{ route('admin.installments.index') }}" data-tip="Installments"
            class="sl {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}">
-            @php $pi = \App\Models\Finance\InstallmentApprovalLog::where('status','Pending')->count(); @endphp
+            @php $pi = \App\Models\Finance\InstallmentApprovalLog::whereHas('enrollment')->where('status','Pending')->count(); @endphp
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             <span class="sl-txt">Installments</span>
             @if($pi > 0)<span class="sl-bdg">{{ $pi }}</span>@endif

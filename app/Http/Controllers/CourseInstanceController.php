@@ -238,7 +238,9 @@ class CourseInstanceController extends Controller
                         'updated_at'          => now(),
                     ]);
 
-                    $adminEmployees = \App\Models\HR\Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))->get();
+                    $adminEmployees = \App\Models\HR\Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))
+                        ->where('branch_id', $instance->branch_id)
+                        ->get();
                     foreach ($adminEmployees as $admin) {
                         \DB::table('user_notification')->insert([
                             'employee_id'         => $admin->employee_id,
@@ -624,7 +626,9 @@ class CourseInstanceController extends Controller
                         'updated_at'          => now(),
                     ]);
 
-                    $adminEmployees = \App\Models\HR\Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))->get();
+                    $adminEmployees = \App\Models\HR\Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))
+                        ->where('branch_id', $instance->branch_id)
+                        ->get();
                     foreach ($adminEmployees as $admin) {
                         \DB::table('user_notification')->insert([
                             'employee_id'         => $admin->employee_id,

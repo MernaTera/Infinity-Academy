@@ -151,11 +151,8 @@ class RefundController extends Controller
             'status'            => 'Pending',
         ]);
 
-        $adminIds = DB::table('employee')
-            ->join('users', 'employee.user_id', '=', 'users.id')
-            ->join('role', 'users.role_id', '=', 'role.role_id')
-            ->where('role.role_name', 'Admin')
-            ->pluck('employee.employee_id');
+        // Notify only admins in this enrollment's branch (branches are isolated).
+        $adminIds = \App\Support\BranchContext::adminEmployeeIdsForBranch($enrollment->branch_id);
 
         $studentName = $enrollment->student?->full_name ?? "Enrollment #{$enrollment->enrollment_id}";
         $matNote = $refundMaterial ? ' (incl. material)' : '';

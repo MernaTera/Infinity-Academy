@@ -165,14 +165,12 @@ class TeacherReportController extends Controller
             }
 
             if ($request->action === 'submit') {
-                $studentName = \App\Models\Enrollment\Enrollment::find($request->enrollment_id)?->student?->full_name ?? '—';
+                $reportEnrollment = \App\Models\Enrollment\Enrollment::find($request->enrollment_id);
+                $studentName = $reportEnrollment?->student?->full_name ?? '—';
                 $teacherName = $employee?->full_name ?? 'Teacher';
 
-                $adminIds = DB::table('employee')
-                    ->join('users', 'employee.user_id', '=', 'users.id')
-                    ->join('role', 'users.role_id', '=', 'role.role_id')
-                    ->where('role.role_name', 'Admin')
-                    ->pluck('employee.employee_id');
+                // Only admins in the enrollment's branch (branches are isolated).
+                $adminIds = \App\Support\BranchContext::adminEmployeeIdsForBranch($reportEnrollment?->branch_id);
 
                 foreach ($adminIds as $adminId) {
                     \App\Services\NotificationService::send(
@@ -259,11 +257,8 @@ class TeacherReportController extends Controller
                 $studentName = $report->enrollment?->student?->full_name ?? '—';
                 $teacherName = $employee?->full_name ?? 'Teacher';
 
-                $adminIds = DB::table('employee')
-                    ->join('users', 'employee.user_id', '=', 'users.id')
-                    ->join('role', 'users.role_id', '=', 'role.role_id')
-                    ->where('role.role_name', 'Admin')
-                    ->pluck('employee.employee_id');
+                // Only admins in the enrollment's branch (branches are isolated).
+                $adminIds = \App\Support\BranchContext::adminEmployeeIdsForBranch($report->enrollment?->branch_id);
 
                 foreach ($adminIds as $adminId) {
                     \App\Services\NotificationService::send(
