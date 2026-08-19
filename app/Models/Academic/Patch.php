@@ -13,6 +13,7 @@ use App\Models\Enrollment\Enrollment;
 use App\Models\Finance\FinancialTransaction;
 use App\Models\Finance\RevenueSplit;
 use App\Models\Enrollment\WaitingList;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class Patch
@@ -42,6 +43,7 @@ use App\Models\Enrollment\WaitingList;
  */
 class Patch extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'patch';
 	protected $primaryKey = 'patch_id';
 	public $timestamps = true;

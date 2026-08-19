@@ -13,6 +13,7 @@ use App\Models\Auth\User;
 use App\Models\Enrollment\Enrollment;
 use App\Models\Enrollment\PlacementTest;
 use App\Models\Student\StudentPhone;
+use App\Models\Concerns\BelongsToBranch;
 
 
 /**
@@ -39,6 +40,8 @@ use App\Models\Student\StudentPhone;
  */
 class Student extends Model
 {
+	use BelongsToBranch;
+
 	protected $table = 'student';
 	protected $primaryKey = 'student_id';
 	public $timestamps = true;
@@ -53,6 +56,7 @@ class Student extends Model
 
 	protected $fillable = [
 		'user_id',
+		'branch_id',
 		'full_name',
 		'birthdate',
 		'degree',

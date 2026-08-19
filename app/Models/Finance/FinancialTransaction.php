@@ -13,6 +13,7 @@ use App\Models\Academic\Patch;
 use App\Models\Finance\InstallmentSchedule;
 use App\Models\Finance\RefundRequest;
 use App\Models\Finance\RevenueSplit;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class FinancialTransaction
@@ -42,6 +43,8 @@ use App\Models\Finance\RevenueSplit;
  */
 class FinancialTransaction extends Model
 {
+	use BelongsToBranch;
+
 	protected $table = 'financial_transaction';
 	protected $primaryKey = 'transaction_id';
 	public $timestamps = true;

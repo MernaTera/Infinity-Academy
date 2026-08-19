@@ -18,6 +18,7 @@ use App\Models\Enrollment\Enrollment;
 use App\Models\Academic\InstanceSchedule;
 use App\Models\Academic\ScheduleChangeLog;
 use App\Models\Academic\CourseSession;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class CourseInstance
@@ -58,6 +59,7 @@ use App\Models\Academic\CourseSession;
  */
 class CourseInstance extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'course_instance';
 	protected $primaryKey = 'course_instance_id';
 	public $timestamps = true;

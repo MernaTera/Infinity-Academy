@@ -10,6 +10,7 @@ use App\Models\Core\Branch;
 use App\Models\HR\Employee;
 use App\Models\Academic\Patch;
 use App\Models\Finance\FinancialTransaction;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class RevenueSplit
@@ -35,6 +36,7 @@ use App\Models\Finance\FinancialTransaction;
  */
 class RevenueSplit extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'revenue_split';
 	protected $primaryKey = 'revenue_split_id';
 	public $timestamps = true;

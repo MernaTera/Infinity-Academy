@@ -13,6 +13,7 @@ use App\Models\Academic\Sublevel;
 use App\Models\Leads\LeadCallLog;
 use App\Models\Leads\LeadHistory;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class Lead
@@ -47,6 +48,8 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class Lead extends Model
 {
+	use BelongsToBranch;
+
 	protected $table = 'lead';
 	protected $primaryKey = 'lead_id';
     public $timestamps = true;
@@ -80,6 +83,7 @@ class Lead extends Model
         'start_preference_date',
 		'next_call_at',
 		'owner_cs_id',
+		'branch_id',
 		'is_active',
 		'notes'
 	];

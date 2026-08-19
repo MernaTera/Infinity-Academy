@@ -11,6 +11,7 @@ use App\Models\HR\Employee;
 use App\Models\Core\Branch;
 use App\Models\Academic\CourseInstance;
 use App\Models\Academic\CourseSession;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class Room
@@ -33,6 +34,7 @@ use App\Models\Academic\CourseSession;
  */
 class Room extends Model
 {
+	use BelongsToBranch;
 	protected $table = 'room';
 	protected $primaryKey = 'room_id';
 	public $timestamps = true;

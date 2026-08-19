@@ -110,7 +110,10 @@ class BranchContext
             return [];
         }
 
-        return \App\Models\HR\Employee::query()
+        // withoutGlobalScopes(): once Employee itself is branch-scoped, this
+        // query must NOT be limited to the current user's branch — we're asking
+        // for a specific (possibly different) branch's admins on purpose.
+        return \App\Models\HR\Employee::withoutGlobalScopes()
             ->where('branch_id', $branchId)
             ->whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))
             ->pluck('employee_id')

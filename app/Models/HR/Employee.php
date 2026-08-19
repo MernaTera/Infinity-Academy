@@ -13,6 +13,7 @@ use App\Models\Enrollment\CsTarget;
 use App\Models\Finance\RevenueSplit;
 use App\Models\Audit\AuditLog;
 use App\Models\HR\Teacher;
+use App\Models\Concerns\BelongsToBranch;
 
 /**
  * Class Employee
@@ -36,6 +37,8 @@ use App\Models\HR\Teacher;
 
 class Employee extends Model
 {
+	use BelongsToBranch;
+
 	protected $table = 'employee';
 	protected $primaryKey = 'employee_id';
 	public $timestamps = true;
@@ -53,8 +56,6 @@ class Employee extends Model
 		'user_id',
 		'branch_id',
 		'salary',
-		'work_start_time',
-		'work_end_time',
 		'status',
 		'hired_at'
 	];
