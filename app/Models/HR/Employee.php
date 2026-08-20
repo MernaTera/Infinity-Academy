@@ -47,7 +47,9 @@ class Employee extends Model
 		'user_id' => 'integer',
 		'branch_id' => 'integer',
 		'salary' => 'decimal:2',
-		'hired_at' => 'datetime',	
+		'hired_at' => 'datetime',
+		'work_start_time' => 'datetime',
+		'work_end_time' => 'datetime',
 		'created_at' => 'datetime'
 	];
 
@@ -56,6 +58,8 @@ class Employee extends Model
 		'user_id',
 		'branch_id',
 		'salary',
+        'work_start_time',
+		'work_end_time',
 		'status',
 		'hired_at'
 	];
