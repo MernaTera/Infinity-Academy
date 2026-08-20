@@ -173,7 +173,7 @@ class Enrollment extends Model
 
 	public function teacher()
 	{
-		return $this->belongsTo(Employee::class, 'teacher_id');
+		return $this->belongsTo(\App\Models\HR\Teacher::class, 'teacher_id', 'teacher_id');
 	}
 
 	public function sublevel()

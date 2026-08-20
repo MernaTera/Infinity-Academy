@@ -182,7 +182,7 @@
                             <span style="color:var(--faint);font-size:11px;">No active enrollment</span>
                             @endif
                         </td>
-                        <td style="font-size:12px;">{{ $e?->teacher?->full_name ?? '—' }}</td>
+                        <td style="font-size:12px;">{{ $e?->teacher?->name ?? $e?->courseInstance?->teacher?->name ?? '—' }}</td>
                         <td style="font-size:12px;">{{ $student->enrollments->first()?->createdByCs?->full_name ?? $student->lead?->owner?->full_name ?? '—' }}</td>
                         <td>
                             @php

@@ -248,7 +248,8 @@
                         </div>
                         <div class="enroll-meta">
                             {{ ucfirst($e->enrollment_type) }} · {{ $e->delivery_mood }}
-                            @if($e->teacher?->employee) · {{ $e->teacher->full_name }} @endif
+                            @php $eTeacher = $e->teacher ?? $e->courseInstance?->teacher; @endphp
+                            @if($eTeacher) · {{ $eTeacher->name }} @endif
                             · Registered by {{ $e->createdByCs?->full_name ?? '—' }}
                         </div>
 
