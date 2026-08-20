@@ -372,10 +372,7 @@
                                     <td style="font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--blue);">{{ number_format($inst->amount, 0) }} LE</td>
                                     <td>{{ \Carbon\Carbon::parse($inst->due_date)->format('d M Y') }}</td>
                                     <td style="font-size:10px;color:var(--muted);">
-                                        @php
-                                            $dp = $depositPayments->where('enrollment_id', $e->enrollment_id)->first();
-                                        @endphp
-                                        {{ $dp ? str_replace('_',' ', $dp->method) : '—' }}
+                                        {{ $inst->financialTransaction ? str_replace('_',' ', $inst->financialTransaction->payment_method) : '—' }}
                                     </td>
                                     <td>
                                         <span style="font-size:9px;color:{{ $inst->status === 'Paid' ? 'var(--green)' : ($inst->status === 'Overdue' ? 'var(--red)' : 'var(--muted)') }};">

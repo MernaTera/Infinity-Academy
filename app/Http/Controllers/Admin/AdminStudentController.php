@@ -124,7 +124,7 @@ class AdminStudentController extends Controller
                 'teacher.employee' => fn($q2) => $q2->withoutGlobalScope('branch'),
                 'paymentPlan',
                 'financialTransactions',
-                'installmentSchedules',
+                'installmentSchedules.financialTransaction',
                 'createdByCs',
                 'placementTest',
                 'courseInstance.sessions',
