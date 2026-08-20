@@ -1,0 +1,270 @@
+/* =========================================================
+   APP DATE — global date / datetime-local picker component
+   Same visual language as app-select (rounded pill control,
+   floating card panel, blue accent, hover states).
+
+   Applied automatically to every <input type="date"> and
+   <input type="datetime-local"> by resources/js/app-datepicker.js
+
+   Opt a specific input out with: data-no-enhance
+   ========================================================= */
+
+.app-date {
+    position: relative;
+    display: block;
+    width: 100%;
+}
+
+.app-date__native {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.app-date__control {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    min-height: 20px;
+    padding: 10px 12px;
+    background: #fff;
+    border: 1px solid rgba(27, 79, 168, 0.14);
+    border-radius: 9px;
+    font-size: 13px;
+    line-height: 1.3;
+    color: #1A2A4A;
+    cursor: pointer;
+    user-select: none;
+    box-shadow: 0 2px 8px rgba(27, 79, 168, 0.03);
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.app-date__control:hover { border-color: #1B4FA8; }
+
+.app-date__control.is-open,
+.app-date__control.is-focus {
+    border-color: #1B4FA8;
+    box-shadow: 0 0 0 3px rgba(27, 79, 168, 0.08);
+}
+
+.app-date--disabled .app-date__control {
+    cursor: default;
+    opacity: 0.55;
+    background: #F8F6F2;
+}
+
+.app-date__icon { flex: none; display: inline-flex; color: #1B4FA8; }
+
+.app-date__label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.app-date__label.is-placeholder { color: #AAB8C8; }
+
+.app-date__clear {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    color: #AAB8C8;
+    transition: background 0.15s, color 0.15s;
+}
+
+.app-date__clear:hover { background: rgba(220, 38, 38, 0.08); color: #DC2626; }
+
+/* ═══ floating panel (fixed on <body>, positioned via JS so it can
+   never be clipped by a card/section with overflow:hidden) ═══ */
+.app-date__panel {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    width: 290px;
+    background: #fff;
+    border: 1px solid rgba(27, 79, 168, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(15, 31, 61, 0.16);
+    padding: 14px;
+    font-size: 12.5px;
+    color: #1A2A4A;
+}
+
+.app-date__panel.is-open { display: block; }
+
+.app-date__nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.app-date__nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 7px;
+    color: #7A8A9A;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.app-date__nav-btn:hover { background: rgba(27, 79, 168, 0.08); color: #1B4FA8; }
+
+.app-date__month-label {
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    color: #1A2A4A;
+}
+
+.app-date__weekdays,
+.app-date__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.app-date__weekdays {
+    margin-bottom: 4px;
+}
+
+.app-date__weekday {
+    text-align: center;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: #AAB8C8;
+    padding: 4px 0;
+}
+
+.app-date__cell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-weight: 500;
+    color: #1A2A4A;
+    transition: background 0.15s, color 0.15s;
+}
+
+.app-date__cell:hover { background: rgba(27, 79, 168, 0.08); }
+
+.app-date__cell.is-muted { color: #C9D3E0; }
+
+.app-date__cell.is-today { color: #1B4FA8; font-weight: 700; }
+
+.app-date__cell.is-today::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #1B4FA8;
+}
+
+.app-date__cell.is-selected {
+    background: #1B4FA8;
+    color: #fff;
+    font-weight: 700;
+}
+
+.app-date__cell.is-selected::after { background: #fff; }
+
+.app-date__cell.is-disabled {
+    color: #E1E7F0;
+    cursor: default;
+    pointer-events: none;
+}
+
+.app-date__time-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(27, 79, 168, 0.08);
+}
+
+.app-date__time-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #7A8A9A;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.app-date__time-native {
+    flex: 1;
+    padding: 7px 10px;
+    border: 1px solid rgba(27, 79, 168, 0.14);
+    border-radius: 7px;
+    font-size: 12.5px;
+    color: #1A2A4A;
+    outline: none;
+    background: #fff;
+}
+
+.app-date__time-native:focus { border-color: #1B4FA8; }
+
+.app-date__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(27, 79, 168, 0.08);
+}
+
+.app-date__quick-btn {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #1B4FA8;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.app-date__quick-btn:hover { background: rgba(27, 79, 168, 0.08); }
+
+.app-date__quick-btn.is-muted { color: #AAB8C8; }
+.app-date__quick-btn.is-muted:hover { background: rgba(122, 138, 154, 0.1); color: #7A8A9A; }
+
+.app-date__done-btn {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    color: #fff;
+    background: #1B4FA8;
+    cursor: pointer;
+    padding: 7px 14px;
+    border-radius: 7px;
+    transition: background 0.15s;
+}
+
+.app-date__done-btn:hover { background: #163f88; }

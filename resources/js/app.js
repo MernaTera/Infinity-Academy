@@ -1,5 +1,6 @@
 import './bootstrap';
 import './app-select';
+import './app-datepicker';
 import Echo from 'laravel-echo';
 import Alpine from 'alpinejs';
 

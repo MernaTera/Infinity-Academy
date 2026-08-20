@@ -1,4 +1,5 @@
 @import './app-select.css';
+@import './app-datepicker.css';
 
 @tailwind base;
 @tailwind components;
