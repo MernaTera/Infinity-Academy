@@ -31,7 +31,7 @@ class CourseInstanceController extends Controller
         ])->latest()->paginate(10);
 
         $templates = CourseTemplate::all();
-        $teachers  = Teacher::with('employee')->get();
+        $teachers  = Teacher::whereHas('employee')->with('employee')->get();
         $patches   = Patch::whereIn('status', ['Active', 'Upcoming'])->get();
         $branches  = Branch::all();
         $rooms     = Room::all();
@@ -787,7 +787,9 @@ class CourseInstanceController extends Controller
         $course = CourseTemplate::find($courseId);
         if (!$course || !$course->english_level_id) return response()->json([]);
         return response()->json(
-            Teacher::where('english_level_id', '>=', $course->english_level_id)->with('employee')->get()
+            Teacher::where('english_level_id', '>=', $course->english_level_id)
+                ->whereHas('employee')
+                ->with('employee')->get()
         );
     }
 
@@ -796,6 +798,7 @@ class CourseInstanceController extends Controller
         return response()->json(
             Teacher::where('english_level_id', '>=', $englishLevelId)
                 ->where('is_active', true)
+                ->whereHas('employee')
                 ->with(['employee', 'englishLevel'])
                 ->get()
         );
