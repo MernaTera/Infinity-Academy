@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\BranchContext;
+
 use App\Models\Enrollment\Enrollment;
 use App\Models\Attendance\Attendance;
 use App\Models\Finance\PrivateBundle;
@@ -61,6 +63,7 @@ class PrivateHoursController extends Controller
         $leadByStudent = empty($studentIds) ? collect() :
             DB::table('lead')
                 ->whereIn('student_id', $studentIds)
+                ->when(BranchContext::currentBranchId() !== null, fn($q) => $q->where('branch_id', BranchContext::currentBranchId()))
                 ->orderByDesc('lead_id')
                 ->pluck('lead_id', 'student_id');
 

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\BranchContext;
+
 use App\Http\Controllers\Controller;
 use App\Models\Academic\CourseInstance;
 use App\Models\Academic\CourseSession;
@@ -209,6 +211,7 @@ class AdminCourseInstanceController extends Controller
         $enrollMap = DB::table('enrollment')
             ->whereIn('course_instance_id', $instanceIds)
             ->where('status', '!=', 'Cancelled')
+            ->when(BranchContext::currentBranchId() !== null, fn($q) => $q->where('branch_id', BranchContext::currentBranchId()))
             ->pluck('course_instance_id', 'enrollment_id');
 
         if ($enrollMap->isEmpty()) return [];

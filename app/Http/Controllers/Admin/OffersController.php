@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Support\BranchContext;
+
 use App\Http\Controllers\Controller;
 use App\Models\Finance\Offer;
 use App\Models\Academic\CourseTemplate;
@@ -51,6 +53,7 @@ class OffersController extends Controller
             $overlap = DB::table('offer')
                 ->join('offer_course_template', 'offer.offer_id', '=', 'offer_course_template.offer_id')
                 ->where('offer_course_template.course_template_id', $courseId)
+                ->when(BranchContext::currentBranchId() !== null, fn($q) => $q->where('offer.branch_id', BranchContext::currentBranchId()))
                 ->where('offer.is_active', true)
                 ->where('offer.start_date', '<=', $request->end_date)
                 ->where('offer.end_date', '>=', $request->start_date)

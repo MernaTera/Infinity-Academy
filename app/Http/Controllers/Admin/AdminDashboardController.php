@@ -18,6 +18,7 @@ use App\Models\Reports\Report;
 use App\Services\BalanceCalculator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Support\BranchContext;
 use Carbon\Carbon;
 
 class AdminDashboardController extends Controller
@@ -97,19 +98,19 @@ class AdminDashboardController extends Controller
         // ═══ TIER 2: ACTION QUEUE ═══
         $pendingInstallments = InstallmentSchedule::where('status', 'Pending')->count();
         $overdueInstallments = InstallmentSchedule::where('status', 'Overdue')->count();
-        $pendingApprovals    = \App\Models\Finance\InstallmentApprovalLog::where('status', 'Pending')->count();
-        $pendingRefunds      = RefundRequest::where('status', 'Pending')->count();
-        $pendingReports      = Report::where('status', 'Submitted')->count();
+        $pendingApprovals    = \App\Models\Finance\InstallmentApprovalLog::whereHas('enrollment')->where('status', 'Pending')->count();
+        $pendingRefunds      = RefundRequest::whereHas('enrollment')->where('status', 'Pending')->count();
+        $pendingReports      = Report::whereHas('enrollment')->where('status', 'Submitted')->count();
 
-        $overdueReports = Report::whereIn('status', ['Draft'])
+        $overdueReports = Report::whereHas('enrollment')->whereIn('status', ['Draft'])
             ->orWhere(function($q) { $q->whereNull('status'); })->count();
 
-        $expiringPostponements = Postponement::where('status', 'Active')
+        $expiringPostponements = Postponement::whereHas('enrollment')->where('status', 'Active')
             ->where('expected_return_date', '<=', now()->addDays(7))
             ->where('expected_return_date', '>=', now())
             ->count();
 
-        $expiredPostponements = Postponement::where('status', 'Expired')
+        $expiredPostponements = Postponement::whereHas('enrollment')->where('status', 'Expired')
             ->where('updated_at', '>=', now()->subDays(7))
             ->count();
 
@@ -117,9 +118,14 @@ class AdminDashboardController extends Controller
 
         // ═══ TIER 3: FINANCIAL BREAKDOWN ═══
 
+        // Branch scope for raw DB::table queries below (Eloquent models are
+        // already scoped by the trait; raw queries must filter explicitly).
+        $branchId = BranchContext::currentBranchId();
+
         // Payment methods — from financial_transaction, EXCLUDING unpaid installments.
         $ftMethodsQuery = DB::table('financial_transaction')
-            ->whereIn('transaction_type', ['Payment', 'Installment']);
+            ->whereIn('transaction_type', ['Payment', 'Installment'])
+            ->when($branchId !== null, fn($q) => $q->where('branch_id', $branchId));
         if (!empty($unpaidInstallmentTxIds)) {
             $ftMethodsQuery->whereNotIn('transaction_id', $unpaidInstallmentTxIds);
         }
@@ -163,7 +169,8 @@ class AdminDashboardController extends Controller
             ->leftJoin('course_instance as ci', 'e.course_instance_id', '=', 'ci.course_instance_id')
             ->leftJoin('course_template as ct1', 'ci.course_template_id', '=', 'ct1.course_template_id')
             ->leftJoin('course_template as ct2', 'e.course_template_id', '=', 'ct2.course_template_id')
-            ->whereIn('ft.transaction_type', ['Payment', 'Installment']);
+            ->whereIn('ft.transaction_type', ['Payment', 'Installment'])
+            ->when($branchId !== null, fn($q) => $q->where('ft.branch_id', $branchId));
         if (!empty($unpaidInstallmentTxIds)) {
             $revByCourseQuery->whereNotIn('ft.transaction_id', $unpaidInstallmentTxIds);
         }
@@ -182,7 +189,8 @@ class AdminDashboardController extends Controller
         // Revenue by Branch — date-based, excluding unpaid installments
         $revByBranchQuery = DB::table('financial_transaction as ft')
             ->join('branch', 'ft.branch_id', '=', 'branch.branch_id')
-            ->whereIn('ft.transaction_type', ['Payment', 'Installment']);
+            ->whereIn('ft.transaction_type', ['Payment', 'Installment'])
+            ->when($branchId !== null, fn($q) => $q->where('ft.branch_id', $branchId));
         if (!empty($unpaidInstallmentTxIds)) {
             $revByBranchQuery->whereNotIn('ft.transaction_id', $unpaidInstallmentTxIds);
         }
@@ -200,7 +208,7 @@ class AdminDashboardController extends Controller
 
         $totalStudents      = Enrollment::whereIn('status', ['Active', 'Restricted'])->count();
         $restrictedStudents = Enrollment::where('status', 'Restricted')->count();
-        $waitingList        = WaitingList::where('status', 'Active')->count();
+        $waitingList        = WaitingList::whereHas('enrollment')->where('status', 'Active')->count();
 
         $activeInstances = CourseInstance::where('status', 'Active')->withCount('enrollments')->get();
         $validInstances  = $activeInstances->filter(fn($i) => $i->capacity > 0);
