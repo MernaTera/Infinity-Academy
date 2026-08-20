@@ -1,4 +1,5 @@
 import './bootstrap';
+import './app-select';
 import Echo from 'laravel-echo';
 import Alpine from 'alpinejs';
 

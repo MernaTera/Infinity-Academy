@@ -128,7 +128,7 @@
                                 </div>
                             </div>
                             {{-- hidden select للـ function --}}
-                            <select class="status-select" data-id="{{ $lead->lead_id }}" style="display:none;"
+                            <select class="status-select" data-id="{{ $lead->lead_id }}" style="display:none;" data-no-enhance
                                     onchange="updateLeadStatus(this, {{ $lead->lead_id }})">
                                 @foreach(['Waiting','Call_Again','Registered','Not_Interested','Archived'] as $status)
                                     <option value="{{ $status }}" {{ $lead->status == $status ? 'selected' : '' }}>
