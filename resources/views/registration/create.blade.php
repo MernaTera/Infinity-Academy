@@ -526,6 +526,7 @@
                                 <option value="">— Select Level —</option>
                                 @foreach($levels as $level)
                                     <option value="{{ $level->level_id }}"
+                                        data-hours="{{ $level->total_hours ?? '' }}"
                                         {{ $lead->interested_level_id == $level->level_id ? 'selected' : '' }}>
                                         {{ $level->name }}
                                     </option>
@@ -539,6 +540,7 @@
                                 <option value="">— Select Sublevel —</option>
                                 @foreach($sublevels as $sublevel)
                                     <option value="{{ $sublevel->sublevel_id }}"
+                                        data-hours="{{ $sublevel->total_hours ?? '' }}"
                                         {{ $lead->interested_sublevel_id == $sublevel->sublevel_id ? 'selected' : '' }}>
                                         {{ $sublevel->name }}
                                     </option>
@@ -923,17 +925,35 @@
 
 <script>
     (function() {
-        const courseSel = document.getElementById('course_select');
-        const bundleSel = document.getElementById('bundle_select');
-        const warnBox   = document.getElementById('bundle_hours_warning');
-        const warnText  = document.getElementById('bundle_hours_warning_text');
+        const courseSel   = document.getElementById('course_select');
+        const levelSel     = document.getElementById('level_select');
+        const sublevelSel  = document.getElementById('sublevel_select');
+        const bundleSel   = document.getElementById('bundle_select');
+        const warnBox     = document.getElementById('bundle_hours_warning');
+        const warnText    = document.getElementById('bundle_hours_warning_text');
         if (!courseSel || !bundleSel || !warnBox) return;
 
-        function checkBundleHours() {
+        // The hours to check against follow the most specific selection made:
+        // sublevel chosen -> only that sublevel's hours matter, then level,
+        // and only fall back to the whole course's hours when neither a
+        // level nor a sublevel has been picked.
+        function currentRequiredHours() {
+            const sublevelOpt = sublevelSel?.options[sublevelSel.selectedIndex];
+            if (sublevelSel?.value && sublevelOpt?.dataset.hours) {
+                return { hours: parseFloat(sublevelOpt.dataset.hours || 0), label: 'sublevel' };
+            }
+            const levelOpt = levelSel?.options[levelSel.selectedIndex];
+            if (levelSel?.value && levelOpt?.dataset.hours) {
+                return { hours: parseFloat(levelOpt.dataset.hours || 0), label: 'level' };
+            }
             const courseOpt = courseSel.options[courseSel.selectedIndex];
+            return { hours: parseFloat(courseOpt?.dataset.hours || 0), label: 'course' };
+        }
+
+        function checkBundleHours() {
             const bundleOpt = bundleSel.options[bundleSel.selectedIndex];
 
-            const courseHours = parseFloat(courseOpt?.dataset.hours || 0);
+            const { hours: courseHours, label: scopeLabel } = currentRequiredHours();
             const bundleHours = parseFloat(bundleOpt?.dataset.hours || 0);
             const leftover    = parseFloat(bundleSel.dataset.leftover || 0);
 
@@ -947,8 +967,8 @@
                     ? `${totalAvailable} hours available (${leftover} carried + ${bundleHours} bundle)`
                     : `the selected bundle only has ${bundleHours}`;
                 warnText.textContent =
-                    `This course needs ${courseHours} hours but ${haveStr}. `
-                    + `The student will need ${diff} more hour(s) to finish the course.`;
+                    `This ${scopeLabel} needs ${courseHours} hours but ${haveStr}. `
+                    + `The student will need ${diff} more hour(s) to finish the ${scopeLabel}.`;
                 warnBox.style.display = 'block';
             } else {
                 warnBox.style.display = 'none';
@@ -956,6 +976,8 @@
         }
 
         courseSel.addEventListener('change', checkBundleHours);
+        levelSel?.addEventListener('change', checkBundleHours);
+        sublevelSel?.addEventListener('change', checkBundleHours);
         bundleSel.addEventListener('change', checkBundleHours);
 
         checkBundleHours();
