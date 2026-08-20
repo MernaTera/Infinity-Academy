@@ -253,8 +253,7 @@ class InstallmentApprovalController extends Controller
                 ]);
             }
             $enrollment->student?->update([
-                'is_active'     => false,
-                'global_status' => 'Inactive',
+                'is_active' => false,
             ]);
 
             $log->update([

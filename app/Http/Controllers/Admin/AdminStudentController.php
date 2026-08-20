@@ -29,6 +29,14 @@ class AdminStudentController extends Controller
                 'createdByCs',
             ])->latest(),
         ])
+        // A student whose every enrollment is 'Cancelled' only exists because
+        // an installment approval got rejected (financial records wiped, the
+        // enrollment flipped to Cancelled) — they never really enrolled, so
+        // they're excluded from this list entirely. A student with at least
+        // one non-Cancelled enrollment is a real student and stays visible.
+        ->whereHas('enrollments', fn($q) => $q->where('status', '!=', 'Cancelled'))
+        ->when($status, fn($q) =>
+            $q->whereHas('enrollments', fn($q2) => $q2->where('status', $status)))
         ->when($search, function ($q) use ($search) {
             $invoiceId = null;
             if (preg_match('/^INV-?(\d+)$/i', trim($search), $m)) {
@@ -49,7 +57,6 @@ class AdminStudentController extends Controller
                 }
             });
         })
-        ->when($status, fn($q) => $q->where('status', $status))
         ->when($csFilter, fn($q) =>
             $q->whereHas('enrollments', fn($q2) =>
                 $q2->where('created_by_cs_id', $csFilter)))
@@ -87,11 +94,13 @@ class AdminStudentController extends Controller
             $q->where('role_name', 'Customer Service')
         )->get();
 
+        $visibleStudents = fn() => Student::whereHas('enrollments', fn($q) => $q->where('status', '!=', 'Cancelled'));
+
         $stats = [
-            'total'      => Student::count(),
-            'active'     => Student::where('status', 'Active')->count(),
-            'archived'   => Student::where('status', 'Archived')->count(),
-            'dropped'    => Student::where('status', 'Dropped')->count(),
+            'total'     => $visibleStudents()->count(),
+            'active'    => $visibleStudents()->whereHas('enrollments', fn($q) => $q->where('status', 'Active'))->count(),
+            'waiting'   => $visibleStudents()->whereHas('enrollments', fn($q) => $q->where('status', 'Waiting'))->count(),
+            'completed' => $visibleStudents()->whereHas('enrollments', fn($q) => $q->where('status', 'Completed'))->count(),
         ];
 
         return view('admin.students.index', compact(

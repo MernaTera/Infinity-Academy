@@ -76,8 +76,8 @@
     <div class="kpi-grid">
         <div class="kpi-card" style="--kc:var(--blue)"><div class="kpi-label">Total</div><div class="kpi-val">{{ $stats['total'] }}</div></div>
         <div class="kpi-card" style="--kc:var(--green)"><div class="kpi-label">Active</div><div class="kpi-val">{{ $stats['active'] }}</div></div>
-        <div class="kpi-card" style="--kc:var(--faint)"><div class="kpi-label">Archived</div><div class="kpi-val">{{ $stats['archived'] }}</div></div>
-        <div class="kpi-card" style="--kc:var(--orange)"><div class="kpi-label">Dropped</div><div class="kpi-val">{{ $stats['dropped'] }}</div></div>
+        <div class="kpi-card" style="--kc:#7F77DD"><div class="kpi-label">Waiting</div><div class="kpi-val">{{ $stats['waiting'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--orange)"><div class="kpi-label">Completed</div><div class="kpi-val">{{ $stats['completed'] }}</div></div>
     </div>
 
     {{-- Filters --}}
@@ -90,9 +90,13 @@
                 <label class="filter-label">Status</label>
                 <select name="status" class="filter-control">
                     <option value="">All Statuses</option>
-                    <option value="Active"   {{ $status === 'Active'   ? 'selected' : '' }}>Active</option>
-                    <option value="Archived" {{ $status === 'Archived' ? 'selected' : '' }}>Archived</option>
-                    <option value="Dropped"  {{ $status === 'Dropped'  ? 'selected' : '' }}>Dropped</option>
+                    <option value="Pending_Approval" {{ $status === 'Pending_Approval' ? 'selected' : '' }}>Pending Approval</option>
+                    <option value="Active"           {{ $status === 'Active'           ? 'selected' : '' }}>Active</option>
+                    <option value="Restricted"       {{ $status === 'Restricted'       ? 'selected' : '' }}>Restricted</option>
+                    <option value="Waiting"          {{ $status === 'Waiting'          ? 'selected' : '' }}>Waiting</option>
+                    <option value="Postponed"        {{ $status === 'Postponed'        ? 'selected' : '' }}>Postponed</option>
+                    <option value="Completed"        {{ $status === 'Completed'        ? 'selected' : '' }}>Completed</option>
+                    <option value="Expired"          {{ $status === 'Expired'          ? 'selected' : '' }}>Expired</option>
                 </select>
             </div>
             <div class="filter-field">

@@ -70,7 +70,6 @@ class RegistrationService
                     'birthdate'     => $lead->birthdate,
                     'degree'        => $lead->degree,
                     'location'      => $lead->location,
-                    'global_status' => 'Active',
                     'is_active'     => true,
                 ]);
             }
