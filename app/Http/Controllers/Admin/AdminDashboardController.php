@@ -43,7 +43,7 @@ class AdminDashboardController extends Controller
         // paid. So for ALL revenue math we must EXCLUDE the transactions whose
         // schedule is still Pending/Overdue. This mirrors OutstandingService.
         // ═══════════════════════════════════════════════════════════
-        $unpaidInstallmentTxIds = InstallmentSchedule::whereIn('status', ['Pending', 'Overdue'])
+        $unpaidInstallmentTxIds = InstallmentSchedule::whereHas('enrollment')->whereIn('status', ['Pending', 'Overdue'])
             ->whereNotNull('transaction_id')
             ->pluck('transaction_id')
             ->filter()
@@ -68,11 +68,13 @@ class AdminDashboardController extends Controller
             ? round(($periodRevenue - $prevPeriodRevenue) / $prevPeriodRevenue * 100)
             : ($periodRevenue > 0 ? 100 : 0);
 
-        $periodEnrollments = Enrollment::when($from,
-                fn($q) => $q->whereBetween('created_at', [$from, $to]))->count();
+        // Exclude Cancelled/Rejected — a rejected registration is not a real
+        // enrollment and must not inflate the period count or its trend.
+        $periodEnrollments = Enrollment::whereNotIn('status', ['Cancelled', 'Rejected'])
+                ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))->count();
 
-        $prevPeriodEnrollments = Enrollment::when($prevFrom,
-                fn($q) => $q->whereBetween('created_at', [$prevFrom, $prevTo]))->count();
+        $prevPeriodEnrollments = Enrollment::whereNotIn('status', ['Cancelled', 'Rejected'])
+                ->when($prevFrom, fn($q) => $q->whereBetween('created_at', [$prevFrom, $prevTo]))->count();
 
         $enrollmentsTrendPct = $prevPeriodEnrollments > 0
             ? round(($periodEnrollments - $prevPeriodEnrollments) / $prevPeriodEnrollments * 100)
@@ -96,14 +98,16 @@ class AdminDashboardController extends Controller
             ->sum('amount');
 
         // ═══ TIER 2: ACTION QUEUE ═══
-        $pendingInstallments = InstallmentSchedule::where('status', 'Pending')->count();
-        $overdueInstallments = InstallmentSchedule::where('status', 'Overdue')->count();
+        $pendingInstallments = InstallmentSchedule::whereHas('enrollment')->where('status', 'Pending')->count();
+        $overdueInstallments = InstallmentSchedule::whereHas('enrollment')->where('status', 'Overdue')->count();
         $pendingApprovals    = \App\Models\Finance\InstallmentApprovalLog::whereHas('enrollment')->where('status', 'Pending')->count();
         $pendingRefunds      = RefundRequest::whereHas('enrollment')->where('status', 'Pending')->count();
         $pendingReports      = Report::whereHas('enrollment')->where('status', 'Submitted')->count();
 
-        $overdueReports = Report::whereHas('enrollment')->whereIn('status', ['Draft'])
-            ->orWhere(function($q) { $q->whereNull('status'); })->count();
+        $overdueReports = Report::whereHas('enrollment')
+            ->where(function($q) {
+                $q->whereIn('status', ['Draft'])->orWhereNull('status');
+            })->count();
 
         $expiringPostponements = Postponement::whereHas('enrollment')->where('status', 'Active')
             ->where('expected_return_date', '<=', now()->addDays(7))
@@ -118,11 +122,9 @@ class AdminDashboardController extends Controller
 
         // ═══ TIER 3: FINANCIAL BREAKDOWN ═══
 
-        // Branch scope for raw DB::table queries below (Eloquent models are
-        // already scoped by the trait; raw queries must filter explicitly).
+        // Payment methods — from financial_transaction, EXCLUDING unpaid installments.
         $branchId = BranchContext::currentBranchId();
 
-        // Payment methods — from financial_transaction, EXCLUDING unpaid installments.
         $ftMethodsQuery = DB::table('financial_transaction')
             ->whereIn('transaction_type', ['Payment', 'Installment'])
             ->when($branchId !== null, fn($q) => $q->where('branch_id', $branchId));
@@ -217,6 +219,7 @@ class AdminDashboardController extends Controller
             : 0;
 
         $enrollTrend = Enrollment::where('created_at', '>=', now()->subDays(13)->startOfDay())
+            ->whereNotIn('status', ['Cancelled', 'Rejected'])
             ->select(DB::raw('DATE(created_at) as date'), DB::raw('COUNT(*) as total'))
             ->groupBy('date')->orderBy('date')->get()->keyBy('date');
 
