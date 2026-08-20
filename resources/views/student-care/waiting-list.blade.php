@@ -13,7 +13,7 @@
 
 <style>
     body, .wl-page * { font-family: 'DM Sans', sans-serif; }
-    body { min-width: fit-content; }
+    /* body { min-width: fit-content; } */
 
     .wl-page {
 

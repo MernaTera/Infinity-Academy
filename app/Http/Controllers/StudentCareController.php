@@ -28,7 +28,11 @@ class StudentCareController extends Controller
 
     public function waitingList()
     {
-        $waiting = WaitingList::with([
+        // WaitingList has no branch_id; it belongs to a branch through its
+        // enrollment. whereHas('enrollment') runs against the branch-scoped
+        // Enrollment model, so an SC in one branch only sees their branch's
+        // waiting list — never entries from a branch they aren't in.
+        $waiting = WaitingList::whereHas('enrollment')->with([
             'enrollment.student',
             'enrollment.courseTemplate',
             'enrollment.level'
@@ -56,6 +60,11 @@ class StudentCareController extends Controller
         ]);
 
         $waiting = WaitingList::with('enrollment')->findOrFail($request->waiting_id);
+
+        // enrollment is null when it belongs to another branch (scoped out).
+        if ($waiting->enrollment === null) {
+            return back()->with('error', 'This entry is not available for your branch.');
+        }
 
         $instance = CourseInstance::with('enrollments')
             ->withCount([
@@ -124,6 +133,10 @@ class StudentCareController extends Controller
     public function cancelWaiting(Request $request, $id)
     {
         $waiting = WaitingList::with('enrollment')->findOrFail($id);
+
+        if ($waiting->enrollment === null) {
+            return back()->with('error', 'This entry is not available for your branch.');
+        }
 
         if ($waiting->status === 'Assigned') {
             return back()->with('error', 'This student has already been assigned and cannot be cancelled.');
@@ -281,7 +294,7 @@ class StudentCareController extends Controller
         $totalStudents   = \App\Models\Enrollment\Enrollment::whereIn('status', ['Active', 'Restricted'])->count();
         $restrictedStudents = \App\Models\Enrollment\Enrollment::where('status', 'Restricted')->count();
         $postponedStudents  = \App\Models\Enrollment\Postponement::where('status', 'Active')->count();
-        $waitingList        = \App\Models\Enrollment\WaitingList::where('status', 'Active')->count();
+        $waitingList        = \App\Models\Enrollment\WaitingList::whereHas('enrollment')->where('status', 'Active')->count();
 
         $endingSoon = \App\Models\Academic\CourseInstance::where('status', 'Active')
             ->where('end_date', '<=', now()->addDays(7))
