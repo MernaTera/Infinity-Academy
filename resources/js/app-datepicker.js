@@ -132,6 +132,8 @@
         prevBtn.innerHTML = ICON_PREV;
         const monthLabel = document.createElement('span');
         monthLabel.className = 'app-date__month-label';
+        monthLabel.setAttribute('role', 'button');
+        monthLabel.title = 'Jump to month / year';
         const nextBtn = document.createElement('span');
         nextBtn.className = 'app-date__nav-btn';
         nextBtn.innerHTML = ICON_NEXT;
@@ -151,9 +153,23 @@
         const grid = document.createElement('div');
         grid.className = 'app-date__grid';
 
+        // Month + year jump overlay (opened by clicking the month label).
+        // Lets the user pick any year from a scrollable list and any month
+        // in two clicks instead of stepping one month at a time — essential
+        // for far-back dates like a birthdate.
+        const myPanel = document.createElement('div');
+        myPanel.className = 'app-date__my';
+        const yearCol = document.createElement('div');
+        yearCol.className = 'app-date__my-years';
+        const monthCol = document.createElement('div');
+        monthCol.className = 'app-date__my-months';
+        myPanel.appendChild(yearCol);
+        myPanel.appendChild(monthCol);
+
         panel.appendChild(nav);
         panel.appendChild(weekdaysRow);
         panel.appendChild(grid);
+        panel.appendChild(myPanel);
 
         let timeNative = null;
         if (isDateTime) {
@@ -256,6 +272,66 @@
             });
         }
 
+        function renderMonthYear() {
+            // Year list: wide, practical range. Respect min/max years if set,
+            // otherwise offer 120 years back (covers any birthdate) up to 10
+            // years ahead (covers future start dates).
+            const min = currentMinMax('min');
+            const max = currentMinMax('max');
+            const startY = min ? min.y : todayParts.y - 120;
+            const endY = max ? max.y : todayParts.y + 10;
+
+            yearCol.innerHTML = '';
+            for (let y = endY; y >= startY; y--) {
+                const yi = document.createElement('div');
+                yi.className = 'app-date__my-year' + (y === viewY ? ' is-active' : '');
+                yi.textContent = y;
+                yi.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    viewY = y;
+                    renderMonthYear();
+                    renderGrid();
+                });
+                yearCol.appendChild(yi);
+            }
+            // scroll the active year into view
+            const activeYear = yearCol.querySelector('.is-active');
+            if (activeYear) activeYear.scrollIntoView({ block: 'center' });
+
+            monthCol.innerHTML = '';
+            MONTHS_SHORT.forEach(function (mName, idx) {
+                const mi = document.createElement('div');
+                mi.className = 'app-date__my-month' + (idx + 1 === viewM ? ' is-active' : '');
+                mi.textContent = mName;
+                mi.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    viewM = idx + 1;
+                    closeMonthYear();
+                    renderGrid();
+                });
+                monthCol.appendChild(mi);
+            });
+        }
+
+        function openMonthYear() {
+            renderMonthYear();
+            myPanel.classList.add('is-open');
+            monthLabel.classList.add('is-open');
+        }
+
+        function closeMonthYear() {
+            myPanel.classList.remove('is-open');
+            monthLabel.classList.remove('is-open');
+        }
+
+        function toggleMonthYear(e) {
+            e.stopPropagation();
+            if (myPanel.classList.contains('is-open')) closeMonthYear();
+            else openMonthYear();
+        }
+
+        monthLabel.addEventListener('click', toggleMonthYear);
+
         function commit() {
             if (!selected) {
                 input.value = '';
@@ -305,6 +381,7 @@
             document.querySelectorAll('.app-select__panel.is-open').forEach(function (p) { p.classList.remove('is-open'); });
             viewY = (selected || todayParts).y;
             viewM = (selected || todayParts).m;
+            closeMonthYear();
             renderGrid();
             panel.classList.add('is-open');
             control.classList.add('is-open');
@@ -314,6 +391,7 @@
         function closePanel() {
             panel.classList.remove('is-open');
             control.classList.remove('is-open');
+            closeMonthYear();
         }
 
         function togglePanel(e) {
@@ -325,12 +403,14 @@
 
         prevBtn.addEventListener('click', function (e) {
             e.stopPropagation();
+            closeMonthYear();
             viewM--;
             if (viewM < 1) { viewM = 12; viewY--; }
             renderGrid();
         });
         nextBtn.addEventListener('click', function (e) {
             e.stopPropagation();
+            closeMonthYear();
             viewM++;
             if (viewM > 12) { viewM = 1; viewY++; }
             renderGrid();
