@@ -351,7 +351,7 @@ function selectInstance(card, instanceId) {
 function submitAssign() {
     const instanceId = document.getElementById('assign_instance_hidden').value;
     if (!instanceId) {
-        alert('Please select a course instance first.');
+        infAlert({ type:'warning', title:'Select a Course', message:'Please select a course instance first.' });
         return;
     }
     document.getElementById('assignForm').submit();

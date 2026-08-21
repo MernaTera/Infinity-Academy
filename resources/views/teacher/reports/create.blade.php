@@ -336,7 +336,7 @@ function submitForm(action) {
     // Validate enrollment selected
     const enrollmentInput = document.querySelector('[name="enrollment_id"]');
     if (!enrollmentInput || !enrollmentInput.value) {
-        alert('Please select a student/course first.');
+        infAlert({ type:'warning', title:'Select a Student', message:'Please select a student/course first.' });
         return;
     }
 
@@ -344,7 +344,7 @@ function submitForm(action) {
     if (action === 'submit') {
         const total = scores.reduce((a, b) => a + b, 0);
         if (total === 0) {
-            alert('Please fill in the scores before submitting.');
+            infAlert({ type:'warning', title:'Scores Required', message:'Please fill in the scores before submitting.' });
             return;
         }
         // Check each score within range
@@ -358,7 +358,7 @@ function submitForm(action) {
                 input.classList.remove('error');
             }
         });
-        if (!valid) { alert('Some scores are out of range. Please check.'); return; }
+        if (!valid) { infAlert({ type:'warning', title:'Check Scores', message:'Some scores are out of range. Please check.' }); return; }
     }
 
     document.getElementById('actionInput').value = action;

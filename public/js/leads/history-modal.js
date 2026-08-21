@@ -76,8 +76,8 @@ function confirmCall() {
     const leadId = modal?._leadId;
     const input  = document.getElementById('callDate').value;
 
-    if (!leadId) { alert('Error: Lead not found'); return; }
-    if (!input)  { alert('Please select date & time'); return; }
+    if (!leadId) { infAlert({ type:'error', title:'Lead Not Found', message:'This lead could not be found. Please refresh and try again.' }); return; }
+    if (!input)  { infAlert({ type:'warning', title:'Date Required', message:'Please select a date & time.' }); return; }
 
     fetch(`/leads/${leadId}`, {
         method: 'POST',

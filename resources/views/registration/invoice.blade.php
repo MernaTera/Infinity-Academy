@@ -444,10 +444,17 @@ document.getElementById('confirm_register_btn').addEventListener('click', async 
         } else if (data.redirect) {
             window.location.href = data.redirect;
 
-        } else if (data.errors) {
+        } else {
+            // Any failure: field-validation errors carry an `errors` map,
+            // business-rule blocks (e.g. an invalid custom start date) carry
+            // only a `message`. Previously only the `errors` case was handled,
+            // so a message-only 422 left the button stuck on "Processing…".
             btn.disabled = false;
             btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Confirm &amp; Register</span>';
-            alert(Object.values(data.errors).flat().join('\n'));
+            const msg = data.errors
+                ? Object.values(data.errors).flat().join('\n')
+                : (data.message || 'Registration could not be completed. Please review your entries and try again.');
+            infAlert({ type: 'error', title: 'Registration Blocked', message: msg });
         }
 
     } catch (e) {
