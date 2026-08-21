@@ -933,7 +933,23 @@ async function renderTimeSlots(pair) {
 
     container.innerHTML = '<div class="time-grid">' + slots.map(slot => {
         const isBreak    = isBreakTime(slot.start);
-        const isOccupied = occupied.includes(slot.start);
+        // A slot is occupied if the NEW session — [slotStart, slotStart+duration)
+        // — overlaps any existing course's time range on this weekday. This blocks
+        // every start that would clash (e.g. 09:30/10:00 against a 09:00–11:00
+        // course), not just the exact matching start time.
+        const toMin = (t) => { const [h,m] = t.split(':').map(Number); return h*60 + m; };
+        const newStart = toMin(slot.start);
+        // If no duration is entered yet, treat the session as a zero-length point
+        // so we still block any start that sits inside an existing course range.
+        const newEnd   = newStart + (sessionDur ? sessionDur*60 : 0);
+        const isOccupied = (occupied || []).some(o => {
+            if (typeof o === 'string') return o === slot.start; // backward-compat
+            const oStart = toMin(o.start), oEnd = toMin(o.end);
+            // Standard interval overlap. For a zero-length session (no duration
+            // yet), block starts that fall within [oStart, oEnd).
+            if (newEnd === newStart) return newStart >= oStart && newStart < oEnd;
+            return newStart < oEnd && newEnd > oStart;
+        });
         let isOutOfRange = false;
         if (sessionDur && slot.end) {
             const [sh,sm] = slot.start.split(':').map(Number);

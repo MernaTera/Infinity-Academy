@@ -877,36 +877,58 @@ class CourseInstanceController extends Controller
 
         if (!$teacherId || !$pair) return response()->json([]);
 
-        $availability = \App\Models\HR\TeacherAvailability::with('timeSlot')
+        // A teacher can have more than one time-slot on the same pair (e.g. a
+        // Morning 09:00–16:00 AND an Evening 05:00–12:00 window). Use ALL of
+        // them, not just the first, otherwise the extra window's hours never
+        // show up in the picker.
+        $availabilities = \App\Models\HR\TeacherAvailability::with('timeSlot')
             ->where('teacher_id', $teacherId)
             ->where('day_of_week', $pair)
-            ->first();
+            ->get()
+            ->filter(fn($a) => $a->timeSlot);
 
-        if (!$availability || !$availability->timeSlot) return response()->json([]);
+        if ($availabilities->isEmpty()) return response()->json([]);
 
-        $slot       = $availability->timeSlot;
-        $slotStart  = \Carbon\Carbon::createFromTimeString($slot->start_time);
-        $slotEnd    = \Carbon\Carbon::createFromTimeString($slot->end_time);
         $breakSlots = BreakSlot::where('is_active', true)->get();
-        $slots      = [];
-        $current    = $slotStart->copy();
 
-        while ($current->lt($slotEnd)) {
-            $timeStr = $current->format('H:i');
-            $isBreak = false;
-            foreach ($breakSlots as $b) {
-                $bStart = \Carbon\Carbon::createFromTimeString($b->start_time);
-                $bEnd   = \Carbon\Carbon::createFromTimeString($b->end_time);
-                if ($current->gte($bStart) && $current->lt($bEnd)) { $isBreak = true; break; }
+        // Build 30-min starts across the UNION of every window, keyed by time so
+        // overlapping windows don't produce duplicate slots. Each start keeps the
+        // latest window-end that contains it, so the picker knows how far a
+        // session may run from that start.
+        $byStart = [];
+        foreach ($availabilities as $av) {
+            $slot      = $av->timeSlot;
+            $slotStart = \Carbon\Carbon::createFromTimeString($slot->start_time);
+            $slotEnd   = \Carbon\Carbon::createFromTimeString($slot->end_time);
+            $current   = $slotStart->copy();
+
+            while ($current->lt($slotEnd)) {
+                $timeStr = $current->format('H:i');
+                $isBreak = false;
+                foreach ($breakSlots as $b) {
+                    $bStart = \Carbon\Carbon::createFromTimeString($b->start_time);
+                    $bEnd   = \Carbon\Carbon::createFromTimeString($b->end_time);
+                    if ($current->gte($bStart) && $current->lt($bEnd)) { $isBreak = true; break; }
+                }
+
+                $endStr = $slotEnd->format('H:i');
+                // If this start already exists from another window, keep the one
+                // that allows the longer session (later end).
+                if (!isset($byStart[$timeStr]) || $endStr > $byStart[$timeStr]['end']) {
+                    $byStart[$timeStr] = [
+                        'start'    => $timeStr,
+                        'end'      => $endStr,
+                        'slot_id'  => $slot->time_slot_id,
+                        'is_break' => $isBreak,
+                    ];
+                }
+                $current->addMinutes(30);
             }
-            $slots[] = [
-                'start'    => $timeStr,
-                'end'      => $slotEnd->format('H:i'),
-                'slot_id'  => $slot->time_slot_id,
-                'is_break' => $isBreak,
-            ];
-            $current->addMinutes(30);
         }
+
+        // Return sorted by start time.
+        ksort($byStart);
+        $slots = array_values($byStart);
 
         return response()->json($slots);
     }
@@ -935,15 +957,82 @@ class CourseInstanceController extends Controller
         }
         if (empty($pairByDay)) return response()->json([]);
 
-        $occupiedDates = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
+        // Collect existing sessions per date (with their time ranges), not just
+        // the set of dates. A single 2-hour session on a 12-hour availability day
+        // used to mark the WHOLE day occupied, which wrongly blocked the date as
+        // a start option even though hours remain. A date is only truly occupied
+        // when its availability window (minus breaks) has no free gap left for a
+        // new session — the specific taken times are still blocked at the
+        // time-slot step, so partial days stay selectable here.
+        $sessionsByDate = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
             $q->where('teacher_id', $teacherId)
             ->where('patch_id', $patchId)
             ->whereIn('status', ['Active','Upcoming','Pending_Approval'])
             ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
         )->where('status','!=','Cancelled')
-        ->pluck('session_date')
-        ->map(fn($d) => \Carbon\Carbon::parse($d)->format('Y-m-d'))
-        ->unique()->toArray();
+        ->get(['session_date', 'start_time', 'end_time'])
+        ->groupBy(fn($s) => \Carbon\Carbon::parse($s->session_date)->format('Y-m-d'));
+
+        // Availability window(s) per pair, so we can measure free gaps. A teacher
+        // may have more than one time-slot on the same pair, so keep them all.
+        $slotsByPair = [];
+        foreach ($availability as $av) {
+            if ($av->timeSlot) $slotsByPair[$av->day_of_week][] = $av->timeSlot;
+        }
+        $breakSlots = BreakSlot::where('is_active', true)->get();
+
+        // Smallest schedulable block. Matches the 30-min slot granularity used by
+        // getTimeSlotsForPair, so "free" here means at least one pickable start.
+        $minBlockMins = 30;
+
+        // A day is full only if NONE of its availability windows has a free gap
+        // of >= $minBlockMins after removing breaks and existing sessions.
+        $isDayFull = function ($dateStr, $pair) use ($sessionsByDate, $slotsByPair, $breakSlots, $minBlockMins) {
+            $slots = $slotsByPair[$pair] ?? [];
+            if (empty($slots)) return false; // no window info → don't hard-block the date
+
+            $daySessions = $sessionsByDate[$dateStr] ?? collect();
+
+            foreach ($slots as $slot) {
+                $winStart = \Carbon\Carbon::parse($dateStr . ' ' . \Carbon\Carbon::parse($slot->start_time)->format('H:i:s'));
+                $winEnd   = \Carbon\Carbon::parse($dateStr . ' ' . \Carbon\Carbon::parse($slot->end_time)->format('H:i:s'));
+
+                // Busy intervals inside this window (breaks + existing sessions).
+                $busy = [];
+                foreach ($breakSlots as $b) {
+                    $busy[] = [
+                        \Carbon\Carbon::parse($dateStr . ' ' . \Carbon\Carbon::parse($b->start_time)->format('H:i:s')),
+                        \Carbon\Carbon::parse($dateStr . ' ' . \Carbon\Carbon::parse($b->end_time)->format('H:i:s')),
+                    ];
+                }
+                foreach ($daySessions as $s) {
+                    $busy[] = [
+                        \Carbon\Carbon::parse($dateStr . ' ' . \Carbon\Carbon::parse($s->start_time)->format('H:i:s')),
+                        \Carbon\Carbon::parse($dateStr . ' ' . \Carbon\Carbon::parse($s->end_time)->format('H:i:s')),
+                    ];
+                }
+
+                // Walk this window; a single free gap >= min block means the day
+                // is NOT full (at least one start time is still pickable).
+                $cursor = $winStart->copy();
+                while ($cursor->lt($winEnd)) {
+                    $next = $winEnd->copy();
+                    foreach ($busy as [$bStart, $bEnd]) {
+                        if ($bEnd->lte($cursor)) continue;        // already passed
+                        if ($bStart->lte($cursor)) {              // busy covers cursor → jump to its end
+                            if ($bEnd->gt($cursor)) { $cursor = $bEnd->copy(); }
+                            $next = null;
+                            break;
+                        }
+                        if ($bStart->lt($next)) $next = $bStart->copy(); // nearest upcoming busy start
+                    }
+                    if ($next === null) continue;                 // cursor moved past a busy block
+                    if (abs($next->diffInMinutes($cursor)) >= $minBlockMins) return false; // free gap found
+                    $cursor = $next->copy();
+                }
+            }
+            return true; // no window had a big enough gap → fully occupied
+        };
 
         $result  = [];
         $current = \Carbon\Carbon::parse($patch->start_date);
@@ -952,12 +1041,13 @@ class CourseInstanceController extends Controller
         while ($current->lte($end)) {
             $dow = $current->dayOfWeek;
             if (isset($pairByDay[$dow])) {
+                $dateStr = $current->toDateString();
                 $result[] = [
-                    'date'     => $current->toDateString(),
+                    'date'     => $dateStr,
                     'day'      => $current->format('D'),
                     'display'  => $current->format('d M'),
                     'pair'     => $pairByDay[$dow],
-                    'occupied' => in_array($current->toDateString(), $occupiedDates),
+                    'occupied' => $isDayFull($dateStr, $pairByDay[$dow]),
                 ];
             }
             $current->addDay();
@@ -989,6 +1079,10 @@ class CourseInstanceController extends Controller
 
         if (!$teacherId || !$startDate) return response()->json([]);
 
+        // Return the full occupied time RANGES (not just start times), so the
+        // frontend can block every start whose session would overlap an existing
+        // one. Returning only the start time used to leave 09:30/10:00 pickable
+        // even though a 09:00–11:00 course already runs then.
         $occupied = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
             $q->where('teacher_id', $teacherId)
               ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
@@ -1000,8 +1094,12 @@ class CourseInstanceController extends Controller
         ->when(!empty($targetDays), fn($rows) => $rows->filter(fn($s) =>
             in_array(\Carbon\Carbon::parse($s->session_date)->dayOfWeek, $targetDays, true)
         ))
-        ->map(fn($s) => \Carbon\Carbon::parse($s->start_time)->format('H:i'))
-        ->unique()->values()->toArray();
+        ->map(fn($s) => [
+            'start' => \Carbon\Carbon::parse($s->start_time)->format('H:i'),
+            'end'   => \Carbon\Carbon::parse($s->end_time)->format('H:i'),
+        ])
+        ->unique(fn($r) => $r['start'] . '-' . $r['end'])
+        ->values()->toArray();
 
         return response()->json($occupied);
     }
