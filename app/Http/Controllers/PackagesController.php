@@ -35,6 +35,14 @@ class PackagesController extends Controller
                 'courseInstance',
             ])
             ->whereNotNull('package_id')
+            // Mirror the Private Hours screen: only enrolments that represent a
+            // live package belong here. Active/Restricted are on a current level;
+            // Completed still matters while prepaid units remain. Everything else
+            // — most importantly Cancelled (a rejected installment approval) and
+            // Pending_Approval (not yet approved) — must not appear.
+            ->where(function ($q) {
+                $q->whereIn('status', ['Active', 'Restricted', 'Completed']);
+            })
             ->orderByDesc('enrollment_id')
             ->get();
 
