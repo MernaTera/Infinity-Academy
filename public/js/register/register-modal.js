@@ -431,6 +431,13 @@ function recalcMaterials() {
         fetch(`/level-packages/${courseId}`)
             .then(r=>r.json())
             .then(packages => {
+                // Re-check the type here: the fetch is async, so the user may
+                // have switched to private (or cleared the type) while it was
+                // in flight. Without this guard a late response would re-show
+                // the section for a private enrolment.
+                const typeNow = document.querySelector('input[name="type"]:checked')?.value;
+                if (typeNow !== 'group') { section.style.display = 'none'; return; }
+
                 if (!packages.length) { section.style.display='none'; return; }
                 section.style.display = 'block';
                 container.innerHTML = '';
