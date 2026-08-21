@@ -11,7 +11,14 @@ class BranchAdminController extends Controller
 {
     public function index()
     {
-        $branches = Branch::withCount(['employees','courseInstances'])
+        // Employee and CourseInstance are branch-scoped, so a plain withCount
+        // would only count rows for the admin's *own* branch (showing 0 for
+        // every other branch). This screen is the intended cross-branch view,
+        // so each count explicitly ignores the branch scope.
+        $branches = Branch::withCount([
+                'employees'       => fn($q) => $q->withoutGlobalScope('branch'),
+                'courseInstances' => fn($q) => $q->withoutGlobalScope('branch'),
+            ])
             ->orderByDesc('is_active')
             ->orderBy('name')
             ->get();
@@ -69,7 +76,10 @@ class BranchAdminController extends Controller
             return back()->with('error', 'Incorrect password. Action cancelled.');
         }
 
-        $branch = Branch::withCount(['employees','courseInstances'])->findOrFail($id);
+        $branch = Branch::withCount([
+                'employees'       => fn($q) => $q->withoutGlobalScope('branch'),
+                'courseInstances' => fn($q) => $q->withoutGlobalScope('branch'),
+            ])->findOrFail($id);
 
         if ($branch->employees_count > 0 || $branch->course_instances_count > 0) {
             return back()->with('error', 'Cannot delete branch with existing employees or courses.');
