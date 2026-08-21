@@ -220,6 +220,15 @@ class RegistrationService
             }
  
             if (!$requiresApproval) {
+                // If the student joined an existing instance in the current patch
+                // (patchData type 'direct'), the enrolment is already placed in a
+                // course (course_instance_id + Active). The waiting-list row is
+                // then just a historical record and must show as 'Assigned' — not
+                // 'Active', which would wrongly list them as awaiting assignment.
+                // Only 'next'/'custom' (type 'waiting') genuinely await a course.
+                $isDirectlyAssigned = ($patchData['type'] ?? null) === 'direct'
+                    && !empty($enrollment->course_instance_id);
+
                 $waiting = WaitingList::create([
                     'enrollment_id'           => $enrollment->enrollment_id,
                     'requested_patch_id'      => $requestedPatchId,
@@ -235,7 +244,7 @@ class RegistrationService
                     'preferred_days'   => ($enrollment->enrollment_type === 'Private')
                         ? ($data['day'] ?? null)
                         : null,
-                    'status'           => 'Active',
+                    'status'           => $isDirectlyAssigned ? 'Assigned' : 'Active',
                     'notes'            => $data['notes'] ?? null,
                     'created_by_cs_id' => auth()->user()?->employee?->employee_id,
                 ]);
@@ -939,6 +948,43 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
                 'amount'             => $thisAmount,
                 'status'             => 'Pending',
             ]);
+        }
+
+        // If the student was auto-assigned to an existing instance at
+        // registration (current-patch group enrolment), the installments must
+        // get their due dates from that instance's sessions right away — the
+        // same mapping SC's assignToCourse() does. Otherwise they'd keep NULL
+        // due dates and show "Upon course assignment" forever even though the
+        // student is already in a course. Students who still await a course
+        // (course_instance_id is null) correctly keep NULL until assigned.
+        if (!empty($enrollment->course_instance_id)) {
+            $this->syncInstallmentDueDatesToSessions($enrollment);
+        }
+    }
+
+    /**
+     * Map an enrolment's pending installment due dates onto its course
+     * instance's session dates (installment N → session N). Shared by the
+     * direct-assignment registration path and mirrors SC's manual assignment.
+     */
+    private function syncInstallmentDueDatesToSessions($enrollment): void
+    {
+        $sessions = \App\Models\Academic\CourseSession::where('course_instance_id', $enrollment->course_instance_id)
+            ->orderBy('session_number')
+            ->get();
+
+        if ($sessions->isEmpty()) return;
+
+        $schedules = InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)
+            ->where('status', 'Pending')
+            ->orderBy('installment_number')
+            ->get();
+
+        foreach ($schedules as $i => $schedule) {
+            $session = $sessions[$i] ?? null;
+            if ($session) {
+                $schedule->update(['due_date' => $session->session_date]);
+            }
         }
     }
 
