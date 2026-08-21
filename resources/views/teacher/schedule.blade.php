@@ -26,6 +26,12 @@
 
 /* Filters */
 .filter-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+    .filter-bar .app-select,
+    .filter-bar > .filter-select {
+        flex: 1 1 150px;
+        min-width: 140px;
+        max-width: 260px;
+    }
 .filter-sel{padding:9px 14px;border:1px solid rgba(5,150,105,0.15);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1A2A4A;background:#fff;cursor:pointer;outline:none}
 .filter-sel:focus{border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,0.07)}
 .btn-filter{padding:9px 18px;background:#059669;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer}

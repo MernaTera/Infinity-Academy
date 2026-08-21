@@ -32,7 +32,12 @@
 .search-input{width:100%;padding:10px 14px 10px 38px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none}
 .search-input:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
 .filter-sel{padding:10px 14px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1A2A4A;background:#fff;cursor:pointer;outline:none}
-
+    .toolbar .app-select,
+    .toolbar > .filter-select {
+        flex: 1 1 150px;
+        min-width: 140px;
+        max-width: 260px;
+    }
 .tbl-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:6px;overflow:hidden}
 .tbl{width:100%;border-collapse:collapse}
 .tbl thead th{padding:11px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-align:left;font-weight:500;background:rgba(27,79,168,0.02);border-bottom:1px solid rgba(27,79,168,0.07);white-space:nowrap}

@@ -84,6 +84,17 @@
     }
     .filter-select:focus { border-color: #1B4FA8; }
 
+    /* keep the search box wide, then lay the four filters out inline,
+       each taking an equal share of the remaining row instead of
+       stacking full-width (the global app-select wrapper is 100% wide
+       by default, which is what pushed them onto separate lines) */
+    .toolbar .app-select,
+    .toolbar > .filter-select {
+        flex: 1 1 150px;
+        min-width: 140px;
+        max-width: 260px;
+    }
+
     .table-card {
         min-height: 400px; background: rgba(255,255,255,0.75);
         backdrop-filter: blur(10px); border: 1px solid rgba(27,79,168,0.1);

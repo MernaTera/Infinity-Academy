@@ -60,6 +60,12 @@
         display: flex; align-items: center; gap: 10px;
         margin-bottom: 16px; flex-wrap: wrap;
     }
+        .toolbar .app-select,
+    .toolbar > .filter-select {
+        flex: 1 1 150px;
+        min-width: 140px;
+        max-width: 260px;
+    }
     .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 360px; }
     .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
     .search-input {
