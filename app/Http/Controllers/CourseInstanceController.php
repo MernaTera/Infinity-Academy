@@ -27,7 +27,10 @@ class CourseInstanceController extends Controller
     public function index()
     {
         $instances = CourseInstance::with([
-            'courseTemplate','level','sublevel','teacher','patch','enrollments','sessions','instanceSchedules','room',
+            'courseTemplate','level','sublevel','teacher','patch','sessions','instanceSchedules','room',
+            // Cancelled enrolments (e.g. rejected installment approvals) must
+            // not count toward the capacity chip shown per instance.
+            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
         ])->latest()->paginate(10);
 
         $templates = CourseTemplate::all();
@@ -771,6 +774,10 @@ class CourseInstanceController extends Controller
         $instance = CourseInstance::with([
             'courseTemplate','level','sublevel','teacher.employee',
             'branch','patch','room',
+            // Exclude Cancelled enrolments (e.g. a rejected installment
+            // approval): they must not appear in the student list nor be
+            // counted against the instance's capacity.
+            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.student.phones',
             'enrollments.installmentSchedules',
             'sessions',
