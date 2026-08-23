@@ -39,10 +39,30 @@ return new class extends Migration {
 
             $table->index('course_template_id', 'idx_package_course');
         });
+
+        // Add the enrollment.package_id foreign key here, now that BOTH tables
+        // exist. It can't live in the add_package_tracking_to_enrollment
+        // migration (2026_03_17_080211) because that runs before this table is
+        // created. Guard for the column so it's safe on any DB state.
+        if (Schema::hasTable('enrollment') && Schema::hasColumn('enrollment', 'package_id')) {
+            Schema::table('enrollment', function (Blueprint $table) {
+                $table->foreign('package_id')
+                      ->references('package_id')
+                      ->on('level_package')
+                      ->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void
     {
+        // Drop the FK first (added in up()), then the table.
+        if (Schema::hasTable('enrollment') && Schema::hasColumn('enrollment', 'package_id')) {
+            Schema::table('enrollment', function (Blueprint $table) {
+                $table->dropForeign(['package_id']);
+            });
+        }
+
         Schema::dropIfExists('level_package');
     }
 };

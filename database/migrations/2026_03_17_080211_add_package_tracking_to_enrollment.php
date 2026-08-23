@@ -11,18 +11,18 @@ return new class extends Migration
         Schema::table('enrollment', function (Blueprint $table) {
             $table->unsignedBigInteger('package_id')->nullable()->after('bundle_id');
             $table->integer('package_units_remaining')->nullable()->after('package_id');
-
-            $table->foreign('package_id')
-                  ->references('package_id')
-                  ->on('level_package')
-                  ->nullOnDelete();
         });
+
+        // NOTE: the package_id → level_package foreign key is intentionally NOT
+        // added here. This migration's timestamp runs BEFORE the level_package
+        // table is created (2026_03_17_121016), so adding the FK now fails with
+        // "Foreign key constraint is incorrectly formed". The FK is added at the
+        // end of the create_level_package migration, once both tables exist.
     }
 
     public function down(): void
     {
         Schema::table('enrollment', function (Blueprint $table) {
-            $table->dropForeign(['package_id']);
             $table->dropColumn(['package_id', 'package_units_remaining']);
         });
     }
