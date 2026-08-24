@@ -13,66 +13,36 @@
 #adminNav.scrolled{background:rgba(255,255,255,0.99)!important;box-shadow:0 2px 20px rgba(27,79,168,0.08);}
 
 /* ═══════════════════════════════════════════════════════════════
-   CONTAINER — max-width + responsive padding
+   CONTAINER
 ═══════════════════════════════════════════════════════════════ */
 .anav-container{margin:0 auto;padding:0 clamp(12px,2vw,24px);}
 .anav-inner{display:flex;align-items:center;height:62px;gap:clamp(8px,1.5vw,14px);}
 
 /* ═══════════════════════════════════════════════════════════════
-   NAV LINKS — responsive font & spacing
+   LOGO — subtle lift on hover, feels alive
 ═══════════════════════════════════════════════════════════════ */
-.anav-link{font-size:clamp(9px,0.85vw,10px);letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-decoration:none;
-    padding:6px 0;position:relative;transition:color 0.2s;white-space:nowrap;}
-.anav-link::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:1.5px;
-    background:linear-gradient(90deg,#F5911E,#1B4FA8);transition:width 0.35s cubic-bezier(0.16,1,0.3,1);}
-.anav-link:hover,.anav-link.active{color:#1B4FA8;text-decoration:none;}
-.anav-link:hover::after,.anav-link.active::after{width:100%;}
-
-.anav-desktop-links{display:flex;align-items:center;gap:clamp(12px,1.8vw,26px);margin-left:clamp(8px,1.5vw,16px);flex:1;overflow:hidden;}
-
-/* ═══════════════════════════════════════════════════════════════
-   MONITORING DROPDOWN
-═══════════════════════════════════════════════════════════════ */
-.anav-monitor-wrap{position:relative;}
-.anav-monitor-btn{background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;
-    font-size:clamp(9px,0.85vw,10px);letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;
-    padding:6px 0;position:relative;transition:color 0.2s;white-space:nowrap;display:flex;align-items:center;gap:5px;}
-.anav-monitor-btn::after{content:'';position:absolute;bottom:-1px;left:0;width:0;height:1.5px;
-    background:linear-gradient(90deg,#F5911E,#1B4FA8);transition:width 0.35s cubic-bezier(0.16,1,0.3,1);}
-.anav-monitor-btn:hover,.anav-monitor-btn.active{color:#1B4FA8;}
-.anav-monitor-btn:hover::after,.anav-monitor-btn.active::after{width:100%;}
-.anav-monitor-chevron{transition:transform 0.2s;opacity:0.6;}
-.anav-monitor-wrap.open .anav-monitor-chevron{transform:rotate(180deg);}
-#monitorPanel{display:none;position:absolute;left:0;top:calc(100% + 10px);
-    background:rgba(255,255,255,0.99);backdrop-filter:blur(16px);
-    border:1px solid rgba(27,79,168,0.1);border-radius:8px;
-    box-shadow:0 12px 40px rgba(27,79,168,0.12);min-width:210px;overflow:hidden;z-index:999;}
-#monitorPanel.open{display:block;animation:dropIn 0.2s ease both;}
-.anav-monitor-item{display:flex;align-items:center;gap:10px;padding:11px 16px;font-size:10px; 
-    letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-decoration:none;transition:all 0.2s;
-    font-family:'DM Sans',sans-serif;}
-.anav-monitor-item:hover,.anav-monitor-item.active{color:#1B4FA8;background:rgba(27,79,168,0.04);text-decoration:none;}
-.anav-monitor-item svg{opacity:0.5;flex-shrink:0;transition:opacity 0.2s;}
-.anav-monitor-item:hover svg,.anav-monitor-item.active svg{opacity:1;}
+.anav-logo{transition:transform 0.25s cubic-bezier(0.16,1,0.3,1),filter 0.25s;}
+.anav-logo:hover{transform:translateY(-1px) scale(1.02);filter:drop-shadow(0 2px 6px rgba(27,79,168,0.15));}
 
 /* ═══════════════════════════════════════════════════════════════
    AVATAR + USER DROPDOWN
 ═══════════════════════════════════════════════════════════════ */
 .anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(245,145,30,0.08);
     border:1.5px solid rgba(245,145,30,0.25);display:flex;align-items:center;justify-content:center;
-    transition:border-color 0.2s;flex-shrink:0;cursor:pointer;}
-.anav-avatar:hover{border-color:#F5911E;}
+    transition:border-color 0.2s,transform 0.2s;flex-shrink:0;cursor:pointer;}
+.anav-avatar:hover{border-color:#F5911E;transform:scale(1.05);}
+.anav-avatar:active{transform:scale(0.96);}
 .nav-dropdown{display:none;position:absolute;right:0;top:calc(100% + 10px);
     background:rgba(255,255,255,0.99);backdrop-filter:blur(16px);
     border:1px solid rgba(27,79,168,0.1);border-radius:8px;
     box-shadow:0 12px 40px rgba(27,79,168,0.12);min-width:200px;overflow:hidden;z-index:999;}
-.nav-dropdown.open{display:block;animation:dropIn 0.2s ease both;}
-@keyframes dropIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.nav-dropdown.open{display:block;animation:dropIn 0.22s cubic-bezier(0.16,1,0.3,1) both;}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(0.98)}to{opacity:1;transform:none}}
 .nav-dropdown-item{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:10px;letter-spacing:2px;
-    text-transform:uppercase;color:#7A8A9A;text-decoration:none;transition:all 0.2s;
+    text-transform:uppercase;color:#7A8A9A;text-decoration:none;transition:all 0.18s;
     font-family:'DM Sans',sans-serif;width:100%;text-align:left;background:none;border:none;cursor:pointer;}
-.nav-dropdown-item:hover{color:#1B4FA8;background:rgba(27,79,168,0.04);text-decoration:none;}
-.nav-dropdown-item.danger:hover{color:#DC2626;background:rgba(220,38,38,0.04);}
+.nav-dropdown-item:hover{color:#1B4FA8;background:rgba(27,79,168,0.05);text-decoration:none;padding-left:20px;}
+.nav-dropdown-item.danger:hover{color:#DC2626;background:rgba(220,38,38,0.05);}
 
 /* ═══════════════════════════════════════════════════════════════
    BELL PANEL
@@ -82,43 +52,94 @@
     backdrop-filter:blur(16px);border:1px solid rgba(27,79,168,0.1);border-radius:8px;
     box-shadow:0 12px 40px rgba(27,79,168,0.12);overflow:hidden;z-index:999;}
 .bell-badge-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;
-    border-radius:50%;background:#F5911E;border:1.5px solid #fff;display:none;}
+    border-radius:50%;background:#F5911E;border:1.5px solid #fff;display:none;
+    animation:pulseDot 1.8s ease-in-out infinite;}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(245,145,30,0.5)}50%{box-shadow:0 0 0 4px rgba(245,145,30,0)}}
 .nav-bell-btn{background:none;border:none;cursor:pointer;padding:7px;color:#AAB8C8;
-    position:relative;transition:color 0.2s;display:flex;align-items:center;}
-.nav-bell-btn:hover{color:#F5911E;}
+    position:relative;transition:color 0.2s,transform 0.15s;display:flex;align-items:center;border-radius:8px;}
+.nav-bell-btn:hover{color:#F5911E;background:rgba(245,145,30,0.06);}
+.nav-bell-btn:active{transform:scale(0.92);}
+.nav-bell-btn.ringing svg{animation:ring 0.5s ease;}
+@keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(6deg)}80%{transform:rotate(-4deg)}}
 
 /* ═══════════════════════════════════════════════════════════════
-   SIDEBAR TOGGLE + HAMBURGER + MOBILE MENU
+   SIDEBAR TOGGLE + HAMBURGER
 ═══════════════════════════════════════════════════════════════ */
 .sb-nav-toggle{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
     padding:6px 8px;color:#AAB8C8;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
 .sb-nav-toggle:hover{background:rgba(27,79,168,0.04);color:#1B4FA8;border-color:rgba(27,79,168,0.2);}
-.nav-hamburger{background:none;border:none;cursor:pointer;padding:6px;display:none;
-    flex-direction:column;gap:5px;align-items:center;justify-content:center;}
-.nav-ham-line{display:block;width:22px;height:1.5px;background:#7A8A9A;
-    transition:all 0.3s;transform-origin:center;}
-.amobile-menu{display:none;border-top:1px solid rgba(27,79,168,0.07);background:rgba(255,255,255,0.99);}
-.amobile-menu.open{display:block;animation:slideDown 0.25s ease both;}
-@keyframes slideDown{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-.amobile-nav-link{display:flex;align-items:center;gap:10px;padding:13px 20px;font-size:10px;letter-spacing:2px;
-    text-transform:uppercase;color:#7A8A9A;text-decoration:none;
-    border-bottom:1px solid rgba(27,79,168,0.04);transition:all 0.2s;}
-.amobile-nav-link svg{flex-shrink:0;opacity:0.6;}
-.amobile-nav-link:hover,.amobile-nav-link.active{color:#1B4FA8;background:rgba(27,79,168,0.03);text-decoration:none;}
-.amobile-nav-link:hover svg,.amobile-nav-link.active svg{opacity:1;}
-.amobile-section-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#AAB8C8;
-    padding:14px 20px 6px;background:rgba(27,79,168,0.02);}
-
-@keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(0.96)}to{opacity:1;transform:none}}
-@keyframes toastOut{to{opacity:0;transform:translateX(20px) scale(0.96)}}
+.nav-hamburger{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
+    padding:8px;display:none;flex-direction:column;gap:5px;align-items:center;justify-content:center;
+    transition:background 0.2s,border-color 0.2s;}
+.nav-hamburger:hover{background:rgba(27,79,168,0.04);border-color:rgba(27,79,168,0.2);}
+.nav-ham-line{display:block;width:20px;height:1.5px;background:#7A8A9A;
+    transition:all 0.32s cubic-bezier(0.65,0,0.35,1);transform-origin:center;}
 
 /* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE BREAKPOINTS
+   MOBILE DRAWER — full concept: slide-in panel + backdrop
 ═══════════════════════════════════════════════════════════════ */
-@media(max-width:1200px){.anav-desktop-links{gap:clamp(10px,1.3vw,20px);}}
-@media(max-width:1000px){.anav-desktop-links{gap:clamp(8px,1.1vw,14px);}}
-@media(max-width:900px){
-    .anav-desktop-links,.anav-desktop-user-name{display:none!important;}
+.amobile-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.42);backdrop-filter:blur(2px);
+    z-index:59;opacity:0;pointer-events:none;transition:opacity 0.28s ease;}
+.amobile-backdrop.open{opacity:1;pointer-events:auto;}
+
+.amobile-menu{position:fixed;top:0;right:0;height:100vh;width:min(320px,86vw);z-index:60;
+    background:rgba(255,255,255,0.99);backdrop-filter:blur(18px);
+    box-shadow:-8px 0 34px rgba(27,79,168,0.14);
+    transform:translateX(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);
+    display:flex;flex-direction:column;overflow:hidden;}
+.amobile-menu.open{transform:translateX(0);}
+
+.amobile-head{display:flex;align-items:center;justify-content:space-between;
+    padding:16px 18px;border-bottom:1px solid rgba(27,79,168,0.07);flex-shrink:0;}
+.amobile-head img{height:28px;}
+.amobile-close{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:7px;
+    width:30px;height:30px;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;color:#7A8A9A;transition:all 0.2s;}
+.amobile-close:hover{background:rgba(220,38,38,0.06);color:#DC2626;border-color:rgba(220,38,38,0.2);}
+
+.amobile-user{display:flex;align-items:center;gap:10px;padding:14px 18px;
+    border-bottom:1px solid rgba(27,79,168,0.07);flex-shrink:0;background:rgba(27,79,168,0.02);}
+.amobile-user .anav-avatar{width:38px;height:38px;}
+
+.amobile-scroll{flex:1;overflow-y:auto;padding:6px 0 10px;scrollbar-width:thin;
+    scrollbar-color:rgba(27,79,168,0.15) transparent;}
+
+/* Accordion groups */
+.amgroup{border-bottom:1px solid rgba(27,79,168,0.05);}
+.amgroup-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;
+    justify-content:space-between;padding:12px 18px;font-family:'DM Sans',sans-serif;
+    font-size:9.5px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;font-weight:700;
+    transition:color 0.2s;}
+.amgroup-head:hover{color:#1B4FA8;}
+.amgroup-chevron{transition:transform 0.28s cubic-bezier(0.16,1,0.3,1);opacity:0.6;flex-shrink:0;}
+.amgroup.open .amgroup-chevron{transform:rotate(180deg);}
+.amgroup-body{max-height:0;overflow:hidden;transition:max-height 0.32s cubic-bezier(0.16,1,0.3,1);}
+
+.amobile-nav-link{display:flex;align-items:center;gap:11px;padding:10px 18px 10px 22px;font-size:12px;
+    color:#5A6A7A;text-decoration:none;transition:all 0.16s;position:relative;
+    border-left:2px solid transparent;opacity:0;transform:translateX(8px);}
+.amgroup.open .amobile-nav-link{animation:slideInLink 0.3s cubic-bezier(0.16,1,0.3,1) forwards;}
+@keyframes slideInLink{to{opacity:1;transform:translateX(0);}}
+.amobile-nav-link svg{flex-shrink:0;opacity:0.55;transition:opacity 0.16s;}
+.amobile-nav-link:hover,.amobile-nav-link.active{color:#1B4FA8;background:rgba(27,79,168,0.05);text-decoration:none;border-left-color:#1B4FA8;}
+.amobile-nav-link:hover svg,.amobile-nav-link.active svg{opacity:1;}
+.amobile-nav-link.active{font-weight:600;background:rgba(27,79,168,0.06);}
+.amobile-bdg{margin-left:auto;font-size:9px;font-weight:700;padding:1px 6px;border-radius:9px;
+    background:#F5911E;color:#fff;flex-shrink:0;}
+
+.amobile-foot{padding:12px 18px 16px;border-top:1px solid rgba(27,79,168,0.07);flex-shrink:0;}
+.amobile-logout{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+    background:none;border:1px solid rgba(220,38,38,0.22);border-radius:7px;padding:10px;
+    cursor:pointer;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#DC2626;
+    font-family:'DM Sans',sans-serif;font-weight:600;transition:all 0.2s;}
+.amobile-logout:hover{background:rgba(220,38,38,0.06);}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE — unified breakpoint w/ sidebar's 768px collapse
+═══════════════════════════════════════════════════════════════ */
+.anav-desktop-user-name{display:flex;}
+@media(max-width:768px){
+    .anav-desktop-user-name{display:none!important;}
     .nav-hamburger{display:flex!important;}
     .sb-nav-toggle{display:none!important;}
 }
@@ -128,60 +149,24 @@
 <div class="anav-container">
     <div class="anav-inner">
 
-        {{-- Sidebar toggle (desktop) --}}
+        {{-- Sidebar toggle (desktop only) --}}
         <button class="sb-nav-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
         </button>
 
-        {{-- Hamburger (mobile) --}}
-        <button class="nav-hamburger" onclick="toggleMobileNav()" id="navHamburger">
+        {{-- Hamburger (mobile only — opens the full drawer) --}}
+        <button class="nav-hamburger" onclick="openMobileNav()" id="navHamburger" aria-label="Open menu">
             <span class="nav-ham-line" id="hl1"></span>
             <span class="nav-ham-line" id="hl2"></span>
             <span class="nav-ham-line" id="hl3"></span>
         </button>
 
         {{-- Logo → Dashboard --}}
-        <a href="{{ route('admin.dashboard') }}" style="text-decoration:none;flex-shrink:0;" title="Go to Dashboard">
+        <a href="{{ route('admin.dashboard') }}" class="anav-logo" style="text-decoration:none;flex-shrink:0;" title="Go to Dashboard">
             <img src="{{ asset('images/logo.png') }}" alt="Infinity" style="height:34px;width:auto;display:block;">
         </a>
-
-        {{-- ═══════════════════════════════════════════════════════
-             DESKTOP LINKS — ordered by business priority
-        ═══════════════════════════════════════════════════════ --}}
-        <div class="anav-desktop-links">
-
-            {{-- 1. Sales — Daily operations, highest priority --}}
-            <a href="{{ route('admin.sales.index') }}"
-               class="anav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">Sales</a>
-
-            {{-- 2. Installments — approvals need urgent action --}}
-            <a href="{{ route('admin.installments.index') }}"
-               class="anav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}"
-               style="display:flex;align-items:center;gap:5px;">
-                Installments
-                <!-- @if(isset($navUnreadCount) && $navUnreadCount > 0)
-                <span style="background:#F5911E;color:#fff;font-size:8px;padding:1px 5px;border-radius:20px;letter-spacing:0;font-weight:700;">{{ $navUnreadCount }}</span>
-                @endif -->
-            </a>
-
-            {{-- 3. Outstanding --}}
-            <a href="{{ route('admin.outstanding.index') }}"
-               class="anav-link {{ request()->routeIs('admin.outstanding.*') ? 'active' : '' }}">Outstanding</a>
-            {{-- 4. Refunds --}}
-            <a href="{{ route('admin.refunds.index') }}"
-               class="anav-link {{ request()->routeIs('admin.refunds.*') ? 'active' : '' }}">Refunds</a>
-
-            {{-- 5. Reports --}}
-            <a href="{{ route('admin.reports.index') }}"
-               class="anav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">Reports</a>
-
-            {{-- 7. Audit --}}
-            <a href="{{ route('admin.audit.index') }}"
-               class="anav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">Audit</a>
-
-        </div>
 
         {{-- ═══════════════════════════════════════════════════════
              RIGHT — Bell + User menu
@@ -190,7 +175,7 @@
 
             {{-- Bell --}}
             <div style="position:relative;" id="abellWrap">
-                <button class="nav-bell-btn" onclick="toggleBell()">
+                <button class="nav-bell-btn" onclick="toggleBell()" id="navBellBtn">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
                         <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -278,7 +263,7 @@
                 </div>
             </div>
 
-            {{-- User menu --}}
+            {{-- User menu (desktop dropdown) --}}
             <div style="position:relative;" id="auserMenuWrap">
                 <button onclick="toggleUserMenu()"
                         style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;
@@ -290,7 +275,7 @@
                             {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
                         </span>
                     </div>
-                    <div class="anav-desktop-user-name" style="display:flex;flex-direction:column;align-items:flex-start;line-height:1;">
+                    <div class="anav-desktop-user-name" style="flex-direction:column;align-items:flex-start;line-height:1;">
                         <span style="font-size:12px;font-weight:600;color:#1A2A4A;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;">{{ Auth::user()->name ?? '' }}</span>
                         <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C47010;margin-top:2px;">Administrator</span>
                     </div>
@@ -303,10 +288,6 @@
                         <div style="font-size:11px;color:#AAB8C8;margin-top:2px;">{{ Auth::user()->email ?? '' }}</div>
                     </div>
                     <div style="padding:6px 0;">
-                        <!-- <a href="{{ route('profile.edit') }}" class="nav-dropdown-item">
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            Profile
-                        </a> -->
                         <form method="POST" action="{{ route('logout') }}">
                             @csrf
                             <button type="submit" class="nav-dropdown-item danger">
@@ -321,76 +302,205 @@
         </div>
     </div>
 </div>
-
+</nav>
 {{-- ═══════════════════════════════════════════════════════════════
-     MOBILE MENU
+     MOBILE DRAWER — mirrors every link in the sidebar (26 total),
+     grouped exactly like the sidebar, as a smooth accordion.
 ═══════════════════════════════════════════════════════════════ --}}
+<div class="amobile-backdrop" id="amobileBackdrop" onclick="closeMobileNav()"></div>
+
 <div class="amobile-menu" id="amobileMenu">
-    <div style="padding:4px 0;">
-
-        {{-- Core Operations --}}
-        <a href="{{ route('admin.sales.index') }}"        class="amobile-nav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-            Sales
-        </a>
-        <a href="{{ route('admin.employees.index') }}"    class="amobile-nav-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-            Employees
-        </a>
-        <a href="{{ route('admin.courses.index') }}"      class="amobile-nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-            Courses
-        </a>
-
-        {{-- Finance --}}
-        <a href="{{ route('admin.installments.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}" style="justify-content:space-between;">
-            <span style="display:flex;align-items:center;gap:10px;">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                Installments
-            </span>
-            @if(isset($navUnreadCount) && $navUnreadCount > 0)
-            <span style="background:#F5911E;color:#fff;font-size:9px;padding:2px 7px;border-radius:20px;letter-spacing:0;">{{ $navUnreadCount }}</span>
-            @endif
-        </a>
-        <a href="{{ route('admin.outstanding.index') }}"  class="amobile-nav-link {{ request()->routeIs('admin.outstanding.*') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Outstanding
-        </a>
-
-        {{-- Monitoring section --}}
-        <div class="amobile-section-label">Monitoring</div>
-        <a href="{{ route('admin.refunds.index') }}"      class="amobile-nav-link {{ request()->routeIs('admin.refunds.*') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
-            Refunds
-        </a>
-        <a href="{{ route('admin.audit.index') }}"        class="amobile-nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-            Audit
-        </a>
+    <div class="amobile-head">
+        <img src="{{ asset('images/logo.png') }}" alt="Infinity">
+        <button class="amobile-close" onclick="closeMobileNav()" aria-label="Close menu">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
     </div>
 
-    <div style="padding:14px 20px;border-top:1px solid rgba(27,79,168,0.06);display:flex;align-items:center;justify-content:space-between;gap:12px;">
-        <div style="display:flex;align-items:center;gap:10px;">
-            <div class="anav-avatar" style="width:38px;height:38px;">
-                <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#C47010;">{{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}</span>
-            </div>
-            <div>
-                <div style="font-size:13px;color:#1A2A4A;font-weight:600;">{{ Auth::user()->name ?? '' }}</div>
-                <div style="font-size:10px;color:#AAB8C8;">{{ Auth::user()->email ?? '' }}</div>
+    <div class="amobile-user">
+        <div class="anav-avatar">
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:16px;color:#C47010;">{{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}</span>
+        </div>
+        <div style="min-width:0;">
+            <div style="font-size:13px;color:#1A2A4A;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ Auth::user()->name ?? '' }}</div>
+            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C47010;">Administrator</div>
+        </div>
+    </div>
+
+    @php
+        $__pi  = \App\Models\Finance\InstallmentApprovalLog::whereHas('enrollment')->where('status','Pending')->count();
+        $__pr  = \App\Models\Finance\RefundRequest::where('status','Pending')->count();
+        $__prp = \App\Models\Reports\Report::where('status','Submitted')->count();
+        $__pp  = \App\Models\Enrollment\Postponement::where('status','Active')->count();
+    @endphp
+
+    <div class="amobile-scroll">
+
+        {{-- Overview --}}
+        <div class="amgroup" data-group>
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Overview
+                <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+            <div class="amgroup-body">
+                <a href="{{ route('admin.dashboard') }}" class="amobile-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                    Dashboard
+                </a>
             </div>
         </div>
+
+        {{-- Human Resources --}}
+        <div class="amgroup" data-group>
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Human Resources
+                <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+            <div class="amgroup-body">
+                <a href="{{ route('admin.employees.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.employees.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Employees
+                </a>
+                <a href="{{ route('admin.students.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                    Students
+                </a>
+            </div>
+        </div>
+
+        {{-- Academic --}}
+        <div class="amgroup" data-group>
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Academic
+                <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+            <div class="amgroup-body">
+                <a href="{{ route('admin.patches.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.patches.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    Patches
+                </a>
+                <a href="{{ route('admin.slots.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.slots.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Slots
+                </a>
+                <a href="{{ route('admin.courses.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.courses.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Courses
+                </a>
+                <a href="{{ route('admin.rooms.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.rooms.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Rooms
+                </a>
+                <a href="{{ route('admin.materials.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.materials.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                    Materials
+                </a>
+                <a href="{{ route('admin.test-fees.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.test-fees.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><circle cx="12" cy="12" r="10"/></svg>
+                    Test Fees
+                </a>
+                <a href="{{ route('admin.english-levels.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.english-levels.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                    English Levels
+                </a>
+                <a href="{{ route('admin.contract-types.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.contract-types.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Contract Types
+                </a>
+            </div>
+        </div>
+
+        {{-- Financial --}}
+        <div class="amgroup" data-group>
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Financial
+                <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+            <div class="amgroup-body">
+                <a href="{{ route('admin.payment-policy.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.payment-policy.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                    Payment Plans
+                </a>
+                <a href="{{ route('admin.offers.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.offers.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    Offers
+                </a>
+                <a href="{{ route('admin.packages.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.packages.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                    Packages
+                </a>
+                <a href="{{ route('admin.bundles.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.bundles.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                    Bundles
+                </a>
+                <a href="{{ route('admin.outstanding.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.outstanding.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Outstanding
+                </a>
+                <a href="{{ route('admin.installments.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.installments.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    Installments
+                    @if($__pi > 0)<span class="amobile-bdg">{{ $__pi }}</span>@endif
+                </a>
+                <a href="{{ route('admin.refunds.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.refunds.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                    Refunds
+                    @if($__pr > 0)<span class="amobile-bdg">{{ $__pr }}</span>@endif
+                </a>
+                <a href="{{ route('admin.postponed.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.postponed.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Postponed
+                    @if($__pp > 0)<span class="amobile-bdg">{{ $__pp }}</span>@endif
+                </a>
+                <a href="{{ route('private-hours.index') }}" class="amobile-nav-link {{ request()->routeIs('private-hours.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    Private Hours
+                </a>
+                <a href="{{ route('packages-tracking.index') }}" class="amobile-nav-link {{ request()->routeIs('packages-tracking.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    Level Packages
+                </a>
+            </div>
+        </div>
+
+        {{-- Monitoring --}}
+        <div class="amgroup" data-group>
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Monitoring
+                <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+            <div class="amgroup-body">
+                <a href="{{ route('admin.reports.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Reports
+                    @if($__prp > 0)<span class="amobile-bdg">{{ $__prp }}</span>@endif
+                </a>
+                <a href="{{ route('admin.manual-transactions.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.manual-transactions.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                    Manual Transactions
+                </a>
+                <a href="{{ route('admin.sales.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.sales.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Sales
+                </a>
+                <a href="{{ route('admin.audit.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.audit.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    Audit Logs
+                </a>
+                <a href="{{ route('admin.branches.index') }}" class="amobile-nav-link {{ request()->routeIs('admin.branches.*') ? 'active' : '' }}">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Branches
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="amobile-foot">
         <form method="POST" action="{{ route('logout') }}">
             @csrf
-            <button type="submit" style="background:none;border:1px solid rgba(220,38,38,0.2);border-radius:4px;
-                    padding:6px 12px;cursor:pointer;font-size:9px;letter-spacing:2px;text-transform:uppercase;
-                    color:#DC2626;font-family:'DM Sans',sans-serif;transition:all 0.2s;"
-                    onmouseover="this.style.background='rgba(220,38,38,0.04)'"
-                    onmouseout="this.style.background='none'">Logout</button>
+            <button type="submit" class="amobile-logout">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+                Log Out
+            </button>
         </form>
     </div>
 </div>
-
-</nav>
 
 <script>
 /* ═══════════════════════════════════════════════════════════════
@@ -401,38 +511,46 @@ window.addEventListener('scroll',()=>{
 },{passive:true});
 
 /* ═══════════════════════════════════════════════════════════════
-   MOBILE NAV TOGGLE
+   MOBILE DRAWER OPEN/CLOSE
 ═══════════════════════════════════════════════════════════════ */
 let mobileNavOpen=false;
-function toggleMobileNav(){
-    mobileNavOpen=!mobileNavOpen;
-    document.getElementById('amobileMenu').classList.toggle('open',mobileNavOpen);
+function openMobileNav(){
+    mobileNavOpen=true;
+    document.getElementById('amobileMenu').classList.add('open');
+    document.getElementById('amobileBackdrop').classList.add('open');
+    document.body.style.overflow='hidden';
+
     const[hl1,hl2,hl3]=['hl1','hl2','hl3'].map(id=>document.getElementById(id));
-    if(mobileNavOpen){
-        hl1.style.cssText='transform:translateY(6.5px) rotate(45deg);background:#1B4FA8';
-        hl2.style.opacity='0';
-        hl3.style.cssText='transform:translateY(-6.5px) rotate(-45deg);background:#1B4FA8';
-    }else{
-        [hl1,hl2,hl3].forEach(l=>l.style.cssText='');
-    }
+    hl1.style.cssText='transform:translateY(6.5px) rotate(45deg);background:#1B4FA8';
+    hl2.style.opacity='0';
+    hl3.style.cssText='transform:translateY(-6.5px) rotate(-45deg);background:#1B4FA8';
+
     document.getElementById('auserMenuPanel')?.classList.remove('open');
     document.getElementById('abellPanel').style.display='none';
-    document.getElementById('monitorPanel')?.classList.remove('open');
-    document.getElementById('monitorWrap')?.classList.remove('open');
+
+    // auto-open the group containing the active link, collapse the rest
+    document.querySelectorAll('.amgroup').forEach(g=>{
+        const hasActive=g.querySelector('.amobile-nav-link.active');
+        setAmGroup(g,!!hasActive || g===document.querySelector('.amgroup'));
+    });
+}
+function closeMobileNav(){
+    mobileNavOpen=false;
+    document.getElementById('amobileMenu').classList.remove('open');
+    document.getElementById('amobileBackdrop').classList.remove('open');
+    document.body.style.overflow='';
+    [document.getElementById('hl1'),document.getElementById('hl2'),document.getElementById('hl3')].forEach(l=>l.style.cssText='');
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   MONITORING DROPDOWN
-═══════════════════════════════════════════════════════════════ */
-function toggleMonitor(e){
-    e?.stopPropagation();
-    const wrap=document.getElementById('monitorWrap');
-    const panel=document.getElementById('monitorPanel');
-    wrap.classList.toggle('open');
-    panel.classList.toggle('open');
-    // Close bell + user menu
-    document.getElementById('abellPanel').style.display='none';
-    document.getElementById('auserMenuPanel')?.classList.remove('open');
+/* Accordion groups inside the drawer */
+function setAmGroup(group,open){
+    const body=group.querySelector('.amgroup-body');
+    group.classList.toggle('open',open);
+    body.style.maxHeight=open?(body.scrollHeight+'px'):'0px';
+}
+function toggleAmGroup(btn){
+    const group=btn.closest('.amgroup');
+    setAmGroup(group,!group.classList.contains('open'));
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -442,8 +560,6 @@ function toggleBell(){
     const p=document.getElementById('abellPanel');
     const open=p.style.display==='block';
     document.getElementById('auserMenuPanel')?.classList.remove('open');
-    document.getElementById('monitorPanel')?.classList.remove('open');
-    document.getElementById('monitorWrap')?.classList.remove('open');
     p.style.display=open?'none':'block';
     if(!open)p.style.animation='dropIn 0.2s ease both';
 }
@@ -454,22 +570,19 @@ function toggleBell(){
 function toggleUserMenu(){
     document.getElementById('auserMenuPanel').classList.toggle('open');
     document.getElementById('abellPanel').style.display='none';
-    document.getElementById('monitorPanel')?.classList.remove('open');
-    document.getElementById('monitorWrap')?.classList.remove('open');
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   CLOSE ALL DROPDOWNS ON OUTSIDE CLICK
+   CLOSE DROPDOWNS ON OUTSIDE CLICK / ESC
 ═══════════════════════════════════════════════════════════════ */
 document.addEventListener('click',(e)=>{
     if(!document.getElementById('abellWrap')?.contains(e.target))
         document.getElementById('abellPanel').style.display='none';
     if(!document.getElementById('auserMenuWrap')?.contains(e.target))
         document.getElementById('auserMenuPanel')?.classList.remove('open');
-    if(!document.getElementById('monitorWrap')?.contains(e.target)){
-        document.getElementById('monitorWrap')?.classList.remove('open');
-        document.getElementById('monitorPanel')?.classList.remove('open');
-    }
+});
+document.addEventListener('keydown',(e)=>{
+    if(e.key==='Escape' && mobileNavOpen) closeMobileNav();
 });
 
 /* ═══════════════════════════════════════════════════════════════
@@ -492,6 +605,11 @@ async function markRead(id){
 
 const prevUnread={{$navPrevUnread??0}};
 if(unread>prevUnread){
+    // Ring the bell icon
+    const bellBtn=document.getElementById('navBellBtn');
+    bellBtn.classList.add('ringing');
+    setTimeout(()=>bellBtn.classList.remove('ringing'),600);
+
     // Play notification sound
     try{
         const ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -519,3 +637,8 @@ if(unread>prevUnread){
     },4500);
 }
 </script>
+
+<style>
+@keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(0.96)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px) scale(0.96)}}
+</style>
