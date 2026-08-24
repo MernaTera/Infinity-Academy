@@ -419,15 +419,13 @@ Route::middleware(['auth', 'permission:attendance.create'])
         Route::post('/attendance/{sessionId}', [TeacherAttendanceController::class, 'store'])->name('attendance.store');
     });
 
-Route::middleware(['auth', 'permission:reports.create'])
-    ->prefix('teacher')
-    ->name('teacher.')
-    ->group(function () {
-        Route::get('/reports/create/{instanceId}', [TeacherReportController::class, 'create'])->name('reports.create');
-        Route::post('/reports',                    [TeacherReportController::class, 'store'])->name('reports.store');
-        Route::get('/reports/{id}/edit',           [TeacherReportController::class, 'edit'])->name('reports.edit');
-        Route::put('/reports/{id}',                [TeacherReportController::class, 'update'])->name('reports.update');
-    });
+// NOTE: report create/store/edit/update routes live in the permission:academic.view
+// group above (which every Teacher has). A second group here previously
+// re-declared the same names under permission:reports.create — but its
+// 'reports.create' used a /create/{instanceId} signature the controller never
+// reads (it reads ?enrollment_id=), and since the later declaration wins for
+// route() generation, it broke the report-create link. The redundant group has
+// been removed; the working definitions above are the single source of truth.
 
 // ─────────────────────────────────────────────────────────────────
 // Notifications
