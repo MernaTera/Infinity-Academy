@@ -74,19 +74,6 @@ const infConfirm = {
     reject()  { document.getElementById('inf-confirm-overlay').classList.remove('active'); if(this._resolve) this._resolve(false); this._resolve=null; }
 };
 
-function toggleDropdown(badge) {
-    const dd = badge.nextElementSibling;
-    const open = dd.style.display==='block';
-    document.querySelectorAll('.status-dropdown').forEach(d=>d.style.display='none');
-    if (!open) dd.style.display='block';
-    setTimeout(()=>{
-        document.addEventListener('click', function c(e) {
-            if (!dd.contains(e.target) && e.target!==badge) dd.style.display='none';
-            document.removeEventListener('click',c);
-        });
-    },0);
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.delete-lead-form').forEach(form => {
         form.addEventListener('submit', async function(e) {

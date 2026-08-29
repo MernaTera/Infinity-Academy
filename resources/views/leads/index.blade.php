@@ -94,12 +94,18 @@
     table { width:100%; border-collapse:collapse; }
     thead th {
         font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted);
-        padding:14px 16px; text-align:left; border-bottom:1px solid var(--border);
-        font-weight:600; background:var(--bg); white-space:nowrap; position:sticky; top:0;
+        padding:15px 16px; text-align:left; border-bottom:1px solid var(--border);
+        font-weight:700; background:var(--bg); white-space:nowrap; position:sticky; top:0; z-index:2;
+        box-shadow:0 1px 0 var(--border);
     }
-    tbody td { padding:14px 16px; border-bottom:1px solid rgba(27,79,168,0.05); font-size:12px; color:var(--text); vertical-align:top; }
-    tbody tr { transition:background 0.15s; }
+    tbody td { padding:14px 16px; border-bottom:1px solid rgba(27,79,168,0.05); font-size:12px; color:var(--text); vertical-align:middle; }
+    tbody tr { transition:background 0.15s, box-shadow 0.15s; position:relative; }
     tbody tr:hover { background:var(--blue-l); }
+    tbody tr td:first-child { position:relative; }
+    tbody tr:hover td:first-child::before {
+        content:''; position:absolute; left:0; top:0; bottom:0; width:3px;
+        background:linear-gradient(180deg,#F5911E,#1B4FA8); border-radius:0 2px 2px 0;
+    }
     tbody tr:last-child td { border-bottom:none; }
 
     .lead-name { font-weight:600; color:var(--text); font-size:13px; }
@@ -121,9 +127,14 @@
     .status-badge {
         display:inline-flex; align-items:center; gap:6px;
         padding:6px 13px; border-radius:20px; font-size:11px; font-weight:600;
-        letter-spacing:0.3px; white-space:nowrap; transition:filter 0.2s;
+        letter-spacing:0.3px; white-space:nowrap;
+        transition:filter 0.2s, box-shadow 0.2s, transform 0.15s;
+        border:1px solid transparent;
     }
-    .status-badge:hover { filter:brightness(0.96); }
+    .status-badge:hover { filter:brightness(0.97); box-shadow:0 2px 8px rgba(15,31,61,0.08); }
+    .status-badge:active { transform:scale(0.97); }
+    .status-badge svg { transition:transform 0.2s; opacity:0.7; }
+    .status-badge.badge-open svg { transform:rotate(180deg); }
     .status-waiting     { background:rgba(122,138,154,0.12); color:var(--muted); }
     .status-call_again  { background:var(--orange-l); color:var(--orange-dk); }
     .status-scheduled   { background:var(--blue-l); color:var(--blue); }
@@ -134,16 +145,28 @@
 
     .status-dropdown {
         display:none;
-        position:absolute; top:calc(100% + 6px); left:0; z-index:50;
-        background:var(--card); border:1px solid var(--border); border-radius:9px;
-        box-shadow:0 8px 28px rgba(15,31,61,0.14); padding:5px; min-width:150px;
+        position:absolute; top:calc(100% + 6px); left:0; z-index:9999;
+        background:var(--card); border:1px solid var(--border); border-radius:11px;
+        box-shadow:0 12px 32px rgba(15,31,61,0.16), 0 2px 8px rgba(15,31,61,0.06);
+        padding:6px; min-width:160px;
+        transform-origin:top left;
+        animation:statusDropIn 0.16s cubic-bezier(0.16,1,0.3,1);
+    }
+    .status-dropdown.opens-up { transform-origin:bottom left; animation-name:statusDropInUp; }
+    @keyframes statusDropIn {
+        from { opacity:0; transform:translateY(-6px) scale(0.97); }
+        to   { opacity:1; transform:translateY(0) scale(1); }
+    }
+    @keyframes statusDropInUp {
+        from { opacity:0; transform:translateY(6px) scale(0.97); }
+        to   { opacity:1; transform:translateY(0) scale(1); }
     }
     .status-dropdown-item {
-        display:flex; align-items:center; gap:9px; padding:9px 12px; border-radius:6px;
-        font-size:12px; color:var(--text); cursor:pointer; transition:background 0.15s; font-weight:500;
+        display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:7px;
+        font-size:12px; color:var(--text); cursor:pointer; transition:background 0.15s, padding-left 0.15s; font-weight:500;
     }
-    .status-dropdown-item:hover { background:var(--blue-l); }
-    .status-dropdown-item::before { content:''; width:8px; height:8px; border-radius:50%; }
+    .status-dropdown-item:hover { background:var(--blue-l); padding-left:15px; }
+    .status-dropdown-item::before { content:''; width:8px; height:8px; border-radius:50%; flex-shrink:0; }
     .status-dropdown-item[data-status="Waiting"]::before       { background:#7A8A9A; }
     .status-dropdown-item[data-status="Call_Again"]::before    { background:#C47010; }
     .status-dropdown-item[data-status="Registered"]::before    { background:#15803D; }

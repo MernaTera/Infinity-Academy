@@ -287,7 +287,10 @@ function closeHistoryModal() {
 function toggleDropdown(badge) {
     // Close all others
     document.querySelectorAll('.status-dropdown').forEach(d => {
-        if (d !== badge.nextElementSibling) d.style.display = 'none';
+        if (d !== badge.nextElementSibling) { d.style.display = 'none'; d.classList.remove('is-open'); }
+    });
+    document.querySelectorAll('.status-badge.badge-open').forEach(b => {
+        if (b !== badge) b.classList.remove('badge-open');
     });
 
     const dropdown = badge.nextElementSibling;
@@ -295,26 +298,77 @@ function toggleDropdown(badge) {
 
     if (isOpen) {
         dropdown.style.display = 'none';
+        dropdown.classList.remove('is-open');
+        badge.classList.remove('badge-open');
         return;
     }
 
+    positionStatusDropdown(badge, dropdown);
+    dropdown.style.display = 'block';
+    dropdown.classList.add('is-open');
+    badge.classList.add('badge-open');
+
+    // Keep it glued to the badge while the page/table scrolls, and flip
+    // up/down as space changes. Stored on the element so we can detach later.
+    dropdown._reposition = () => positionStatusDropdown(badge, dropdown);
+    window.addEventListener('scroll', dropdown._reposition, true);
+    window.addEventListener('resize', dropdown._reposition);
+}
+
+// Positions the status dropdown as a fixed overlay, flipping ABOVE the badge
+// when there isn't enough room below (last rows), so the whole list is always
+// visible without scrolling the table.
+function positionStatusDropdown(badge, dropdown) {
     const rect = badge.getBoundingClientRect();
+
+    // Measure the dropdown (temporarily shown, off-screen) to know its height.
+    const prevDisplay = dropdown.style.display;
+    dropdown.style.visibility = 'hidden';
+    dropdown.style.display = 'block';
     dropdown.style.position = 'fixed';
-    dropdown.style.top      = (rect.bottom + 6) + 'px';
-    dropdown.style.left     = rect.left + 'px';
+    const dropH = dropdown.offsetHeight;
+    const dropW = dropdown.offsetWidth;
+    dropdown.style.display = prevDisplay || 'block';
+    dropdown.style.visibility = '';
+
+    const gap        = 6;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const openUp     = spaceBelow < (dropH + gap + 8) && spaceAbove > spaceBelow;
+
+    let top  = openUp ? (rect.top - dropH - gap) : (rect.bottom + gap);
+    let left = rect.left;
+
+    // keep inside the viewport horizontally
+    if (left + dropW > window.innerWidth - 8) left = window.innerWidth - dropW - 8;
+    if (left < 8) left = 8;
+    // clamp vertically too
+    if (top < 8) top = 8;
+    if (top + dropH > window.innerHeight - 8) top = window.innerHeight - dropH - 8;
+
+    dropdown.style.position = 'fixed';
+    dropdown.style.top      = top + 'px';
+    dropdown.style.left     = left + 'px';
     dropdown.style.zIndex   = '9999';
-    dropdown.style.display  = 'block';
+    dropdown.classList.toggle('opens-up', openUp);
+}
+
+function closeAllStatusDropdowns() {
+    document.querySelectorAll('.status-dropdown').forEach(d => {
+        d.style.display = 'none';
+        d.classList.remove('is-open');
+        if (d._reposition) {
+            window.removeEventListener('scroll', d._reposition, true);
+            window.removeEventListener('resize', d._reposition);
+            d._reposition = null;
+        }
+    });
+    document.querySelectorAll('.status-badge.badge-open').forEach(b => b.classList.remove('badge-open'));
 }
 
 document.addEventListener('click', function(e) {
     if (!e.target.closest('.status-badge') && !e.target.closest('.status-dropdown')) {
-        document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
-    }
-});
-
-document.addEventListener('click', e => {
-    if (!e.target.closest('.status-badge') && !e.target.closest('.status-dropdown')) {
-        document.querySelectorAll('.status-dropdown').forEach(d => d.style.display = 'none');
+        closeAllStatusDropdowns();
     }
 });
 
