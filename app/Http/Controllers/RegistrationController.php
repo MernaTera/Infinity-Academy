@@ -508,14 +508,21 @@ class RegistrationController extends Controller
     {
         $enrollment = \App\Models\Enrollment\Enrollment::with([
             'student.phones',
+            'courseTemplate',
+            'level',
+            'sublevel',
+            'teacher' => fn($q) => $q->withoutGlobalScope('branch'),
+            'teacher.employee' => fn($q) => $q->withoutGlobalScope('branch'),
             'courseInstance.courseTemplate',
             'courseInstance.level',
             'courseInstance.patch',
-            'courseInstance.teacher.employee',
-            'patch', 
+            'courseInstance.teacher' => fn($q) => $q->withoutGlobalScope('branch'),
+            'courseInstance.teacher.employee' => fn($q) => $q->withoutGlobalScope('branch'),
+            'patch',
             'paymentPlan',
             'financialTransactions',
             'installmentSchedules',
+            'createdByCs',
             'waitingLists',
         ])->findOrFail($id);
 
