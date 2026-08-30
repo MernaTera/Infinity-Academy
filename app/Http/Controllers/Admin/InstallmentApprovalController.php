@@ -244,12 +244,24 @@ class InstallmentApprovalController extends Controller
 
             $enrollment->update(['status' => 'Cancelled']);
 
+            // Capture the student id now so we can delete the orphaned student
+            // record at the very end (after all logging/notification code that
+            // still needs the enrollment + student data has run).
+            $rejectedStudentId = $enrollment->student_id;
+
             $studentName = $enrollment->student?->full_name ?? 'student';
             $lead = Lead::where('student_id', $enrollment->student_id)->first();
             if ($lead) {
                 $studentName = $lead->full_name;
+                // Revert the lead out of "Registered": the registration was
+                // declined, so it must not keep showing in the Registered list.
+                // Move it back to Call_Again so the CS follows up. The lead's
+                // student_id link is cleared automatically when the student row
+                // is deleted below (FK is nullOnDelete), but we set it here too
+                // so the status change and unlink happen together.
                 $lead->update([
                     'student_id' => null,
+                    'status'     => 'Call_Again',
                 ]);
             }
             $enrollment->student?->update([
@@ -301,6 +313,16 @@ class InstallmentApprovalController extends Controller
                     ->reason("Admin declined installment plan for \"{$courseName}\" (Enrollment #{$enrollmentId})")
                     ->notes("Rejection reason: {$request->reason}")
                     ->record();
+            }
+
+            // Finally, delete the orphaned student record. This is the LAST step
+            // so all the code above still had the enrollment + student data.
+            // Deleting the student cascades to its enrollment and everything
+            // under it (FKs are cascadeOnDelete); the lead was already unlinked.
+            if ($rejectedStudentId) {
+                \App\Models\Student\Student::withoutGlobalScope('branch')
+                    ->where('student_id', $rejectedStudentId)
+                    ->delete();
             }
         });
 
