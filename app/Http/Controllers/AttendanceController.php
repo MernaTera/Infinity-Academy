@@ -11,11 +11,7 @@ use Carbon\Carbon;
 
 class AttendanceController extends Controller
 {
-    /*
-    |------------------------------------------------------------------
-    | Student Care — Show
-    |------------------------------------------------------------------
-    */
+
     public function show($sessionId)
     {
         $session = CourseSession::with([
@@ -57,11 +53,7 @@ class AttendanceController extends Controller
         ));
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Student Care — Store
-    |------------------------------------------------------------------
-    */
+
     public function store(Request $request, $sessionId)
     {
         $session = CourseSession::findOrFail($sessionId);

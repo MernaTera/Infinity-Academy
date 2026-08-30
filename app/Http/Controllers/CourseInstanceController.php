@@ -23,13 +23,10 @@ class CourseInstanceController extends Controller
         $this->schedulingService = $schedulingService;
     }
 
-    // ─────────────────────────────────────────────────────────────────
     public function index()
     {
         $instances = CourseInstance::with([
             'courseTemplate','level','sublevel','teacher','patch','sessions','instanceSchedules','room',
-            // Cancelled enrolments (e.g. rejected installment approvals) must
-            // not count toward the capacity chip shown per instance.
             'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
         ])->latest()->paginate(10);
 
@@ -44,7 +41,6 @@ class CourseInstanceController extends Controller
         ));
     }
 
-    // ─────────────────────────────────────────────────────────────────
     public function create()
     {
         $templates  = CourseTemplate::orderBy('name')->get();
@@ -60,7 +56,7 @@ class CourseInstanceController extends Controller
         ));
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function storeInstance(Request $request)
     {
         $data = $request->validate([
@@ -91,7 +87,6 @@ class CourseInstanceController extends Controller
 
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
 
-        // Single-day mode: the course runs on only ONE day of each chosen pair.
         $isSingle    = ($data['schedule_type'] ?? 'double') === 'single';
         $singleDays  = $isSingle ? ($data['single_days'] ?? []) : [];
         $resolveDays = function ($pair) use ($dayMap, $singleDays) {
@@ -103,7 +98,6 @@ class CourseInstanceController extends Controller
             return $pairDays;
         };
 
-        // ── 1. Patch date validation ──────────────────────────────────
         $patch = Patch::findOrFail($data['patch_id']);
         if ($data['start_date'] < $patch->start_date || $data['start_date'] > $patch->end_date) {
             return back()->withInput()->withErrors([
@@ -116,7 +110,6 @@ class CourseInstanceController extends Controller
             ]);
         }
 
-        // ── 2. Auto-adjust start_date to first valid session day ──────
         $allTargetDays = array_merge(...array_map(fn($p) => $resolveDays($p), $data['day_of_week']));
         $current       = \Carbon\Carbon::parse($data['start_date']);
         $patchEnd      = \Carbon\Carbon::parse($patch->end_date);
@@ -140,7 +133,6 @@ class CourseInstanceController extends Controller
             ]);
         }
 
-        // ── 3. Room conflict check ────────────────────────────────────
         if (!empty($data['room_id'])) {
             foreach ($data['day_of_week'] as $pair) {
                 $startTime = $data['start_times'][$pair] ?? null;
@@ -173,13 +165,11 @@ class CourseInstanceController extends Controller
             }
         }
 
-        // ── 4. Main transaction ───────────────────────────────────────
         $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id');
 
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use ($data, $employeeId) {
 
-                // Contract limit check
                 $contract = \App\Models\HR\TeacherContract::with('contractType')
                     ->where('teacher_id', $data['teacher_id'])
                     ->where('patch_id',   $data['patch_id'])
@@ -206,7 +196,6 @@ class CourseInstanceController extends Controller
                 $needsApproval    = $maxSessions && ($existingSessions + $newSessions) > $maxSessions;
                 $overBy           = $needsApproval ? ($existingSessions + $newSessions) - $maxSessions : 0;
 
-                // Create instance
                 $instance = CourseInstance::create([
                     'course_template_id'     => $data['course_template_id'],
                     'level_id'               => $data['level_id']   ?? null,
@@ -228,7 +217,6 @@ class CourseInstanceController extends Controller
 
                 $teacher = \App\Models\HR\Teacher::with('employee')->find($data['teacher_id']);
 
-                // ── Pending Approval flow ─────────────────────────────
                 if ($needsApproval) {
                     \DB::table('user_notification')->insert([
                         'employee_id'         => $teacher->employee->employee_id,
@@ -257,7 +245,6 @@ class CourseInstanceController extends Controller
                         ]);
                     }
 
-                    // Save schedules (no sessions yet)
                     foreach ($data['day_of_week'] as $pair) {
                         $startTime  = $data['start_times'][$pair]  ?? null;
                         $timeSlotId = $data['time_slot_ids'][$pair] ?? null;
@@ -280,7 +267,6 @@ class CourseInstanceController extends Controller
                     return;
                 }
 
-                // ── Normal flow ───────────────────────────────────────
                 foreach ($data['day_of_week'] as $pair) {
                     $startTime  = $data['start_times'][$pair]  ?? null;
                     $timeSlotId = $data['time_slot_ids'][$pair] ?? null;
@@ -336,9 +322,8 @@ class CourseInstanceController extends Controller
             ->with('success', 'Course instance created successfully.');
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // EDIT — show the form pre-filled with the instance's current data
-    // ─────────────────────────────────────────────────────────────────
+    
+    
     public function edit($id)
     {
         $instance = CourseInstance::with(['instanceSchedules', 'sessions'])->findOrFail($id);
@@ -351,20 +336,17 @@ class CourseInstanceController extends Controller
         $employee   = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
         $userBranch = Branch::find($employee->branch_id);
 
-        // How many sessions are already completed (locked — cannot be changed)
         $completedCount = $instance->sessions->where('status', 'Completed')->count();
 
-        // Current day pairs + start times, so the form can pre-select them
         $currentPairs      = $instance->instanceSchedules->pluck('day_of_week')->unique()->values();
         $currentStartTimes = [];
-        $currentSingleDays = [];   // pair => chosen single day number (if any)
+        $currentSingleDays = [];   
         foreach ($instance->instanceSchedules as $sch) {
             $currentStartTimes[$sch->day_of_week] = \Carbon\Carbon::parse($sch->start_time)->format('H:i');
             if ($sch->single_day !== null) {
                 $currentSingleDays[$sch->day_of_week] = (int) $sch->single_day;
             }
         }
-        // If any schedule row carries a single_day, the course is single-day.
         $scheduleType = count($currentSingleDays) > 0 ? 'single' : 'double';
 
         return view('student-care.course-instances.create', compact(
@@ -373,10 +355,10 @@ class CourseInstanceController extends Controller
         ));
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     // UPDATE — re-validate everything (like create) and rebuild the
     // scheduled (not completed) sessions with the new teacher/time/days.
-    // ─────────────────────────────────────────────────────────────────
+    
     public function updateInstance(Request $request, $id)
     {
         $instance = CourseInstance::with(['sessions', 'instanceSchedules'])->findOrFail($id);
@@ -768,7 +750,7 @@ class CourseInstanceController extends Controller
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function show($id)
     {
         $instance = CourseInstance::with([
@@ -788,7 +770,7 @@ class CourseInstanceController extends Controller
         return view('student-care.course-instances.show', compact('instance'));
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function getTeachersByCourse($courseId)
     {
         $course = CourseTemplate::find($courseId);
@@ -811,7 +793,7 @@ class CourseInstanceController extends Controller
         );
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     // Returns teacher's available pairs + for each pair: existing courses
     public function getTeacherAvailablePairs(Request $request)
     {
@@ -869,7 +851,7 @@ class CourseInstanceController extends Controller
         return response()->json($result);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function getTimeSlotsForPair(Request $request)
     {
         $teacherId = $request->query('teacher_id');
@@ -933,7 +915,7 @@ class CourseInstanceController extends Controller
         return response()->json($slots);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
 
     public function getTeacherFreeDates(Request $request)
     {
@@ -1056,7 +1038,7 @@ class CourseInstanceController extends Controller
         return response()->json($result);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function getOccupiedSlots(Request $request)
     {
         $teacherId  = $request->query('teacher_id');
@@ -1104,7 +1086,7 @@ class CourseInstanceController extends Controller
         return response()->json($occupied);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function checkConflicts(Request $request)
     {
         $teacherId  = $request->teacher_id;
@@ -1162,7 +1144,7 @@ class CourseInstanceController extends Controller
         return response()->json(['conflicts' => array_values(array_unique($conflicts))]);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function getTeacherContractInfo(Request $request)
     {
         $teacherId = $request->query('teacher_id');
@@ -1208,7 +1190,7 @@ class CourseInstanceController extends Controller
         ]);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function checkRoomAvailability(Request $request)
     {
         $roomId    = $request->query('room_id');
@@ -1265,7 +1247,7 @@ class CourseInstanceController extends Controller
         return response()->json(['available' => true]);
     }
 
-    // ─────────────────────────────────────────────────────────────────
+    
     public function getScheduleData($id)
     {
         $instance = CourseInstance::with('teacher')->findOrFail($id);
