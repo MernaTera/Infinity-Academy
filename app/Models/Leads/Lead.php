@@ -118,6 +118,25 @@ class Lead extends Model
 		return $this->hasMany(LeadHistory::class, 'lead_id', 'lead_id');
 	}
 
+	// The student this lead was registered as (nullable — only set after a
+	// successful registration). Used to detect a pending installment approval.
+	public function student()
+	{
+		return $this->belongsTo(\App\Models\Student\Student::class, 'student_id', 'student_id');
+	}
+
+	// True when this lead has an enrolment awaiting admin installment approval.
+	// While pending, the lead's status is shown as "Pending Approval" and its
+	// status dropdown is locked in the leads table until the admin decides.
+	public function getIsPendingApprovalAttribute(): bool
+	{
+		if (!$this->student_id) return false;
+		return \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
+			->where('student_id', $this->student_id)
+			->where('status', 'Pending_Approval')
+			->exists();
+	}
+
     public function isWaiting()
     {
         return $this->status === 'Waiting';

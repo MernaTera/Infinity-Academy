@@ -62,6 +62,18 @@ class LeadController extends Controller
 
         $leads = $this->leadRepository->myLeads($employeeId);
 
+        // Pre-compute which of these leads are awaiting admin installment
+        // approval (one query for the whole page, no N+1). A lead is pending
+        // when its linked student has an enrolment in 'Pending_Approval'.
+        $studentIdsOnPage = $leads->pluck('student_id')->filter()->unique()->all();
+        $pendingApprovalStudentIds = empty($studentIdsOnPage) ? [] :
+            \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
+                ->whereIn('student_id', $studentIdsOnPage)
+                ->where('status', 'Pending_Approval')
+                ->pluck('student_id')
+                ->unique()
+                ->all();
+
         // Registered leads: expand to ONE ROW PER ENROLMENT, so a student with
         // multiple enrolments (a level package, or private renewals) shows a
         // separate row + invoice for each. Each row carries its lead plus the
@@ -83,8 +95,14 @@ class LeadController extends Controller
             foreach ($registeredLeads as $lead) {
                 $studentEnrollments = $enrollments->get($lead->student_id, collect());
                 if ($studentEnrollments->isEmpty()) {
-                    // Registered but no enrolment row yet — still show the lead.
-                    $registeredRows->push(['lead' => $lead, 'enrollment' => null]);
+                    // Registered but no active enrolment row yet — only show it if
+                    // the lead is still linked to a student (a genuine in-progress
+                    // registration). A rejected registration has its student_id
+                    // unlinked and every enrolment Cancelled, so it must NOT
+                    // appear here as a phantom row.
+                    if ($lead->student_id) {
+                        $registeredRows->push(['lead' => $lead, 'enrollment' => null]);
+                    }
                 } else {
                     foreach ($studentEnrollments as $enr) {
                         $registeredRows->push(['lead' => $lead, 'enrollment' => $enr]);
@@ -93,7 +111,7 @@ class LeadController extends Controller
             }
         }
 
-        return view('leads.index', compact('leads', 'stats', 'registeredRows'));
+        return view('leads.index', compact('leads', 'stats', 'registeredRows', 'pendingApprovalStudentIds'));
     }
 
     /*
@@ -156,6 +174,13 @@ class LeadController extends Controller
     public function edit($id)
     {
         $lead    = $this->leadRepository->find($id);
+
+        // A lead awaiting admin installment approval is locked from editing.
+        if ($lead->is_pending_approval) {
+            return redirect()->route('leads.index')
+                ->with('error', 'This lead is awaiting admin approval and cannot be edited until it is approved or rejected.');
+        }
+
         $courses = CourseTemplate::where('is_active', true)->get();
 
         // Pre-load existing levels/sublevels for edit mode
@@ -177,6 +202,20 @@ class LeadController extends Controller
     */
     public function update(Request $request, $id)
     {
+        $lead = $this->leadRepository->find($id);
+
+        // Locked while awaiting admin installment approval.
+        if ($lead->is_pending_approval) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This lead is awaiting admin approval and cannot be edited until it is approved or rejected.',
+                ], 422);
+            }
+            return redirect()->route('leads.index')
+                ->with('error', 'This lead is awaiting admin approval and cannot be edited until it is approved or rejected.');
+        }
+
         if ($request->expectsJson()) {
             $lead = $this->leadRepository->find($id);
             $old  = $lead->status;
@@ -288,6 +327,16 @@ class LeadController extends Controller
         ]);
 
         $lead      = $this->leadRepository->find($request->lead_id);
+
+        // Block status changes while the lead is awaiting admin installment
+        // approval — it's locked until the admin approves or rejects.
+        if ($lead->is_pending_approval) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This lead is awaiting admin approval and cannot be edited until it is approved or rejected.',
+            ], 422);
+        }
+
         $oldStatus = $lead->status;
 
         $this->leadRepository->update($lead->lead_id, ['status' => $request->status]);

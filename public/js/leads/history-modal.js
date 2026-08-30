@@ -38,7 +38,12 @@ async function updateLeadStatus(el, leadId, newStatus) {
             'X-HTTP-Method-Override':'PUT'
         },
         body:JSON.stringify({ _method:'PUT', status })
-        }).then(r=>r.json()).then(d=>{ if(d.success) location.reload(); });
+        }).then(r=>r.json()).then(d=>{
+            if (d.success) { location.reload(); return; }
+            if (typeof infAlert === 'function') {
+                infAlert({ type:'warning', title:'Locked', message: d.message || 'This lead cannot be updated right now.' });
+            }
+        });
     }
 function sendUpdate(select, leadId, data) {
     fetch(`/leads/${leadId}`, {

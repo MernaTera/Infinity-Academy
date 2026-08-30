@@ -141,6 +141,7 @@
     .status-registered  { background:var(--green-l); color:var(--green-dk); }
     .status-not_interest{ background:var(--red-l); color:var(--red); }
     .status-archived    { background:rgba(154,138,122,0.14); color:#9A8A7A; }
+    .status-pending-approval { background:rgba(245,145,30,0.12); color:#C47010; border:1px dashed rgba(245,145,30,0.5); }
     .status-default     { background:var(--bg); color:var(--muted); }
 
     .status-dropdown {
@@ -293,7 +294,7 @@
                 </thead>
                 <tbody id="mainTableBody">
                     @forelse($leads->where('status', '!=', 'Registered') as $lead)
-                        @include('leads.lead-row', ['lead' => $lead])
+                        @include('leads.lead-row', ['lead' => $lead, 'isPendingApproval' => in_array($lead->student_id, $pendingApprovalStudentIds ?? [])])
                     @empty
                     <tr data-empty-main>
                         <td colspan="11">

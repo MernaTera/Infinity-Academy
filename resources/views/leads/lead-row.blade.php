@@ -87,7 +87,12 @@
                         {{-- Status --}}
                         <td>
                             @php
-                                $statusClass = match($lead->status) {
+                                $isPendingApproval = $isPendingApproval ?? false;
+                                // A lead awaiting admin installment approval is locked: it can't
+                                // be edited until the admin approves or rejects. It's rendered
+                                // like the "Registered" lock (no dropdown, no chevron).
+                                $isLocked = $isPendingApproval || $lead->status === 'Registered';
+                                $statusClass = $isPendingApproval ? 'status-pending-approval' : match($lead->status) {
                                     'Waiting'        => 'status-waiting',
                                     'Call_Again'     => 'status-call_again',
                                     'Scheduled_Call' => 'status-scheduled',
@@ -96,16 +101,18 @@
                                     'Archived'       => 'status-archived',
                                     default          => 'status-default',
                                 };
+                                $statusLabel = $isPendingApproval ? 'Pending Approval' : str_replace('_',' ',$lead->status);
                             @endphp
                             <div style="position:relative;display:inline-block;">
                                 <div class="status-badge {{ $statusClass }}"
-                                    style="cursor:pointer;user-select:none;{{ $lead->status === 'Registered' ? 'pointer-events:none;opacity:0.85;cursor:default;' : '' }}"
-                                    @if($lead->status !== 'Registered') onclick="toggleDropdown(this)" @endif>
-                                    {{ str_replace('_',' ',$lead->status) }}
-                                    @if($lead->status !== 'Registered')
+                                    style="cursor:pointer;user-select:none;{{ $isLocked ? 'pointer-events:none;opacity:0.85;cursor:default;' : '' }}"
+                                    @if(!$isLocked) onclick="toggleDropdown(this)" @endif>
+                                    {{ $statusLabel }}
+                                    @if(!$isLocked)
                                         <svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
                                     @endif
                                 </div>
+                                @unless($isLocked)
                                 <div class="status-dropdown">
                                     @foreach(['Waiting','Call_Again','Registered'] as $s)
                                         @if($s === 'Registered')
@@ -126,6 +133,7 @@
                                         @endif
                                     @endforeach
                                 </div>
+                                @endunless
                             </div>
                             {{-- hidden select للـ function --}}
                             <select class="status-select" data-id="{{ $lead->lead_id }}" style="display:none;" data-no-enhance
@@ -189,7 +197,13 @@
                         {{-- Actions --}}
                         <td>
                             <div class="action-group">
-                                @if($lead->status === 'Registered' && $lead->student_id)
+                                @if($isPendingApproval)
+                                    {{-- Awaiting admin installment approval: locked, no Edit --}}
+                                    <span class="btn-action" style="background:rgba(245,145,30,0.1);color:#C47010;border:1px dashed rgba(245,145,30,0.4);cursor:default;" title="Waiting for admin to approve or reject the installment plan">
+                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                        Awaiting Approval
+                                    </span>
+                                @elseif($lead->status === 'Registered' && $lead->student_id)
                                     {{-- Registered: show Invoice, hide Edit --}}
                                     <a href="{{ route('leads.invoice', $lead->lead_id) }}" target="_blank" class="btn-action btn-invoice" title="View / Print Invoice">
                                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
