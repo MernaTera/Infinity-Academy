@@ -11,10 +11,6 @@ class BranchAdminController extends Controller
 {
     public function index()
     {
-        // Employee and CourseInstance are branch-scoped, so a plain withCount
-        // would only count rows for the admin's *own* branch (showing 0 for
-        // every other branch). This screen is the intended cross-branch view,
-        // so each count explicitly ignores the branch scope.
         $branches = Branch::withCount([
                 'employees'       => fn($q) => $q->withoutGlobalScope('branch'),
                 'courseInstances' => fn($q) => $q->withoutGlobalScope('branch'),

@@ -30,11 +30,6 @@ class AdminStudentController extends Controller
                 'createdByCs',
             ])->latest(),
         ])
-        // A student whose every enrollment is 'Cancelled' only exists because
-        // an installment approval got rejected (financial records wiped, the
-        // enrollment flipped to Cancelled) — they never really enrolled, so
-        // they're excluded from this list entirely. A student with at least
-        // one non-Cancelled enrollment is a real student and stays visible.
         ->whereHas('enrollments', fn($q) => $q->where('status', '!=', 'Cancelled'))
         ->when($status, fn($q) =>
             $q->whereHas('enrollments', fn($q2) => $q2->where('status', $status)))

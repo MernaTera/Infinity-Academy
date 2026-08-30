@@ -23,10 +23,6 @@ class ContractTypeAdminController extends Controller
 
     public function store(Request $request)
     {
-        // Contract-type names are unique PER BRANCH, not globally: the same name
-        // (e.g. "Full-time") may exist in different branches. Scope the unique
-        // check to the current branch so a duplicate name is only rejected
-        // within the same branch.
         $branchId = BranchContext::currentBranchId();
 
         $request->validate([
@@ -51,7 +47,6 @@ class ContractTypeAdminController extends Controller
 
     public function update(Request $request, $id)
     {
-        // Same per-branch uniqueness as store(), ignoring the row being edited.
         $branchId = BranchContext::currentBranchId();
 
         $request->validate([

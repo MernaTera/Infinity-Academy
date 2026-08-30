@@ -82,7 +82,7 @@ class CheckReportDeadlines extends Command
 
         foreach ($reports as $report) {
             $approvedAt   = Carbon::parse($report->approved_at);
-            $deadline     = $approvedAt->copy()->addDay(); // +24h
+            $deadline     = $approvedAt->copy()->addDay(); 
             $hoursLeft    = (int) now()->diffInHours($deadline, false);
 
             $teacherEmpId = $report->teacher?->employee_id;

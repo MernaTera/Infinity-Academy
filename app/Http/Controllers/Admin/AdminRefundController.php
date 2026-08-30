@@ -55,45 +55,33 @@ class AdminRefundController extends Controller
 
         DB::transaction(function () use ($refund, $enrollment, $adminEmployee) {
 
-            // Decide which transaction categories are being refunded:
-            //   - Course   → always refunded
-            //   - Material  → only if the CS opted in (refund->includes_material)
-            //   - Test      → NEVER refunded (student already took the test)
-            //   - Installments → removed (registration is being reversed)
+
             $refundCategories = ['Course'];
             if ($refund->includes_material) {
                 $refundCategories[] = 'Material';
             }
 
-            // Transactions being removed:
-            //   * all Payment transactions in the refunded categories
-            //   * all Installment transactions (course installments)
+
             $removableTx = $enrollment->financialTransactions->filter(function ($t) use ($refundCategories) {
-                if ($t->transaction_type === 'Installment') return true;               // course installments
+                if ($t->transaction_type === 'Installment') return true;              
                 if ($t->transaction_type === 'Payment') {
-                    return in_array($t->transaction_category, $refundCategories);       // Course (+Material if chosen)
+                    return in_array($t->transaction_category, $refundCategories);      
                 }
-                return false; // Test payments (and anything else) stay
+                return false;
             });
 
             $txIds = $removableTx->pluck('transaction_id')->all();
 
-            // 1. Remove RevenueSplit rows tied to the removed transactions
-            //    → reverses the CS revenue for the refunded portion
             if (!empty($txIds)) {
                 RevenueSplit::whereIn('transaction_id', $txIds)->delete();
             }
 
-            // 2. Delete installment schedules for this enrollment
             InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->delete();
 
-            // 3. Delete the refunded financial transactions
-            //    (Test payments are intentionally left untouched → stay as revenue)
             if (!empty($txIds)) {
                 FinancialTransaction::whereIn('transaction_id', $txIds)->delete();
             }
 
-            // 4. Record approval on the refund request
             $refund->update([
                 'status'                   => 'Approved',
                 'approved_by_admin_id'     => $adminEmployee->employee_id,
@@ -101,10 +89,8 @@ class AdminRefundController extends Controller
                 'processed_transaction_id' => null,
             ]);
 
-            // 5. Cancel the enrollment (drops out of Outstanding since not Active)
             $enrollment->update(['status' => 'Cancelled']);
 
-            // 6. Restore the lead to Waiting + unlink the student
             $lead = \App\Models\Leads\Lead::where('student_id', $enrollment->student_id)->first();
             if ($lead) {
                 $oldStatus = $lead->status;

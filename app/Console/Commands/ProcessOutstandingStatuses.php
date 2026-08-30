@@ -42,10 +42,7 @@ class ProcessOutstandingStatuses extends Command
             $enrollment = Enrollment::find($enrollmentId);
 
             if (!$enrollment || $enrollment->status === 'Restricted') continue;
-            // Only restrict students who are actually in a course. A Waiting
-            // enrolment hasn't started yet — its installment due dates aren't
-            // real until Student Care assigns it to a course, so it can't be
-            // genuinely overdue.
+
             if ($enrollment->status !== 'Active') continue;
 
             $enrollment->update([

@@ -22,7 +22,6 @@ class AdminSalesController extends Controller
         $range = $this->getDateRange($filterType, $month, $day);
         $targetMonth = $this->getTargetMonth($filterType, $month, $day);
 
-        // جيبي كل الـ CS employees
         $csEmployees = Employee::with(['user.role', 'branch'])
             ->whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
             ->where('status', 'Active')
@@ -61,7 +60,6 @@ class AdminSalesController extends Controller
             ];
         })->sortByDesc('achieved')->values();
 
-        // Overall KPIs
         $overallKpis = [
             'total_target'        => $rows->sum('target'),
             'total_achieved'      => $rows->sum('achieved'),
@@ -70,7 +68,6 @@ class AdminSalesController extends Controller
             'avg_achievement'     => $rows->where('target', '>', 0)->avg('percentage') ?? 0,
         ];
 
-        // Daily breakdown for chart (all CS combined)
         $dailyData = RevenueSplit::whereIn('employee_id', $csEmployees->pluck('employee_id'))
             ->whereBetween('created_at', [$range['start'], $range['end']])
             ->selectRaw('DATE(created_at) as day, SUM(amount_allocated) as total')

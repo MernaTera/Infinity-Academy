@@ -33,24 +33,13 @@ class AdminDashboardController extends Controller
         [$from, $to]         = $this->periodRange($period, $currentPatch);
         [$prevFrom, $prevTo] = $this->previousPeriodRange($period, $currentPatch, $from, $to);
 
-        // ═══════════════════════════════════════════════════════════
-        // UNPAID INSTALLMENT TRANSACTIONS
-        //
-        // When an installment plan is approved, a FinancialTransaction is
-        // created for EACH installment up front (so it shows in Outstanding
-        // and links to the schedule). But that money is NOT received yet —
-        // the schedule row stays 'Pending' until the installment is actually
-        // paid. So for ALL revenue math we must EXCLUDE the transactions whose
-        // schedule is still Pending/Overdue. This mirrors OutstandingService.
-        // ═══════════════════════════════════════════════════════════
+
         $unpaidInstallmentTxIds = InstallmentSchedule::whereHas('enrollment')->whereIn('status', ['Pending', 'Overdue'])
             ->whereNotNull('transaction_id')
             ->pluck('transaction_id')
             ->filter()
             ->toArray();
 
-        // Helper: revenue query that counts only money ACTUALLY received
-        // (Payments + Installments that are NOT still-pending), date-filtered.
         $realRevenue = function ($from = null, $to = null) use ($unpaidInstallmentTxIds) {
             $q = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
                 ->when(!empty($unpaidInstallmentTxIds),
@@ -59,7 +48,6 @@ class AdminDashboardController extends Controller
             return $q;
         };
 
-        // ═══ TIER 1: EXECUTIVE OVERVIEW ═══
 
         $periodRevenue     = (clone $realRevenue($from, $to))->sum('amount');
         $prevPeriodRevenue = (clone $realRevenue($prevFrom, $prevTo))->sum('amount');
@@ -68,8 +56,6 @@ class AdminDashboardController extends Controller
             ? round(($periodRevenue - $prevPeriodRevenue) / $prevPeriodRevenue * 100)
             : ($periodRevenue > 0 ? 100 : 0);
 
-        // Exclude Cancelled/Rejected — a rejected registration is not a real
-        // enrollment and must not inflate the period count or its trend.
         $periodEnrollments = Enrollment::whereNotIn('status', ['Cancelled', 'Rejected'])
                 ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))->count();
 
@@ -97,7 +83,6 @@ class AdminDashboardController extends Controller
             ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
             ->sum('amount');
 
-        // ═══ TIER 2: ACTION QUEUE ═══
         $pendingInstallments = InstallmentSchedule::whereHas('enrollment')->where('status', 'Pending')->count();
         $overdueInstallments = InstallmentSchedule::whereHas('enrollment')->where('status', 'Overdue')->count();
         $pendingApprovals    = \App\Models\Finance\InstallmentApprovalLog::whereHas('enrollment')->where('status', 'Pending')->count();
@@ -120,9 +105,6 @@ class AdminDashboardController extends Controller
 
         $totalActions = $overdueInstallments + $pendingApprovals + $pendingRefunds + $pendingReports + $expiringPostponements;
 
-        // ═══ TIER 3: FINANCIAL BREAKDOWN ═══
-
-        // Payment methods — from financial_transaction, EXCLUDING unpaid installments.
         $branchId = BranchContext::currentBranchId();
 
         $ftMethodsQuery = DB::table('financial_transaction')
@@ -139,14 +121,13 @@ class AdminDashboardController extends Controller
 
         $cashRevenue     = $ftMethods['Cash']?->total     ?? 0;
         $cashCount       = $ftMethods['Cash']?->count     ?? 0;
-        $instapayRevenue = $ftMethods['Transfer']?->total ?? 0;   // Instapay => Transfer
+        $instapayRevenue = $ftMethods['Transfer']?->total ?? 0;  
         $instapayCount   = $ftMethods['Transfer']?->count ?? 0;
-        $vodafoneRevenue = $ftMethods['Online']?->total   ?? 0;   // Vodafone => Online
+        $vodafoneRevenue = $ftMethods['Online']?->total   ?? 0;  
         $vodafoneCount   = $ftMethods['Online']?->count   ?? 0;
         $cardRevenue     = $ftMethods['Card']?->total     ?? 0;
         $cardCount       = $ftMethods['Card']?->count     ?? 0;
 
-        // Revenue trend (last 14 days) — excluding unpaid installments
         $revenueTrendQuery = FinancialTransaction::whereIn('transaction_type', ['Payment', 'Installment'])
             ->where('created_at', '>=', now()->subDays(13)->startOfDay());
         if (!empty($unpaidInstallmentTxIds)) {
@@ -165,7 +146,6 @@ class AdminDashboardController extends Controller
 
         $revenueSparkline = array_slice($trendValues, -7);
 
-        // Revenue by Course (Top 6) — date-based, excluding unpaid installments
         $revByCourseQuery = DB::table('financial_transaction as ft')
             ->join('enrollment as e', 'ft.enrollment_id', '=', 'e.enrollment_id')
             ->leftJoin('course_instance as ci', 'e.course_instance_id', '=', 'ci.course_instance_id')
@@ -188,7 +168,6 @@ class AdminDashboardController extends Controller
             ->having('name', '!=', null)
             ->orderByDesc('total')->limit(6)->get();
 
-        // Revenue by Branch — date-based, excluding unpaid installments
         $revByBranchQuery = DB::table('financial_transaction as ft')
             ->join('branch', 'ft.branch_id', '=', 'branch.branch_id')
             ->whereIn('ft.transaction_type', ['Payment', 'Installment'])
@@ -202,7 +181,6 @@ class AdminDashboardController extends Controller
             ->select('branch.name', DB::raw('SUM(ft.amount) as total'), DB::raw('COUNT(*) as count'))
             ->groupBy('branch.name')->orderByDesc('total')->get();
 
-        // ═══ TIER 4: ACADEMIC OPERATIONS ═══
         $activeCourses      = CourseInstance::where('status', 'Active')->count();
         $upcomingCourses    = CourseInstance::where('status', 'Upcoming')->count();
         $completedCourses   = CourseInstance::where('status', 'Completed')
@@ -230,7 +208,6 @@ class AdminDashboardController extends Controller
             $enrollValues[] = $enrollTrend[$d]?->total ?? 0;
         }
 
-        // ═══ TIER 5: SALES & CS PERFORMANCE ═══
         $csEmployees = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
             ->where('status', 'Active')
             ->get()
@@ -277,7 +254,6 @@ class AdminDashboardController extends Controller
             ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
             ->latest()->limit(8)->get();
 
-        // ═══ TIER 6: WORKFORCE ═══
         $totalEmployees = Employee::where('status', 'Active')->count();
         $totalTeachers  = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Teacher'))
             ->where('status', 'Active')->count();

@@ -46,7 +46,6 @@ class CourseAdminController extends Controller
             'default_session_duration' => 'nullable|numeric|min:0.5',
             'max_capacity'             => 'nullable|integer|min:1',
             
-            // Levels
             'levels'                           => 'nullable|array',
             'levels.*.name'                    => 'required|string',
             'levels.*.price'                   => 'required|numeric|min:0',
@@ -86,7 +85,6 @@ class CourseAdminController extends Controller
                     'created_by_admin_id'      => $adminEmployeeId,
                 ]);
 
-                // Sublevels
                 foreach ($lvl['sublevels'] ?? [] as $j => $sub) {
                     Sublevel::create([
                         'level_id'                => $level->level_id,
@@ -171,7 +169,6 @@ class CourseAdminController extends Controller
         DB::transaction(function () use ($request, $course, &$skipped) {
             $adminEmployeeId = Employee::where('user_id', auth()->id())->first()?->employee_id;
 
-            // ── Update course basic info ─────────────────────────
             $course->update([
                 'name'                     => $request->name,
                 'price'                    => $request->price,
@@ -183,7 +180,6 @@ class CourseAdminController extends Controller
 
             AuditService::updated('course_template', $course->course_template_id, 'name', $course->name, $request->name);
 
-            // ── Process submitted levels ─────────────────────────
             $submittedLevelIds = [];
 
             foreach ($request->levels ?? [] as $i => $lvl) {
@@ -212,7 +208,6 @@ class CourseAdminController extends Controller
                 }
                 $submittedLevelIds[] = $level->level_id;
 
-                // ── Sublevels ─────────────────────────────────────
                 $submittedSubIds = [];
                 foreach ($lvl['sublevels'] ?? [] as $j => $sub) {
                     $subData = [
@@ -241,7 +236,6 @@ class CourseAdminController extends Controller
                     $submittedSubIds[] = $subModel->sublevel_id;
                 }
 
-                // Delete removed sublevels (skip if in use)
                 $removedSubs = $level->sublevels()
                     ->whereNotIn('sublevel_id', $submittedSubIds ?: [0])
                     ->get();
@@ -258,7 +252,6 @@ class CourseAdminController extends Controller
                 }
             }
 
-            // ── Delete removed levels (skip if in use) ──────────
             $removedLevels = $course->levels()
                 ->whereNotIn('level_id', $submittedLevelIds ?: [0])
                 ->get();

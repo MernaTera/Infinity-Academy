@@ -15,13 +15,10 @@ use Illuminate\Support\Facades\DB;
 
 class AdminCourseInstanceController extends Controller
 {
-    /**
-     * List every running course instance (Active + Upcoming) with headline
-     * data: teacher, patch, enrolment count, session progress, and revenue.
-     */
+
     public function index(Request $request)
     {
-        $statusFilter = $request->query('status', 'all'); // all | Active | Upcoming | Completed | Cancelled
+        $statusFilter = $request->query('status', 'all'); 
 
         $query = CourseInstance::with([
             'courseTemplate',
@@ -42,17 +39,12 @@ class AdminCourseInstanceController extends Controller
         if (in_array($statusFilter, ['Active', 'Upcoming', 'Completed', 'Cancelled'])) {
             $query->where('status', $statusFilter);
         } else {
-            // "all" default → the running ones first (Active + Upcoming),
-            // but still show completed/cancelled below.
+
             $query->orderByRaw("FIELD(status, 'Active','Upcoming','Completed','Cancelled')");
         }
 
         $instances = $query->orderBy('start_date')->get();
 
-        // ── Revenue per instance ───────────────────────────────────────
-        // Sum Payment/Installment transactions of the enrolments in each
-        // instance, EXCLUDING unpaid (Pending/Overdue) installment rows —
-        // same rule the finance dashboards use.
         $revenueByInstance = $this->revenueByInstance($instances->pluck('course_instance_id')->all());
 
         foreach ($instances as $ci) {
@@ -63,7 +55,6 @@ class AdminCourseInstanceController extends Controller
                 : 0;
         }
 
-        // ── Headline stats ─────────────────────────────────────────────
         $all = CourseInstance::selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
         $stats = [
             'active'    => (int) ($all['Active'] ?? 0),
@@ -77,10 +68,7 @@ class AdminCourseInstanceController extends Controller
         return view('admin.course-instances.index', compact('instances', 'stats', 'statusFilter'));
     }
 
-    /**
-     * Full detail for one course instance: schedule, sessions, enrolled
-     * students with attendance, progress, and revenue breakdown.
-     */
+
     public function show($id)
     {
         $instance = CourseInstance::with([
@@ -99,14 +87,12 @@ class AdminCourseInstanceController extends Controller
 
         $activeEnrollments = $instance->enrollments->where('status', '!=', 'Cancelled')->values();
 
-        // ── Session stats ──────────────────────────────────────────────
         $totalSessions     = $instance->sessions->count();
         $completedSessions = $instance->sessions->where('status', 'Completed')->count();
         $cancelledSessions = $instance->sessions->where('status', 'Cancelled')->count();
         $remainingSessions = max(0, $totalSessions - $completedSessions - $cancelledSessions);
         $progressPct       = $totalSessions > 0 ? round(($completedSessions / $totalSessions) * 100) : 0;
 
-        // ── Attendance map: [course_session_id][enrollment_id] => status ──
         $sessionIds = $instance->sessions->pluck('course_session_id')->all();
         $enrollIds  = $activeEnrollments->pluck('enrollment_id')->all();
 
@@ -119,7 +105,6 @@ class AdminCourseInstanceController extends Controller
             $attendanceMap[$a->course_session_id][$a->enrollment_id] = $a->status;
         }
 
-        // ── Per-student attendance summary ─────────────────────────────
         $completedSessionIds = $instance->sessions->where('status', 'Completed')->pluck('course_session_id')->all();
         $studentAttendance = [];
         foreach ($activeEnrollments as $enr) {
@@ -137,11 +122,9 @@ class AdminCourseInstanceController extends Controller
             ];
         }
 
-        // ── Revenue for this instance ──────────────────────────────────
         $revenueByInstance = $this->revenueByInstance([$instance->course_instance_id]);
         $revenueTotal      = $revenueByInstance[$instance->course_instance_id] ?? 0;
 
-        // Revenue split by category (Course / Test / Material / Installment)
         $revenueByCategory = $this->revenueByCategory($enrollIds);
 
         return view('admin.course-instances.show', compact(
@@ -152,11 +135,7 @@ class AdminCourseInstanceController extends Controller
         ));
     }
 
-    /**
-     * Admin action: cancel a course instance.
-     * Marks the instance Cancelled and cancels its still-scheduled sessions.
-     * Completed sessions and enrolments are left intact for the record.
-     */
+
     public function cancel(Request $request, $id)
     {
         $instance = CourseInstance::with('sessions')->findOrFail($id);
@@ -169,14 +148,12 @@ class AdminCourseInstanceController extends Controller
         }
 
         DB::transaction(function () use ($instance) {
-            // Cancel only the sessions that haven't happened yet.
             CourseSession::where('course_instance_id', $instance->course_instance_id)
                 ->where('status', 'Scheduled')
                 ->update(['status' => 'Cancelled']);
 
             $instance->update(['status' => 'Cancelled']);
 
-            // Notify the teacher (if any)
             if ($instance->teacher?->employee) {
                 \DB::table('user_notification')->insert([
                     'employee_id'         => $instance->teacher->employee->employee_id,
@@ -194,20 +171,11 @@ class AdminCourseInstanceController extends Controller
         return back()->with('success', 'Course instance cancelled.');
     }
 
-    // ─────────────────────────────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────────────────────────────
 
-    /**
-     * Revenue per course instance, keyed by course_instance_id.
-     * Counts Payment + Installment transactions of each instance's
-     * enrolments, EXCLUDING unpaid (Pending/Overdue) installment rows.
-     */
     private function revenueByInstance(array $instanceIds): array
     {
         if (empty($instanceIds)) return [];
 
-        // enrollment_id → course_instance_id
         $enrollMap = DB::table('enrollment')
             ->whereIn('course_instance_id', $instanceIds)
             ->where('status', '!=', 'Cancelled')
@@ -218,7 +186,6 @@ class AdminCourseInstanceController extends Controller
 
         $enrollIds = $enrollMap->keys()->all();
 
-        // Unpaid installment transaction ids to exclude
         $unpaidTxIds = InstallmentSchedule::whereIn('enrollment_id', $enrollIds)
             ->whereIn('status', ['Pending', 'Overdue'])
             ->whereNotNull('transaction_id')
@@ -240,10 +207,7 @@ class AdminCourseInstanceController extends Controller
         return $result;
     }
 
-    /**
-     * Revenue grouped by transaction_category for a set of enrolments,
-     * excluding unpaid installments.
-     */
+
     private function revenueByCategory(array $enrollIds): array
     {
         $out = ['Course' => 0, 'Test' => 0, 'Material' => 0, 'Installment' => 0];
