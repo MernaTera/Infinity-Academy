@@ -22,15 +22,14 @@ class AdminSalesController extends Controller
         $range = $this->getDateRange($filterType, $month, $day);
         $targetMonth = $this->getTargetMonth($filterType, $month, $day);
 
+        // جيبي كل الـ CS employees
         $csEmployees = Employee::with(['user.role', 'branch'])
             ->whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
             ->where('status', 'Active')
             ->get();
 
         $rows = $csEmployees->map(function ($emp) use ($range, $targetMonth, $filterType) {
-            $target = CsTarget::where('employee_id', $emp->employee_id)
-                ->where('month', $targetMonth)
-                ->first();
+            $targetAmount = CsTarget::amountFor($emp->employee_id);
 
             $achieved = RevenueSplit::where('employee_id', $emp->employee_id)
                 ->whereBetween('created_at', [$range['start'], $range['end']])
@@ -44,7 +43,7 @@ class AdminSalesController extends Controller
             $totalLeads  = (clone $leads)->count();
             $activeLeads = (clone $leads)->whereIn('status', ['Waiting', 'Call_Again'])->count();
 
-            $targetAmount = $target?->target_amount ?? 0;
+            $targetAmount = $targetAmount ?? 0;
             $remaining    = $targetAmount > 0 ? max(0, $targetAmount - $achieved) : null;
             $pct          = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : 0;
 
@@ -60,6 +59,7 @@ class AdminSalesController extends Controller
             ];
         })->sortByDesc('achieved')->values();
 
+        // Overall KPIs
         $overallKpis = [
             'total_target'        => $rows->sum('target'),
             'total_achieved'      => $rows->sum('achieved'),
@@ -68,6 +68,7 @@ class AdminSalesController extends Controller
             'avg_achievement'     => $rows->where('target', '>', 0)->avg('percentage') ?? 0,
         ];
 
+        // Daily breakdown for chart (all CS combined)
         $dailyData = RevenueSplit::whereIn('employee_id', $csEmployees->pluck('employee_id'))
             ->whereBetween('created_at', [$range['start'], $range['end']])
             ->selectRaw('DATE(created_at) as day, SUM(amount_allocated) as total')

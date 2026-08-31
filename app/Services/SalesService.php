@@ -65,9 +65,8 @@ class SalesService
             'day'   => \Carbon\Carbon::parse($day)->format('Y-m'),
         };
 
-        $target = CsTarget::where('employee_id', $employee->employee_id)
-            ->where('month', $targetMonth)
-            ->first();
+        // Standing (permanent) target — same value every month until admin edits.
+        $targetAmount = CsTarget::amountFor($employee->employee_id);
 
         $achieved = RevenueSplit::where('employee_id', $employee->employee_id)
             ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
@@ -79,7 +78,7 @@ class SalesService
             ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
             ->count();
 
-        $targetAmount = $target?->target_amount ?? 0;
+        $targetAmount = $targetAmount ?? 0;
         $remaining    = $targetAmount > 0 ? max(0, $targetAmount - $achieved) : null;
         $pct          = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : null;
 

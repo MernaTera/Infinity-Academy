@@ -163,18 +163,9 @@ public function store(Request $request)
             // patch and saved no month, so the target never showed up until the
             // employee was edited and re-saved.
             if ($role?->role_name === 'Customer Service' && $request->filled('target_amount')) {
-                CsTarget::updateOrCreate(
-                    [
-                        'employee_id' => $employee->employee_id,
-                        'month'       => $request->target_month ?: now()->format('Y-m'),
-                    ],
-                    [
-                        'patch_id'            => $request->cs_patch_id ?: null,
-                        'target_amount'       => $request->target_amount,
-                        'is_locked'           => false,
-                        'created_by_admin_id' => $adminId,
-                    ]
-                );
+                // Standing (permanent) target — stored with month = NULL so it
+                // applies to every month until an admin changes it.
+                CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminId);
             }
         });
 
@@ -206,9 +197,7 @@ public function store(Request $request)
         if ($roleName === 'Customer Service') {
             $currentMonth = now()->format('Y-m');
 
-            $target = CsTarget::where('employee_id', $employee->employee_id)
-                ->where('month', $currentMonth)
-                ->first();
+            $targetAmount = CsTarget::amountFor($employee->employee_id);
 
             $achieved = RevenueSplit::where('employee_id', $employee->employee_id)
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
@@ -217,8 +206,8 @@ public function store(Request $request)
             $leads = \App\Models\Leads\Lead::where('owner_cs_id', $employee->employee_id);
 
             $csData = [
-                'target'        => $target?->target_amount ?? 0,
-                'target_id'     => $target?->target_id,
+                'target'        => $targetAmount,
+                'target_id'     => null,
                 'current_month' => $currentMonth,
                 'achieved'      => $achieved,
                 'registrations' => \App\Models\Enrollment\Enrollment::where('created_by_cs_id', $employee->employee_id)
@@ -373,7 +362,7 @@ public function store(Request $request)
             'english_level_id' => 'nullable|exists:english_level,english_level_id',
             'salary'        => 'nullable|numeric|min:0', 
             'target_amount' => 'nullable|numeric|min:0',
-            'target_month'  => 'required|string',
+            'target_month'  => 'nullable|string',
         ]);
 
         $employee = Employee::with(['user', 'teacher'])->findOrFail($id);
@@ -395,16 +384,8 @@ public function store(Request $request)
 
         if ($request->filled('target_amount')) {
             $adminEmployee = Employee::where('user_id', auth()->id())->first();
-            CsTarget::updateOrCreate(
-                [
-                    'employee_id' => $employee->employee_id,
-                    'month'       => $request->target_month,
-                ],
-                [
-                    'target_amount'       => $request->target_amount,
-                    'created_by_admin_id' => $adminEmployee->employee_id,
-                ]
-            );
+            // Standing (permanent) target — one value for every month.
+            CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminEmployee?->employee_id);
         }
 
         return back()->with('success', 'Employee updated successfully.');
@@ -440,7 +421,7 @@ public function store(Request $request)
             'contract_type_id' => 'nullable|exists:contract_type,contract_type_id',
             'patch_id'         => 'nullable|exists:patch,patch_id',
             'target_amount'    => 'nullable|numeric|min:0',
-            'target_month'     => 'required|string',
+            'target_month'     => 'nullable|string',
         ]);
 
         $employee = Employee::with(['user','teacher'])->findOrFail($id);
@@ -482,10 +463,8 @@ public function store(Request $request)
         }
 
         if ($request->role_name === 'Customer Service' && $request->filled('target_amount')) {
-            \App\Models\Enrollment\CsTarget::updateOrCreate(
-                ['employee_id' => $employee->employee_id, 'month' => $request->target_month],
-                ['target_amount' => $request->target_amount, 'created_by_admin_id' => $adminId]
-            );
+            // Standing (permanent) target — one value for every month.
+            \App\Models\Enrollment\CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminId);
         }
 
         return back()->with('success', 'Employee updated successfully.');

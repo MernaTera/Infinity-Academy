@@ -48,9 +48,9 @@ class DashboardController extends Controller
 
         $currentMonth = now()->format('Y-m');
 
-        $target = CsTarget::where('employee_id', $employee?->employee_id)
-            ->where('month', $currentMonth)
-            ->first();
+        // Standing (permanent) target — set once, applies every month until the
+        // admin changes it. Not per-month.
+        $targetAmount = CsTarget::amountFor($employee?->employee_id);
 
         $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)
             ->whereBetween('created_at', [
@@ -59,7 +59,7 @@ class DashboardController extends Controller
             ])
             ->sum('amount_allocated');
 
-        $targetAmount = $target?->target_amount ?? 0;
+        $targetAmount = $targetAmount ?? 0;
         $remaining    = max(0, $targetAmount - $achieved);
         $percentage   = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : 0;
 
