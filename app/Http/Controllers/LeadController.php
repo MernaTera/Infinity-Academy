@@ -470,4 +470,26 @@ class LeadController extends Controller
         return app(\App\Http\Controllers\RegistrationController::class)
             ->showInvoice($enrollment->enrollment_id);
     }
+
+    // 80mm thermal receipt resolved from a lead (mirrors showInvoice).
+    public function showReceipt($leadId)
+    {
+        $lead = Lead::findOrFail($leadId);
+
+        if (!$lead->student_id) {
+            return back()->with('error', 'This lead has not been registered yet.');
+        }
+
+        $enrollment = \App\Models\Enrollment\Enrollment::where('student_id', $lead->student_id)
+            ->whereIn('status', ['Active', 'Pending_Approval', 'Waiting', 'Completed'])
+            ->latest('enrollment_id')
+            ->first();
+
+        if (!$enrollment) {
+            return back()->with('error', 'No enrollment found for this lead.');
+        }
+
+        return app(\App\Http\Controllers\RegistrationController::class)
+            ->showReceipt($enrollment->enrollment_id);
+    }
 }

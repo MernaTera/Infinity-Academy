@@ -403,6 +403,25 @@ document.getElementById('confirm_register_btn').addEventListener('click', async 
             btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span>Registered ✓</span>';
             btn.style.background = 'linear-gradient(135deg,#059669,#10B981)';
 
+            // Add a "Receipt" button (80mm thermal) in the header next to Print —
+            // opens the receipt in a small window that auto-prints from the CS's
+            // own machine to the connected receipt printer.
+            const enrollmentId = data.enrollment_id;
+            const headerActions = document.querySelector('.inf-header-actions');
+            if (headerActions && enrollmentId && !document.getElementById('print_receipt_btn')) {
+                const rbtn = document.createElement('button');
+                rbtn.type = 'button';
+                rbtn.id = 'print_receipt_btn';
+                rbtn.className = 'inf-print-btn';
+                rbtn.title = 'Print cashier receipt (80mm)';
+                rbtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="1"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg><span>Receipt</span>';
+                rbtn.onclick = function () {
+                    window.open('/enrollments/' + enrollmentId + '/receipt', 'receipt_' + enrollmentId,
+                        'width=380,height=650,menubar=no,toolbar=no,location=no');
+                };
+                headerActions.insertBefore(rbtn, headerActions.firstChild);
+            }
+
             const mainForm = document.getElementById('main_form');
             if (mainForm) {
                 mainForm.querySelectorAll('input, select, textarea, button').forEach(el => el.disabled = true);

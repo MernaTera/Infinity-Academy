@@ -528,4 +528,30 @@ class RegistrationController extends Controller
 
         return view('registration.invoice-page', compact('enrollment'));
     }
+
+    //--------------------------------------------------
+    // 80mm thermal receipt (cashier printer) — same data as the A4 invoice.
+    public function showReceipt($id)
+    {
+        $enrollment = \App\Models\Enrollment\Enrollment::with([
+            'student.phones',
+            'courseTemplate',
+            'level',
+            'sublevel',
+            'teacher' => fn($q) => $q->withoutGlobalScope('branch'),
+            'courseInstance.courseTemplate',
+            'courseInstance.level',
+            'courseInstance.patch',
+            'patch',
+            'paymentPlan',
+            'privateBundle',
+            'levelPackage',
+            'financialTransactions',
+            'installmentSchedules',
+            'createdByCs',
+            'waitingLists',
+        ])->findOrFail($id);
+
+        return view('registration.receipt', compact('enrollment'));
+    }
 }
