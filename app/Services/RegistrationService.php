@@ -597,15 +597,24 @@ class RegistrationService
         $teacherId = (int) $data['teacher_id'];
         $patchId   = (int) $data['patch_id'];
 
+        // A contract covers its start patch and every later one (not per-patch).
+        // Find the teacher's standing contract: the one on the latest patch that
+        // starts on or before this patch. Its contract type carries the cap.
+        $targetPatch = \App\Models\Academic\Patch::find($patchId);
         $contract = \App\Models\HR\TeacherContract::with('contractType')
             ->where('teacher_id', $teacherId)
-            ->where('patch_id', $patchId)
             ->where('is_active', true)
+            ->when($targetPatch, fn($q) => $q->whereHas('patch',
+                fn($p) => $p->where('start_date', '<=', $targetPatch->start_date)))
+            ->join('patch', 'patch.patch_id', '=', 'teacher_contract.patch_id')
+            ->orderByDesc('patch.start_date')
+            ->select('teacher_contract.*')
             ->first();
 
         $maxAllowed = (int) ($contract?->contractType?->max_sessions_allowed ?? 0);
         if ($maxAllowed <= 0) return; // no readable cap → nothing to enforce here
 
+        // Session usage is still counted within THIS patch (per-patch budget).
         $existing = \App\Models\Academic\CourseInstance::where('teacher_id', $teacherId)
             ->where('patch_id', $patchId)
             ->whereIn('status', ['Active', 'Upcoming', 'Completed'])

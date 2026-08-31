@@ -179,12 +179,24 @@ class PatchService
         ?int $sublevelId,
         int $courseTemplateId
     ) {
-        $contracts = TeacherContract::with(['contractType', 'teacher'])
-            ->where('patch_id', $patch->patch_id)
+        // A teacher's contract starts at a given patch and stays in effect for
+        // that patch AND every later one — it is NOT per-patch. So a teacher is
+        // available for THIS patch if they have an active contract on any patch
+        // whose start_date is on or before this patch's start_date. (Previously
+        // this required a contract for the exact patch, so a brand-new patch had
+        // no available teachers until each was re-contracted.)
+        $contracts = TeacherContract::with(['contractType', 'teacher', 'patch'])
             ->where('is_active', true)
             ->whereHas('teacher', fn($q) => $q->where('is_active', true))
             ->whereHas('contractType', fn($q) => $q->where('is_active', true))
+            ->whereHas('patch', fn($q) => $q->where('start_date', '<=', $patch->start_date))
             ->get();
+
+        // Keep only the earliest-starting contract per teacher (their standing
+        // contract), so max-session limits are read from the right row.
+        $contracts = $contracts
+            ->sortBy(fn($c) => optional($c->patch)->start_date)
+            ->unique('teacher_id');
 
         foreach ($contracts as $contract) {
             $teacher = $contract->teacher;
@@ -197,6 +209,8 @@ class PatchService
             $maxAllowed = (int) ($contract->contractType?->max_sessions_allowed ?? 0);
             if ($maxAllowed <= 0) continue;
 
+            // Session usage is still counted within THIS patch (each patch has
+            // its own session budget).
             $used = $this->countTeacherSessionsInPatch($teacher->teacher_id, $patch->patch_id);
 
             if ($used < $maxAllowed) {

@@ -26,12 +26,20 @@ class TeacherAvailabilityService
         $sublevelId = $data['sublevel_id'] ?? null;
         $courseId   = $data['course_template_id'] ?? null;
 
-        $contracts = TeacherContract::with(['contractType', 'teacher.availability', 'teacher.employee'])
-            ->where('patch_id', $patchId)
+        $targetPatch = \App\Models\Academic\Patch::find($patchId);
+        if (!$targetPatch) return [];
+
+        // A contract starts at a patch and stays valid for that patch AND every
+        // later one (not per-patch). So a teacher is available for this patch if
+        // they have an active contract on any patch starting on or before it.
+        $contracts = TeacherContract::with(['contractType', 'teacher.availability', 'teacher.employee', 'patch'])
             ->where('is_active', true)
             ->whereHas('teacher', fn($q) => $q->where('is_active', true))
             ->whereHas('contractType', fn($q) => $q->where('is_active', true))
-            ->get();
+            ->whereHas('patch', fn($q) => $q->where('start_date', '<=', $targetPatch->start_date))
+            ->get()
+            ->sortBy(fn($c) => optional($c->patch)->start_date)  // earliest = standing contract
+            ->unique('teacher_id');
 
         $available = [];
         $seenTeacherIds = [];
