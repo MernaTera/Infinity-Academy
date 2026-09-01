@@ -85,7 +85,13 @@
 
         function renderOptions() {
             panel.innerHTML = '';
-            const options = Array.from(select.options);
+            // Skip options hidden by page logic (e.g. rooms filtered by
+            // Online/Offline mode). A hidden <option> must not appear in the
+            // custom panel — otherwise the styled dropdown shows choices the
+            // native select is hiding.
+            const options = Array.from(select.options).filter(function (o) {
+                return !o.hidden && o.style.display !== 'none';
+            });
 
             if (!options.length) {
                 const empty = document.createElement('div');
@@ -95,7 +101,8 @@
                 return;
             }
 
-            options.forEach(function (opt, idx) {
+            options.forEach(function (opt) {
+                const idx  = opt.index; // real index in select.options
                 const item = document.createElement('div');
                 item.className = 'app-select__item';
                 item.setAttribute('role', 'option');
@@ -193,8 +200,18 @@
         // keep the widget in sync if some page script changes options/value/disabled directly
         select.addEventListener('change', syncLabel);
 
+        // Re-render when options are added/removed AND when their attributes
+        // change (hidden/disabled/style) — e.g. mode filtering rooms. Without
+        // `subtree`+`attributes` the panel wouldn't update when a page script
+        // just hides an <option> instead of removing it.
         const optsObserver = new MutationObserver(syncLabel);
-        optsObserver.observe(select, { childList: true });
+        optsObserver.observe(select, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['hidden', 'disabled', 'style'],
+            characterData: true,
+        });
 
         const attrObserver = new MutationObserver(function () {
             wrap.classList.toggle('app-select--disabled', select.disabled);
