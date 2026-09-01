@@ -738,12 +738,12 @@
                                 value="{{ old('test_fee', 0) }}">
                             <input type="hidden" name="test_fee_setting_id" id="test_fee_setting_id">
                         </div>
-                        <div class="form-field">
+                        <!-- <div class="form-field">
                             <label class="form-label">Test Score</label>
                             <input name="test_score" id="test_score_input" class="form-control-inf"
                                 placeholder="e.g. 85" value="{{ old('test_score') }}"
                                 oninput="onTestScoreChange()">
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
