@@ -259,8 +259,8 @@
                             <th class="num">Deposit</th>
                             <th class="num">Test</th>
                             <th class="num">Material</th>
+                            <th>Material Type</th>
                             <th class="num">Total Revenue</th>
-                            <th>Type</th>
                             <th>Date</th>
                         </tr>
                     </thead>
@@ -283,12 +283,12 @@
                                 @endif
                             </td>
                             <td class="num money">{{ number_format($row['material']) }} LE</td>
-                            <td class="num total">{{ number_format($row['total']) }} LE</td>
-                            <td>
+                                                        <td>
                                 <span class="badge {{ $row['material'] > 0 ? 'badge-shared' : 'badge-direct' }}">
                                     {{ $row['material'] > 0 ? 'Shared' : 'Direct' }}
                                 </span>
                             </td>
+                            <td class="num total">{{ number_format($row['total']) }} LE</td>
                             <td style="color:var(--faint);font-size:11px;white-space:nowrap;">{{ $row['date'] }}</td>
                         </tr>
                         @empty
@@ -310,6 +310,7 @@
                             <td class="num tfoot-num">{{ number_format($revenueRows->sum('deposit')) }} LE</td>
                             <td class="num tfoot-num">{{ number_format($revenueRows->sum('test_fee')) }} LE</td>
                             <td class="num tfoot-num">{{ number_format($revenueRows->sum('material')) }} LE</td>
+                            <td class="num tfoot-num"></td>
                             <td class="num tfoot-total">{{ number_format($revenueRows->sum('total')) }} LE</td>
                             <td colspan="2"></td>
                         </tr>
