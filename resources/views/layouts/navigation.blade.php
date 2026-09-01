@@ -164,7 +164,7 @@
         </button>
 
         {{-- Logo → Dashboard --}}
-        <a href="{{ route('admin.dashboard') }}" class="anav-logo" style="text-decoration:none;flex-shrink:0;" title="Go to Dashboard">
+        <a href="{{ route('dashboard') }}" class="anav-logo" style="text-decoration:none;flex-shrink:0;" title="Go to Dashboard">
             <img src="{{ asset('images/logo.png') }}" alt="Infinity" style="height:34px;width:auto;display:block;">
         </a>
 
