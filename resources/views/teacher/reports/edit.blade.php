@@ -74,34 +74,24 @@
                 {{-- Scores --}}
                 <span class="sec-label">Update Scores</span>
                 @php
-                $components = [
-                    ['roleplay_1',   'Roleplay 1',         15],
-                    ['roleplay_2',   'Roleplay 2',         15],
-                    ['writing_1',    'Writing Task 1',     10],
-                    ['writing_2',    'Writing Task 2',     10],
-                    ['presentation', 'Presentation/Debate',20],
-                    ['mcq',          'Final MCQ',          20],
-                    ['writing_final','Final Writing Task', 10],
-                ];
-                $existingScores = $report->reportScores->pluck('student_score','component_name');                $fieldMap = [
-                    'roleplay_1'=>'Roleplay 1','roleplay_2'=>'Roleplay 2',
-                    'writing_1'=>'Writing Task 1','writing_2'=>'Writing Task 2',
-                    'presentation'=>'Presentation / Debate','mcq'=>'Final MCQ',
-                    'writing_final'=>'Final Writing Task',
-                ];
+                    // Components come from the controller (TeacherReportController::COMPONENTS),
+                    // so this form always matches the current component set — no hardcoding.
+                    $components = $components ?? [];
+                    // Existing student scores keyed by the saved component_name.
+                    $existingScores = $report->reportScores->pluck('student_score', 'component_name');
                 @endphp
                 <div class="score-grid">
-                    @foreach($components as [$field, $label, $max])
-                    @php $existing = $existingScores[$fieldMap[$field]] ?? 0; @endphp
+                    @foreach($components as $i => $comp)
+                    @php $existing = $existingScores[$comp['name']] ?? 0; @endphp
                     <div class="score-row">
-                        <div class="score-name">{{ $label }} <span style="font-size:10px;color:#AAB8C8">· out of {{ $max }}</span></div>
+                        <div class="score-name">{{ $comp['name'] }} <span style="font-size:10px;color:#AAB8C8">· out of {{ $comp['max'] }}</span></div>
                         <div style="display:flex;align-items:center;gap:6px">
-                            <input type="number" name="scores[{{ $loop->index }}]" id="{{ $field }}"
-                                   class="score-input" min="0" max="{{ $max }}"
-                                   value="{{ old($field, $existing) }}"
+                            <input type="number" name="scores[{{ $i }}]"
+                                   class="score-input" min="0" max="{{ $comp['max'] }}"
+                                   value="{{ old('scores.'.$i, $existing) }}"
                                    onchange="calcTotal()" oninput="calcTotal()" required>
                             <span style="color:#AAB8C8">/</span>
-                            <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#AAB8C8;letter-spacing:1px">{{ $max }}</span>
+                            <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#AAB8C8;letter-spacing:1px">{{ $comp['max'] }}</span>
                         </div>
                     </div>
                     @endforeach
@@ -130,13 +120,16 @@
 </div>
 
 <script>
-const maxScores = {roleplay_1:15,roleplay_2:15,writing_1:10,writing_2:10,presentation:20,mcq:20,writing_final:10};
+// Sum all score inputs dynamically (respecting each field's max), so the
+// total always works regardless of which components are configured.
 function calcTotal() {
     let total = 0;
-    Object.keys(maxScores).forEach(f => {
-        total += Math.min(parseFloat(document.getElementById(f)?.value||0), maxScores[f]);
+    document.querySelectorAll('.score-input').forEach(inp => {
+        const max = parseFloat(inp.max) || Infinity;
+        total += Math.min(parseFloat(inp.value || 0), max);
     });
     const d = document.getElementById('totalDisplay');
+    if (!d) return;
     d.textContent = total;
     d.style.color = total >= 60 ? '#059669' : (total >= 40 ? '#C47010' : '#DC2626');
 }

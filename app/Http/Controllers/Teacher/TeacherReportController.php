@@ -13,15 +13,12 @@ use Illuminate\Support\Facades\DB;
 
 class TeacherReportController extends Controller
 {
-    // Fixed score components
+    // Fixed score components (total must add up to 100)
     const COMPONENTS = [
-        ['name' => 'Roleplay 1',               'max' => 15],
-        ['name' => 'Roleplay 2',               'max' => 15],
-        ['name' => 'Writing Task 1',            'max' => 10],
-        ['name' => 'Writing Task 2',            'max' => 10],
-        ['name' => 'Presentation / Debate',     'max' => 20],
-        ['name' => 'Final Exam (MCQ)',           'max' => 20],
-        ['name' => 'Final Exam (Writing Task 3)','max' => 10],
+        ['name' => 'Mid Presentation',   'max' => 20],
+        ['name' => 'Final Presentation', 'max' => 25],
+        ['name' => 'Writing Test',       'max' => 15],
+        ['name' => 'Computer Test',      'max' => 40],
     ];
 
     
