@@ -136,6 +136,9 @@ class AppServiceProvider extends ServiceProvider
                     'navNotifications' => $navNotifications,
                     'navUnreadCount'   => $navUnreadCount,
                     'navPrevUnread'    => session('prev_unread_count', 0),
+                    // Most-recent notification (with its resolved url) for the
+                    // page-load toast — lets it show real details and be clickable.
+                    'navLatestNotification' => $navNotifications->first(),
                 ]);
 
                 session(['prev_unread_count' => $navUnreadCount]);

@@ -607,38 +607,128 @@ const prevUnread={{$navPrevUnread??0}};
 if(unread>prevUnread){
     // Ring the bell icon
     const bellBtn=document.getElementById('navBellBtn');
-    bellBtn.classList.add('ringing');
-    setTimeout(()=>bellBtn.classList.remove('ringing'),600);
+    if(bellBtn){ bellBtn.classList.add('ringing'); setTimeout(()=>bellBtn.classList.remove('ringing'),600); }
 
-    // Play notification sound
+    // Pleasant two-note chime (soft, not harsh)
     try{
         const ctx=new(window.AudioContext||window.webkitAudioContext)();
-        const osc=ctx.createOscillator(),gain=ctx.createGain();
-        osc.connect(gain);gain.connect(ctx.destination);
-        osc.frequency.value=520;
-        gain.gain.setValueAtTime(0.2,ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.4);
-        osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.4);
+        const now=ctx.currentTime;
+        [[784,0],[1047,0.09]].forEach(([f,t])=>{      // G5 → C6
+            const o=ctx.createOscillator(),g=ctx.createGain();
+            o.type='sine'; o.frequency.value=f;
+            o.connect(g); g.connect(ctx.destination);
+            g.gain.setValueAtTime(0.0001,now+t);
+            g.gain.exponentialRampToValueAtTime(0.16,now+t+0.02);
+            g.gain.exponentialRampToValueAtTime(0.0001,now+t+0.32);
+            o.start(now+t); o.stop(now+t+0.34);
+        });
     }catch(e){}
 
-    // Show toast
+    @php
+        $rtTitle = $navLatestNotification->title ?? 'New Notification';
+        $rtMsg   = $navLatestNotification->message ?? 'You have a new notification';
+        $rtUrl   = $navLatestNotification->url ?? '#';
+        $rtType  = $navLatestNotification->related_entity_type ?? '';
+    @endphp
+    showInfToast(@json($rtTitle), @json($rtMsg), @json($rtUrl), @json($rtType));
+}
+
+/* ─── Premium notification toast: detailed, clickable, animated, fast ─── */
+function showInfToast(title, message, url, type){
+    const P={
+        installment_request:{c:'#F5911E',g:'#FFB347'}, installment_approved:{c:'#059669',g:'#34D399'}, installment_rejected:{c:'#DC2626',g:'#F87171'},
+        refund_request:{c:'#F5911E',g:'#FFB347'}, refund_approved:{c:'#059669',g:'#34D399'}, refund_rejected:{c:'#DC2626',g:'#F87171'},
+        report_submitted:{c:'#1B4FA8',g:'#3B82F6'}, report_approved:{c:'#059669',g:'#34D399'}, report_rejected:{c:'#DC2626',g:'#F87171'},
+        waiting_list:{c:'#1B4FA8',g:'#3B82F6'}, course_instance:{c:'#1B4FA8',g:'#3B82F6'}
+    };
+    const IC={
+        installment_request:'<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+        installment_approved:'<polyline points="20 6 9 17 4 12"/>', installment_rejected:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
+        refund_request:'<path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"/>',
+        report_submitted:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
+        waiting_list:'<circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>'
+    };
+    const p=P[type]||{c:'#F5911E',g:'#FFB347'};
+    const icon=IC[type]||'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>';
+    const clickable=url&&url!=='#';
+    const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;};
+
+    // container (stacks multiple toasts)
+    let host=document.getElementById('inf-toast-host');
+    if(!host){host=document.createElement('div');host.id='inf-toast-host';
+        host.style.cssText='position:fixed;bottom:22px;right:22px;z-index:99999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;';
+        document.body.appendChild(host);}
+
     const t=document.createElement('div');
-    t.innerHTML=`<div style="position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.99);border:1px solid rgba(27,79,168,0.1);border-left:3px solid #F5911E;border-radius:8px;box-shadow:0 8px 32px rgba(27,79,168,0.15);animation:toastIn 0.4s cubic-bezier(0.16,1,0.3,1) both;font-family:'DM Sans',sans-serif;min-width:240px;">
-        <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,145,30,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    t.className='inf-toast';
+    t.style.setProperty('--ac',p.c); t.style.setProperty('--ac2',p.g);
+    if(clickable) t.style.cursor='pointer';
+    t.innerHTML=`
+        <div class="inf-toast-bar"></div>
+        <div class="inf-toast-body">
+            <div class="inf-toast-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon}</svg></div>
+            <div class="inf-toast-txt">
+                <div class="inf-toast-title">${esc(title)}</div>
+                <div class="inf-toast-msg">${esc(message).replace(/\n/g,'<br>')}</div>
+            </div>
+            <button class="inf-toast-x" aria-label="Dismiss">&times;</button>
         </div>
-        <div><div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#F5911E;margin-bottom:3px;">New Notification</div><div style="font-size:13px;color:#1A2A4A;font-weight:500;">You have a new notification</div></div>
-        <button onclick="this.closest('div').parentElement.remove()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#AAB8C8;font-size:18px;line-height:1;padding:0 2px;">×</button>
-    </div>`;
-    document.body.appendChild(t);
-    setTimeout(()=>{
-        t.firstElementChild.style.animation='toastOut 0.3s ease forwards';
-        setTimeout(()=>t.remove(),300);
-    },4500);
+        ${clickable?`<div class="inf-toast-cta">Click to review <span>&rarr;</span></div>`:''}
+        <div class="inf-toast-progress"><i></i></div>`;
+
+    host.appendChild(t);
+    requestAnimationFrame(()=>t.classList.add('in'));
+
+    let dismissed=false;
+    const kill=()=>{ if(dismissed)return; dismissed=true; t.classList.remove('in'); t.classList.add('out'); setTimeout(()=>t.remove(),260); };
+
+    t.querySelector('.inf-toast-x').addEventListener('click',e=>{e.stopPropagation();kill();});
+    if(clickable) t.addEventListener('click',()=>{ window.location=url; });
+
+    // auto-dismiss with a visible progress bar; pause on hover
+    const LIFE=6000; const bar=t.querySelector('.inf-toast-progress i');
+    bar.style.animation=`infToastLife ${LIFE}ms linear forwards`;
+    let timer=setTimeout(kill,LIFE);
+    t.addEventListener('mouseenter',()=>{ clearTimeout(timer); bar.style.animationPlayState='paused'; });
+    t.addEventListener('mouseleave',()=>{
+        const rem=Math.max(1200,LIFE*(1-(parseFloat(getComputedStyle(bar).width)/parseFloat(getComputedStyle(bar.parentElement).width)||0)));
+        bar.style.animationPlayState='running'; timer=setTimeout(kill,rem);
+    });
 }
 </script>
 
 <style>
+.inf-toast{
+    width:360px;max-width:calc(100vw - 32px);background:#fff;border-radius:14px;overflow:hidden;
+    box-shadow:0 16px 44px rgba(15,31,61,0.20),0 3px 10px rgba(15,31,61,0.08);
+    font-family:'DM Sans',sans-serif;position:relative;
+    transform:translateX(120%) scale(0.9);opacity:0;
+    transition:transform .42s cubic-bezier(0.16,1,0.3,1),opacity .3s,box-shadow .2s;
+    will-change:transform,opacity;
+}
+.inf-toast.in{transform:translateX(0) scale(1);opacity:1;}
+.inf-toast.out{transform:translateX(120%) scale(0.9);opacity:0;}
+.inf-toast:hover{box-shadow:0 22px 56px rgba(15,31,61,0.28),0 3px 10px rgba(15,31,61,0.1);}
+.inf-toast-bar{height:3px;background:linear-gradient(90deg,var(--ac),var(--ac2),transparent);}
+.inf-toast-body{display:flex;align-items:flex-start;gap:12px;padding:14px 15px 12px;}
+.inf-toast-ic{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;
+    animation:infIcPop .5s cubic-bezier(0.16,1,0.3,1) both;}
+.inf-toast-ic::before{content:'';position:absolute;inset:0;border-radius:11px;background:var(--ac);opacity:0.12;}
+.inf-toast-ic svg{position:relative;z-index:1;}
+.inf-toast-txt{flex:1;min-width:0;}
+.inf-toast-title{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;font-weight:700;color:var(--ac);margin-bottom:4px;}
+.inf-toast-msg{font-size:12.5px;line-height:1.5;color:#1A2A4A;font-weight:500;}
+.inf-toast-x{background:none;border:none;cursor:pointer;color:#C0CAD8;font-size:19px;line-height:1;padding:0 2px;flex-shrink:0;transition:color .15s;}
+.inf-toast-x:hover{color:#7A8A9A;}
+.inf-toast-cta{padding:8px 15px;background:linear-gradient(135deg,#0F1F3D,#1A2A4A);color:#fff;font-size:9px;
+    letter-spacing:2px;text-transform:uppercase;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
+.inf-toast-cta span{font-size:12px;transition:transform .2s;}
+.inf-toast:hover .inf-toast-cta span{transform:translateX(3px);}
+.inf-toast-progress{height:3px;background:rgba(15,31,61,0.06);}
+.inf-toast-progress i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));transform-origin:left;}
+@keyframes infToastLife{from{width:100%}to{width:0%}}
+@keyframes infIcPop{0%{transform:scale(0.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
+/* legacy keyframes kept in case other code references them */
 @keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(0.96)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateX(20px) scale(0.96)}}
 </style>
