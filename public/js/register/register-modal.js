@@ -498,7 +498,7 @@ function recalcMaterials() {
         if (!this.value) return;
         const res  = await fetch(`/levels/${this.value}`);
         const data = await res.json();
-        data.forEach(l => { level.innerHTML += `<option value="${l.level_id}">${l.name}</option>`; });
+        data.forEach(l => { level.innerHTML += `<option value="${l.level_id}" data-hours="${l.total_hours ?? ''}">${l.name}</option>`; });
         loadPatch(); calculatePrice(); loadMaterial(); loadPackages(this.value);
     });
 
@@ -507,7 +507,7 @@ function recalcMaterials() {
         if (!this.value) { calculatePrice(); return; }
         const res  = await fetch(`/sublevels/${this.value}`);
         const data = await res.json();
-        data.forEach(s => { sublevel.innerHTML += `<option value="${s.sublevel_id}">${s.name}</option>`; });
+        data.forEach(s => { sublevel.innerHTML += `<option value="${s.sublevel_id}" data-hours="${s.total_hours ?? ''}">${s.name}</option>`; });
         loadPatch(); calculatePrice(); loadMaterial();
     });
 
