@@ -96,6 +96,31 @@ class AttendanceController extends Controller
 
         $session->update(['status' => 'Completed']);
 
+        $instance = $session->courseInstance;
+        if ($instance) {
+            $remainingSessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+                ->whereNotIn('status', ['Completed', 'Cancelled'])
+                ->count();
+
+            if ($remainingSessions === 0) {
+                Enrollment::where('course_instance_id', $instance->course_instance_id)
+                    ->where('status', 'Active')
+                    ->where(function ($q) {
+                        $q->where(function ($p) {
+                            $p->where('enrollment_type', 'Private')
+                              ->where('hours_remaining', '>', 0);
+                        })->orWhere(function ($p) {
+                            $p->whereNotNull('package_id')
+                              ->where('package_units_remaining', '>', 0);
+                        })->orWhere(function ($p) {
+                            $p->whereNull('package_id')
+                              ->where('enrollment_type', '!=', 'Private');
+                        });
+                    })
+                    ->update(['status' => 'Completed']);
+            }
+        }
+
         return back()->with('success', 'Attendance saved successfully.');
     }
 }

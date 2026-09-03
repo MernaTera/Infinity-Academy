@@ -201,9 +201,19 @@ class TeacherAttendanceController extends Controller
 
         if ($remainingSessions === 0) {
             Enrollment::where('course_instance_id', $instance->course_instance_id)
-                ->where('enrollment_type', 'Private')
                 ->where('status', 'Active')
-                ->where('hours_remaining', '>', 0)
+                ->where(function ($q) {
+                    $q->where(function ($p) {                       // private with hours left
+                        $p->where('enrollment_type', 'Private')
+                          ->where('hours_remaining', '>', 0);
+                    })->orWhere(function ($p) {                     // package with units left
+                        $p->whereNotNull('package_id')
+                          ->where('package_units_remaining', '>', 0);
+                    })->orWhere(function ($p) {                     // plain finished course
+                        $p->whereNull('package_id')
+                          ->where('enrollment_type', '!=', 'Private');
+                    });
+                })
                 ->update(['status' => 'Completed']);
         }
 
