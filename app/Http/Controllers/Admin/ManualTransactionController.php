@@ -10,14 +10,8 @@ use Illuminate\Support\Facades\DB;
 
 class ManualTransactionController extends Controller
 {
-    /**
-     * Manual transactions — lets an Admin record an ad-hoc financial
-     * transaction (pick amount, method, category, notes, and which enrolment
-     * it belongs to) and shows the full recent transaction log underneath.
-     */
     public function index()
     {
-        // Enrolments to attach a transaction to (every transaction needs one).
         $enrollments = Enrollment::with(['student', 'courseTemplate'])
             ->orderByDesc('enrollment_id')
             ->get()
@@ -30,21 +24,24 @@ class ManualTransactionController extends Controller
                 ];
             });
 
-        // Full recent transaction log (most recent first).
+        $unpaidInstallmentTxIds = \App\Models\Finance\InstallmentSchedule::whereIn('status', ['Pending', 'Overdue'])
+            ->whereNotNull('transaction_id')
+            ->pluck('transaction_id')
+            ->all();
+
         $transactions = FinancialTransaction::with([
                 'enrollment.student',
                 'branch',
                 'createdBy',
             ])
+            ->when(!empty($unpaidInstallmentTxIds), fn($q) =>
+                $q->whereNotIn('transaction_id', $unpaidInstallmentTxIds))
             ->orderByDesc('transaction_id')
             ->paginate(25);
 
         return view('admin.manual-transactions.index', compact('enrollments', 'transactions'));
     }
 
-    /**
-     * Store a manual transaction.
-     */
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -56,7 +53,6 @@ class ManualTransactionController extends Controller
             'notes'                => 'nullable|string',
         ]);
 
-        // Map the friendly method names to the DB enum.
         $methodMap = [
             'Cash'          => 'Cash',
             'Instapay'      => 'Transfer',
@@ -65,13 +61,6 @@ class ManualTransactionController extends Controller
 
         $enrollment = Enrollment::findOrFail($data['enrollment_id']);
 
-        // The admin revenue total and the payment-method breakdown both sum
-        // FinancialTransaction rows where transaction_type is Payment or
-        // Installment. So record every manual entry as a Payment — that's what
-        // makes it show up in revenue and in the Cash/Instapay/Vodafone split.
-        // The chosen category (Course/Material/Test/Other) is kept separately
-        // for classification; nothing keys revenue off the type beyond the
-        // Payment/Installment filter.
         FinancialTransaction::create([
             'enrollment_id'          => $enrollment->enrollment_id,
             'patch_id'               => $enrollment->patch_id,
