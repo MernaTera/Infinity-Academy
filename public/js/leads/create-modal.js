@@ -132,21 +132,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // ─────────────────────────────────────────
     // Required field highlight on submit
     // ─────────────────────────────────────────
-    const form = document.querySelector('form');
-    if (form) {
-        form.addEventListener('submit', function () {
-            form.querySelectorAll('[required]').forEach(field => {
-                if (!field.value.trim()) {
-                    field.style.borderColor = '#DC2626';
-                    field.style.boxShadow   = '0 0 0 3px rgba(220,38,38,0.1)';
-                    field.addEventListener('input', function fix() {
-                        field.style.borderColor = '';
-                        field.style.boxShadow   = '';
-                        field.removeEventListener('input', fix);
-                    }, { once: true });
-                }
-            });
-        });
-    }
+    // The lead form's submit handling (double-submit guard + required-field
+    // highlight) lives inline in leads/partials/form.blade.php so it always
+    // runs regardless of this file's cache state. Nothing to bind here.
 
 });

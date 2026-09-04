@@ -1,6 +1,6 @@
 <script src="{{ asset('js/leads/history-modal.js') }}"></script>
 
-<form method="POST"
+<form method="POST" id="leadMainForm"
       action="{{ isset($isRegistration) ? route('registration.store') : (isset($lead) ? route('leads.update', $lead->lead_id) : route('leads.store')) }}">
     @csrf
     @if(isset($lead)) @method('PUT') @endif
@@ -302,6 +302,51 @@
     </div>
 
 </form>
+
+{{-- Double-submit guard (inline so it always runs, immune to JS caching / load
+     order). On slow connections a second click used to create a duplicate POST
+     that bounced back on the unique-phone rule — looking like "refresh, no
+     redirect". This locks the button after the first valid submit. --}}
+<script>
+(function(){
+    var form = document.getElementById('leadMainForm');
+    if(!form) return;
+    var locked = false;
+    form.addEventListener('submit', function(e){
+        // required-field check
+        var empty=false;
+        form.querySelectorAll('[required]').forEach(function(f){
+            if(!String(f.value||'').trim()){
+                empty=true;
+                f.style.borderColor='#DC2626'; f.style.boxShadow='0 0 0 3px rgba(220,38,38,0.1)';
+                f.addEventListener('input', function fix(){ f.style.borderColor=''; f.style.boxShadow=''; f.removeEventListener('input',fix); }, {once:true});
+            }
+        });
+        if(empty){ e.preventDefault(); return; }
+
+        if(locked){ e.preventDefault(); return; }   // block 2nd+ submit
+        locked = true;
+
+        var btn = form.querySelector('button[type="submit"]');
+        if(btn){
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+            btn.style.pointerEvents = 'none';
+            var span = btn.querySelector('span');
+            if(span){ btn.dataset.orig = span.textContent; span.textContent = 'Saving...'; }
+        }
+    });
+    // if user returns via back button (bfcache), unlock so form works again
+    window.addEventListener('pageshow', function(ev){
+        if(ev.persisted){
+            locked=false;
+            var btn=form.querySelector('button[type="submit"]');
+            if(btn){ btn.disabled=false; btn.style.opacity=''; btn.style.pointerEvents='';
+                var span=btn.querySelector('span'); if(span && btn.dataset.orig) span.textContent=btn.dataset.orig; }
+        }
+    });
+})();
+</script>
 
 {{-- ── Error + hint styles (scoped here so they work inside any layout) ── --}}
 <style>
