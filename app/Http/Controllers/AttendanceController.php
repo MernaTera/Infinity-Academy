@@ -26,7 +26,6 @@ class AttendanceController extends Controller
         $sessionDate = Carbon::parse($session->session_date);
         $isToday     = $sessionDate->isToday();
 
-        // String comparison to avoid timezone issues
         $nowTime   = now()->format('H:i');
         $startTime = Carbon::parse($session->start_time)->format('H:i');
         $endTime   = Carbon::parse($session->end_time)->format('H:i');

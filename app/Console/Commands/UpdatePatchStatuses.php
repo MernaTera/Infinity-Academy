@@ -24,13 +24,6 @@ class UpdatePatchStatuses extends Command
             $patch->update(['status' => 'Closed', 'is_locked' => true]);
             AuditService::updated('patch', $patch->patch_id, 'status', 'Active', 'Closed');
 
-            // Safety net: when a patch closes, any enrolment still 'Active' in it
-            // that carries leftover value should become 'Completed' so it isn't
-            // stranded — this is what keeps a package student (units remaining)
-            // or a private student (hours remaining) visible as "ready to
-            // continue" in the next patch. Normally the last-session attendance
-            // already completes them; this covers edge cases (cancelled/unmarked
-            // final sessions). Plain finished courses are also completed.
             \App\Models\Enrollment\Enrollment::where('patch_id', $patch->patch_id)
                 ->where('status', 'Active')
                 ->where(function ($q) {

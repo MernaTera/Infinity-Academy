@@ -8,7 +8,6 @@ use App\Interfaces\LeadRepositoryInterface;
 use App\Repositories\LeadRepository;
 use App\Observers\AuditObserver;
 
-// ── Models to audit ──
 use App\Models\Leads\Lead;
 use App\Models\Student\Student;
 use App\Models\Enrollment\Enrollment;
@@ -40,9 +39,6 @@ use App\Http\Controllers\RegistrationController;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         $this->app->bind(
@@ -51,18 +47,12 @@ class AppServiceProvider extends ServiceProvider
         );
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        // ── Blade directive ──
         \Illuminate\Support\Facades\Blade::if('cando', function (string $permission) {
             return auth()->check() && auth()->user()->canDo($permission);
         });
 
-        // ── Audit Observers ──
-        // Each model listed here will have Create/Update/Delete logged automatically
 
         Lead::observe(AuditObserver::class);
         Student::observe(AuditObserver::class);
@@ -136,8 +126,6 @@ class AppServiceProvider extends ServiceProvider
                     'navNotifications' => $navNotifications,
                     'navUnreadCount'   => $navUnreadCount,
                     'navPrevUnread'    => session('prev_unread_count', 0),
-                    // Most-recent notification (with its resolved url) for the
-                    // page-load toast — lets it show real details and be clickable.
                     'navLatestNotification' => $navNotifications->first(),
                 ]);
 

@@ -117,9 +117,9 @@ class SchedulingService
     public function storeMultipleSchedules(
         int $instanceId, 
         array $pairs, 
-        array|string $startTimes,  // ✅ array أو string
+        array|string $startTimes, 
         array|int|null $timeSlotIds = null,
-        array $singleDays = []     // per-pair chosen single day (0-6) or absent = both days
+        array $singleDays = []     
     ): array {
         $schedules = [];
         foreach ($pairs as $pair) {
@@ -127,7 +127,7 @@ class SchedulingService
             $timeSlotId = is_array($timeSlotIds) ? ($timeSlotIds[$pair] ?? null) : $timeSlotIds;
             $singleDay  = $singleDays[$pair] ?? null;
 
-            if (!$startTime) continue; // ✅ skip لو مفيش وقت للـ pair دي
+            if (!$startTime) continue;
 
             $schedules[] = $this->storeSchedule($instanceId, [
                 'day_of_week'  => $pair,

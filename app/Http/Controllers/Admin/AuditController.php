@@ -14,7 +14,6 @@ class AuditController extends Controller
         $query = AuditLog::with('employee.user')
             ->orderByDesc('created_at');
 
-        // Filters
         if ($request->filled('table')) {
             $query->where('table_name', $request->table);
         }
@@ -47,7 +46,6 @@ class AuditController extends Controller
 
         $logs = $query->paginate(50)->withQueryString();
 
-        // Stats
         $stats = [
             'total'   => AuditLog::count(),
             'today'   => AuditLog::whereDate('created_at', today())->count(),
@@ -56,7 +54,6 @@ class AuditController extends Controller
             'deletes' => AuditLog::where('action_type', 'Delete')->count(),
         ];
 
-        // Filter options
         $tables    = AuditLog::distinct()->pluck('table_name')->sort()->values();
         $employees = Employee::with('user')->orderBy('full_name')->get();
 

@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class AuditObserver
 {
-    /**
-     * Tables that must NEVER be audited (prevents infinite loop).
-     */
     protected array $excludedTables = [
         'audit_log',
         'sessions',
@@ -17,8 +14,8 @@ class AuditObserver
         'cache_locks',
         'jobs',
         'failed_jobs',
-        'lead_history',   // has its own logging in LeadService
-        'lead_call_log',  // has its own logging in LeadService
+        'lead_history',  
+        'lead_call_log',  
     ];
 
     protected array $skipFields = [
@@ -28,15 +25,11 @@ class AuditObserver
         'created_at',
     ];
 
-    // ─────────────────────────────────────────
     private function shouldAudit(Model $model): bool
     {
         return !in_array($model->getTable(), $this->excludedTables);
     }
 
-    // ─────────────────────────────────────────
-    // Created
-    // ─────────────────────────────────────────
     public function created(Model $model): void
     {
         if (!$this->shouldAudit($model)) return;
@@ -50,9 +43,6 @@ class AuditObserver
         AuditLogger::create($table, $id, $values);
     }
 
-    // ─────────────────────────────────────────
-    // Updated
-    // ─────────────────────────────────────────
     public function updated(Model $model): void
     {
         if (!$this->shouldAudit($model)) return;
@@ -77,9 +67,6 @@ class AuditObserver
         AuditLogger::update($table, $id, $oldValues, $newValues);
     }
 
-    // ─────────────────────────────────────────
-    // Deleted
-    // ─────────────────────────────────────────
     public function deleted(Model $model): void
     {
         if (!$this->shouldAudit($model)) return;

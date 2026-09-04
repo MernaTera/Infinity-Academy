@@ -32,18 +32,12 @@ class AuditLog extends Model
         'changed_at',
     ];
 
-    // ─────────────────────────────────────────
-    // Relations
-    // ─────────────────────────────────────────
 
     public function employee()
     {
         return $this->belongsTo(Employee::class, 'changed_by', 'employee_id');
     }
 
-    // ─────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────
 
     public function isCreate(): bool { return $this->action_type === 'Create'; }
     public function isUpdate(): bool { return $this->action_type === 'Update'; }
@@ -61,9 +55,6 @@ class AuditLog extends Model
         return $this->changed_at?->diffForHumans();
     }
 
-    // ─────────────────────────────────────────
-    // Scopes
-    // ─────────────────────────────────────────
 
     public function scopeForTable(Builder $query, string $table): Builder
     {

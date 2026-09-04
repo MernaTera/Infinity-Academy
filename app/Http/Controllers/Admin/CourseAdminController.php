@@ -263,7 +263,6 @@ class CourseAdminController extends Controller
                 if ($inUse) {
                     $skipped[] = "Level '{$lvl->name}' (in use)";
                 } else {
-                    // Also try to remove its sublevels first
                     foreach ($lvl->sublevels as $s) {
                         $sInUse = \App\Models\Academic\CourseInstance::where('sublevel_id', $s->sublevel_id)->exists()
                             || \App\Models\Enrollment\Enrollment::where('sublevel_id', $s->sublevel_id)->exists();

@@ -69,7 +69,6 @@ class OutstandingAdminController extends Controller
         DB::transaction(function () use ($request, $enrollment, $adminId) {
 
             if ($request->action === 'lift') {
-                // Release restriction
                 $enrollment->update([
                     'status'             => 'Active',
                     'restriction_flag'   => false,
@@ -85,7 +84,6 @@ class OutstandingAdminController extends Controller
                     ]);
 
             } elseif ($request->action === 'restrict') {
-                // Manual restriction
                 $enrollment->update([
                     'status'             => 'Restricted',
                     'restriction_flag'   => true,

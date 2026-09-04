@@ -36,7 +36,6 @@ class TeacherAttendanceController extends Controller
 
         $isToday = Carbon::parse($session->session_date)->isToday();
 
-        // String comparison to avoid timezone issues
         $nowTime      = now()->format('H:i');
         $startTimeStr = Carbon::parse($session->start_time)->format('H:i');
         $deadlineStr  = Carbon::parse($session->start_time)->addMinutes(20)->format('H:i');
@@ -66,11 +65,6 @@ class TeacherAttendanceController extends Controller
         ));
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Store — 20 min window
-    |------------------------------------------------------------------
-    */
     public function store(Request $request, $sessionId)
     {
         $employee = Employee::where('user_id', auth()->id())->first();
@@ -100,15 +94,12 @@ class TeacherAttendanceController extends Controller
             ->whereIn('status', ['Active', 'Restricted'])
             ->get();
 
-        // Session length in hours (from its start/end times), used to deduct
-        // from private students' remaining bundle hours.
         $sessionHours = 0;
         if ($session->start_time && $session->end_time) {
             $mins = Carbon::parse($session->start_time)->diffInMinutes(Carbon::parse($session->end_time));
             $sessionHours = round($mins / 60, 2);
         }
         if ($sessionHours <= 0) {
-            // Fallback to the instance's configured session duration.
             $sessionHours = (float) ($session->courseInstance->session_duration ?? 0);
         }
 
@@ -133,9 +124,6 @@ class TeacherAttendanceController extends Controller
                 ]
             );
 
-            // ── Private hours deduction ────────────────────────────────
-            // Only private enrolments with a bundle track hours. Group
-            // students are unaffected.
             $isPrivate = $enrollment->enrollment_type === 'Private'
                 && $enrollment->hours_remaining !== null;
 
@@ -144,22 +132,13 @@ class TeacherAttendanceController extends Controller
                 $shouldDeduct = false;
 
                 if ($status === 'Present') {
-                    // Attending always consumes the student's hours.
                     $shouldDeduct = true;
                 } elseif ($status === 'Absent') {
-                    // First two absences in THIS course are free; from the
-                    // third absence onward, the missed session's hours are
-                    // deducted as a penalty. Count prior absences for this
-                    // enrolment (excluding the row we just wrote for this
-                    // session, since that's the current one).
                     $priorAbsences = Attendance::where('enrollment_id', $enrollment->enrollment_id)
                         ->where('status', 'Absent')
                         ->where('course_session_id', '!=', $sessionId)
                         ->count();
 
-                    // priorAbsences does not include this session. If the
-                    // student already had >= 2 absences before this one, then
-                    // this absence is the 3rd (or later) → deduct.
                     if ($priorAbsences >= 2) {
                         $shouldDeduct = true;
                     }
@@ -169,7 +148,6 @@ class TeacherAttendanceController extends Controller
                     $newRemaining = max(0, (float) $enrollment->hours_remaining - $sessionHours);
                     $enrollment->hours_remaining = $newRemaining;
 
-                    // Log the deduction.
                     \DB::table('bundle_usage_log')->insert([
                         'enrollment_id'     => $enrollment->enrollment_id,
                         'course_session_id' => $sessionId,
@@ -180,8 +158,6 @@ class TeacherAttendanceController extends Controller
                         'updated_at'        => now(),
                     ]);
 
-                    // If the bundle is now exhausted, restrict the student
-                    // until they buy more hours.
                     if ($newRemaining <= 0) {
                         $enrollment->status = 'Restricted';
                         $enrollment->restriction_flag = true;
@@ -203,13 +179,13 @@ class TeacherAttendanceController extends Controller
             Enrollment::where('course_instance_id', $instance->course_instance_id)
                 ->where('status', 'Active')
                 ->where(function ($q) {
-                    $q->where(function ($p) {                       // private with hours left
+                    $q->where(function ($p) {                      
                         $p->where('enrollment_type', 'Private')
                           ->where('hours_remaining', '>', 0);
-                    })->orWhere(function ($p) {                     // package with units left
+                    })->orWhere(function ($p) {                    
                         $p->whereNotNull('package_id')
                           ->where('package_units_remaining', '>', 0);
-                    })->orWhere(function ($p) {                     // plain finished course
+                    })->orWhere(function ($p) {                    
                         $p->whereNull('package_id')
                           ->where('enrollment_type', '!=', 'Private');
                     });

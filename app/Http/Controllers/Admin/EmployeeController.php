@@ -66,7 +66,7 @@ class EmployeeController extends Controller
         $englishLevels = EnglishLevel::all();
         $patches       = Patch::whereIn('status', ['Active', 'Upcoming'])->get();
         $contractTypes = \App\Models\HR\ContractType::where('is_active', true)->get();
-        $timeSlots     = \App\Models\Academic\TimeSlot::where('is_active', true)->orderBy('start_time')->get(); // ✅
+        $timeSlots     = \App\Models\Academic\TimeSlot::where('is_active', true)->orderBy('start_time')->get();
 
         return view('admin.employees.create', compact(
             'roles', 'branches', 'englishLevels', 'patches', 'contractTypes', 'timeSlots'
@@ -113,7 +113,6 @@ public function store(Request $request)
                 'user_id'   => $user->id,
                 'branch_id' => $request->branch_id,
                 'salary'    => $request->salary,
-                // Fixed daily shift window — only meaningful for CS / Student Care.
                 'work_start_time' => in_array(Role::find($request->role_id)?->role_name, ['Customer Service', 'Student Care'])
                     ? $request->work_start_time : null,
                 'work_end_time'   => in_array(Role::find($request->role_id)?->role_name, ['Customer Service', 'Student Care'])
@@ -125,7 +124,6 @@ public function store(Request $request)
             $adminId = Employee::where('user_id', auth()->id())->value('employee_id');
             $role    = Role::find($request->role_id);
 
-            // ── Teacher ───────────────────────────────────────────────
             if ($role?->role_name === 'Teacher' && $request->english_level_id) {
 
                 $teacher = Teacher::create([
@@ -156,15 +154,7 @@ public function store(Request $request)
                 }
             }
 
-            // ── CS Target ─────────────────────────────────────────────
-            // Save the target keyed by month (same as the edit flow and what
-            // the dashboard/sales reports read). Defaults to the current month
-            // when the form doesn't specify one. Previously this required a
-            // patch and saved no month, so the target never showed up until the
-            // employee was edited and re-saved.
             if ($role?->role_name === 'Customer Service' && $request->filled('target_amount')) {
-                // Standing (permanent) target — stored with month = NULL so it
-                // applies to every month until an admin changes it.
                 CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminId);
             }
         });
@@ -173,11 +163,6 @@ public function store(Request $request)
             ->with('success', 'Employee created successfully.');
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Show Profile
-    |------------------------------------------------------------------
-    */
     public function show($id)
     {
         $employee = Employee::with([
@@ -272,11 +257,6 @@ public function store(Request $request)
 
         return back()->with('success', 'Contract assigned successfully.');
     }
-    /*
-    |------------------------------------------------------------------
-    | Edit
-    |------------------------------------------------------------------
-    */
     public function edit($id)
     {
         $employee      = Employee::with(['user.role', 'teacher'])->findOrFail($id);
@@ -289,11 +269,6 @@ public function store(Request $request)
         return view('admin.employees.edit', compact('employee', 'branches', 'englishLevels', 'patches'));
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Update
-    |------------------------------------------------------------------
-    */
     public function update(Request $request, $id)
     {
         $employee = Employee::with('user')->findOrFail($id);
@@ -327,11 +302,6 @@ public function store(Request $request)
         return back()->with('success', 'Employee updated successfully.');
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Toggle Active / Inactive
-    |------------------------------------------------------------------
-    */
     public function toggle($id)
     {
         $employee  = Employee::with('user')->findOrFail($id);
@@ -384,7 +354,6 @@ public function store(Request $request)
 
         if ($request->filled('target_amount')) {
             $adminEmployee = Employee::where('user_id', auth()->id())->first();
-            // Standing (permanent) target — one value for every month.
             CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminEmployee?->employee_id);
         }
 
@@ -427,9 +396,7 @@ public function store(Request $request)
         $employee = Employee::with(['user','teacher'])->findOrFail($id);
         $adminId  = Employee::where('user_id', auth()->id())->value('employee_id');
 
-        // Basic
         $employee->update(['full_name' => $request->full_name, 'salary' => $request->salary]);
-        // Fixed daily shift window — CS / Student Care only.
         if (in_array($request->role_name, ['Customer Service', 'Student Care'])) {
             $employee->update([
                 'work_start_time' => $request->work_start_time ?: null,
@@ -463,7 +430,6 @@ public function store(Request $request)
         }
 
         if ($request->role_name === 'Customer Service' && $request->filled('target_amount')) {
-            // Standing (permanent) target — one value for every month.
             \App\Models\Enrollment\CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminId);
         }
 

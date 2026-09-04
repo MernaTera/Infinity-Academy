@@ -44,49 +44,38 @@ class StoreLeadRequest extends FormRequest
     public function messages(): array
     {
         return [
-            // Full Name
             'full_name.required' => 'Full name is required.',
             'full_name.string'   => 'Full name must be text.',
             'full_name.min'      => 'Full name must be at least 3 characters.',
             'full_name.max'      => 'Full name cannot exceed 255 characters.',
 
-            // Phone
             'phone.required' => 'Phone number is required.',
             'phone.regex'    => 'Phone must contain a number of 11 digits.',
             'phone.unique'   => 'This phone number is already registered in the system.',
 
-            // Birthdate
             'birthdate.date'   => 'Please enter a valid date.',
             'birthdate.before' => 'Birthdate must be in the past.',
 
-            // Location
             'location.max' => 'Location cannot exceed 255 characters.',
 
-            // Source
             'source.required' => 'Please select how the lead heard about us.',
             'source.in'       => 'Invalid source selected.',
 
-            // Degree
             'degree.required' => 'Please select the lead\'s degree.',
             'degree.in'       => 'Degree must be either Student or Graduate.',
 
-            // Status
             'status.in' => 'Invalid status selected.',
 
-            // Start Preference
             'start_preference_type.in'          => 'Invalid start preference selected.',
             'start_preference_date.required_if' => 'Please enter the specific start date.',
             'start_preference_date.date'        => 'Please enter a valid date for start preference.',
 
-            // Next Call
             'next_call_at.date' => 'Please enter a valid date and time for the next call.',
 
-            // Course & Level
             'interested_course_template_id.exists' => 'Selected course does not exist.',
             'interested_level_id.exists'            => 'Selected level does not exist.',
             'interested_sublevel_id.exists'         => 'Selected sublevel does not exist.',
 
-            // Notes
             'notes.max' => 'Notes cannot exceed 2000 characters.',
         ];
     }

@@ -44,7 +44,6 @@ class PatchAdminController extends Controller
         ));
     }
 
-    // ── Create ────────────────────────────────────────────────────
     public function store(Request $request)
     {
         $request->validate([
@@ -83,7 +82,6 @@ class PatchAdminController extends Controller
         return back()->with('success', 'Patch created successfully.');
     }
 
-    // ── Edit ──────────────────────────────────────────────────────
     public function update(Request $request, $id)
     {
         $patch = Patch::findOrFail($id);
@@ -103,7 +101,6 @@ class PatchAdminController extends Controller
             'end_date'   => 'required|date|after:start_date',
         ]);
 
-        // Check overlap excluding current patch
         $overlap = Patch::where('branch_id', $request->branch_id)
             ->where('patch_id', '!=', $id)
             ->where('status', '!=', 'Closed')
@@ -130,7 +127,6 @@ class PatchAdminController extends Controller
         return back()->with('success', 'Patch updated successfully.');
     }
 
-    // ── Delete ────────────────────────────────────────────────────
     public function destroy($id)
     {
         $patch = Patch::findOrFail($id);
@@ -181,7 +177,6 @@ class PatchAdminController extends Controller
         return back()->with('success', 'Patch deleted successfully.');
     }
 
-    // ── Extend Date ───────────────────────────────────────────────
     public function extendDate(Request $request, $id)
     {
         $patch = Patch::findOrFail($id);
@@ -233,7 +228,6 @@ class PatchAdminController extends Controller
         return back()->with('success', "Patch {$action} successfully to " . $newEnd->format('d M Y') . ".");
     }
 
-    // ── Status ────────────────────────────────────────────────────
     public function updateStatus(Request $request, $id)
     {
         $patch = Patch::findOrFail($id);
@@ -259,7 +253,6 @@ class PatchAdminController extends Controller
             ->where('status', 'Active')
             ->exists();
     }
-    // ── Time Slots ────────────────────────────────────────────────
     public function storeTimeSlot(Request $request)
     {
         $request->validate([
@@ -333,7 +326,6 @@ class PatchAdminController extends Controller
 
         return back()->with('success', 'Break slot updated.');
     }
-    // ── Break Slots ───────────────────────────────────────────────
     public function storeBreakSlot(Request $request)
     {
         $request->validate([

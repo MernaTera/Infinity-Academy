@@ -48,7 +48,6 @@ class OffersController extends Controller
             'course_ids.*'      => 'exists:course_template,course_template_id',
         ]);
 
-        // No overlapping active offers for same course
         foreach ($request->course_ids as $courseId) {
             $overlap = DB::table('offer')
                 ->join('offer_course_template', 'offer.offer_id', '=', 'offer_course_template.offer_id')

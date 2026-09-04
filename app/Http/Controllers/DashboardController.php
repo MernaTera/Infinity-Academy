@@ -48,8 +48,6 @@ class DashboardController extends Controller
 
         $currentMonth = now()->format('Y-m');
 
-        // Standing (permanent) target — set once, applies every month until the
-        // admin changes it. Not per-month.
         $targetAmount = CsTarget::amountFor($employee?->employee_id);
 
         $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)

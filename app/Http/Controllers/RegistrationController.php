@@ -27,11 +27,6 @@ class RegistrationController extends Controller
         $this->registrationService = $registrationService;
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Show Registration Form (from lead)
-    |------------------------------------------------------------------
-    */
     public function createFromLead($lead_id)
     {
         $lead = Lead::findOrFail($lead_id);
@@ -63,10 +58,6 @@ class RegistrationController extends Controller
             $lead->interested_sublevel_id = null;
         }
 
-        // ── Leftover private hours ─────────────────────────────────────
-        // If this lead's student finished previous private courses with hours
-        // still on them, sum those up so the form can carry them into the new
-        // enrolment. The new bundle then becomes optional.
         $leftoverHours = 0;
         if ($lead->student_id) {
             $leftoverHours = (float) \App\Models\Enrollment\Enrollment::where('student_id', $lead->student_id)
@@ -76,11 +67,6 @@ class RegistrationController extends Controller
                 ->sum('hours_remaining');
         }
 
-        // ── Active level package ───────────────────────────────────────
-        // If this lead's student is on a level package with prepaid levels
-        // still remaining, surface it so the form can show that the next
-        // group enrolment is already paid for (free) — mirroring how leftover
-        // private hours are surfaced above.
         $packageInfo = null;
         if ($lead->student_id) {
             $pkgEnrollment = \App\Models\Enrollment\Enrollment::with('levelPackage')
@@ -113,11 +99,6 @@ class RegistrationController extends Controller
         ));
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Store Registration
-    |------------------------------------------------------------------
-    */
     public function store(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -153,10 +134,6 @@ class RegistrationController extends Controller
                     'final_price.required'             => 'Course price could not be determined. Please re-select the course.',
                 ]);
 
-        // Return validation errors as JSON for ajax (the registration form
-        // submits via fetch expecting JSON); fall back to a redirect otherwise.
-        // Previously a failed validation always redirected (302 → HTML), which
-        // the fetch caller saw as "Response is not JSON".
         $failValidation = function ($errors) use ($request) {
             if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
@@ -175,10 +152,6 @@ class RegistrationController extends Controller
         $discountValue = (float) ($request->discount_value ?? 0);
         $finalPriceVal = (float) $request->final_price;
 
-        // ── Level package validation ───────────────────────────────────
-        // A package is billed per unit: by sublevel when the chosen level has
-        // sublevels, otherwise by level. So a package registration must pin
-        // down the exact starting unit (level, and sublevel where applicable).
         if (!empty($request->package_id)) {
             if (strtolower($request->type) !== 'group') {
                 return $failValidation([
@@ -190,7 +163,6 @@ class RegistrationController extends Controller
                     'level_id' => 'Please select the starting level for this package.'
                 ]);
             }
-            // If the selected level has sublevels, a starting sublevel is required.
             $levelHasSublevels = \App\Models\Academic\Sublevel::where('level_id', $request->level_id)->exists();
             if ($levelHasSublevels && empty($request->sublevel_id)) {
                 return $failValidation([
@@ -213,9 +185,6 @@ class RegistrationController extends Controller
         $finalPrice    = (float) $request->final_price;
         $testFee       = (float) $request->test_fee;
 
-        // Material total = sum of the selected materials' real prices (from DB),
-        // supporting multiple materials per course. Falls back to the posted
-        // material_price only if no ids were sent.
         $selectedMaterialIds = collect($request->input('material_ids', []))
             ->map(fn($id) => (int) $id)->filter()->unique();
         if ($selectedMaterialIds->isNotEmpty()) {
@@ -356,11 +325,6 @@ class RegistrationController extends Controller
             }
     }
 
-    /*
-    |------------------------------------------------------------------
-    | AJAX Helpers
-    |------------------------------------------------------------------
-    */
 
     public function getPatchOptions(Request $request)
     {
@@ -404,9 +368,6 @@ class RegistrationController extends Controller
         $levelId    = $request->level_id    ?: null;
         $courseId   = $request->course_template_id ?: null;
 
-        // Return ALL materials assigned at the most specific matching level.
-        // Priority: sublevel → level → course. Within the first level that
-        // has any assignments, return every material (mandatory + optional).
         $materials = collect();
 
         if ($sublevelId) {
@@ -439,7 +400,6 @@ class RegistrationController extends Controller
                 ->get();
         }
 
-        // Normalise types (is_mandatory as bool, price as float)
         $materials = $materials->map(fn($m) => [
             'material_id'  => (int) $m->material_id,
             'name'         => $m->name,
@@ -503,7 +463,6 @@ class RegistrationController extends Controller
         ]);
     }
 
-    //--------------------------------------------------
     public function showInvoice($id)
     {
         $enrollment = \App\Models\Enrollment\Enrollment::with([
@@ -529,8 +488,6 @@ class RegistrationController extends Controller
         return view('registration.invoice-page', compact('enrollment'));
     }
 
-    //--------------------------------------------------
-    // 80mm thermal receipt (cashier printer) — same data as the A4 invoice.
     public function showReceipt($id)
     {
         $enrollment = \App\Models\Enrollment\Enrollment::with([

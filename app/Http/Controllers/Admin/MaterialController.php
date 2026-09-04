@@ -14,13 +14,8 @@ class MaterialController extends Controller
 {
     public function index()
     {
-        // Eloquent (not DB::table) so the branch scope applies — an admin sees
-        // only their own branch's materials and courses.
         $materials = Material::orderByDesc('created_at')->get();
 
-        // Assignments belong to a branch through their material. We keep the
-        // join query (for the course/level/sublevel names) but restrict it to
-        // this branch's materials, which we already fetched above.
         $branchMaterialIds = $materials->pluck('material_id')->all();
 
         $assignments = DB::table('material_assignment')
@@ -60,7 +55,6 @@ class MaterialController extends Controller
 
         $adminId = Employee::where('user_id', auth()->id())->value('employee_id');
 
-        // Eloquent create so the trait stamps the admin's branch_id automatically.
         Material::create([
             'name'                => $request->name,
             'price'               => $request->price,
@@ -80,8 +74,6 @@ class MaterialController extends Controller
             'revenue_type' => 'required|in:Individual,Shared',
         ]);
 
-        // Eloquent so an admin can only update their own branch's material
-        // (findOrFail respects the scope and 404s on another branch's row).
         $material = Material::findOrFail($id);
         $material->update([
             'name'          => $request->name,
@@ -109,9 +101,6 @@ class MaterialController extends Controller
             'is_mandatory'       => 'boolean',
         ]);
 
-        // The material must belong to the current admin's branch. Material::find
-        // respects the branch scope, so a material from another branch resolves
-        // to null and is rejected.
         if (Material::find($request->material_id) === null) {
             return back()->with('error', 'This material is not available for your branch.');
         }

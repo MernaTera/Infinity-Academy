@@ -55,7 +55,6 @@ class SalesService
     {
         $range = $this->getDateRange($filterType, $patch, $month, $day);
 
-        // ── Target by month ──
         $targetMonth = match($filterType) {
             'patch' => $patch?->start_date
                         ? \Carbon\Carbon::parse($patch->start_date)->format('Y-m')
@@ -65,7 +64,6 @@ class SalesService
             'day'   => \Carbon\Carbon::parse($day)->format('Y-m'),
         };
 
-        // Standing (permanent) target — same value every month until admin edits.
         $targetAmount = CsTarget::amountFor($employee->employee_id);
 
         $achieved = RevenueSplit::where('employee_id', $employee->employee_id)

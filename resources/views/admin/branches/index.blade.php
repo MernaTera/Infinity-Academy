@@ -393,7 +393,6 @@ function openDelete(id, name) {
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
-// Close on backdrop click
 document.querySelectorAll('.modal-bg').forEach(bg => {
     bg.addEventListener('click', e => { if(e.target === bg) bg.classList.remove('open'); });
 });

@@ -13,7 +13,6 @@ use Illuminate\Support\Facades\DB;
 
 class TeacherReportController extends Controller
 {
-    // Fixed score components (total must add up to 100)
     const COMPONENTS = [
         ['name' => 'Mid Presentation',   'max' => 20],
         ['name' => 'Final Presentation', 'max' => 25],
@@ -113,7 +112,7 @@ class TeacherReportController extends Controller
         $instance = $enrollment?->courseInstance;
 
         return view('teacher.reports.create', compact(
-            'enrollment', 'availableEnrollments', 'teacher', 'instance' // ← ضيفي instance
+            'enrollment', 'availableEnrollments', 'teacher', 'instance' 
         ))->with('components', self::COMPONENTS);
     }
 
@@ -147,7 +146,6 @@ class TeacherReportController extends Controller
                 'pdf_generated'  => false,
             ]);
 
-            // Store scores
             foreach (self::COMPONENTS as $i => $comp) {
                 ReportScore::create([
                     'report_id'      => $report->report_id,
@@ -166,7 +164,6 @@ class TeacherReportController extends Controller
                 $studentName = $reportEnrollment?->student?->full_name ?? '—';
                 $teacherName = $employee?->full_name ?? 'Teacher';
 
-                // Only admins in the enrollment's branch (branches are isolated).
                 $adminIds = \App\Support\BranchContext::adminEmployeeIdsForBranch($reportEnrollment?->branch_id);
 
                 foreach ($adminIds as $adminId) {
@@ -239,7 +236,6 @@ class TeacherReportController extends Controller
                         : null),
             ]);
 
-            // Update scores
             $report->reportScores()->delete();
             foreach (self::COMPONENTS as $i => $comp) {
                 ReportScore::create([
@@ -254,7 +250,6 @@ class TeacherReportController extends Controller
                 $studentName = $report->enrollment?->student?->full_name ?? '—';
                 $teacherName = $employee?->full_name ?? 'Teacher';
 
-                // Only admins in the enrollment's branch (branches are isolated).
                 $adminIds = \App\Support\BranchContext::adminEmployeeIdsForBranch($report->enrollment?->branch_id);
 
                 foreach ($adminIds as $adminId) {

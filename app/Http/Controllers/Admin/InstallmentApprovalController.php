@@ -17,10 +17,6 @@ class InstallmentApprovalController extends Controller
 {
     public function index()
     {
-        // These approval logs have no branch_id of their own; they belong to a
-        // branch through their enrollment. whereHas('enrollment') runs against
-        // the branch-scoped Enrollment model, so each admin only sees requests
-        // whose enrollment is in their branch.
         $pending = InstallmentApprovalLog::whereHas('enrollment')
         ->with([
             'enrollment.student',
@@ -52,11 +48,6 @@ class InstallmentApprovalController extends Controller
         return view('admin.installments.index', compact('pending', 'history', 'stats'));
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Approve
-    |------------------------------------------------------------------
-    */
     public function approve(Request $request, $id)
     {
         $log = InstallmentApprovalLog::findOrFail($id);
@@ -65,10 +56,6 @@ class InstallmentApprovalController extends Controller
             return back()->with('error', 'This request has already been processed.');
         }
 
-        // The enrollment is loaded through the branch-scoped relationship, so it
-        // resolves to null when it belongs to another branch (or was removed).
-        // An admin should only ever act on their own branch's requests, so fail
-        // gracefully instead of crashing on a null enrollment.
         if ($log->enrollment === null) {
             return back()->with('error', 'This request is not available for your branch.');
         }
@@ -78,10 +65,8 @@ class InstallmentApprovalController extends Controller
             $enrollment    = $log->enrollment;
             $plan          = $log->paymentPlan;
 
-            // ── Activate enrollment ───────────────────────────────────
             $enrollment->update(['status' => 'Active']);
 
-            // ── Calculate installment amount ──────────────────────────
             $remaining      = $enrollment->final_price * (1 - $plan->deposit_percentage / 100);
             $installmentAmt = $plan->installment_count > 0
                 ? round($remaining / $plan->installment_count, 2)
@@ -91,7 +76,6 @@ class InstallmentApprovalController extends Controller
             $branchId     = $adminEmployee?->branch_id ?? $currentPatch?->branch_id;
             $patchId      = $enrollment->patch_id ?? $currentPatch?->patch_id;
 
-            // ── Cleanup any orphaned installments ─────────────────────
             $existingSchedules = InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)->get();
             foreach ($existingSchedules as $sched) {
                 FinancialTransaction::where('transaction_id', $sched->transaction_id)
@@ -191,7 +175,6 @@ class InstallmentApprovalController extends Controller
                     ->reason("Admin approved installment plan for \"{$courseName}\" (Enrollment #{$enrollment->enrollment_id})")
                     ->record();
 
-                // Also update the lead status if it wasn't already Registered
                 if ($lead->status !== 'Registered') {
                     $lead->update(['status' => 'Registered']);
                 }
@@ -201,11 +184,6 @@ class InstallmentApprovalController extends Controller
         return redirect()->route('admin.installments.index')->with('success', 'Request approved.');
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Reject
-    |------------------------------------------------------------------
-    */
     public function reject(Request $request, $id)
     {
         $request->validate(['reason' => 'required|string|min:5']);
@@ -216,8 +194,6 @@ class InstallmentApprovalController extends Controller
             return back()->with('error', 'This request has already been processed.');
         }
 
-        // Same branch-scope guard as approve(): the enrollment is null when it
-        // belongs to another branch, so fail gracefully instead of crashing.
         if ($log->enrollment === null) {
             return back()->with('error', 'This request is not available for your branch.');
         }
@@ -227,7 +203,6 @@ class InstallmentApprovalController extends Controller
             $enrollment    = $log->enrollment;
             $enrollmentId  = $enrollment->enrollment_id;
 
-            // ── 1. حذف الـ financial records ─────────────────────────
             $txIds = FinancialTransaction::where('enrollment_id', $enrollmentId)
                 ->pluck('transaction_id');
             RevenueSplit::whereIn('transaction_id', $txIds)->delete();
@@ -244,21 +219,12 @@ class InstallmentApprovalController extends Controller
 
             $enrollment->update(['status' => 'Cancelled']);
 
-            // Capture the student id now so we can delete the orphaned student
-            // record at the very end (after all logging/notification code that
-            // still needs the enrollment + student data has run).
             $rejectedStudentId = $enrollment->student_id;
 
             $studentName = $enrollment->student?->full_name ?? 'student';
             $lead = Lead::where('student_id', $enrollment->student_id)->first();
             if ($lead) {
                 $studentName = $lead->full_name;
-                // Revert the lead out of "Registered": the registration was
-                // declined, so it must not keep showing in the Registered list.
-                // Move it back to Call_Again so the CS follows up. The lead's
-                // student_id link is cleared automatically when the student row
-                // is deleted below (FK is nullOnDelete), but we set it here too
-                // so the status change and unlink happen together.
                 $lead->update([
                     'student_id' => null,
                     'status'     => 'Call_Again',
@@ -287,7 +253,6 @@ class InstallmentApprovalController extends Controller
                     ->record();
             }
 
-            // ── 8. Notify CS via real-time ─────────────────────────
             $csEmployeeId = $log->request_by_cs_id;
             if ($csEmployeeId) {
                 \App\Services\NotificationService::send(
@@ -315,10 +280,6 @@ class InstallmentApprovalController extends Controller
                     ->record();
             }
 
-            // Finally, delete the orphaned student record. This is the LAST step
-            // so all the code above still had the enrollment + student data.
-            // Deleting the student cascades to its enrollment and everything
-            // under it (FKs are cascadeOnDelete); the lead was already unlinked.
             if ($rejectedStudentId) {
                 \App\Models\Student\Student::withoutGlobalScope('branch')
                     ->where('student_id', $rejectedStudentId)
@@ -329,11 +290,6 @@ class InstallmentApprovalController extends Controller
         return redirect()->route('admin.installments.index')->with('success', 'Request rejected.');
     }
 
-    /*
-    |------------------------------------------------------------------
-    | AJAX — CS polls this to check approval status
-    |------------------------------------------------------------------
-    */
     public function checkStatus($enrollmentId)
     {
         $enrollment = Enrollment::find($enrollmentId);

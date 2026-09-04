@@ -17,7 +17,6 @@ class PricingService
      */
     public function calculate($data): array
     {
-        // ── PRIVATE: price comes from bundle ──
         if (($data['type'] ?? null) === 'private') {
 
             if (empty($data['bundle_id'])) {
@@ -37,10 +36,8 @@ class PricingService
             ];
         }
 
-        // ── GROUP: price from sublevel → level → course ──
         $basePrice = $this->getBasePrice($data);
 
-        // Apply offer discount (on course price only)
         $discount = $this->getDiscount($data['course_template_id'] ?? null, $basePrice);
 
         $finalPrice = max(0, $basePrice - $discount);
@@ -52,9 +49,6 @@ class PricingService
         ];
     }
 
-    // ─────────────────────────────────────────
-    // Base price: sublevel > level > course
-    // ─────────────────────────────────────────
     private function getBasePrice(array $data): float
     {
         if (!empty($data['sublevel_id'])) {
@@ -75,9 +69,6 @@ class PricingService
         return 0.0;
     }
 
-    // ─────────────────────────────────────────
-    // Active offer discount for this course
-    // ─────────────────────────────────────────
     private function getDiscount(?int $courseId, float $price): float
     {
         if (!$courseId || $price <= 0) return 0.0;

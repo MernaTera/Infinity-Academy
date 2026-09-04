@@ -20,7 +20,7 @@ class LeadService
 
     private function currentEmployeeId(): int
     {
-        $employee = Auth::user()->employee; // hasOne → single model
+        $employee = Auth::user()->employee;
         if (!$employee) abort(403, 'No employee profile linked to this account.');
         return $employee->employee_id;
     }
@@ -37,11 +37,6 @@ class LeadService
         return $lead;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Assign Lead
-    |--------------------------------------------------------------------------
-    */
     public function assignLead(int $leadId): Lead
     {
         $lead       = $this->leadRepository->find($leadId);
@@ -55,11 +50,6 @@ class LeadService
         return $lead;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Schedule Call
-    |--------------------------------------------------------------------------
-    */
     public function scheduleCall(int $leadId, $datetime): Lead
     {
         $lead = $this->leadRepository->find($leadId);

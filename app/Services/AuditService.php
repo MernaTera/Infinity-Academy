@@ -30,7 +30,6 @@ class AuditService
         ]);
     }
 
-    // ── Shortcuts ──
     public static function created(string $table, int $id, string $field = 'record', mixed $value = null): void
     {
         self::log($table, $id, $field, 'Create', null, $value);
