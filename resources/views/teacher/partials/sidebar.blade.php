@@ -352,7 +352,7 @@
     </div>
 
     <div class="tsb-toggle">
-        <button class="tsb-toggle-btn" onclick="toggleTSidebar()" title="Toggle sidebar">
+        <button class="tsb-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
         </button>
     </div>
@@ -367,7 +367,7 @@ if(localStorage.getItem(T_PREF_KEY)==='1' && window.innerWidth>900){
     tSidebar.classList.add('collapsed');
 }
 
-function toggleTSidebar(){
+function toggleSidebar(){
     tSidebar.classList.toggle('collapsed');
     localStorage.setItem(T_PREF_KEY, tSidebar.classList.contains('collapsed')?'1':'0');
 }

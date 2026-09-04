@@ -117,7 +117,7 @@
 /* PRINT STYLES */
 @media print {
     body{background:#fff !important;}
-    .rp-toolbar,.tnav-container,#teacherSidebar,.tsb-overlay,.tsb-toggle,nav#teacherNav,.rp-status-bar{display:none !important;}
+    .rp-toolbar,.tnav-container,#teacherSidebar,.tsb-overlay,.tsb-toggle,nav#teachNav,.rp-status-bar{display:none !important;}
     .rp-page{padding:0 !important;background:#fff !important;}
     .rp-sheet{max-width:100% !important;box-shadow:none !important;border:none !important;border-radius:0 !important;}
     .rp-header{color:#000 !important;background:#f5f5f5 !important;}
@@ -148,7 +148,7 @@
         <div class="rp-actions">
             <button class="rp-btn rp-btn-print" onclick="window.print()">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-                Download PDF
+                Download PDF / Print
             </button>
         </div>
     </div>
