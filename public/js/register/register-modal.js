@@ -738,6 +738,29 @@ function recalcMaterials() {
     // ✅ preview_invoice_btn — validation + open invoice
     // ─────────────────────────────────────────
     const previewBtn = document.getElementById('preview_invoice_btn');
+
+    // Guard: block ANY native submit of the registration form (e.g. pressing
+    // Enter in a field). Registration must ONLY go through the invoice modal's
+    // Confirm button (which is AJAX + double-submit-guarded). Without this, a
+    // stray Enter on a slow connection natively POSTed the form to
+    // registration.store, bypassing the modal — causing the "refresh, no
+    // redirect" (and possible duplicate) behaviour.
+    const mainForm = document.getElementById('main_form');
+    if (mainForm) {
+        mainForm.addEventListener('submit', function(e){
+            e.preventDefault();
+            // Route the intent to the proper review flow instead.
+            if (previewBtn) previewBtn.click();
+            return false;
+        });
+        // Also stop Enter from submitting via single-line inputs.
+        mainForm.addEventListener('keydown', function(e){
+            if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT') {
+                e.preventDefault();
+            }
+        });
+    }
+
     if (previewBtn) {
         previewBtn.addEventListener('click', async function() {
 

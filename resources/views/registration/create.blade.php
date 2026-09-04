@@ -474,7 +474,7 @@
         @endif
     </div>
 
-    <form id="main_form" method="POST" action="{{ route('registration.store') }}">
+    <form id="main_form" method="POST" action="{{ route('registration.store') }}" onsubmit="event.preventDefault(); var b=document.getElementById('preview_invoice_btn'); if(b) b.click(); return false;">
         @csrf
         <input type="hidden" name="lead_id"      value="{{ $lead->lead_id }}">
         <input type="hidden" name="final_price"  id="final_price_hidden">
@@ -484,7 +484,7 @@
         @if(!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0)
         {{-- Student is on a level package with prepaid levels remaining. The next
              group level is already paid for, so this enrolment should be free. --}}
-        <div style="margin-bottom:18px;padding:14px 18px;border-radius:10px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.25);border-left:3px solid #7C3AED;color:#6D28D9;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px;max-width:1080px;margin:0 auto 20px;">
+        <div style="margin-bottom:18px;padding:14px 18px;border-radius:10px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.25);border-left:3px solid #7C3AED;color:#6D28D9;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" style="flex-shrink:0;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             <div>
                 This student is on the <strong>{{ $packageInfo['name'] }}</strong> package with
