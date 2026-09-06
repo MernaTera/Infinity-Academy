@@ -20,6 +20,7 @@ class StoreLeadRequest extends FormRequest
                 'string',
                 'min:3',
                 'max:255',
+                'regex:/^\s*([\p{Arabic}A-Za-z]{2,})(\s+[\p{Arabic}A-Za-z]{2,}){3,}\s*$/u',
             ],
             'phone' => [
                 'required',
@@ -48,6 +49,7 @@ class StoreLeadRequest extends FormRequest
             'full_name.string'   => 'Full name must be text.',
             'full_name.min'      => 'Full name must be at least 3 characters.',
             'full_name.max'      => 'Full name cannot exceed 255 characters.',
+            'full_name.regex'    => 'Please enter the full 4-part name (e.g. first, father, grandfather, and family name).',
 
             'phone.required' => 'Phone number is required.',
             'phone.regex'    => 'Phone must contain a number of 11 digits.',

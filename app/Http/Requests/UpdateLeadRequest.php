@@ -26,7 +26,12 @@ class UpdateLeadRequest extends FormRequest
 
         return [
 
-            'full_name' => 'required|string|max:255',
+            'full_name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^\s*([\p{Arabic}A-Za-z]{2,})(\s+[\p{Arabic}A-Za-z]{2,}){3,}\s*$/u',
+            ],
 
             'phone' => [
                 'required',
@@ -52,6 +57,13 @@ class UpdateLeadRequest extends FormRequest
 
             'notes' => 'nullable|string'
 
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'full_name.regex' => 'Please enter the full 4-part name (e.g. first, father, grandfather, and family name).',
         ];
     }
 }
