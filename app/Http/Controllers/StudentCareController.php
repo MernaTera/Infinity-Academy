@@ -53,6 +53,7 @@ class StudentCareController extends Controller
         $request->validate([
             'waiting_id' => 'required|exists:waiting_list,waiting_id',
             'course_instance_id' => 'required|exists:course_instance,course_instance_id',
+            'note' => 'nullable|string|max:2000',
         ]);
 
         $waiting = WaitingList::with('enrollment')->findOrFail($request->waiting_id);
@@ -67,7 +68,7 @@ class StudentCareController extends Controller
             ])
             ->findOrFail($request->course_instance_id);
 
-        $studentType = $waiting->enrollment->enrollment_type;  
+        $studentType = $waiting->enrollment->enrollment_type;   
         $courseType  = $instance->type;                         
 
         if ($studentType && $courseType && $studentType !== $courseType) {
@@ -92,6 +93,14 @@ class StudentCareController extends Controller
             'course_instance_id' => $instance->course_instance_id,
             'status'             => 'Active',
         ]);
+
+        if ($request->filled('note')) {
+            \App\Models\Enrollment\EnrollmentNote::create([
+                'enrollment_id'          => $waiting->enrollment->enrollment_id,
+                'created_by_employee_id' => \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id'),
+                'note'                   => trim($request->note),
+            ]);
+        }
 
         $sessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
             ->orderBy('session_number')
@@ -477,5 +486,30 @@ class StudentCareController extends Controller
             ->where('level_order', '>', $currentLevel->level_order)
             ->orderBy('level_order')
             ->first();
+    }
+
+    public function addEnrollmentNote(Request $request, $enrollmentId)
+    {
+        $request->validate(['note' => 'required|string|max:2000']);
+
+        $enrollment = \App\Models\Enrollment\Enrollment::findOrFail($enrollmentId);
+
+        \App\Models\Enrollment\EnrollmentNote::create([
+            'enrollment_id'          => $enrollment->enrollment_id,
+            'created_by_employee_id' => \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id'),
+            'note'                   => trim($request->note),
+        ]);
+
+        return back()->with('success', 'Note added.');
+    }
+
+    public function updateEnrollmentNote(Request $request, $noteId)
+    {
+        $request->validate(['note' => 'required|string|max:2000']);
+
+        $note = \App\Models\Enrollment\EnrollmentNote::findOrFail($noteId);
+        $note->update(['note' => trim($request->note)]);
+
+        return back()->with('success', 'Note updated.');
     }
 }

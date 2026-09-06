@@ -319,6 +319,17 @@
                     @endforelse
                 </div>
 
+                {{-- Optional note the SC can attach with this assignment.
+                     Saved to the enrollment notes log; the teacher sees it
+                     read-only on the course details. --}}
+                <div style="margin-top:18px;">
+                    <span class="assign-label">Note <span style="color:#AAB8C8;font-weight:400;text-transform:none;letter-spacing:0;">(optional — visible to the teacher)</span></span>
+                    <textarea name="note" id="assign_note" rows="3"
+                        placeholder="e.g. Student needs extra attention on speaking..."
+                        style="width:100%;margin-top:6px;padding:10px 12px;border:1px solid rgba(27,79,168,0.15);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12.5px;color:#1A2A4A;resize:vertical;outline:none;transition:border-color 0.2s;"
+                        onfocus="this.style.borderColor='#1B4FA8'" onblur="this.style.borderColor='rgba(27,79,168,0.15)'"></textarea>
+                </div>
+
             </form>
         </div>
 
@@ -338,9 +349,6 @@
 </div>
 
 <script>
-// NOTE: openAssignModal() and closeAssignModal() are defined in the parent
-// waiting-list view (they handle the Private/Group type filtering there).
-// This partial only defines the selection + submit helpers.
 
 function selectInstance(card, instanceId) {
     document.querySelectorAll('.assign-instance-card').forEach(c => c.classList.remove('selected'));

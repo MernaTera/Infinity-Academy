@@ -343,7 +343,7 @@ class CourseInstanceController extends Controller
 
         $currentPairs      = $instance->instanceSchedules->pluck('day_of_week')->unique()->values();
         $currentStartTimes = [];
-        $currentSingleDays = [];   // pair => chosen single day number (if any)
+        $currentSingleDays = [];  
         foreach ($instance->instanceSchedules as $sch) {
             $currentStartTimes[$sch->day_of_week] = \Carbon\Carbon::parse($sch->start_time)->format('H:i');
             if ($sch->single_day !== null) {
@@ -717,6 +717,7 @@ class CourseInstanceController extends Controller
             'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.student.phones',
             'enrollments.installmentSchedules',
+            'enrollments.notes',
             'sessions',
             'instanceSchedules.timeSlot',
             'enrollments.activePostponement',
@@ -859,7 +860,7 @@ class CourseInstanceController extends Controller
     {
         $teacherId = $request->query('teacher_id');
         $patchId   = $request->query('patch_id');
-        $excludeId = $request->query('exclude_instance_id');
+        $excludeId = $request->query('exclude_instance_id'); // ignore self in edit mode
         if (!$teacherId || !$patchId) return response()->json([]);
 
         $patch = Patch::find($patchId);
@@ -921,16 +922,16 @@ class CourseInstanceController extends Controller
                 while ($cursor->lt($winEnd)) {
                     $next = $winEnd->copy();
                     foreach ($busy as [$bStart, $bEnd]) {
-                        if ($bEnd->lte($cursor)) continue;      
-                        if ($bStart->lte($cursor)) {           
+                        if ($bEnd->lte($cursor)) continue;       
+                        if ($bStart->lte($cursor)) {             
                             if ($bEnd->gt($cursor)) { $cursor = $bEnd->copy(); }
                             $next = null;
                             break;
                         }
                         if ($bStart->lt($next)) $next = $bStart->copy(); 
                     }
-                    if ($next === null) continue;                
-                    if (abs($next->diffInMinutes($cursor)) >= $minBlockMins) return false;
+                    if ($next === null) continue;             
+                    if (abs($next->diffInMinutes($cursor)) >= $minBlockMins) return false; 
                     $cursor = $next->copy();
                 }
             }

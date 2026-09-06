@@ -37,6 +37,7 @@ class TeacherController extends Controller
             'courseTemplate',
             'level',
             'sessions',
+            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.report',
         ])
         ->where('teacher_id', $teacher->teacher_id)
@@ -152,7 +153,9 @@ class TeacherController extends Controller
 
         $instances = \App\Models\Academic\CourseInstance::with([
             'courseTemplate', 'level', 'sublevel', 'branch', 'room',
-            'instanceSchedules.timeSlot', 'sessions', 'enrollments.student',
+            'instanceSchedules.timeSlot', 'sessions',
+            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
+            'enrollments.student',
         ])
         ->where('teacher_id', $teacher->teacher_id)
         ->where('patch_id', $currentPatch?->patch_id)
@@ -183,7 +186,8 @@ class TeacherController extends Controller
 
         $activeCourses = \App\Models\Academic\CourseInstance::with([
             'courseTemplate', 'level', 'sublevel', 'patch',
-            'instanceSchedules.timeSlot', 'sessions', 'enrollments',
+            'instanceSchedules.timeSlot', 'sessions',
+            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
         ])
         ->where('teacher_id', $teacher->teacher_id)
         ->whereIn('status', ['Active', 'Upcoming'])
@@ -401,9 +405,11 @@ class TeacherController extends Controller
             'courseTemplate', 'level', 'sublevel', 'patch',
             'instanceSchedules.timeSlot', 'branch', 'room',
             'sessions' => fn($q) => $q->orderBy('session_number'),
+            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.student.phones',
             'enrollments.attendances',
             'enrollments.placementTest',
+            'enrollments.notes',
         ])
         ->where('teacher_id', $teacher->teacher_id)
         ->findOrFail($id);

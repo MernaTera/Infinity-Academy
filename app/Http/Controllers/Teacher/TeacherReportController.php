@@ -28,6 +28,7 @@ class TeacherReportController extends Controller
         $completedInstances = \App\Models\Academic\CourseInstance::with([
             'courseTemplate', 'level', 'sublevel', 'patch',
             'sessions',
+            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.student',
             'enrollments.report',
             'enrollments.attendances',

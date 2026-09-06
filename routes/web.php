@@ -199,6 +199,8 @@ Route::middleware(['auth', 'permission:enrollment.create'])
     ->name('student-care.')
     ->group(function () {
         Route::post('/assign',                        [StudentCareController::class, 'assign'])->name('assign');
+        Route::post('/enrollments/{enrollmentId}/notes', [StudentCareController::class, 'addEnrollmentNote'])->name('enrollment.notes.add');
+        Route::put('/enrollment-notes/{noteId}',      [StudentCareController::class, 'updateEnrollmentNote'])->name('enrollment.notes.update');
         Route::post('/course-instances/store',        [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
         Route::get('/course-instances/{id}/edit',    [CourseInstanceController::class, 'edit'])->name('instances.edit');
         Route::put('/course-instances/{id}',         [CourseInstanceController::class, 'updateInstance'])->name('instance.update');
@@ -420,14 +422,6 @@ Route::middleware(['auth', 'permission:attendance.create'])
     ->group(function () {
         Route::post('/attendance/{sessionId}', [TeacherAttendanceController::class, 'store'])->name('attendance.store');
     });
-
-// NOTE: report create/store/edit/update routes live in the permission:academic.view
-// group above (which every Teacher has). A second group here previously
-// re-declared the same names under permission:reports.create — but its
-// 'reports.create' used a /create/{instanceId} signature the controller never
-// reads (it reads ?enrollment_id=), and since the later declaration wins for
-// route() generation, it broke the report-create link. The redundant group has
-// been removed; the working definitions above are the single source of truth.
 
 // ─────────────────────────────────────────────────────────────────
 // Notifications
