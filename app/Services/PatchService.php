@@ -151,7 +151,7 @@ class PatchService
             ->when($sublevelId, fn($q) => $q->where('sublevel_id', $sublevelId))
             ->whereIn('status', ['Active', 'Upcoming'])
             ->orderByRaw("FIELD(status, 'Active', 'Upcoming')")
-            ->withCount('enrollments')
+            ->withCount(['enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled')])
             ->get();
 
         foreach ($candidates as $instance) {

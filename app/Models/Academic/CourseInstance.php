@@ -187,7 +187,7 @@ class CourseInstance extends Model
 
 	public function isFull()
 	{
-		return $this->enrollments()->count() >= $this->capacity;
+		return $this->enrollments()->where('status', '!=', 'Cancelled')->count() >= $this->capacity;
 	}
 
 	public function hasScheduleConflict($dayOfWeek, $timeSlotId)

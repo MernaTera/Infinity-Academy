@@ -69,7 +69,7 @@ class StudentCareController extends Controller
             ->findOrFail($request->course_instance_id);
 
         $studentType = $waiting->enrollment->enrollment_type;   
-        $courseType  = $instance->type;                         
+        $courseType  = $instance->type;                          
 
         if ($studentType && $courseType && $studentType !== $courseType) {
             return back()->with('error',
@@ -275,6 +275,7 @@ class StudentCareController extends Controller
 
     public function dashboard()
     {
+        // Current logged-in Student Care employee (for the work-hours banner).
         $me = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
 
         $currentPatch = \App\Models\Academic\Patch::where('status', 'Active')
@@ -298,7 +299,7 @@ class StudentCareController extends Controller
 
         $fullGroups = \App\Models\Academic\CourseInstance::where('status', 'Active')
             ->where('type', 'Group')
-            ->withCount('enrollments')
+            ->withCount(['enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled')])
             ->get()
             ->filter(fn($i) => $i->enrollments_count >= $i->capacity);
 
@@ -394,6 +395,15 @@ class StudentCareController extends Controller
         ));
 }
 
+    /**
+     * Continue Package — create the next prepaid enrolment in a level package.
+     *
+     * A package covers several units. The unit is a sublevel when the course
+     * has sublevels, otherwise a level. This finds the next unit after the
+     * current enrolment's, creates a new FREE enrolment for it (final_price 0),
+     * decrements the remaining prepaid units, and closes out the current one's
+     * package counter.
+     */
     public function continuePackage($enrollmentId)
     {
         $current = Enrollment::with(['level', 'sublevel', 'courseTemplate'])
@@ -403,16 +413,19 @@ class StudentCareController extends Controller
             return back()->with('error', 'This enrollment has no remaining package units.');
         }
 
+        // Work out the next unit (sublevel within/after the current level, or
+        // the next level for courses without sublevels).
         $next = $this->resolveNextPackageUnit($current);
 
         if (!$next) {
             return back()->with('error', 'No further levels/sublevels available in this course for the package.');
         }
 
+        // Create the next enrolment — FREE (already paid via the package).
         $newEnrollment = Enrollment::create([
             'student_id'              => $current->student_id,
             'course_template_id'      => $current->course_template_id,
-            'course_instance_id'      => null, 
+            'course_instance_id'      => null, // assigned later by Student Care
             'level_id'                => $next['level_id'],
             'sublevel_id'             => $next['sublevel_id'],
             'patch_id'                => $current->patch_id,
@@ -431,6 +444,7 @@ class StudentCareController extends Controller
             'created_by_cs_id'        => auth()->user()->employee?->employee_id ?? null,
         ]);
 
+        // The current enrolment has handed off its package continuation.
         $current->package_units_remaining = 0;
         $current->save();
 
@@ -438,15 +452,22 @@ class StudentCareController extends Controller
             'Next package level created (free). The student can now be assigned to a class for it.');
     }
 
+    /**
+     * Given the current enrolment, return the next package unit as
+     * ['level_id' => .., 'sublevel_id' => ..|null], or null if none remain.
+     */
     private function resolveNextPackageUnit(Enrollment $current): ?array
     {
         $courseId = $current->course_template_id;
 
+        // Does the current level have sublevels? If so, the package is billed
+        // by sublevel; otherwise by level.
         $currentLevelHasSublevels = $current->level_id
             ? Sublevel::where('level_id', $current->level_id)->exists()
             : false;
 
         if ($currentLevelHasSublevels && $current->sublevel_id) {
+            // 1) Try the next sublevel within the SAME level.
             $currentSub = Sublevel::find($current->sublevel_id);
             if ($currentSub) {
                 $nextSub = Sublevel::where('level_id', $current->level_id)
@@ -457,6 +478,7 @@ class StudentCareController extends Controller
                     return ['level_id' => $current->level_id, 'sublevel_id' => $nextSub->sublevel_id];
                 }
             }
+            // 2) Exhausted this level's sublevels → first sublevel of the NEXT level.
             $nextLevel = $this->nextLevel($courseId, $current->level_id);
             if ($nextLevel) {
                 $firstSub = Sublevel::where('level_id', $nextLevel->level_id)
@@ -464,12 +486,13 @@ class StudentCareController extends Controller
                     ->first();
                 return [
                     'level_id'    => $nextLevel->level_id,
-                    'sublevel_id' => $firstSub?->sublevel_id, 
+                    'sublevel_id' => $firstSub?->sublevel_id, // may be null if next level has none
                 ];
             }
             return null;
         }
 
+        // Course without sublevels → simply the next level.
         $nextLevel = $this->nextLevel($courseId, $current->level_id);
         if ($nextLevel) {
             return ['level_id' => $nextLevel->level_id, 'sublevel_id' => null];
@@ -477,6 +500,9 @@ class StudentCareController extends Controller
         return null;
     }
 
+    /**
+     * Next level in a course by level_order, after the given level.
+     */
     private function nextLevel($courseId, $currentLevelId): ?Level
     {
         $currentLevel = Level::find($currentLevelId);
@@ -488,6 +514,9 @@ class StudentCareController extends Controller
             ->first();
     }
 
+    // ─────────────────────────────────────────────────────────────
+    // Enrollment notes (Student Care) — add a new note to the log.
+    // ─────────────────────────────────────────────────────────────
     public function addEnrollmentNote(Request $request, $enrollmentId)
     {
         $request->validate(['note' => 'required|string|max:2000']);
@@ -503,6 +532,7 @@ class StudentCareController extends Controller
         return back()->with('success', 'Note added.');
     }
 
+    // Edit an existing note (SC only). Kept simple: updates the text in place.
     public function updateEnrollmentNote(Request $request, $noteId)
     {
         $request->validate(['note' => 'required|string|max:2000']);

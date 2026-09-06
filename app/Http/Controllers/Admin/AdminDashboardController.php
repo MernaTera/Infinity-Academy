@@ -122,7 +122,7 @@ class AdminDashboardController extends Controller
         $cashCount       = $ftMethods['Cash']?->count     ?? 0;
         $instapayRevenue = $ftMethods['Transfer']?->total ?? 0;   
         $instapayCount   = $ftMethods['Transfer']?->count ?? 0;
-        $vodafoneRevenue = $ftMethods['Online']?->total   ?? 0;  
+        $vodafoneRevenue = $ftMethods['Online']?->total   ?? 0;   
         $vodafoneCount   = $ftMethods['Online']?->count   ?? 0;
         $cardRevenue     = $ftMethods['Card']?->total     ?? 0;
         $cardCount       = $ftMethods['Card']?->count     ?? 0;
@@ -189,7 +189,7 @@ class AdminDashboardController extends Controller
         $restrictedStudents = Enrollment::where('status', 'Restricted')->count();
         $waitingList        = WaitingList::whereHas('enrollment')->where('status', 'Active')->count();
 
-        $activeInstances = CourseInstance::where('status', 'Active')->withCount('enrollments')->get();
+        $activeInstances = CourseInstance::where('status', 'Active')->withCount(['enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled')])->get();
         $validInstances  = $activeInstances->filter(fn($i) => $i->capacity > 0);
         $avgCapacity     = $validInstances->count() > 0
             ? round($validInstances->avg(fn($i) => ($i->enrollments_count / $i->capacity) * 100))
