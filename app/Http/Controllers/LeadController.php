@@ -110,7 +110,17 @@ class LeadController extends Controller
     {
         $courses = CourseTemplate::where('is_active', true)->get();
 
-        return view('leads.create', compact('courses'));
+        $levels    = collect();
+        $sublevels = collect();
+
+        if (old('interested_course_template_id')) {
+            $levels = \App\Models\Academic\Level::where('course_template_id', old('interested_course_template_id'))->get();
+        }
+        if (old('interested_level_id')) {
+            $sublevels = \App\Models\Academic\Sublevel::where('level_id', old('interested_level_id'))->get();
+        }
+
+        return view('leads.create', compact('courses', 'levels', 'sublevels'));
     }
 
     public function store(StoreLeadRequest $request)
