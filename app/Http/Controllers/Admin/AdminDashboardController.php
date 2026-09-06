@@ -78,8 +78,8 @@ class AdminDashboardController extends Controller
             return max(0, (float) $result['remaining_balance']);
         });
 
-        $totalRefunded = FinancialTransaction::where('transaction_type', 'Refund')
-            ->when($from, fn($q) => $q->whereBetween('created_at', [$from, $to]))
+        $totalRefunded = RefundRequest::where('status', 'Approved')
+            ->when($from, fn($q) => $q->whereBetween('approved_at', [$from, $to]))
             ->sum('amount');
 
         $pendingInstallments = InstallmentSchedule::whereHas('enrollment')->where('status', 'Pending')->count();
@@ -120,9 +120,9 @@ class AdminDashboardController extends Controller
 
         $cashRevenue     = $ftMethods['Cash']?->total     ?? 0;
         $cashCount       = $ftMethods['Cash']?->count     ?? 0;
-        $instapayRevenue = $ftMethods['Transfer']?->total ?? 0;   
+        $instapayRevenue = $ftMethods['Transfer']?->total ?? 0;   // Instapay => Transfer
         $instapayCount   = $ftMethods['Transfer']?->count ?? 0;
-        $vodafoneRevenue = $ftMethods['Online']?->total   ?? 0;   
+        $vodafoneRevenue = $ftMethods['Online']?->total   ?? 0;   // Vodafone => Online
         $vodafoneCount   = $ftMethods['Online']?->count   ?? 0;
         $cardRevenue     = $ftMethods['Card']?->total     ?? 0;
         $cardCount       = $ftMethods['Card']?->count     ?? 0;
