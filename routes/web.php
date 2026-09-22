@@ -118,6 +118,13 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::get('/enrollments/{id}/receipt', [RegistrationController::class, 'showReceipt'])->name('cs.enrollment.receipt');
         Route::get('/leads/{leadId}/invoice', [\App\Http\Controllers\LeadController::class, 'showInvoice'])->name('leads.invoice');
         Route::get('/leads/{leadId}/receipt', [\App\Http\Controllers\LeadController::class, 'showReceipt'])->name('leads.receipt');
+
+        // CS postponed page (with Resume & Register) + the resume action, which
+        // redirects into the registration form. Kept under enrollment.create so
+        // only the booking role (CS) can resume/register a postponed student.
+        Route::get('/cs/postponed', [StudentCareController::class, 'csPostponed'])->name('cs.postponed');
+        Route::get('/cs/postponed/{id}/resume', [StudentCareController::class, 'resumePostponement'])->name('cs.postponed.resume');
+        Route::patch('/cs/postponed/{id}/expire', [StudentCareController::class, 'expirePostponement'])->name('cs.postponed.expire');
         
         Route::get('/refunds',  [RefundController::class, 'index'])->name('refunds.index');
         Route::post('/refunds', [RefundController::class, 'store'])->name('refunds.store');
@@ -217,7 +224,6 @@ Route::middleware(['auth', 'permission:enrollment.edit'])
     ->prefix('student-care')
     ->name('student-care.')
     ->group(function () {
-        Route::patch('/postponed/{id}/resume', [StudentCareController::class, 'resumePostponement'])->name('postponed.resume');
         Route::patch('/postponed/{id}/expire', [StudentCareController::class, 'expirePostponement'])->name('postponed.expire');
     });
 
@@ -422,6 +428,14 @@ Route::middleware(['auth', 'permission:attendance.create'])
     ->group(function () {
         Route::post('/attendance/{sessionId}', [TeacherAttendanceController::class, 'store'])->name('attendance.store');
     });
+
+// NOTE: report create/store/edit/update routes live in the permission:academic.view
+// group above (which every Teacher has). A second group here previously
+// re-declared the same names under permission:reports.create — but its
+// 'reports.create' used a /create/{instanceId} signature the controller never
+// reads (it reads ?enrollment_id=), and since the later declaration wins for
+// route() generation, it broke the report-create link. The redundant group has
+// been removed; the working definitions above are the single source of truth.
 
 // ─────────────────────────────────────────────────────────────────
 // Notifications

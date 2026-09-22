@@ -85,6 +85,38 @@ class RegistrationController extends Controller
             }
         }
 
+        $resumeContext = null;
+        if (request()->filled('resume')) {
+            $rp = \App\Models\Enrollment\Postponement::with('enrollment')->find(request()->query('resume'));
+            if ($rp && $rp->status === 'Active' && $rp->enrollment) {
+                $pe = $rp->enrollment;
+
+                $lead->interested_course_template_id = $pe->course_template_id;
+                $lead->interested_level_id           = $pe->level_id;
+                $lead->interested_sublevel_id        = $pe->sublevel_id;
+
+                $levels = $pe->course_template_id
+                    ? Level::where('course_template_id', $pe->course_template_id)->get()
+                    : collect();
+                $sublevels = $pe->level_id
+                    ? Sublevel::where('level_id', $pe->level_id)->get()
+                    : collect();
+
+                $unit = $pe->sublevel_id ? 'sublevel' : ($pe->level_id ? 'level' : 'course');
+
+                $resumeContext = [
+                    'postponement_id' => $rp->postponement_id,
+                    'enrollment_id'   => $pe->enrollment_id,
+                    'type'            => $pe->enrollment_type,   // Private / Group
+                    'allowed_unit'    => $unit,
+                    'is_group_free'   => $pe->enrollment_type === 'Group', // already paid
+                    'hours_remaining' => (float) ($pe->hours_remaining ?? 0),
+                    'package_id'      => $pe->package_id,
+                    'package_units'   => $pe->package_units_remaining,
+                ];
+            }
+        }
+
         return view('registration.create', compact(
             'lead',
             'courses',
@@ -96,6 +128,7 @@ class RegistrationController extends Controller
             'testFees',
             'leftoverHours',
             'packageInfo',
+            'resumeContext',
         ));
     }
 
@@ -124,6 +157,8 @@ class RegistrationController extends Controller
                     'deposit_methods'            => 'nullable|array',
                     'deposit_methods.*.method'   => 'nullable|in:Cash,Instapay,Vodafone_Cash',
                     'deposit_methods.*.amount'   => 'nullable|numeric|min:0',
+
+                    'resume_postponement_id'     => 'nullable|exists:postponement,postponement_id',
                 ], [
                     'mode.required'                    => 'Please select a delivery mode (Online or Offline).',
                     'mode.in'                          => 'Invalid delivery mode selected.',
@@ -147,6 +182,23 @@ class RegistrationController extends Controller
 
         if ($validator->fails()) {
             return $failValidation($validator->errors()->toArray());
+        }
+
+        if (!empty($request->resume_postponement_id)) {
+            $rp = \App\Models\Enrollment\Postponement::with('enrollment')->find($request->resume_postponement_id);
+            $pe = $rp?->enrollment;
+            if ($pe) {
+                $wasUnit = $pe->sublevel_id ? 'sublevel' : ($pe->level_id ? 'level' : 'course');
+                $nowUnit = $request->filled('sublevel_id') ? 'sublevel'
+                         : ($request->filled('level_id') ? 'level' : 'course');
+                $rank = ['sublevel' => 1, 'level' => 2, 'course' => 3];
+                if (($rank[$nowUnit] ?? 3) > ($rank[$wasUnit] ?? 3)) {
+                    $msg = $wasUnit === 'sublevel'
+                        ? 'This student was postponed on a sublevel, so they can only resume on a sublevel (not a full level or course).'
+                        : 'This student was postponed on a level, so they can only resume on a level (not a full course).';
+                    return $failValidation(['level_id' => $msg]);
+                }
+            }
         }
 
         $discountValue = (float) ($request->discount_value ?? 0);
@@ -324,7 +376,6 @@ class RegistrationController extends Controller
                     ->with('error', 'Something went wrong while processing the registration. Please try again, or contact support if the problem persists.');
             }
     }
-
 
     public function getPatchOptions(Request $request)
     {

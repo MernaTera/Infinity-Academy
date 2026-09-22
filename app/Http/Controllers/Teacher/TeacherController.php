@@ -8,6 +8,7 @@ use App\Models\Academic\CourseInstance;
 
 class TeacherController extends Controller
 {
+    // ─── helpers ────────────────────────────────────────────────────────────
     private function resolveTeacher()
     {
         $employee = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
@@ -19,13 +20,16 @@ class TeacherController extends Controller
         return [$employee, $teacher];
     }
 
+    // ─── dashboard ──────────────────────────────────────────────────────────
     public function dashboard()
     {
         [$employee, $teacher] = $this->resolveTeacher();
 
+        // Current active patch
         $currentPatch = \App\Models\Academic\Patch::where('status', 'Active')
             ->latest('start_date')->first();
 
+        // Active contract for current patch
         $contract = \App\Models\HR\TeacherContract::with('contractType')
             ->where('teacher_id', $teacher->teacher_id)
             ->where('is_active', true)
@@ -33,6 +37,7 @@ class TeacherController extends Controller
             ->latest('created_at')
             ->first();
 
+        // All course instances (eager load what we need)
         $allInstances = \App\Models\Academic\CourseInstance::with([
             'courseTemplate',
             'level',
@@ -48,19 +53,23 @@ class TeacherController extends Controller
         $upcomingInstances  = $allInstances->where('status', 'Upcoming')->values();
         $completedInstances = $allInstances->where('status', 'Completed')->values();
 
+        // ── Profile stats ──────────────────────────────────────────────────
         $totalCourses  = $activeInstances->count() + $upcomingInstances->count();
 
         $totalStudents = $activeInstances->concat($upcomingInstances)
             ->sum(fn($i) => $i->enrollments->count());
 
+        // Sessions this calendar month
         $sessionsThisMonth = $allInstances->sum(function ($inst) {
             return $inst->sessions->filter(
                 fn($s) => Carbon::parse($s->session_date)->isCurrentMonth()
             )->count();
         });
 
+        // Days remaining until end-of-month (salary day)
         $daysUntilSalary = now()->daysInMonth - now()->day;
 
+        // ── Academic summary ───────────────────────────────────────────────
         $pendingReports = 0;
         $lateReports    = 0;
 
@@ -72,9 +81,11 @@ class TeacherController extends Controller
             foreach ($inst->enrollments as $enr) {
                 $reportStatus = $enr->report?->status ?? null;
 
+                // Draft / null = pending
                 if (in_array($reportStatus, [null, 'Draft'])) {
                     $pendingReports++;
 
+                    // Late if deadline already passed
                     if ($deadline && now()->gt($deadline)) {
                         $lateReports++;
                     }
@@ -82,12 +93,15 @@ class TeacherController extends Controller
             }
         }
 
+        // Restricted students across all teacher's instances
         $restrictedStudents = $allInstances->sum(
             fn($i) => $i->enrollments->where('restriction_flag', true)->count()
         );
 
+        // ── Alerts ─────────────────────────────────────────────────────────
         $alerts = [];
 
+        // Upcoming course endings (≤ 7 days away)
         foreach ($activeInstances as $inst) {
             if (!$inst->end_date) continue;
             $daysLeft = (int) now()->diffInDays(Carbon::parse($inst->end_date), false);
@@ -103,6 +117,7 @@ class TeacherController extends Controller
             }
         }
 
+        // Pending reports reminder
         if ($pendingReports > 0) {
             $alerts[] = [
                 'type' => 'info',
@@ -113,6 +128,7 @@ class TeacherController extends Controller
             ];
         }
 
+        // Late (overdue) reports
         if ($lateReports > 0) {
             $alerts[] = [
                 'type' => 'danger',
@@ -123,6 +139,7 @@ class TeacherController extends Controller
             ];
         }
 
+        // Restricted students alert
         if ($restrictedStudents > 0) {
             $alerts[] = [
                 'type' => 'danger',
@@ -142,6 +159,7 @@ class TeacherController extends Controller
         ));
     }
 
+    // ─── schedule ───────────────────────────────────────────────────────────
     public function schedule(Request $request)
     {
         [, $teacher] = $this->resolveTeacher();
@@ -180,6 +198,7 @@ class TeacherController extends Controller
         ));
     }
 
+    // ─── courses ────────────────────────────────────────────────────────────
     public function courses()
     {
         [, $teacher] = $this->resolveTeacher();
@@ -238,11 +257,18 @@ class TeacherController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($instance) {
 
+            // Completed sessions are locked — they already exist with their own
+            // dates/times. Generate ONLY the remaining sessions, numbered after
+            // the completed ones, starting after the last completed date. This
+            // prevents duplicate (room, date, time) rows when a course that had
+            // some completed sessions is edited and then re-approved.
             $completedSessions = $instance->sessions->where('status', 'Completed');
             $completedCount    = $completedSessions->count();
             $totalSessions     = (int) ceil((float)$instance->total_hours / (float)$instance->session_duration);
             $remainingToMake   = max(0, $totalSessions - $completedCount);
 
+            // Remove any leftover non-completed sessions before regenerating,
+            // so we never collide with an existing scheduled row either.
             \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
                 ->where('status', '!=', 'Completed')
                 ->delete();
@@ -296,7 +322,6 @@ class TeacherController extends Controller
             $afterCompleted = \Carbon\Carbon::parse($lastCompletedDate)->addDay();
             if ($afterCompleted->gt($floorDate)) $floorDate = $afterCompleted;
         }
-
         $usedDates = $instance->sessions->where('status', 'Completed')
             ->map(fn($s) => \Carbon\Carbon::parse($s->session_date)->toDateString())
             ->flip();
@@ -340,6 +365,7 @@ class TeacherController extends Controller
             }
         }
 
+        // Renumber all sessions by date so completed + new are sequential.
         $all = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
             ->orderBy('session_date')->orderBy('start_time')->get();
         foreach ($all as $s) {
@@ -412,7 +438,12 @@ class TeacherController extends Controller
             'enrollments.notes',
         ])
         ->where('teacher_id', $teacher->teacher_id)
-        ->findOrFail($id);
+        ->find($id);
+
+        if (!$instance) {
+            return redirect()->route('teacher.courses')
+                ->with('error', 'That course is no longer available (it may have been removed).');
+        }
 
         $todaySession = $instance->sessions->first(function ($s) {
             if ($s->status !== 'Scheduled') return false;

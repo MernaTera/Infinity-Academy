@@ -11,47 +11,49 @@ class AdminPostponementController extends Controller
 {
     public function index(Request $request)
     {
-        $filterStatus = $request->query('status', 'all');
-        $filterType   = $request->query('type', 'all');
-
-        $query = Postponement::with([
+        // Admin postponed = same monitor view as Student Care (no Resume —
+        // that's the CS's job). Admin keeps Mark Expired. Uses the shared blade.
+        $groupPostponed = Postponement::with([
             'enrollment.student.phones',
             'enrollment.courseTemplate',
             'enrollment.level',
+            'enrollment.sublevel',
             'enrollment.courseInstance.courseTemplate',
-            'enrollment.courseInstance.sessions',
-            'enrollment.createdByCs',
+            'enrollment.attendances',
             'createdBy',
-        ]);
+        ])
+        ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))
+        ->whereIn('status', ['Active', 'Expired'])
+        ->orderBy('status')->orderByDesc('created_at')->get();
 
-        if ($filterStatus !== 'all') {
-            $query->where('status', $filterStatus);
-        }
-
-        if ($filterType === 'group') {
-            $query->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'));
-        } elseif ($filterType === 'private') {
-            $query->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'));
-        }
-
-        $postponements = $query->orderBy('status')
-            ->orderByDesc('created_at')
-            ->get();
+        $privatePostponed = Postponement::with([
+            'enrollment.student.phones',
+            'enrollment.courseTemplate',
+            'enrollment.level',
+            'enrollment.sublevel',
+            'enrollment.privateBundle',
+            'enrollment.courseInstance.courseTemplate',
+            'createdBy',
+        ])
+        ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))
+        ->whereIn('status', ['Active', 'Expired'])
+        ->orderBy('status')->orderByDesc('created_at')->get();
 
         $stats = [
-            'active'         => Postponement::where('status', 'Active')->count(),
-            'expiring_soon'  => Postponement::where('status', 'Active')
-                ->where('expected_return_date', '<=', now()->addDays(7))
-                ->count(),
-            'expired'        => Postponement::where('status', 'Expired')->count(),
-            'returned'       => Postponement::where('status', 'Returned')->count(),
-            'group_count'    => Postponement::whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))->count(),
-            'private_count'  => Postponement::whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))->count(),
+            'active'   => Postponement::where('status', 'Active')->count(),
+            'expired'  => Postponement::where('status', 'Expired')->count(),
+            'returned' => Postponement::where('status', 'Returned')->count(),
+            'expiring_soon' => Postponement::where('status', 'Active')
+                ->where('expected_return_date', '<=', now()->addDays(7))->count(),
         ];
 
-        return view('admin.postponed.index', compact(
-            'postponements', 'stats', 'filterStatus', 'filterType'
-        ));
+        return view('student-care.postponed', [
+            'groupPostponed'   => $groupPostponed,
+            'privatePostponed' => $privatePostponed,
+            'stats'            => $stats,
+            'canRegister'      => false,                    // admin monitors only
+            'expireBase'       => url('admin/postponed'),   // admin expire route base
+        ]);
     }
 
     public function resume($id)

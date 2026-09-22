@@ -1,4 +1,12 @@
-@extends('student-care.layouts.app')
+@php
+    // Pick the layout matching the viewer's role, so each panel keeps its own
+    // sidebar (SC monitors; CS resumes & registers). Both share this page.
+    $user = auth()->user();
+    $__layout = $user?->isAdmin() ? 'admin.layouts.app'
+        : ($user?->isSC() ? 'student-care.layouts.app'
+        : 'layouts.leads');
+@endphp
+@extends($__layout)
 @section('title', 'Postponed Students')
 
 @section('content')
@@ -107,7 +115,9 @@
 @media(max-width:768px){.pp-page{padding:18px 14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}.postponed-grid{grid-template-columns:1fr}}
 </style>
 
-<div class="pp-page">
+{{-- Only the SC layout's <main> adds padding; the CS and Admin layouts don't,
+     so add it here for those panels to match. --}}
+<div class="pp-page" @unless(auth()->user()?->isSC()) style="padding:30px;" @endunless>
 
     <div class="page-header">
         <div class="page-eyebrow">Student Care</div>
@@ -193,22 +203,29 @@
                 $totalPostpDays = $start->diffInDays($end);
                 $overMax      = $totalPostpDays > $maxDays;
 
-                // Sessions
-                $totalSessions    = $enrollment->courseInstance?->sessions?->count() ?? 0;
-                $completedSessions= $enrollment->attendances?->count() ?? 0;
-                $remainingSessions= $totalSessions - $completedSessions;
+                // A postponed group student is detached from their instance and,
+                // on resume, repeats the level with a NEW group — so "remaining
+                // sessions" from the old instance no longer applies. Show what's
+                // reliable: how many sessions they attended before postponing.
+                $completedSessions = $enrollment->attendances?->where('status', 'Attended')->count()
+                    ?? ($enrollment->attendances?->count() ?? 0);
 
                 $cardClass = $pp->status === 'Expired' ? 'status-expired' :
                              ($isExpiringSoon ? 'pp-card status-active expiring-soon' : 'status-active');
             @endphp
             <div class="pp-card {{ $cardClass }}"
                  data-name="{{ strtolower($enrollment->student?->full_name ?? '') }}"
-                 data-course="{{ strtolower($enrollment->courseInstance?->courseTemplate?->name ?? '') }}">
+                 data-course="{{ strtolower($enrollment->courseInstance?->courseTemplate?->name ?? $enrollment->courseTemplate?->name ?? '') }}">
 
                 <div class="pc-header">
                     <div>
                         <div class="pc-student">{{ $enrollment->student?->full_name ?? '—' }}</div>
-                        <div class="pc-course">{{ $enrollment->courseInstance?->courseTemplate?->name ?? '—' }}</div>
+                        <div class="pc-course">{{ $enrollment->courseInstance?->courseTemplate?->name ?? $enrollment->courseTemplate?->name ?? '—' }}</div>
+                        @if($enrollment->level || $enrollment->sublevel)
+                        <div style="font-size:10px;color:#AAB8C8;margin-top:2px;">
+                            {{ $enrollment->level?->name }}@if($enrollment->sublevel) · {{ $enrollment->sublevel?->name }}@endif
+                        </div>
+                        @endif
                     </div>
                     <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
                         @if($pp->status === 'Active')
@@ -249,8 +266,8 @@
                     {{-- Meta --}}
                     <div class="pc-meta-grid">
                         <div>
-                            <div class="pc-meta-label">Remaining Sessions</div>
-                            <div class="pc-meta-val orange">{{ $remainingSessions }} sessions</div>
+                            <div class="pc-meta-label">Sessions Attended</div>
+                            <div class="pc-meta-val orange">{{ $completedSessions }} sessions</div>
                         </div>
                         <div>
                             <div class="pc-meta-label">Postponement Duration</div>
@@ -283,11 +300,13 @@
 
                 @if($pp->status === 'Active')
                 <div class="pc-footer">
-                    <button class="btn-sm btn-resume"
-                        onclick="openConfirm({{ $pp->postponement_id }}, 'resume', '{{ addslashes($enrollment->student?->full_name) }}')">
+                    @if(!empty($canRegister))
+                    <a class="btn-sm btn-resume" href="{{ route('cs.postponed.resume', $pp->postponement_id) }}"
+                        style="text-decoration:none;display:inline-flex;align-items:center;gap:5px;justify-content:center;">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        Resume Student
-                    </button>
+                        Resume &amp; Register
+                    </a>
+                    @endif
                     <button class="btn-sm btn-expire"
                         onclick="openConfirm({{ $pp->postponement_id }}, 'expire', '{{ addslashes($enrollment->student?->full_name) }}')">
                         Mark Expired
@@ -328,20 +347,30 @@
                 $daysLeft    = max(0, (int)$today->diffInDays($end, false));
                 $isExpiringSoon = $pp->status === 'Active' && $daysLeft <= 7;
 
-                $totalHours     = $enrollment->courseInstance?->total_hours ?? 0;
-                $hoursRemaining = $enrollment->hours_remaining ?? 0;
-                $hoursUsed      = $totalHours - $hoursRemaining;
+                // Total private hours the student bought = their bundle's hours
+                // (the enrolment may be detached from its instance after postpone,
+                // so we can't rely on courseInstance->total_hours). Fall back to
+                // the instance, then to remaining as a last resort so "used" can
+                // never go negative.
+                $hoursRemaining = (float) ($enrollment->hours_remaining ?? 0);
+                $totalHours     = (float) (
+                    $enrollment->privateBundle?->hours
+                    ?? $enrollment->courseInstance?->total_hours
+                    ?? $hoursRemaining
+                );
+                if ($totalHours < $hoursRemaining) $totalHours = $hoursRemaining;
+                $hoursUsed      = max(0, $totalHours - $hoursRemaining);
                 $hoursPct       = $totalHours > 0 ? round($hoursUsed / $totalHours * 100) : 0;
             @endphp
             <div class="pp-card {{ $pp->status === 'Expired' ? 'status-expired' : ($isExpiringSoon ? 'status-active expiring-soon' : 'status-active') }}"
                  data-name="{{ strtolower($enrollment->student?->full_name ?? '') }}"
-                 data-course="{{ strtolower($enrollment->courseInstance?->courseTemplate?->name ?? '') }}">
+                 data-course="{{ strtolower($enrollment->courseInstance?->courseTemplate?->name ?? $enrollment->courseTemplate?->name ?? '') }}">
 
                 <div class="pc-header">
                     <div>
                         <div class="pc-student">{{ $enrollment->student?->full_name ?? '—' }}</div>
                         <div class="pc-course">
-                            {{ $enrollment->courseInstance?->courseTemplate?->name ?? '—' }}
+                            {{ $enrollment->courseInstance?->courseTemplate?->name ?? $enrollment->courseTemplate?->name ?? '—' }}
                             <span style="color:#1B4FA8;font-weight:500"> · Private</span>
                         </div>
                     </div>
@@ -407,11 +436,13 @@
 
                 @if($pp->status === 'Active')
                 <div class="pc-footer">
-                    <button class="btn-sm btn-resume"
-                        onclick="openConfirm({{ $pp->postponement_id }}, 'resume', '{{ addslashes($enrollment->student?->full_name) }}')">
+                    @if(!empty($canRegister))
+                    <a class="btn-sm btn-resume" href="{{ route('cs.postponed.resume', $pp->postponement_id) }}"
+                        style="text-decoration:none;display:inline-flex;align-items:center;gap:5px;justify-content:center;">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        Resume Student
-                    </button>
+                        Resume &amp; Register
+                    </a>
+                    @endif
                     <button class="btn-sm btn-expire"
                         onclick="openConfirm({{ $pp->postponement_id }}, 'expire', '{{ addslashes($enrollment->student?->full_name) }}')">
                         Mark Expired
@@ -467,9 +498,14 @@ function openConfirm(id, action, studentName) {
         : `Mark ${studentName}'s postponement as Expired? Their enrollment will be cancelled with no refund.`;
     document.getElementById('confirmBtn').textContent = isResume ? 'Resume' : 'Expire';
     document.getElementById('confirmBtn').style.background = isResume ? '#059669' : '#DC2626';
+    // Expire uses the route for the current panel (CS vs SC) so the permission
+    // matches — otherwise the CS hit the SC's expire route and got a 403.
+    // Base path for the expire/resume actions, provided by the controller so
+    // the same view works for SC, CS and Admin panels with the right routes.
+    const ppBase = @json($expireBase ?? url('student-care/postponed'));
     document.getElementById('confirmForm').action = isResume
-        ? `/student-care/postponed/${id}/resume`
-        : `/student-care/postponed/${id}/expire`;
+        ? `${ppBase}/${id}/resume`
+        : `${ppBase}/${id}/expire`;
     document.getElementById('confirmModal').classList.add('show');
 }
 

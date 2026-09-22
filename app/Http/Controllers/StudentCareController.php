@@ -28,6 +28,10 @@ class StudentCareController extends Controller
 
     public function waitingList()
     {
+        // WaitingList has no branch_id; it belongs to a branch through its
+        // enrollment. whereHas('enrollment') runs against the branch-scoped
+        // Enrollment model, so an SC in one branch only sees their branch's
+        // waiting list — never entries from a branch they aren't in.
         $waiting = WaitingList::whereHas('enrollment')->with([
             'enrollment.student',
             'enrollment.courseTemplate',
@@ -58,6 +62,7 @@ class StudentCareController extends Controller
 
         $waiting = WaitingList::with('enrollment')->findOrFail($request->waiting_id);
 
+        // enrollment is null when it belongs to another branch (scoped out).
         if ($waiting->enrollment === null) {
             return back()->with('error', 'This entry is not available for your branch.');
         }
@@ -68,8 +73,10 @@ class StudentCareController extends Controller
             ])
             ->findOrFail($request->course_instance_id);
 
-        $studentType = $waiting->enrollment->enrollment_type;   
-        $courseType  = $instance->type;                          
+        // Business rule: enrollment type must match the course instance type.
+        // A Private student cannot be placed into a Group course and vice-versa.
+        $studentType = $waiting->enrollment->enrollment_type;   // 'Group' | 'Private'
+        $courseType  = $instance->type;                          // 'Group' | 'Private'
 
         if ($studentType && $courseType && $studentType !== $courseType) {
             return back()->with('error',
@@ -78,6 +85,7 @@ class StudentCareController extends Controller
             );
         }
 
+        // Business rule: A student cannot join a group course that has completed more than 3 sessions
         if ($instance->completed_sessions_count > 2) {
             return back()->with('error',
                 'This course has completed ' . $instance->completed_sessions_count .
@@ -94,6 +102,7 @@ class StudentCareController extends Controller
             'status'             => 'Active',
         ]);
 
+        // Save the optional SC note against this enrolment (log entry).
         if ($request->filled('note')) {
             \App\Models\Enrollment\EnrollmentNote::create([
                 'enrollment_id'          => $waiting->enrollment->enrollment_id,
@@ -125,6 +134,12 @@ class StudentCareController extends Controller
         return back()->with('success', 'Student assigned successfully');
     }
 
+    /**
+     * Cancel a waiting-list entry.
+     * Marks the waiting record as Cancelled so it drops out of the active queue.
+     * The enrollment itself is left intact (still awaiting a course) unless you
+     * choose to cancel it too — here we only cancel the waiting-list placement.
+     */
     public function cancelWaiting(Request $request, $id)
     {
         $waiting = WaitingList::with('enrollment')->findOrFail($id);
@@ -207,10 +222,32 @@ class StudentCareController extends Controller
 
     public function postponed()
     {
+        // SC view: monitor only (Mark Expired allowed, no Resume & Register —
+        // registration is the CS's job).
+        $data = $this->postponedData();
+        $data['canRegister'] = false;
+        $data['expireBase']  = url('student-care/postponed');
+        return view('student-care.postponed', $data);
+    }
+
+    // CS view: same page, but with the "Resume & Register" action (the CS is the
+    // booking role). Reuses the same blade + data via a shared loader.
+    public function csPostponed()
+    {
+        $data = $this->postponedData();
+        $data['canRegister'] = true;
+        $data['expireBase']  = url('cs/postponed');
+        return view('student-care.postponed', $data);
+    }
+
+    private function postponedData(): array
+    {
         $groupPostponed = \App\Models\Enrollment\Postponement::with([
-            'enrollment.student',
+            'enrollment.student.phones',
+            'enrollment.courseTemplate',
+            'enrollment.level',
+            'enrollment.sublevel',
             'enrollment.courseInstance.courseTemplate',
-            'enrollment.courseInstance.sessions',
             'enrollment.attendances',
             'createdBy',
         ])
@@ -221,7 +258,11 @@ class StudentCareController extends Controller
         ->get();
 
         $privatePostponed = \App\Models\Enrollment\Postponement::with([
-            'enrollment.student',
+            'enrollment.student.phones',
+            'enrollment.courseTemplate',
+            'enrollment.level',
+            'enrollment.sublevel',
+            'enrollment.privateBundle',
             'enrollment.courseInstance.courseTemplate',
             'createdBy',
         ])
@@ -239,7 +280,7 @@ class StudentCareController extends Controller
                 ->where('expected_return_date', '<=', now()->addDays(7))->count(),
         ];
 
-        return view('student-care.postponed', compact('groupPostponed', 'privatePostponed', 'stats'));
+        return compact('groupPostponed', 'privatePostponed', 'stats');
     }
 
     public function resumePostponement(Request $request, $id)
@@ -250,14 +291,33 @@ class StudentCareController extends Controller
             return back()->with('error', 'Postponement is not active.');
         }
 
-        $postponement->update([
-            'status'             => 'Returned',
-            'actual_return_date' => now()->toDateString(),
-        ]);
+        $enrollment = $postponement->enrollment;
+        if (!$enrollment) {
+            return back()->with('error', 'Enrollment not found for this postponement.');
+        }
 
-        $postponement->enrollment->update(['status' => 'Active']);
+        // Resume = re-register the student into a NEW instance (flow X). We send
+        // Student Care to the registration form pre-filled from the student's
+        // lead, carrying the postponement context (?resume=ID) so the form can:
+        //  • restrict the level/sublevel so they can't upgrade to a bigger unit
+        //    (that would mean more free hours/levels),
+        //  • treat a group re-entry as already paid (free),
+        //  • carry remaining private hours.
+        // The postponement is only marked Returned once the new registration
+        // actually completes (handled in RegistrationService).
+        $lead = \App\Models\Leads\Lead::where('student_id', $enrollment->student_id)->first();
 
-        return back()->with('success', 'Student resumed successfully.');
+        if (!$lead) {
+            // Fallback: no lead linked — just resume in place (old behaviour).
+            $postponement->update([
+                'status'             => 'Returned',
+                'actual_return_date' => now()->toDateString(),
+            ]);
+            $enrollment->update(['status' => 'Active']);
+            return back()->with('success', 'Student resumed.');
+        }
+
+        return redirect()->route('registration.from.lead', [$lead->lead_id, 'resume' => $postponement->postponement_id]);
     }
 
     public function expirePostponement($id)

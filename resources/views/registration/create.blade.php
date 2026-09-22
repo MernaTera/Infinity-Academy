@@ -477,9 +477,32 @@
     <form id="main_form" method="POST" action="{{ route('registration.store') }}" onsubmit="event.preventDefault(); var b=document.getElementById('preview_invoice_btn'); if(b) b.click(); return false;">
         @csrf
         <input type="hidden" name="lead_id"      value="{{ $lead->lead_id }}">
+        @if(!empty($resumeContext))
+        <input type="hidden" name="resume_postponement_id" value="{{ $resumeContext['postponement_id'] }}">
+        @endif
         <input type="hidden" name="final_price"  id="final_price_hidden">
         <input type="hidden" name="discount_value" id="discount_hidden">
         <input type="hidden" name="material_price" id="material_price_hidden">
+
+        @if(!empty($resumeContext))
+        {{-- Resume-from-postponement banner. The registration is free (already
+             paid) and locked to the same unit size (or smaller). --}}
+        <div style="margin-bottom:18px;padding:14px 18px;border-radius:10px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.25);border-left:3px solid #059669;color:#047857;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="flex-shrink:0;"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            <div>
+                <strong>Resuming a postponed student.</strong>
+                This re-registration is <strong>free</strong> (already paid).
+                @if(($resumeContext['type'] ?? '') === 'Private')
+                    Their <strong>{{ rtrim(rtrim(number_format($resumeContext['hours_remaining'],2),'0'),'.') }} remaining hours</strong> will carry over.
+                @endif
+                @if(($resumeContext['allowed_unit'] ?? '') === 'sublevel')
+                    You can only choose a <strong>sublevel</strong> (same as before).
+                @elseif(($resumeContext['allowed_unit'] ?? '') === 'level')
+                    You can only choose a <strong>level</strong> (same as before).
+                @endif
+            </div>
+        </div>
+        @endif
 
         @if(!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0)
         {{-- Student is on a level package with prepaid levels remaining. The next
