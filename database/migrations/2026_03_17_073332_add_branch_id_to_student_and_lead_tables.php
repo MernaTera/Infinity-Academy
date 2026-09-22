@@ -63,7 +63,7 @@ return new class extends Migration
         // table already exists by this point, but guard it too for safety.
         if (Schema::hasTable('employee')) {
             DB::statement("
-                UPDATE lead l
+                UPDATE `lead` l
                 JOIN employee emp ON emp.employee_id = l.owner_cs_id
                 SET l.branch_id = emp.branch_id
                 WHERE l.owner_cs_id IS NOT NULL
