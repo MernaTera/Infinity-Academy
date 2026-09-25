@@ -15,6 +15,8 @@ use App\Models\Academic\Level;
 use App\Models\Academic\Sublevel;
 use App\Models\Student\Student;
 use App\Models\Student\StudentPhone;
+use App\Models\Enrollment\Postponement;
+use App\Models\Leads\Lead;
 
 
 class StudentCareController extends Controller
@@ -57,7 +59,6 @@ class StudentCareController extends Controller
         $request->validate([
             'waiting_id' => 'required|exists:waiting_list,waiting_id',
             'course_instance_id' => 'required|exists:course_instance,course_instance_id',
-            'note' => 'nullable|string|max:2000',
         ]);
 
         $waiting = WaitingList::with('enrollment')->findOrFail($request->waiting_id);
@@ -101,15 +102,6 @@ class StudentCareController extends Controller
             'course_instance_id' => $instance->course_instance_id,
             'status'             => 'Active',
         ]);
-
-        // Save the optional SC note against this enrolment (log entry).
-        if ($request->filled('note')) {
-            \App\Models\Enrollment\EnrollmentNote::create([
-                'enrollment_id'          => $waiting->enrollment->enrollment_id,
-                'created_by_employee_id' => \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id'),
-                'note'                   => trim($request->note),
-            ]);
-        }
 
         $sessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
             ->orderBy('session_number')
@@ -220,117 +212,137 @@ class StudentCareController extends Controller
         return view('student-care.outstanding', compact('enrollments', 'withBalance', 'finishedEnrollments', 'stats'));
     }
 
+    /**
+     * Student Care view — monitor + expire only (no resume; re-registration
+     * is a Customer Service action).
+     */
     public function postponed()
     {
-        // SC view: monitor only (Mark Expired allowed, no Resume & Register —
-        // registration is the CS's job).
-        $data = $this->postponedData();
-        $data['canRegister'] = false;
-        $data['expireBase']  = url('student-care/postponed');
-        return view('student-care.postponed', $data);
+        return view('student-care.postponed', array_merge($this->postponedData(), [
+            'canRegister' => false,
+            'expireBase'  => url('student-care/postponed'),
+        ]));
     }
 
-    // CS view: same page, but with the "Resume & Register" action (the CS is the
-    // booking role). Reuses the same blade + data via a shared loader.
+    /**
+     * Customer Service view — same board, but with the Resume (re-register)
+     * action enabled. CS is the only role that registers enrollments.
+     */
     public function csPostponed()
     {
-        $data = $this->postponedData();
-        $data['canRegister'] = true;
-        $data['expireBase']  = url('cs/postponed');
-        return view('student-care.postponed', $data);
+        return view('student-care.postponed', array_merge($this->postponedData(), [
+            'canRegister' => true,
+            'expireBase'  => url('cs/postponed'),
+        ]));
     }
 
+    /**
+     * Shared data for the postponed board (SC / CS / Admin all render the same
+     * view). Lists are branch-scoped through the enrollment relation, and the
+     * KPI stats are scoped the same way so the numbers match the cards.
+     *
+     * Note: the course name is read from the enrollment's OWN course_template
+     * (courseInstance is detached to null on postpone), and hours/sessions are
+     * derived from the enrollment + bundle rather than the (now missing)
+     * instance — see the view.
+     */
     private function postponedData(): array
     {
-        $groupPostponed = \App\Models\Enrollment\Postponement::with([
-            'enrollment.student.phones',
-            'enrollment.courseTemplate',
-            'enrollment.level',
-            'enrollment.sublevel',
-            'enrollment.courseInstance.courseTemplate',
-            'enrollment.attendances',
-            'createdBy',
-        ])
-        ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))
-        ->whereIn('status', ['Active', 'Expired'])
-        ->orderBy('status')
-        ->orderByDesc('created_at')
-        ->get();
-
-        $privatePostponed = \App\Models\Enrollment\Postponement::with([
+        $with = [
             'enrollment.student.phones',
             'enrollment.courseTemplate',
             'enrollment.level',
             'enrollment.sublevel',
             'enrollment.privateBundle',
+            'enrollment.levelPackage',
+            'enrollment.attendances',
             'enrollment.courseInstance.courseTemplate',
             'createdBy',
-        ])
-        ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))
-        ->whereIn('status', ['Active', 'Expired'])
-        ->orderBy('status')
-        ->orderByDesc('created_at')
-        ->get();
+        ];
 
+        $groupPostponed = Postponement::with($with)
+            ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))
+            ->whereIn('status', ['Active', 'Expired'])
+            ->orderBy('status')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $privatePostponed = Postponement::with($with)
+            ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))
+            ->whereIn('status', ['Active', 'Expired'])
+            ->orderBy('status')
+            ->orderByDesc('created_at')
+            ->get();
+
+        // whereHas('enrollment') forces the enrollment subquery — and its branch
+        // global scope — to apply, so these counts cover the same branch as the
+        // lists above (Postponement itself has no branch column).
         $stats = [
-            'active'   => \App\Models\Enrollment\Postponement::where('status', 'Active')->count(),
-            'expired'  => \App\Models\Enrollment\Postponement::where('status', 'Expired')->count(),
-            'returned' => \App\Models\Enrollment\Postponement::where('status', 'Returned')->count(),
-            'expiring_soon' => \App\Models\Enrollment\Postponement::where('status', 'Active')
-                ->where('expected_return_date', '<=', now()->addDays(7))->count(),
+            'active'        => Postponement::where('status', 'Active')
+                                    ->whereHas('enrollment', fn($q) => $q)->count(),
+            'expired'       => Postponement::where('status', 'Expired')
+                                    ->whereHas('enrollment', fn($q) => $q)->count(),
+            'returned'      => Postponement::where('status', 'Returned')
+                                    ->whereHas('enrollment', fn($q) => $q)->count(),
+            'expiring_soon' => Postponement::where('status', 'Active')
+                                    ->whereHas('enrollment', fn($q) => $q)
+                                    ->whereDate('expected_return_date', '<=', now()->addDays(7))
+                                    ->count(),
         ];
 
         return compact('groupPostponed', 'privatePostponed', 'stats');
     }
 
+    /**
+     * Resume a postponed student (Customer Service). This does NOT flip the
+     * enrollment back in place — resuming means re-registering the student into
+     * a new course. We hand off to the registration form in "resume" mode; the
+     * real state changes (new enrollment created free/with carried hours, old
+     * enrollment marked Completed, postponement marked Returned) happen when CS
+     * submits that form.
+     */
     public function resumePostponement(Request $request, $id)
     {
-        $postponement = \App\Models\Enrollment\Postponement::with('enrollment')->findOrFail($id);
+        $postponement = Postponement::with('enrollment')->findOrFail($id);
 
         if ($postponement->status !== 'Active') {
-            return back()->with('error', 'Postponement is not active.');
+            return back()->with('error', 'Only an active postponement can be resumed.');
         }
 
-        $enrollment = $postponement->enrollment;
-        if (!$enrollment) {
-            return back()->with('error', 'Enrollment not found for this postponement.');
-        }
-
-        // Resume = re-register the student into a NEW instance (flow X). We send
-        // Student Care to the registration form pre-filled from the student's
-        // lead, carrying the postponement context (?resume=ID) so the form can:
-        //  • restrict the level/sublevel so they can't upgrade to a bigger unit
-        //    (that would mean more free hours/levels),
-        //  • treat a group re-entry as already paid (free),
-        //  • carry remaining private hours.
-        // The postponement is only marked Returned once the new registration
-        // actually completes (handled in RegistrationService).
-        $lead = \App\Models\Leads\Lead::where('student_id', $enrollment->student_id)->first();
+        $studentId = $postponement->enrollment?->student_id;
+        $lead = $studentId
+            ? Lead::where('student_id', $studentId)->orderByDesc('lead_id')->first()
+            : null;
 
         if (!$lead) {
-            // Fallback: no lead linked — just resume in place (old behaviour).
-            $postponement->update([
-                'status'             => 'Returned',
-                'actual_return_date' => now()->toDateString(),
-            ]);
-            $enrollment->update(['status' => 'Active']);
-            return back()->with('success', 'Student resumed.');
+            return back()->with('error', 'No lead is linked to this student, so they cannot be re-registered automatically. Create a lead for them first, then resume.');
         }
 
-        return redirect()->route('registration.from.lead', [$lead->lead_id, 'resume' => $postponement->postponement_id]);
+        return redirect()->route('registration.from.lead', [
+            'lead_id' => $lead->lead_id,
+            'resume'  => $postponement->postponement_id,
+        ]);
     }
 
+    /**
+     * Expire a postponement (SC / CS / Admin). The student never returned, so
+     * both the postponement and the enrollment are forfeited — no refund.
+     */
     public function expirePostponement($id)
     {
-        $postponement = \App\Models\Enrollment\Postponement::with('enrollment')->findOrFail($id);
+        $postponement = Postponement::with('enrollment')->findOrFail($id);
+
+        if ($postponement->status !== 'Active') {
+            return back()->with('error', 'Only an active postponement can be expired.');
+        }
 
         $postponement->update(['status' => 'Expired']);
 
-        $postponement->enrollment->update([
-            'status' => 'Expired',
-        ]);
+        if ($postponement->enrollment) {
+            $postponement->enrollment->update(['status' => 'Expired']);
+        }
 
-        return back()->with('success', 'Postponement marked as expired.');
+        return back()->with('success', 'Postponement marked as expired. The enrollment is forfeited with no refund.');
     }
 
     public function dashboard()
@@ -359,7 +371,7 @@ class StudentCareController extends Controller
 
         $fullGroups = \App\Models\Academic\CourseInstance::where('status', 'Active')
             ->where('type', 'Group')
-            ->withCount(['enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled')])
+            ->withCount('enrollments')
             ->get()
             ->filter(fn($i) => $i->enrollments_count >= $i->capacity);
 
@@ -572,34 +584,5 @@ class StudentCareController extends Controller
             ->where('level_order', '>', $currentLevel->level_order)
             ->orderBy('level_order')
             ->first();
-    }
-
-    // ─────────────────────────────────────────────────────────────
-    // Enrollment notes (Student Care) — add a new note to the log.
-    // ─────────────────────────────────────────────────────────────
-    public function addEnrollmentNote(Request $request, $enrollmentId)
-    {
-        $request->validate(['note' => 'required|string|max:2000']);
-
-        $enrollment = \App\Models\Enrollment\Enrollment::findOrFail($enrollmentId);
-
-        \App\Models\Enrollment\EnrollmentNote::create([
-            'enrollment_id'          => $enrollment->enrollment_id,
-            'created_by_employee_id' => \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id'),
-            'note'                   => trim($request->note),
-        ]);
-
-        return back()->with('success', 'Note added.');
-    }
-
-    // Edit an existing note (SC only). Kept simple: updates the text in place.
-    public function updateEnrollmentNote(Request $request, $noteId)
-    {
-        $request->validate(['note' => 'required|string|max:2000']);
-
-        $note = \App\Models\Enrollment\EnrollmentNote::findOrFail($noteId);
-        $note->update(['note' => trim($request->note)]);
-
-        return back()->with('success', 'Note updated.');
     }
 }

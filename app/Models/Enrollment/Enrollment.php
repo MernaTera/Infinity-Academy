@@ -201,13 +201,6 @@ class Enrollment extends Model
 		return $this->hasMany(FinancialTransaction::class, 'enrollment_id');
 	}
 
-	public function notes()
-	{
-		return $this->hasMany(\App\Models\Enrollment\EnrollmentNote::class, 'enrollment_id', 'enrollment_id')
-			->with('createdBy')
-			->orderByDesc('note_id');
-	}
-
 	public function installmentApprovalLogs()
 	{
 		return $this->hasMany(InstallmentApprovalLog::class, 'enrollment_id');
@@ -221,6 +214,11 @@ class Enrollment extends Model
 	public function postponements()
 	{
 		return $this->hasMany(Postponement::class, 'enrollment_id');
+	}
+
+	public function notes()
+	{
+		return $this->hasMany(EnrollmentNote::class, 'enrollment_id')->latest();
 	}
 
 	public function activePostponement()

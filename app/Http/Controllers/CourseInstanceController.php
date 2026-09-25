@@ -793,17 +793,16 @@ class CourseInstanceController extends Controller
             'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.student.phones',
             'enrollments.installmentSchedules',
-            'enrollments.notes',
             'sessions',
             'instanceSchedules.timeSlot',
             'enrollments.activePostponement',
         ])->find($id);
 
-        // The instance may have been removed (e.g. its last active student was
-        // postponed). Redirect gracefully instead of a raw 404.
+        // The instance may have been auto-removed (e.g. its last active student
+        // was postponed). Fail gracefully to the list instead of a hard 404.
         if (!$instance) {
             return redirect()->route('student-care.instances')
-                ->with('error', 'That course is no longer available (it may have been removed after its last student was postponed).');
+                ->with('error', 'That course is no longer available — it may have been closed after its last student left.');
         }
 
         return view('student-care.course-instances.show', compact('instance'));
@@ -1328,59 +1327,124 @@ class CourseInstanceController extends Controller
     public function postponeEnrollment(Request $request, $enrollmentId)
     {
         $enrollment = \App\Models\Enrollment\Enrollment::findOrFail($enrollmentId);
-        $request->validate(['start_date' => 'required|date', 'expected_return_date' => 'required|date|after:start_date']);
+
+        $request->validate([
+            'start_date'           => 'required|date',
+            'expected_return_date' => 'required|date|after:start_date',
+            'reason'               => 'nullable|string|max:1000',
+        ]);
+
+        // Guard: only a live enrollment can be postponed. A student who is
+        // already Postponed / Cancelled / Completed / Expired has nothing to
+        // pause, and postponing them would create a dangling Active postponement.
+        if (!in_array($enrollment->status, ['Active', 'Restricted'], true)) {
+            return back()->with('error', 'Only an active enrollment can be postponed.');
+        }
+
+        // Remember the instance BEFORE detaching so we can tidy it up afterwards.
+        $instanceId   = $enrollment->course_instance_id;
         $scEmployeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->first()?->employee_id;
 
-        // Remember which instance the student was in, before we detach them.
-        $instanceId = $enrollment->course_instance_id;
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $enrollment, $scEmployeeId) {
+            \App\Models\Enrollment\Postponement::create([
+                'enrollment_id'        => $enrollment->enrollment_id,
+                'start_date'           => $request->start_date,
+                'expected_return_date' => $request->expected_return_date,
+                'status'               => 'Active',
+                'reason'               => $request->reason,
+                'created_by_cs_id'     => $scEmployeeId,
+            ]);
 
-        \App\Models\Enrollment\Postponement::create([
-            'enrollment_id'        => $enrollment->enrollment_id,
-            'start_date'           => $request->start_date,
-            'expected_return_date' => $request->expected_return_date,
-            'status'               => 'Active',
-            'reason'               => $request->reason,
-            'created_by_cs_id'     => $scEmployeeId,
-        ]);
-        // Detach from the schedule so the seat is freed while postponed. The
-        // level/sublevel/course + hours_remaining stay on the enrolment, so we
-        // know exactly where the student stopped when they return. When they
-        // resume, Student Care re-registers them into a new instance.
-        $enrollment->update([
-            'status'             => 'Postponed',
-            'course_instance_id' => null,
-        ]);
+            // Detach from the course and free the seat immediately, so another
+            // student can take the place while this one is away. The student's
+            // paid position is preserved by the Postponement + the resume flow
+            // (which re-registers them for free / with their carried hours).
+            $enrollment->update([
+                'status'             => 'Postponed',
+                'course_instance_id' => null,
+            ]);
+        });
 
-        // If this was the LAST active student in the instance, the instance is
-        // now empty — delete it (works for both private and group). Its sessions
-        // and schedule cascade-delete; other enrolments (already Cancelled /
-        // Postponed / Completed) are unaffected (their course_instance_id is
-        // null-on-delete). "Active students" = anyone still attached to it who
-        // isn't cancelled/postponed/completed.
-        $instanceEmptied = false;
+        // ── Tidy up the instance the student just left ─────────────────
+        // Counts run WITHOUT the branch scope so a narrowed context can never
+        // mis-decide and touch an instance that still has students elsewhere.
+        $instanceClosed = false;   // hard-deleted OR cancelled
+        $freedTeacher   = false;   // future sessions returned to the teacher
         if ($instanceId) {
-            $remaining = \App\Models\Enrollment\Enrollment::where('course_instance_id', $instanceId)
-                ->whereNotIn('status', ['Cancelled', 'Postponed', 'Completed'])
+            // Anyone still actively studying? (Active / Restricted / Waiting /
+            // Pending_Approval). If so, the course is still running — leave it.
+            $activeRemaining = \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
+                ->where('course_instance_id', $instanceId)
+                ->whereIn('status', ['Active', 'Restricted', 'Waiting', 'Pending_Approval'])
                 ->count();
 
-            if ($remaining === 0) {
-                $instance = \App\Models\Academic\CourseInstance::find($instanceId);
-                if ($instance) {
-                    \App\Services\AuditService::deleted('course_instance', $instance->course_instance_id, 'reason', 'Auto-removed: last active student postponed');
-                    $instance->delete(); // cascades sessions + schedule
-                    $instanceEmptied = true;
+            if ($activeRemaining === 0) {
+                $instance = CourseInstance::withoutGlobalScope('branch')->find($instanceId);
+
+                // Are there graduates? A Completed student means real history to
+                // keep (their attendance + the teacher's delivered sessions), so
+                // the instance is left fully intact — nothing is removed.
+                $hasCompletedStudents = \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
+                    ->where('course_instance_id', $instanceId)
+                    ->where('status', 'Completed')
+                    ->exists();
+
+                if ($instance && !$hasCompletedStudents) {
+                    // No graduates and no active students — the course will not
+                    // continue. Free the teacher's NOT-yet-delivered sessions by
+                    // removing them (teacher availability is computed from live
+                    // sessions), but KEEP every delivered (Completed) session so
+                    // the teacher still gets credit for lessons already taught.
+                    $futureSessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instanceId)
+                        ->where('status', '!=', 'Completed')
+                        ->count();
+                    if ($futureSessions > 0) {
+                        \App\Models\Academic\CourseSession::where('course_instance_id', $instanceId)
+                            ->where('status', '!=', 'Completed')
+                            ->delete();
+                        $freedTeacher = true;
+                    }
+
+                    $deliveredSessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instanceId)
+                        ->where('status', 'Completed')
+                        ->count();
+
+                    if ($deliveredSessions === 0) {
+                        // Nothing was ever delivered — erase the instance entirely
+                        // (remaining sessions/schedules cascade away; terminal
+                        // enrolments detach via nullOnDelete and keep their record).
+                        \App\Services\AuditService::deleted(
+                            'course_instance',
+                            $instance->course_instance_id,
+                            'reason',
+                            'Auto-removed: last active student postponed, no sessions delivered'
+                        );
+                        $instance->delete();
+                    } else {
+                        // Lessons were delivered — preserve them for the teacher's
+                        // record and mark the instance Cancelled instead of deleting.
+                        $oldStatus = $instance->status;
+                        $instance->update(['status' => 'Cancelled']);
+                        \App\Services\AuditService::updated(
+                            'course_instance',
+                            $instance->course_instance_id,
+                            'status',
+                            $oldStatus,
+                            'Cancelled'
+                        );
+                    }
+
+                    $instanceClosed = true;
                 }
             }
         }
 
-        $msg = 'Student postponed successfully. Their seat has been released; Customer Service can re-register them from the Postponed page when they return.';
-        if ($instanceEmptied) {
-            // The course details page we came from no longer exists (the instance
-            // was just deleted), so back() would 404. Send them to the active
-            // courses list instead.
-            $msg .= ' The course had no other active students, so it was removed.';
+        if ($instanceClosed) {
+            $msg = 'Student postponed. No active students remained, so the course was closed';
+            $msg .= $freedTeacher ? " and the teacher's remaining sessions were freed (delivered sessions kept)." : '.';
             return redirect()->route('student-care.instances')->with('success', $msg);
         }
-        return back()->with('success', $msg);
+
+        return back()->with('success', 'Student postponed successfully.');
     }
 }

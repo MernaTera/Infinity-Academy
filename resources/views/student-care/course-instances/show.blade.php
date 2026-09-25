@@ -4,38 +4,6 @@
 
 @section('content')
 
-{{-- Enrollment Notes popup (compact pill in the table opens this) --}}
-<style>
-    .notes-pill{display:inline-flex;align-items:center;gap:6px;max-width:170px;padding:5px 11px;border-radius:16px;cursor:pointer;
-        background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.15);color:#1B4FA8;font-size:11px;font-family:'DM Sans',sans-serif;transition:all 0.18s;text-align:left;}
-    .notes-pill:hover{background:rgba(27,79,168,0.1);border-color:rgba(27,79,168,0.3);}
-    .notes-pill-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .en-notes-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(10,20,40,0.5);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:20px;}
-    .en-notes-overlay.open{display:flex;animation:enNotesFade 0.2s ease both;}
-    @keyframes enNotesFade{from{opacity:0}to{opacity:1}}
-    .en-notes-modal{background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;
-        box-shadow:0 20px 60px rgba(15,31,61,0.3);animation:enNotesPop 0.25s cubic-bezier(0.16,1,0.3,1) both;}
-    @keyframes enNotesPop{from{opacity:0;transform:scale(0.96) translateY(10px)}to{opacity:1;transform:none}}
-    .en-notes-head{background:linear-gradient(135deg,#0F1F3D,#243B69);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-    .en-notes-head-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;}
-    .en-notes-head-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#F5911E;margin-top:2px;}
-    .en-notes-close{background:rgba(255,255,255,0.1);border:none;width:30px;height:30px;border-radius:8px;color:#fff;cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
-    .en-notes-close:hover{background:rgba(255,255,255,0.2);}
-    .en-notes-body{padding:20px 22px;overflow-y:auto;}
-</style>
-<div class="en-notes-overlay" id="enNotesOverlay" onclick="if(event.target===this)closeEnrollNotes()">
-    <div class="en-notes-modal">
-        <div class="en-notes-head">
-            <div>
-                <div class="en-notes-head-sub">Student Notes</div>
-                <div class="en-notes-head-title" id="enNotesStudent">Notes</div>
-            </div>
-            <button type="button" class="en-notes-close" onclick="closeEnrollNotes()">&times;</button>
-        </div>
-        <div class="en-notes-body" id="enNotesBody"></div>
-    </div>
-</div>
-
 @once
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&family=Cormorant+Garamond:ital@1&display=swap" rel="stylesheet">
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -351,7 +319,6 @@
                             <th>Hours Remaining</th>
                             <th>Start Date</th>
                             <th>Payment</th>
-                            <th>Notes</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -413,31 +380,6 @@
                         @endif
                         </td>
 
-                        <td style="max-width:180px;">
-                            @php
-                                $eNotes = $enrollment->notes ?? collect();
-                                $latest = $eNotes->first();
-                                // Package the notes for this enrollment so the modal can render the full log.
-                                $notesPayload = $eNotes->map(fn($n) => [
-                                    'id'     => $n->note_id,
-                                    'text'   => $n->note,
-                                    'author' => $n->createdBy?->full_name ?? 'SC',
-                                    'date'   => \Carbon\Carbon::parse($n->created_at)->format('d M Y, h:i A'),
-                                    'update_url' => route('student-care.enrollment.notes.update', $n->note_id),
-                                ])->values();
-                            @endphp
-                            <button type="button" class="notes-pill"
-                                onclick='openEnrollNotes(@json($enrollment->student->full_name ?? "Student"), @json($notesPayload), @json(route("student-care.enrollment.notes.add", $enrollment->enrollment_id)))'>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                @if($latest)
-                                    <span class="notes-pill-text">{{ \Illuminate\Support\Str::limit($latest->note, 22) }}</span>
-                                    @if($eNotes->count() > 1)<span style="font-size:9px;background:#1B4FA8;color:#fff;border-radius:10px;padding:1px 6px;">{{ $eNotes->count() }}</span>@endif
-                                @else
-                                    <span class="notes-pill-text" style="color:#AAB8C8;">Add note</span>
-                                @endif
-                            </button>
-                        </td>
-
                         {{-- ✅ Actions Column --}}
                         <td>
                             <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -451,16 +393,10 @@
                                 </button>
                                 @endif
 
-                                @if($enrollment->status === 'Postponed')
-                                <form method="POST" action="{{ route('student-care.postponed.resume', $enrollment->activePostponement?->postponement_id) }}" style="display:inline">
-                                    @csrf @method('PATCH')
-                                    <button type="submit"
-                                        style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(5,150,105,0.25);background:transparent;color:#059669;cursor:pointer;font-family:'DM Sans',sans-serif">
-                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                                        Resume
-                                    </button>
-                                </form>
-                                @endif
+                                {{-- A postponed student is detached from this instance (their seat is
+                                     freed), so they no longer appear in this list. Resuming a student is
+                                     a re-registration handled by Customer Service from the Postponed page,
+                                     not an in-place action here. --}}
                             </div>
                         </td>
                     </tr>
@@ -776,17 +712,8 @@
                                     </button>
                                     @endif
 
-                                    {{-- Resume button -- if Postponed --}}
-                                    @if($session->status === 'Postponed')
-                                    <form method="POST" action="{{ route('student-care.postponed.resume', $enrollment->activePostponement?->postponement_id) }}" style="display:inline">
-                                        @csrf @method('PATCH')
-                                        <button type="submit"
-                                            style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(5,150,105,0.25);background:transparent;color:#059669;cursor:pointer;font-family:'DM Sans',sans-serif">
-                                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                                            Resume
-                                        </button>
-                                    </form>
-                                    @endif
+                                    {{-- Resuming a postponed student is a re-registration done by
+                                         Customer Service from the Postponed page — not an in-place action. --}}
 
                                 </div>
                             </td>
@@ -887,6 +814,7 @@ function openAttendance(sessionId) {
 function openPostponeModal(enrollmentId, studentName) {
     document.getElementById('postponeStudentName').textContent = studentName;
     document.getElementById('postponeForm').action = `/student-care/enrollments/${enrollmentId}/postpone`;
+    // Set min return date to tomorrow
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     document.getElementById('postponeReturn').min = tomorrow.toISOString().split('T')[0];
@@ -903,6 +831,7 @@ function updateMaxReturn() {
     if (!start) return;
     const maxDate = new Date(start);
     maxDate.setMonth(maxDate.getMonth() + 3);
+    // No hard max — just warn
     document.getElementById('postponeReturn').min = start;
     checkDuration();
 }
@@ -918,73 +847,5 @@ function checkDuration() {
 document.getElementById('postponeModal').addEventListener('click', function(e) {
     if (e.target === this) closePostponeModal();
 });
-
-function toggleAddNote(enrollmentId, hide){
-    var f = document.getElementById('addNote_' + enrollmentId);
-    if (!f) return;
-    f.style.display = hide ? 'none' : (f.style.display === 'none' ? 'block' : 'none');
-    if (f.style.display === 'block') { var t=f.querySelector('textarea'); if(t) t.focus(); }
-}
-function editNote(noteId, hide){
-    var f = document.getElementById('noteEdit_' + noteId);
-    var t = document.getElementById('noteText_' + noteId);
-    if (!f) return;
-    var show = !hide && f.style.display === 'none';
-    f.style.display = show ? 'block' : 'none';
-    if (t) t.style.display = show ? 'none' : 'block';
-    if (show) { var ta=f.querySelector('textarea'); if(ta) ta.focus(); }
-}
-
-function escN(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
-var _enCsrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-
-function openEnrollNotes(student, notes, addUrl){
-    var ov = document.getElementById('enNotesOverlay');
-    document.getElementById('enNotesStudent').textContent = student || 'Student';
-
-    var body = document.getElementById('enNotesBody');
-    var html = '';
-
-    html += '<form method="POST" action="'+addUrl+'" style="margin-bottom:16px;">'
-          + '<input type="hidden" name="_token" value="'+_enCsrf+'">'
-          + '<textarea name="note" rows="2" required placeholder="Write a new note..." '
-          + 'style="width:100%;padding:9px 11px;border:1px solid rgba(27,79,168,0.2);border-radius:7px;font-family:\'DM Sans\',sans-serif;font-size:13px;resize:vertical;outline:none;"></textarea>'
-          + '<button type="submit" style="margin-top:8px;padding:8px 16px;font-size:10px;letter-spacing:2px;text-transform:uppercase;border-radius:5px;border:none;background:#1B4FA8;color:#fff;cursor:pointer;font-family:\'DM Sans\',sans-serif;">+ Add Note</button>'
-          + '</form>';
-
-    if (!notes || !notes.length){
-        html += '<div style="text-align:center;color:#AAB8C8;font-size:12px;padding:14px;">No notes yet.</div>';
-    } else {
-        html += '<div style="display:flex;flex-direction:column;gap:10px;">';
-        notes.forEach(function(n){
-            html += '<div style="background:rgba(27,79,168,0.04);border:1px solid rgba(27,79,168,0.1);border-radius:9px;padding:12px 13px;">'
-                  + '<div style="font-size:13px;color:#1A2A4A;line-height:1.55;white-space:pre-wrap;" id="enNoteText_'+n.id+'">'+escN(n.text)+'</div>'
-                  + '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;">'
-                  + '<span style="font-size:10px;color:#AAB8C8;">'+escN(n.author)+' · '+escN(n.date)+'</span>'
-                  + '<button type="button" onclick="enEditNote('+n.id+')" style="background:none;border:none;cursor:pointer;color:#1B4FA8;font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:0;">Edit</button>'
-                  + '</div>'
-                  + '<form method="POST" action="'+n.update_url+'" id="enNoteEdit_'+n.id+'" style="display:none;margin-top:8px;">'
-                  + '<input type="hidden" name="_token" value="'+_enCsrf+'"><input type="hidden" name="_method" value="PUT">'
-                  + '<textarea name="note" rows="2" required style="width:100%;padding:8px 10px;border:1px solid rgba(27,79,168,0.2);border-radius:6px;font-family:\'DM Sans\',sans-serif;font-size:13px;resize:vertical;">'+escN(n.text)+'</textarea>'
-                  + '<div style="display:flex;gap:6px;margin-top:6px;">'
-                  + '<button type="submit" style="font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:4px;border:none;background:#1B4FA8;color:#fff;cursor:pointer;">Save</button>'
-                  + '<button type="button" onclick="enEditNote('+n.id+',true)" style="font-size:10px;letter-spacing:1px;text-transform:uppercase;padding:6px 12px;border-radius:4px;border:1px solid rgba(122,138,154,0.3);background:transparent;color:#7A8A9A;cursor:pointer;">Cancel</button>'
-                  + '</div></form>'
-                  + '</div>';
-        });
-        html += '</div>';
-    }
-    body.innerHTML = html;
-    ov.classList.add('open');
-}
-function closeEnrollNotes(){ document.getElementById('enNotesOverlay').classList.remove('open'); }
-function enEditNote(id, hide){
-    var f=document.getElementById('enNoteEdit_'+id), t=document.getElementById('enNoteText_'+id);
-    if(!f) return;
-    var show = !hide && f.style.display==='none';
-    f.style.display = show?'block':'none';
-    if(t) t.style.display = show?'none':'block';
-    if(show){ var ta=f.querySelector('textarea'); if(ta) ta.focus(); }
-}
 </script>
 @endsection

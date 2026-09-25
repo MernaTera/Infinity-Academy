@@ -9,51 +9,59 @@ use Carbon\Carbon;
 
 class AdminPostponementController extends Controller
 {
+    /**
+     * Admin postponed board. Admin renders the SAME shared view as Student Care
+     * — monitor + expire, no resume (re-registration is a CS action). Lists and
+     * stats are scoped through the enrollment relation so they stay consistent.
+     */
     public function index(Request $request)
     {
-        // Admin postponed = same monitor view as Student Care (no Resume —
-        // that's the CS's job). Admin keeps Mark Expired. Uses the shared blade.
-        $groupPostponed = Postponement::with([
-            'enrollment.student.phones',
-            'enrollment.courseTemplate',
-            'enrollment.level',
-            'enrollment.sublevel',
-            'enrollment.courseInstance.courseTemplate',
-            'enrollment.attendances',
-            'createdBy',
-        ])
-        ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))
-        ->whereIn('status', ['Active', 'Expired'])
-        ->orderBy('status')->orderByDesc('created_at')->get();
-
-        $privatePostponed = Postponement::with([
+        $with = [
             'enrollment.student.phones',
             'enrollment.courseTemplate',
             'enrollment.level',
             'enrollment.sublevel',
             'enrollment.privateBundle',
+            'enrollment.levelPackage',
+            'enrollment.attendances',
             'enrollment.courseInstance.courseTemplate',
             'createdBy',
-        ])
-        ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))
-        ->whereIn('status', ['Active', 'Expired'])
-        ->orderBy('status')->orderByDesc('created_at')->get();
-
-        $stats = [
-            'active'   => Postponement::where('status', 'Active')->count(),
-            'expired'  => Postponement::where('status', 'Expired')->count(),
-            'returned' => Postponement::where('status', 'Returned')->count(),
-            'expiring_soon' => Postponement::where('status', 'Active')
-                ->where('expected_return_date', '<=', now()->addDays(7))->count(),
         ];
 
-        return view('student-care.postponed', [
-            'groupPostponed'   => $groupPostponed,
-            'privatePostponed' => $privatePostponed,
-            'stats'            => $stats,
-            'canRegister'      => false,                    // admin monitors only
-            'expireBase'       => url('admin/postponed'),   // admin expire route base
-        ]);
+        $groupPostponed = Postponement::with($with)
+            ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))
+            ->whereIn('status', ['Active', 'Expired'])
+            ->orderBy('status')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $privatePostponed = Postponement::with($with)
+            ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))
+            ->whereIn('status', ['Active', 'Expired'])
+            ->orderBy('status')
+            ->orderByDesc('created_at')
+            ->get();
+
+        $stats = [
+            'active'        => Postponement::where('status', 'Active')
+                                    ->whereHas('enrollment', fn($q) => $q)->count(),
+            'expired'       => Postponement::where('status', 'Expired')
+                                    ->whereHas('enrollment', fn($q) => $q)->count(),
+            'returned'      => Postponement::where('status', 'Returned')
+                                    ->whereHas('enrollment', fn($q) => $q)->count(),
+            'expiring_soon' => Postponement::where('status', 'Active')
+                                    ->whereHas('enrollment', fn($q) => $q)
+                                    ->whereDate('expected_return_date', '<=', now()->addDays(7))
+                                    ->count(),
+        ];
+
+        return view('student-care.postponed', array_merge(
+            compact('groupPostponed', 'privatePostponed', 'stats'),
+            [
+                'canRegister' => false,
+                'expireBase'  => url('admin/postponed'),
+            ]
+        ));
     }
 
     public function resume($id)
@@ -113,11 +121,17 @@ class AdminPostponementController extends Controller
 
         $postponement = Postponement::with('enrollment')->findOrFail($id);
 
+        // Note: the postponement table has no admin_note column — record the
+        // reason in the existing `reason` field instead of a phantom column.
+        $existingReason = $postponement->reason ? $postponement->reason . ' | ' : '';
         $postponement->update([
-            'status'         => 'Expired',
-            'admin_note'     => 'Force-cancelled by admin. Reason: ' . $request->reason,
+            'status' => 'Expired',
+            'reason' => $existingReason . 'Force-cancelled by admin: ' . $request->reason,
         ]);
-        $postponement->enrollment->update(['status' => 'Cancelled']);
+
+        if ($postponement->enrollment) {
+            $postponement->enrollment->update(['status' => 'Cancelled']);
+        }
 
         return back()->with('success', 'Postponement force-cancelled.');
     }

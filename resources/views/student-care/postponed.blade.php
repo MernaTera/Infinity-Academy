@@ -1,11 +1,19 @@
 @php
-    // Pick the layout matching the viewer's role, so each panel keeps its own
-    // sidebar (SC monitors; CS resumes & registers). Both share this page.
-    $user = auth()->user();
-    $__layout = $user?->isAdmin() ? 'admin.layouts.app'
-        : ($user?->isSC() ? 'student-care.layouts.app'
-        : 'layouts.leads');
+    // ── Role-aware layout ──────────────────────────────────────────────
+    // The same board is shown to Student Care, Customer Service and Admin.
+    // Each panel has its own chrome, so pick the matching layout. Only CS may
+    // resume (re-register) a student — $canRegister is passed by the controller.
+    $__user    = auth()->user();
+    $__isSC    = $__user?->isSC() ?? false;
+    $__isAdmin = $__user?->isAdmin() ?? false;
+    $__layout  = $__isSC ? 'student-care.layouts.app'
+               : ($__isAdmin ? 'admin.layouts.app' : 'layouts.leads');
+    $__eyebrow = $__isSC ? 'Student Care'
+               : ($__isAdmin ? 'Administration' : 'Customer Service');
+    $canRegister = $canRegister ?? false;
+    $expireBase  = $expireBase ?? url('student-care/postponed');
 @endphp
+
 @extends($__layout)
 @section('title', 'Postponed Students')
 
@@ -15,7 +23,7 @@
 @endonce
 
 <style>
-.pp-page{;min-height:100vh;font-family:'DM Sans',sans-serif;color:#1A2A4A}
+.pp-page{min-height:100vh;font-family:'DM Sans',sans-serif;color:#1A2A4A}
 .page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:4px}
 .page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0}
 .page-header{margin-bottom:28px}
@@ -92,7 +100,7 @@
 
 .pc-footer{padding:10px 18px;border-top:1px solid rgba(27,79,168,0.06);display:flex;gap:8px}
 
-.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap}
+.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:6px 14px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap;text-decoration:none}
 .btn-resume{color:#059669;border-color:rgba(5,150,105,0.25)}
 .btn-resume:hover{background:rgba(5,150,105,0.07)}
 .btn-expire{color:#DC2626;border-color:rgba(220,38,38,0.2)}
@@ -115,12 +123,10 @@
 @media(max-width:768px){.pp-page{padding:18px 14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}.postponed-grid{grid-template-columns:1fr}}
 </style>
 
-{{-- Only the SC layout's <main> adds padding; the CS and Admin layouts don't,
-     so add it here for those panels to match. --}}
-<div class="pp-page" @unless(auth()->user()?->isSC()) style="padding:30px;" @endunless>
+<div class="pp-page" @unless($__isSC) style="padding:30px" @endunless>
 
     <div class="page-header">
-        <div class="page-eyebrow">Student Care</div>
+        <div class="page-eyebrow">{{ $__eyebrow }}</div>
         <h1 class="page-title">Postponed Students</h1>
     </div>
 
@@ -197,35 +203,35 @@
                 $totalDays    = max(1, $start->diffInDays($end));
                 $elapsed      = max(0, min($totalDays, $start->diffInDays($today)));
                 $pct          = round($elapsed / $totalDays * 100);
-                $daysLeft     = max(0, (int)$today->diffInDays($end, false));
+                $daysLeft     = max(0, (int) $today->diffInDays($end, false));
                 $isExpiringSoon = $pp->status === 'Active' && $daysLeft <= 7;
                 $maxDays      = 90;
                 $totalPostpDays = $start->diffInDays($end);
                 $overMax      = $totalPostpDays > $maxDays;
 
-                // A postponed group student is detached from their instance and,
-                // on resume, repeats the level with a NEW group — so "remaining
-                // sessions" from the old instance no longer applies. Show what's
-                // reliable: how many sessions they attended before postponing.
-                $completedSessions = $enrollment->attendances?->where('status', 'Attended')->count()
-                    ?? ($enrollment->attendances?->count() ?? 0);
+                // The instance is detached on postpone, so the course name comes
+                // from the enrollment's own template. Sessions attended is counted
+                // from the attendance rows we still have for this enrollment.
+                $courseName    = $enrollment?->courseTemplate?->name
+                                ?? $enrollment?->courseInstance?->courseTemplate?->name
+                                ?? '—';
+                $levelName     = $enrollment?->sublevel?->name ?? $enrollment?->level?->name;
+                $attendedCount = $enrollment?->attendances?->where('status', 'Present')->count() ?? 0;
 
                 $cardClass = $pp->status === 'Expired' ? 'status-expired' :
                              ($isExpiringSoon ? 'pp-card status-active expiring-soon' : 'status-active');
             @endphp
             <div class="pp-card {{ $cardClass }}"
-                 data-name="{{ strtolower($enrollment->student?->full_name ?? '') }}"
-                 data-course="{{ strtolower($enrollment->courseInstance?->courseTemplate?->name ?? $enrollment->courseTemplate?->name ?? '') }}">
+                 data-name="{{ strtolower($enrollment?->student?->full_name ?? '') }}"
+                 data-course="{{ strtolower($courseName) }}">
 
                 <div class="pc-header">
                     <div>
-                        <div class="pc-student">{{ $enrollment->student?->full_name ?? '—' }}</div>
-                        <div class="pc-course">{{ $enrollment->courseInstance?->courseTemplate?->name ?? $enrollment->courseTemplate?->name ?? '—' }}</div>
-                        @if($enrollment->level || $enrollment->sublevel)
-                        <div style="font-size:10px;color:#AAB8C8;margin-top:2px;">
-                            {{ $enrollment->level?->name }}@if($enrollment->sublevel) · {{ $enrollment->sublevel?->name }}@endif
+                        <div class="pc-student">{{ $enrollment?->student?->full_name ?? '—' }}</div>
+                        <div class="pc-course">
+                            {{ $courseName }}
+                            @if($levelName)<span style="color:#1B4FA8"> · {{ $levelName }}</span>@endif
                         </div>
-                        @endif
                     </div>
                     <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
                         @if($pp->status === 'Active')
@@ -267,7 +273,7 @@
                     <div class="pc-meta-grid">
                         <div>
                             <div class="pc-meta-label">Sessions Attended</div>
-                            <div class="pc-meta-val orange">{{ $completedSessions }} sessions</div>
+                            <div class="pc-meta-val orange">{{ $attendedCount }} {{ \Illuminate\Support\Str::plural('session', $attendedCount) }}</div>
                         </div>
                         <div>
                             <div class="pc-meta-label">Postponement Duration</div>
@@ -300,15 +306,14 @@
 
                 @if($pp->status === 'Active')
                 <div class="pc-footer">
-                    @if(!empty($canRegister))
-                    <a class="btn-sm btn-resume" href="{{ route('cs.postponed.resume', $pp->postponement_id) }}"
-                        style="text-decoration:none;display:inline-flex;align-items:center;gap:5px;justify-content:center;">
+                    @if($canRegister)
+                    <a class="btn-sm btn-resume" href="{{ route('cs.postponed.resume', $pp->postponement_id) }}">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         Resume &amp; Register
                     </a>
                     @endif
                     <button class="btn-sm btn-expire"
-                        onclick="openConfirm({{ $pp->postponement_id }}, 'expire', '{{ addslashes($enrollment->student?->full_name) }}')">
+                        onclick="openExpire({{ $pp->postponement_id }}, '{{ addslashes($enrollment?->student?->full_name) }}')">
                         Mark Expired
                     </button>
                 </div>
@@ -344,33 +349,33 @@
                 $totalDays   = max(1, $start->diffInDays($end));
                 $elapsed     = max(0, min($totalDays, $start->diffInDays($today)));
                 $pct         = round($elapsed / $totalDays * 100);
-                $daysLeft    = max(0, (int)$today->diffInDays($end, false));
+                $daysLeft    = max(0, (int) $today->diffInDays($end, false));
                 $isExpiringSoon = $pp->status === 'Active' && $daysLeft <= 7;
 
-                // Total private hours the student bought = their bundle's hours
-                // (the enrolment may be detached from its instance after postpone,
-                // so we can't rely on courseInstance->total_hours). Fall back to
-                // the instance, then to remaining as a last resort so "used" can
-                // never go negative.
-                $hoursRemaining = (float) ($enrollment->hours_remaining ?? 0);
-                $totalHours     = (float) (
-                    $enrollment->privateBundle?->hours
-                    ?? $enrollment->courseInstance?->total_hours
-                    ?? $hoursRemaining
-                );
-                if ($totalHours < $hoursRemaining) $totalHours = $hoursRemaining;
-                $hoursUsed      = max(0, $totalHours - $hoursRemaining);
-                $hoursPct       = $totalHours > 0 ? round($hoursUsed / $totalHours * 100) : 0;
+                $courseName     = $enrollment?->courseTemplate?->name
+                                ?? $enrollment?->courseInstance?->courseTemplate?->name
+                                ?? 'Private Lessons';
+
+                // Private = free pool of hours. The instance is detached on
+                // postpone, so total hours comes from the bundle the student
+                // bought (fallback to the old instance total, then to remaining).
+                // hoursUsed is clamped so a missing total can never show negative.
+                $hoursRemaining = (float) ($enrollment?->hours_remaining ?? 0);
+                $totalHours     = (float) ($enrollment?->privateBundle?->hours
+                                    ?? $enrollment?->courseInstance?->total_hours
+                                    ?? $hoursRemaining);
+                $hoursUsed      = max(0, round($totalHours - $hoursRemaining, 2));
+                $hoursPct       = $totalHours > 0 ? min(100, round($hoursUsed / $totalHours * 100)) : 0;
             @endphp
             <div class="pp-card {{ $pp->status === 'Expired' ? 'status-expired' : ($isExpiringSoon ? 'status-active expiring-soon' : 'status-active') }}"
-                 data-name="{{ strtolower($enrollment->student?->full_name ?? '') }}"
-                 data-course="{{ strtolower($enrollment->courseInstance?->courseTemplate?->name ?? $enrollment->courseTemplate?->name ?? '') }}">
+                 data-name="{{ strtolower($enrollment?->student?->full_name ?? '') }}"
+                 data-course="{{ strtolower($courseName) }}">
 
                 <div class="pc-header">
                     <div>
-                        <div class="pc-student">{{ $enrollment->student?->full_name ?? '—' }}</div>
+                        <div class="pc-student">{{ $enrollment?->student?->full_name ?? '—' }}</div>
                         <div class="pc-course">
-                            {{ $enrollment->courseInstance?->courseTemplate?->name ?? $enrollment->courseTemplate?->name ?? '—' }}
+                            {{ $courseName }}
                             <span style="color:#1B4FA8;font-weight:500"> · Private</span>
                         </div>
                     </div>
@@ -382,6 +387,8 @@
                         @endif
                     @elseif($pp->status === 'Expired')
                         <span class="badge badge-expired">Expired</span>
+                    @else
+                        <span class="badge badge-returned">Returned</span>
                     @endif
                 </div>
 
@@ -391,11 +398,11 @@
                     <div class="pc-meta-grid" style="margin-bottom:10px">
                         <div>
                             <div class="pc-meta-label">Total Hours</div>
-                            <div class="pc-meta-val" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1B4FA8;letter-spacing:1px">{{ $totalHours }}h</div>
+                            <div class="pc-meta-val" style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1B4FA8;letter-spacing:1px">{{ rtrim(rtrim(number_format($totalHours, 2), '0'), '.') }}h</div>
                         </div>
                         <div>
                             <div class="pc-meta-label">Used / Remaining</div>
-                            <div class="pc-meta-val">{{ $hoursUsed }}h / <span class="orange">{{ $hoursRemaining }}h</span></div>
+                            <div class="pc-meta-val">{{ rtrim(rtrim(number_format($hoursUsed, 2), '0'), '.') }}h / <span class="orange">{{ rtrim(rtrim(number_format($hoursRemaining, 2), '0'), '.') }}h</span></div>
                         </div>
                     </div>
 
@@ -419,34 +426,39 @@
                         <div class="tl-dot tl-dot-start"></div>
                         <div class="tl-line">
                             <div class="tl-line-bg"></div>
-                            <div class="tl-line-inner" style="width:{{ $pct }}%;background:#C47010"></div>
+                            <div class="tl-line-inner" style="width:{{ $pct }}%;background:{{ $pp->status === 'Expired' ? '#DC2626' : '#C47010' }}"></div>
                         </div>
                         <div class="tl-dot {{ $pp->status === 'Expired' ? 'tl-dot-expired' : 'tl-dot-end' }}"></div>
                     </div>
 
                     @if($pp->reason)
-                    <div class="reason-box">{{ $pp->reason }}</div>
+                    <div class="reason-box"><strong>Reason:</strong> {{ $pp->reason }}</div>
                     @endif
 
                     <div style="font-size:10px;color:#AAB8C8">
-                        By {{ $pp->createdBy?->full_name ?? '—' }}
+                        Postponed by {{ $pp->createdBy?->full_name ?? '—' }}
                         · {{ \Carbon\Carbon::parse($pp->created_at)->format('d M Y') }}
                     </div>
                 </div>
 
                 @if($pp->status === 'Active')
                 <div class="pc-footer">
-                    @if(!empty($canRegister))
-                    <a class="btn-sm btn-resume" href="{{ route('cs.postponed.resume', $pp->postponement_id) }}"
-                        style="text-decoration:none;display:inline-flex;align-items:center;gap:5px;justify-content:center;">
+                    @if($canRegister)
+                    <a class="btn-sm btn-resume" href="{{ route('cs.postponed.resume', $pp->postponement_id) }}">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         Resume &amp; Register
                     </a>
                     @endif
                     <button class="btn-sm btn-expire"
-                        onclick="openConfirm({{ $pp->postponement_id }}, 'expire', '{{ addslashes($enrollment->student?->full_name) }}')">
+                        onclick="openExpire({{ $pp->postponement_id }}, '{{ addslashes($enrollment?->student?->full_name) }}')">
                         Mark Expired
                     </button>
+                </div>
+                @elseif($pp->status === 'Expired')
+                <div class="pc-footer">
+                    <span style="font-size:10px;color:#DC2626;letter-spacing:1px;text-transform:uppercase">
+                        ✕ Enrollment Expired — No Refund
+                    </span>
                 </div>
                 @endif
 
@@ -458,11 +470,11 @@
 
 </div>
 
-{{-- Confirm Modal --}}
+{{-- Confirm Modal (Expire only) --}}
 <div id="confirmModal">
     <div class="modal-box">
         <div class="modal-header">
-            <div class="modal-title" id="modalTitle">Confirm Action</div>
+            <div class="modal-title">Mark as Expired</div>
         </div>
         <div class="modal-body" id="modalBody">Are you sure?</div>
         <div class="modal-footer">
@@ -472,9 +484,9 @@
             </button>
             <form id="confirmForm" method="POST" style="display:inline">
                 @csrf @method('PATCH')
-                <button type="submit" id="confirmBtn"
-                    style="padding:10px 22px;background:#1B4FA8;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer">
-                    Confirm
+                <button type="submit"
+                    style="padding:10px 22px;background:#DC2626;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer">
+                    Expire
                 </button>
             </form>
         </div>
@@ -482,6 +494,8 @@
 </div>
 
 <script>
+const ppExpireBase = @json($expireBase);
+
 function showTab(tabId, btn) {
     document.getElementById('groupTab').style.display   = 'none';
     document.getElementById('privateTab').style.display = 'none';
@@ -490,22 +504,10 @@ function showTab(tabId, btn) {
     btn.classList.add('active');
 }
 
-function openConfirm(id, action, studentName) {
-    const isResume = action === 'resume';
-    document.getElementById('modalTitle').textContent = isResume ? 'Resume Student' : 'Mark as Expired';
-    document.getElementById('modalBody').textContent  = isResume
-        ? `Resume ${studentName}? Their enrollment will be set back to Active.`
-        : `Mark ${studentName}'s postponement as Expired? Their enrollment will be cancelled with no refund.`;
-    document.getElementById('confirmBtn').textContent = isResume ? 'Resume' : 'Expire';
-    document.getElementById('confirmBtn').style.background = isResume ? '#059669' : '#DC2626';
-    // Expire uses the route for the current panel (CS vs SC) so the permission
-    // matches — otherwise the CS hit the SC's expire route and got a 403.
-    // Base path for the expire/resume actions, provided by the controller so
-    // the same view works for SC, CS and Admin panels with the right routes.
-    const ppBase = @json($expireBase ?? url('student-care/postponed'));
-    document.getElementById('confirmForm').action = isResume
-        ? `${ppBase}/${id}/resume`
-        : `${ppBase}/${id}/expire`;
+function openExpire(id, studentName) {
+    document.getElementById('modalBody').textContent =
+        `Mark ${studentName || 'this student'}'s postponement as Expired? Their enrollment will be forfeited with no refund.`;
+    document.getElementById('confirmForm').action = `${ppExpireBase}/${id}/expire`;
     document.getElementById('confirmModal').classList.add('show');
 }
 
@@ -513,12 +515,12 @@ function closeConfirm() {
     document.getElementById('confirmModal').classList.remove('show');
 }
 
-document.getElementById('confirmModal').addEventListener('click', function(e) {
+document.getElementById('confirmModal').addEventListener('click', function (e) {
     if (e.target === this) closeConfirm();
 });
 
 // Search
-document.getElementById('ppSearch').addEventListener('input', function() {
+document.getElementById('ppSearch').addEventListener('input', function () {
     const q = this.value.toLowerCase();
     document.querySelectorAll('.pp-card[data-name]').forEach(card => {
         const match = card.dataset.name.includes(q) || card.dataset.course.includes(q);

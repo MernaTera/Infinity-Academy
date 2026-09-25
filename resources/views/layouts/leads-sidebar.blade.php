@@ -273,10 +273,6 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
                     <span class="sl-link-text">Level Packages</span>
                 </a>
-                <a href="{{ route('cs.postponed') }}" class="sl-link {{ request()->routeIs('cs.postponed') ? 'active' : '' }}" data-label="Postponed">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    <span class="sl-link-text">Postponed</span>
-                </a>
                 <a href="{{ route('near-completion') }}"
                 class="sl-link {{ request()->routeIs('near-completion') ? 'active' : '' }}"
                 data-label="Near Completion">
@@ -285,6 +281,14 @@
                         <polyline points="22 4 12 14.01 9 11.01"/>
                     </svg>
                     <span class="sl-link-text">Near Completion</span>
+                </a>
+                <a href="{{ route('cs.postponed') }}"
+                class="sl-link {{ request()->routeIs('cs.postponed') ? 'active' : '' }}"
+                data-label="Postponed">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><line x1="10" y1="15" x2="10" y2="9"/><line x1="14" y1="15" x2="14" y2="9"/>
+                    </svg>
+                    <span class="sl-link-text">Postponed</span>
                 </a>
             </div>
         </div>

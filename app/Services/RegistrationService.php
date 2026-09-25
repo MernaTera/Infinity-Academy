@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Leads\Lead;
 use App\Models\Student\Student;
 use App\Models\Enrollment\Enrollment;
+use App\Models\Enrollment\EnrollmentNote;
+use App\Models\Enrollment\Postponement;
 use App\Models\Enrollment\WaitingList;
 use Illuminate\Support\Facades\DB;
 use App\Models\Finance\PaymentPlan;
@@ -98,8 +100,14 @@ class RegistrationService
             // the source enrolment so createEnrollment can carry the package
             // over and decrement the units. (A brand-new package purchase comes
             // through data['package_id'] instead and is handled separately.)
+            // A resume (below) manages the package itself, so the automatic
+            // "continue an existing package" detection must NOT fire here —
+            // otherwise it would consume a prepaid unit off the postponed
+            // enrollment we are about to carry over intact.
             $data['_pkg_continue_from'] = null;
-            if (empty($data['package_id']) && strtolower($data['type'] ?? '') === 'group') {
+            if (empty($data['resume_postponement_id'])
+                && empty($data['package_id'])
+                && strtolower($data['type'] ?? '') === 'group') {
                 $priorPkg = Enrollment::with('levelPackage')
                     ->where('student_id', $student->student_id)
                     ->whereNotNull('package_id')
@@ -113,6 +121,35 @@ class RegistrationService
                 }
             }
 
+            // ── Resume of a postponed enrollment ───────────────────────
+            // Resuming re-registers the student for FREE — they already paid
+            // before postponing. We carry the exact assets (private hours, or a
+            // level package with its remaining units) onto the new enrollment,
+            // then (after it is created) mark the old one Completed, copy its
+            // notes over, and close the postponement as Returned.
+            $data['_resume_from']          = null;
+            $data['_resume_hours']         = null;
+            $data['_resume_package_id']    = null;
+            $data['_resume_package_units'] = null;
+            if (!empty($data['resume_postponement_id'])) {
+                $resumePostponement = Postponement::with('enrollment')
+                    ->where('status', 'Active')
+                    ->find($data['resume_postponement_id']);
+                $oldEnr = $resumePostponement?->enrollment;
+
+                // Defence in depth: the postponement must belong to this lead's
+                // student and still be active.
+                if (!$oldEnr || (int) $oldEnr->student_id !== (int) $student->student_id) {
+                    throw new BusinessValidationException('This postponement can no longer be resumed for this student.');
+                }
+
+                $data['final_price']           = 0;
+                $data['_resume_from']          = $oldEnr->enrollment_id;
+                $data['_resume_hours']         = $oldEnr->hours_remaining;
+                $data['_resume_package_id']    = $oldEnr->package_id;
+                $data['_resume_package_units'] = $oldEnr->package_units_remaining;
+            }
+
             $pricing        = app(\App\Services\PricingService::class)->calculate($data);
             $formFinalPrice = (float) ($data['final_price'] ?? 0);
             if ($formFinalPrice > 0) {
@@ -123,24 +160,9 @@ class RegistrationService
             if (!empty($data['_pkg_continue_from'])) {
                 $pricing['final_price'] = 0;
             }
-            // A GROUP resume from a postponement is already paid → free. (Private
-            // resumes are billed 0 too but carry their remaining hours instead;
-            // the hours are set from the postponed enrolment below.)
-            if (!empty($data['resume_postponement_id'])) {
-                $rpForPrice = \App\Models\Enrollment\Postponement::with('enrollment')->find($data['resume_postponement_id']);
-                if ($rpForPrice?->enrollment) {
-                    $pricing['final_price'] = 0;
-                    $data['final_price']    = 0;
-                    // Carry remaining private hours onto the new enrolment.
-                    if ($rpForPrice->enrollment->enrollment_type === 'Private') {
-                        $data['hours_remaining'] = (float) ($rpForPrice->enrollment->hours_remaining ?? 0);
-                    }
-                    // Carry package units if the postponed enrolment was a package.
-                    if (!is_null($rpForPrice->enrollment->package_id)) {
-                        $data['package_id']              = $rpForPrice->enrollment->package_id;
-                        $data['package_units_remaining'] = $rpForPrice->enrollment->package_units_remaining;
-                    }
-                }
+            // A resume is explicitly free too.
+            if (!empty($data['_resume_from'])) {
+                $pricing['final_price'] = 0;
             }
             $data['final_price'] = $pricing['final_price'];
 
@@ -295,35 +317,35 @@ class RegistrationService
                     ->update(['waiting_list_meta' => $waitingMeta]);
             }
 
-            // If this registration is a resume from a postponement, close that
-            // postponement (Returned) now that the new enrolment exists (flow X:
-            // the old postponed enrolment stays as history, the new one is Active).
-            if (!empty($data['resume_postponement_id'])) {
-                $rpDone = \App\Models\Enrollment\Postponement::with('enrollment')->find($data['resume_postponement_id']);
-                if ($rpDone && $rpDone->status === 'Active') {
-                    $rpDone->update([
+            // ── Close out the resume ───────────────────────────────────
+            // The new enrollment is live; finish superseding the old one:
+            //  • copy its notes across so nothing the team wrote is lost,
+            //  • mark it Completed and drain its carried assets so they can't
+            //    be double-spent, and
+            //  • mark the postponement Returned (with today's return date).
+            if (!empty($data['_resume_from'])) {
+                $old = Enrollment::find($data['_resume_from']);
+                if ($old) {
+                    foreach (EnrollmentNote::where('enrollment_id', $old->enrollment_id)->get() as $note) {
+                        EnrollmentNote::create([
+                            'enrollment_id'    => $enrollment->enrollment_id,
+                            'body'             => $note->body,
+                            'created_by_cs_id' => $note->created_by_cs_id,
+                        ]);
+                    }
+
+                    $old->update([
+                        'status'                  => 'Completed',
+                        'hours_remaining'         => 0,
+                        'package_units_remaining' => $old->package_id ? 0 : $old->package_units_remaining,
+                    ]);
+                }
+
+                Postponement::where('postponement_id', $data['resume_postponement_id'])
+                    ->update([
                         'status'             => 'Returned',
                         'actual_return_date' => now()->toDateString(),
                     ]);
-
-                    // Carry the student's notes from the postponed enrolment onto
-                    // the new one, so their history/context follows them.
-                    if ($rpDone->enrollment) {
-                        \App\Models\Enrollment\EnrollmentNote::where('enrollment_id', $rpDone->enrollment->enrollment_id)
-                            ->get()
-                            ->each(function ($n) use ($enrollment) {
-                                \App\Models\Enrollment\EnrollmentNote::create([
-                                    'enrollment_id'          => $enrollment->enrollment_id,
-                                    'created_by_employee_id' => $n->created_by_employee_id,
-                                    'note'                   => $n->note,
-                                ]);
-                            });
-
-                        // The old postponed enrolment is superseded — mark it
-                        // Completed so it drops off active lists.
-                        $rpDone->enrollment->update(['status' => 'Completed']);
-                    }
-                }
             }
 
             return $enrollment;
@@ -420,42 +442,39 @@ class RegistrationService
         $hoursRemaining = null;
         if (strtolower($data['type']) === 'private') {
 
-            // Resume-from-postponement: the remaining hours are passed in
-            // explicitly (from the postponed enrolment) — use them as-is and
-            // skip the Completed-courses carry-over, so nothing is double-added.
-            if (array_key_exists('hours_remaining', $data) && $data['hours_remaining'] !== null && !empty($data['resume_postponement_id'])) {
-                $hoursRemaining = (float) $data['hours_remaining'];
-                // Add a new bundle's hours if one was also chosen on resume.
-                if (!empty($data['bundle_id'])) {
-                    $b = PrivateBundle::find($data['bundle_id']);
-                    $hoursRemaining += $b ? (float) $b->hours : 0;
-                }
+            if (array_key_exists('_resume_hours', $data) && $data['_resume_hours'] !== null) {
+                // Resume: use exactly the hours carried from the postponed
+                // enrollment. Skip the leftover-carry-over below — the old
+                // enrollment is drained explicitly after the new one is created,
+                // so summing "Completed" private enrollments here would either
+                // miss it (it's still Postponed now) or, worse, double-count
+                // other leftovers the student already spent.
+                $hoursRemaining = (float) $data['_resume_hours'];
             } else {
-
-            // Carry over any leftover hours from this student's completed
-            // private courses, then zero those out so they aren't double-counted.
-            $carried = (float) Enrollment::where('student_id', $student->student_id)
-                ->where('enrollment_type', 'Private')
-                ->where('status', 'Completed')
-                ->where('hours_remaining', '>', 0)
-                ->sum('hours_remaining');
-
-            if ($carried > 0) {
-                Enrollment::where('student_id', $student->student_id)
+                // Carry over any leftover hours from this student's completed
+                // private courses, then zero those out so they aren't double-counted.
+                $carried = (float) Enrollment::where('student_id', $student->student_id)
                     ->where('enrollment_type', 'Private')
                     ->where('status', 'Completed')
                     ->where('hours_remaining', '>', 0)
-                    ->update(['hours_remaining' => 0]);
-            }
+                    ->sum('hours_remaining');
 
-            // Add the new bundle's hours if one was selected (optional).
-            $bundleHours = 0;
-            if (!empty($data['bundle_id'])) {
-                $bundle = PrivateBundle::find($data['bundle_id']);
-                $bundleHours = $bundle ? (float) $bundle->hours : 0;
-            }
+                if ($carried > 0) {
+                    Enrollment::where('student_id', $student->student_id)
+                        ->where('enrollment_type', 'Private')
+                        ->where('status', 'Completed')
+                        ->where('hours_remaining', '>', 0)
+                        ->update(['hours_remaining' => 0]);
+                }
 
-            $hoursRemaining = $carried + $bundleHours;
+                // Add the new bundle's hours if one was selected (optional).
+                $bundleHours = 0;
+                if (!empty($data['bundle_id'])) {
+                    $bundle = PrivateBundle::find($data['bundle_id']);
+                    $bundleHours = $bundle ? (float) $bundle->hours : 0;
+                }
+
+                $hoursRemaining = $carried + $bundleHours;
             }
         }
 
@@ -465,12 +484,13 @@ class RegistrationService
         // so the rest are prepaid and become free in later enrolments.
         $packageId    = null;
         $packageUnits = null;
-        if (!empty($data['resume_postponement_id']) && !empty($data['package_id'])) {
-            // Resume of a postponed PACKAGE enrolment: keep the exact package and
-            // remaining units the student had when postponed (they're re-entering
-            // the same unit they stopped at — no extra unit consumed here).
-            $packageId    = $data['package_id'];
-            $packageUnits = $data['package_units_remaining'] ?? null;
+        if (!empty($data['_resume_from']) && !empty($data['_resume_package_id'])) {
+            // Resume of a level-package enrollment: carry the SAME package with
+            // the EXACT units remaining. The student is redoing a level they
+            // already paid for, so nothing is decremented here (the old
+            // enrollment's units are drained separately after creation).
+            $packageId    = $data['_resume_package_id'];
+            $packageUnits = $data['_resume_package_units'];
         } elseif (!empty($data['package_id'])) {
             // Brand-new package purchase — first level of the package.
             $package = \App\Models\Finance\LevelPackage::find($data['package_id']);
