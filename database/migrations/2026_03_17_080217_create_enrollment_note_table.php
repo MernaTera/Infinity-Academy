@@ -11,8 +11,8 @@ return new class extends Migration {
             $table->bigIncrements('note_id');
 
             $table->unsignedBigInteger('enrollment_id');
-            $table->text('body');
-            $table->unsignedBigInteger('created_by_cs_id')->nullable();
+            $table->text('note');
+            $table->unsignedBigInteger('created_by_employee_id')->nullable();
 
             $table->timestamps();
 
@@ -21,7 +21,7 @@ return new class extends Migration {
                   ->on('enrollment')
                   ->cascadeOnDelete();
 
-            $table->foreign('created_by_cs_id')
+            $table->foreign('created_by_employee_id')
                   ->references('employee_id')
                   ->on('employee')
                   ->nullOnDelete();

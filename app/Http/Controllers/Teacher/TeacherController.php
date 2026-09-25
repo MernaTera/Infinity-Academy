@@ -42,7 +42,6 @@ class TeacherController extends Controller
             'courseTemplate',
             'level',
             'sessions',
-            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.report',
         ])
         ->where('teacher_id', $teacher->teacher_id)
@@ -171,9 +170,7 @@ class TeacherController extends Controller
 
         $instances = \App\Models\Academic\CourseInstance::with([
             'courseTemplate', 'level', 'sublevel', 'branch', 'room',
-            'instanceSchedules.timeSlot', 'sessions',
-            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
-            'enrollments.student',
+            'instanceSchedules.timeSlot', 'sessions', 'enrollments.student',
         ])
         ->where('teacher_id', $teacher->teacher_id)
         ->where('patch_id', $currentPatch?->patch_id)
@@ -205,8 +202,7 @@ class TeacherController extends Controller
 
         $activeCourses = \App\Models\Academic\CourseInstance::with([
             'courseTemplate', 'level', 'sublevel', 'patch',
-            'instanceSchedules.timeSlot', 'sessions',
-            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
+            'instanceSchedules.timeSlot', 'sessions', 'enrollments',
         ])
         ->where('teacher_id', $teacher->teacher_id)
         ->whereIn('status', ['Active', 'Upcoming'])
@@ -303,6 +299,11 @@ class TeacherController extends Controller
         return back()->with('success', 'Course approved — sessions generated successfully.');
     }
 
+    /**
+     * Generate the remaining (non-completed) sessions for an approved instance.
+     * Numbers them after the completed sessions and starts after the last
+     * completed date, so it never duplicates an existing (room, date, time) row.
+     */
     private function generateApprovedSessions(CourseInstance $instance, array $schedules, int $completedCount, int $remainingToMake, ?string $lastCompletedDate): void
     {
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
@@ -313,15 +314,20 @@ class TeacherController extends Controller
         $perPair   = (int) floor($remainingToMake / $pairCount);
         $remainder = $remainingToMake % $pairCount;
 
+        // Start numbering after the HIGHEST existing number (safety against a
+        // non-contiguous completed sequence colliding with unique(instance,number)).
         $maxExisting = (int) \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
             ->max('session_number');
         $startNum = max($completedCount, $maxExisting);
 
+        // Start no earlier than the day after the last completed session.
         $floorDate = \Carbon\Carbon::parse($instance->start_date);
         if ($lastCompletedDate) {
             $afterCompleted = \Carbon\Carbon::parse($lastCompletedDate)->addDay();
             if ($afterCompleted->gt($floorDate)) $floorDate = $afterCompleted;
         }
+
+        // Collect dates already used by completed sessions (extra safety).
         $usedDates = $instance->sessions->where('status', 'Completed')
             ->map(fn($s) => \Carbon\Carbon::parse($s->session_date)->toDateString())
             ->flip();
@@ -389,6 +395,11 @@ class TeacherController extends Controller
             ->where('status', 'Pending_Approval')
             ->findOrFail($id);
 
+        // If this instance already has enrollments or completed sessions, it is
+        // an EXISTING course that was edited — it must NOT be deleted. We only
+        // reject the pending change and put it back to Upcoming (its completed
+        // sessions and students stay intact). A brand-new instance with neither
+        // is safe to remove entirely.
         $hasHistory = $instance->enrollments->isNotEmpty()
             || $instance->sessions->where('status', 'Completed')->isNotEmpty();
 
@@ -413,8 +424,12 @@ class TeacherController extends Controller
             }
 
             if ($hasHistory) {
+                // Existing course — keep it. Just clear the pending flag.
+                // (Sessions were rebuilt at edit time; leaving status Upcoming
+                //  keeps the course usable. SC can edit again if needed.)
                 $instance->update(['status' => 'Upcoming']);
             } else {
+                // Brand-new instance with no students/history — safe to remove.
                 $instance->instanceSchedules()->delete();
                 \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();
                 $instance->delete();
@@ -423,6 +438,7 @@ class TeacherController extends Controller
 
         return back()->with('success', 'Course instance rejected.');
     }
+    // ─── course show ────────────────────────────────────────────────────────
     public function courseShow($id)
     {
         [, $teacher] = $this->resolveTeacher();
@@ -431,18 +447,22 @@ class TeacherController extends Controller
             'courseTemplate', 'level', 'sublevel', 'patch',
             'instanceSchedules.timeSlot', 'branch', 'room',
             'sessions' => fn($q) => $q->orderBy('session_number'),
+            // A cancelled student has left the course — keep them out of the
+            // teacher's roster, attendance and everywhere else this list feeds.
             'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.student.phones',
             'enrollments.attendances',
             'enrollments.placementTest',
-            'enrollments.notes',
+            'enrollments.notes.createdBy',
         ])
         ->where('teacher_id', $teacher->teacher_id)
         ->find($id);
 
+        // The instance may have been closed/removed (e.g. its last active
+        // student postponed). Fail gracefully instead of a hard 404.
         if (!$instance) {
             return redirect()->route('teacher.courses')
-                ->with('error', 'That course is no longer available (it may have been removed).');
+                ->with('error', 'That course is no longer available.');
         }
 
         $todaySession = $instance->sessions->first(function ($s) {

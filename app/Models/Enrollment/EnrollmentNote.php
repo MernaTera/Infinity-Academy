@@ -16,8 +16,8 @@ use App\Models\Enrollment\Enrollment;
  *
  * @property int         $note_id
  * @property int         $enrollment_id
- * @property string      $body
- * @property int|null    $created_by_cs_id
+ * @property string      $note
+ * @property int|null    $created_by_employee_id
  * @property \Carbon\Carbon|null $created_at
  * @property \Carbon\Carbon|null $updated_at
  *
@@ -30,16 +30,16 @@ class EnrollmentNote extends Model
     public $timestamps = true;
 
     protected $casts = [
-        'enrollment_id'    => 'integer',
-        'created_by_cs_id' => 'integer',
-        'created_at'       => 'datetime',
-        'updated_at'       => 'datetime',
+        'enrollment_id'          => 'integer',
+        'created_by_employee_id' => 'integer',
+        'created_at'             => 'datetime',
+        'updated_at'             => 'datetime',
     ];
 
     protected $fillable = [
         'enrollment_id',
-        'body',
-        'created_by_cs_id',
+        'note',
+        'created_by_employee_id',
     ];
 
     public function enrollment()
@@ -49,6 +49,6 @@ class EnrollmentNote extends Model
 
     public function createdBy()
     {
-        return $this->belongsTo(Employee::class, 'created_by_cs_id');
+        return $this->belongsTo(Employee::class, 'created_by_employee_id');
     }
 }

@@ -225,6 +225,11 @@ Route::middleware(['auth', 'permission:enrollment.edit'])
         // Student Care monitors + can expire. Resume (re-registration) is a
         // Customer Service action, so there is no SC resume route.
         Route::patch('/postponed/{id}/expire', [StudentCareController::class, 'expirePostponement'])->name('postponed.expire');
+
+        // Enrollment notes (per student, written by Student Care).
+        Route::post('/enrollments/{id}/notes',   [StudentCareController::class, 'addEnrollmentNote'])->name('enrollment.notes.store');
+        Route::patch('/enrollment-notes/{id}',   [StudentCareController::class, 'updateEnrollmentNote'])->name('enrollment.notes.update');
+        Route::delete('/enrollment-notes/{id}',  [StudentCareController::class, 'deleteEnrollmentNote'])->name('enrollment.notes.destroy');
     });
 
 // ─────────────────────────────────────────────────────────────────

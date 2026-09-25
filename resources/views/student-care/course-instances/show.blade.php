@@ -393,6 +393,20 @@
                                 </button>
                                 @endif
 
+                                {{-- Notes: SC writes a note per student; it also shows on the
+                                     teacher's course page and follows the student on resume. --}}
+                                <button type="button"
+                                    onclick="openNotes({{ $enrollment->enrollment_id }})"
+                                    style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(27,79,168,0.25);background:transparent;color:#1B4FA8;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
+                                    onmouseover="this.style.background='rgba(27,79,168,0.07)'"
+                                    onmouseout="this.style.background='transparent'">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/></svg>
+                                    Notes
+                                    @if(($enrollment->notes?->count() ?? 0) > 0)
+                                        <span style="background:#1B4FA8;color:#fff;border-radius:9px;padding:0 5px;font-size:8px;line-height:14px;min-width:14px;text-align:center;">{{ $enrollment->notes->count() }}</span>
+                                    @endif
+                                </button>
+
                                 {{-- A postponed student is detached from this instance (their seat is
                                      freed), so they no longer appear in this list. Resuming a student is
                                      a re-registration handled by Customer Service from the Postponed page,
@@ -846,6 +860,79 @@ function checkDuration() {
 
 document.getElementById('postponeModal').addEventListener('click', function(e) {
     if (e.target === this) closePostponeModal();
+});
+</script>
+
+{{-- ══════════════════ ENROLLMENT NOTES ══════════════════ --}}
+<style>
+    .notes-overlay{display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:1000;padding:20px;font-family:'DM Sans',sans-serif}
+    .notes-overlay.show{display:flex}
+    .notes-box{width:100%;max-width:460px;max-height:88vh;display:flex;flex-direction:column;background:#F8F6F2;border:1px solid rgba(27,79,168,0.15);border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(27,79,168,0.18)}
+    .notes-head{padding:16px 20px 13px;border-bottom:1px solid rgba(27,79,168,0.08);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .notes-head-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#1B4FA8;line-height:1}
+    .notes-head-sub{font-size:11px;color:#7A8A9A;margin-top:2px}
+    .notes-list{flex:1;overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:10px}
+    .note-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:6px;padding:10px 12px}
+    .note-body{font-size:13px;color:#1A2A4A;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+    .note-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px}
+    .note-by{font-size:10px;color:#AAB8C8}
+    .note-del{background:none;border:none;color:#DC2626;cursor:pointer;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 4px}
+    .note-del:hover{text-decoration:underline}
+    .notes-empty{text-align:center;color:#AAB8C8;font-size:12px;padding:22px 0}
+    .notes-foot{padding:12px 20px 16px;border-top:1px solid rgba(27,79,168,0.08)}
+    .notes-foot textarea{width:100%;box-sizing:border-box;border:1px solid rgba(27,79,168,0.15);border-radius:5px;padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;resize:vertical;min-height:64px;outline:none}
+    .notes-foot textarea:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
+    .notes-add-btn{margin-top:9px;width:100%;padding:9px;background:#1B4FA8;border:none;border-radius:5px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer}
+    .notes-close{background:none;border:none;color:#AAB8C8;cursor:pointer;padding:4px}
+    .notes-close:hover{color:#DC2626}
+</style>
+
+@foreach($instance->enrollments as $enrollment)
+<div class="notes-overlay" id="notesModal-{{ $enrollment->enrollment_id }}">
+    <div class="notes-box">
+        <div class="notes-head">
+            <div>
+                <div class="notes-head-title">Notes</div>
+                <div class="notes-head-sub">{{ $enrollment->student?->full_name ?? '—' }}</div>
+            </div>
+            <button type="button" class="notes-close" onclick="closeNotes({{ $enrollment->enrollment_id }})">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+        </div>
+
+        <div class="notes-list">
+            @forelse($enrollment->notes as $note)
+            <div class="note-card">
+                <div class="note-body">{{ $note->note }}</div>
+                <div class="note-meta">
+                    <span class="note-by">{{ $note->createdBy?->full_name ?? 'Staff' }} · {{ \Carbon\Carbon::parse($note->created_at)->format('d M Y · H:i') }}</span>
+                    <form method="POST" action="{{ route('student-care.enrollment.notes.destroy', $note->note_id) }}" onsubmit="return confirm('Delete this note?')" style="margin:0">
+                        @csrf @method('DELETE')
+                        <button type="submit" class="note-del">Delete</button>
+                    </form>
+                </div>
+            </div>
+            @empty
+            <div class="notes-empty">No notes yet for this student.</div>
+            @endforelse
+        </div>
+
+        <div class="notes-foot">
+            <form method="POST" action="{{ route('student-care.enrollment.notes.store', $enrollment->enrollment_id) }}">
+                @csrf
+                <textarea name="note" required maxlength="2000" placeholder="Write a note about this student…"></textarea>
+                <button type="submit" class="notes-add-btn">Add Note</button>
+            </form>
+        </div>
+    </div>
+</div>
+@endforeach
+
+<script>
+function openNotes(id){ const m=document.getElementById('notesModal-'+id); if(m) m.classList.add('show'); }
+function closeNotes(id){ const m=document.getElementById('notesModal-'+id); if(m) m.classList.remove('show'); }
+document.querySelectorAll('.notes-overlay').forEach(function(o){
+    o.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); });
 });
 </script>
 @endsection

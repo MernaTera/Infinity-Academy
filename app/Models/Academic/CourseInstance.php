@@ -145,6 +145,18 @@ class CourseInstance extends Model
 		return $this->hasMany(Enrollment::class, 'course_instance_id');
 	}
 
+	/**
+	 * Enrollments that still occupy a seat — i.e. students who have NOT left.
+	 * A student who cancelled, completed, postponed or expired no longer counts
+	 * toward the instance's headcount / capacity, so the number drops as soon as
+	 * they leave.
+	 */
+	public function activeEnrollments()
+	{
+		return $this->hasMany(Enrollment::class, 'course_instance_id')
+			->whereNotIn('status', ['Cancelled', 'Completed', 'Postponed', 'Expired']);
+	}
+
 	public function instanceSchedules()
 	{
 		return $this->hasMany(InstanceSchedule::class, 'course_instance_id');
@@ -187,7 +199,7 @@ class CourseInstance extends Model
 
 	public function isFull()
 	{
-		return $this->enrollments()->where('status', '!=', 'Cancelled')->count() >= $this->capacity;
+		return $this->activeEnrollments()->count() >= $this->capacity;
 	}
 
 	public function hasScheduleConflict($dayOfWeek, $timeSlotId)

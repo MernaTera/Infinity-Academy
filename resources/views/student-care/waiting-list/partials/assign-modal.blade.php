@@ -229,7 +229,9 @@
                 <div class="assign-instance-list">
                     @forelse($instances as $instance)
                     @php
-                        $count           = $instance->enrollments->count();
+                        // Active seats only — a student who cancelled/completed/
+                        // postponed/expired has left, so the count drops.
+                        $count           = $instance->activeEnrollments->count();
                         $capacity        = $instance->capacity;
                         $pct             = $capacity > 0 ? round(($count / $capacity) * 100) : 0;
                         $isFull          = $count >= $capacity;
@@ -285,6 +287,16 @@
                                 @endif
                             </div>
 
+                            {{-- Course dates --}}
+                            @if($instance->start_date || $instance->end_date)
+                            <div style="margin-top:6px;display:inline-flex;align-items:center;gap:5px;font-size:10px;color:#7A8A9A;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                                {{ $instance->start_date ? \Carbon\Carbon::parse($instance->start_date)->format('d M Y') : '—' }}
+                                &rarr;
+                                {{ $instance->end_date ? \Carbon\Carbon::parse($instance->end_date)->format('d M Y') : '—' }}
+                            </div>
+                            @endif
+
                             {{-- ══ SESSION PROGRESS INDICATOR ══ --}}
                             <div style="margin-top:8px;display:flex;align-items:center;gap:8px;">
                                 <span style="font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7A8A9A;">
@@ -332,6 +344,14 @@
                         No matching course instances available.
                     </div>
                     @endforelse
+                </div>
+
+                {{-- Optional note SC writes while assigning the student --}}
+                <div style="margin-top:16px;">
+                    <span class="assign-label">Note <span style="text-transform:none;letter-spacing:0;color:#AAB8C8;">(optional)</span></span>
+                    <textarea name="note" maxlength="2000" rows="2"
+                        placeholder="Add a note for this student (visible in the course and to the teacher)…"
+                        style="width:100%;box-sizing:border-box;border:1px solid rgba(27,79,168,0.15);border-radius:5px;padding:9px 11px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;resize:vertical;outline:none;margin-top:4px;"></textarea>
                 </div>
 
             </form>

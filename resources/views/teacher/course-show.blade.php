@@ -7,36 +7,6 @@
 @endonce
 
 <style>
-    .tnotes-pill{display:inline-flex;align-items:center;gap:6px;max-width:170px;padding:5px 11px;border-radius:16px;cursor:pointer;
-        background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.15);color:#1B4FA8;font-size:11px;font-family:'DM Sans',sans-serif;transition:all 0.18s;text-align:left;}
-    .tnotes-pill:hover{background:rgba(27,79,168,0.1);border-color:rgba(27,79,168,0.3);}
-    .tnotes-pill-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .tn-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(10,20,40,0.5);backdrop-filter:blur(3px);align-items:center;justify-content:center;padding:20px;}
-    .tn-overlay.open{display:flex;animation:tnFade 0.2s ease both;}
-    @keyframes tnFade{from{opacity:0}to{opacity:1}}
-    .tn-modal{background:#fff;border-radius:14px;max-width:520px;width:100%;max-height:82vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(15,31,61,0.3);animation:tnPop 0.25s cubic-bezier(0.16,1,0.3,1) both;}
-    @keyframes tnPop{from{opacity:0;transform:scale(0.96) translateY(10px)}to{opacity:1;transform:none}}
-    .tn-head{background:linear-gradient(135deg,#0F1F3D,#243B69);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;}
-    .tn-head-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#fff;}
-    .tn-head-sub{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#F5911E;margin-top:2px;}
-    .tn-close{background:rgba(255,255,255,0.1);border:none;width:30px;height:30px;border-radius:8px;color:#fff;cursor:pointer;font-size:18px;line-height:1;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background 0.2s;}
-    .tn-close:hover{background:rgba(255,255,255,0.2);}
-    .tn-body{padding:20px 22px;overflow-y:auto;}
-</style>
-<div class="tn-overlay" id="tnOverlay" onclick="if(event.target===this)closeTeacherNotes()">
-    <div class="tn-modal">
-        <div class="tn-head">
-            <div>
-                <div class="tn-head-sub">Student Notes · From Student Care</div>
-                <div class="tn-head-title" id="tnStudent">Notes</div>
-            </div>
-            <button type="button" class="tn-close" onclick="closeTeacherNotes()">&times;</button>
-        </div>
-        <div class="tn-body" id="tnBody"></div>
-    </div>
-</div>
-
-<style>
 .cs-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
 .page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:4px}
 .page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#059669;margin:0;line-height:1}
@@ -235,7 +205,7 @@
                         <tr>
                             <th>#</th>
                             <th>Student</th>
-                            <th>Phone</th>
+                            <!-- <th>Phone</th> -->
                             <th>Test Score</th>
                             <th>Attended</th>
                             <th>Absent</th>
@@ -262,7 +232,7 @@
                         <tr>
                             <td style="color:#AAB8C8;font-size:11px">{{ $i + 1 }}</td>
                             <td><div style="font-weight:500;color:#1A2A4A">{{ $enrollment->student?->full_name ?? '—' }}</div></td>
-                            <td style="font-size:11px;color:#7A8A9A;font-family:monospace">{{ $enrollment->student?->phones?->first()?->phone_number ?? '—' }}</td>
+                            <!-- <td style="font-size:11px;color:#7A8A9A;font-family:monospace">{{ $enrollment->student?->phones?->first()?->phone_number ?? '—' }}</td> -->
                             <td>
                                 @if($enrollment->placementTest)
                                 <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#1B4FA8;letter-spacing:1px;line-height:1">{{ $enrollment->placementTest->score }}</div>
@@ -278,25 +248,16 @@
                                 @endif
                             </td>
                             <td><span class="badge {{ $statusBadge }}">{{ $statusLabel }}</span></td>
-                            <td style="max-width:170px;">
-                                @php
-                                    $eNotes = $enrollment->notes ?? collect();
-                                    $latest = $eNotes->first();
-                                    $notesPayload = $eNotes->map(fn($n) => [
-                                        'text'   => $n->note,
-                                        'author' => $n->createdBy?->full_name ?? 'SC',
-                                        'date'   => \Carbon\Carbon::parse($n->created_at)->format('d M Y, h:i A'),
-                                    ])->values();
-                                @endphp
-                                @if($latest)
-                                    <button type="button" class="tnotes-pill"
-                                        onclick='openTeacherNotes(@json($enrollment->student?->full_name ?? "Student"), @json($notesPayload))'>
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                                        <span class="tnotes-pill-text">{{ \Illuminate\Support\Str::limit($latest->note, 22) }}</span>
-                                        @if($eNotes->count() > 1)<span style="font-size:9px;background:#1B4FA8;color:#fff;border-radius:10px;padding:1px 6px;">{{ $eNotes->count() }}</span>@endif
-                                    </button>
+                            <td>
+                                @php $noteCount = $enrollment->notes?->count() ?? 0; @endphp
+                                @if($noteCount > 0)
+                                <button type="button" onclick="openTNotes({{ $enrollment->enrollment_id }})"
+                                    style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:9px;letter-spacing:1px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(27,79,168,0.25);background:transparent;color:#1B4FA8;cursor:pointer;font-family:'DM Sans',sans-serif">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/></svg>
+                                    {{ $noteCount }}
+                                </button>
                                 @else
-                                    <span style="color:#AAB8C8;font-size:11px;">—</span>
+                                <span style="color:#AAB8C8;font-size:11px">—</span>
                                 @endif
                             </td>
                         </tr>
@@ -553,26 +514,55 @@ function toggleSession(id) {
     body.classList.toggle('open', !isOpen);
     chevron.style.transform = isOpen ? '' : 'rotate(180deg)';
 }
+</script>
 
-function tnEsc(s){ var d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML; }
-function openTeacherNotes(student, notes){
-    document.getElementById('tnStudent').textContent = student || 'Student';
-    var body = document.getElementById('tnBody');
-    if(!notes || !notes.length){
-        body.innerHTML = '<div style="text-align:center;color:#AAB8C8;font-size:12px;padding:14px;">No notes.</div>';
-    } else {
-        var html = '<div style="display:flex;flex-direction:column;gap:10px;">';
-        notes.forEach(function(n){
-            html += '<div style="background:rgba(27,79,168,0.04);border:1px solid rgba(27,79,168,0.1);border-radius:9px;padding:12px 13px;">'
-                  + '<div style="font-size:13px;color:#1A2A4A;line-height:1.55;white-space:pre-wrap;">'+tnEsc(n.text)+'</div>'
-                  + '<div style="font-size:10px;color:#AAB8C8;margin-top:7px;">'+tnEsc(n.author)+' · '+tnEsc(n.date)+'</div>'
-                  + '</div>';
-        });
-        html += '</div>';
-        body.innerHTML = html;
-    }
-    document.getElementById('tnOverlay').classList.add('open');
-}
-function closeTeacherNotes(){ document.getElementById('tnOverlay').classList.remove('open'); }
+{{-- ══════════════════ STUDENT NOTES (read-only) ══════════════════ --}}
+<style>
+    .tnotes-overlay{display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:1000;padding:20px;font-family:'DM Sans',sans-serif}
+    .tnotes-overlay.show{display:flex}
+    .tnotes-box{width:100%;max-width:460px;max-height:88vh;display:flex;flex-direction:column;background:#F8F6F2;border:1px solid rgba(27,79,168,0.15);border-radius:8px;overflow:hidden;box-shadow:0 20px 60px rgba(27,79,168,0.18)}
+    .tnotes-head{padding:16px 20px 13px;border-bottom:1px solid rgba(27,79,168,0.08);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .tnotes-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#1B4FA8;line-height:1}
+    .tnotes-sub{font-size:11px;color:#7A8A9A;margin-top:2px}
+    .tnotes-list{flex:1;overflow-y:auto;padding:14px 20px;display:flex;flex-direction:column;gap:10px}
+    .tnote-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:6px;padding:10px 12px}
+    .tnote-body{font-size:13px;color:#1A2A4A;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+    .tnote-by{font-size:10px;color:#AAB8C8;margin-top:7px}
+    .tnotes-close{background:none;border:none;color:#AAB8C8;cursor:pointer;padding:4px}
+    .tnotes-close:hover{color:#DC2626}
+</style>
+
+@foreach($instance->enrollments as $enrollment)
+    @if(($enrollment->notes?->count() ?? 0) > 0)
+    <div class="tnotes-overlay" id="tnotesModal-{{ $enrollment->enrollment_id }}">
+        <div class="tnotes-box">
+            <div class="tnotes-head">
+                <div>
+                    <div class="tnotes-title">Notes</div>
+                    <div class="tnotes-sub">{{ $enrollment->student?->full_name ?? '—' }}</div>
+                </div>
+                <button type="button" class="tnotes-close" onclick="closeTNotes({{ $enrollment->enrollment_id }})">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+            </div>
+            <div class="tnotes-list">
+                @foreach($enrollment->notes as $note)
+                <div class="tnote-card">
+                    <div class="tnote-body">{{ $note->note }}</div>
+                    <div class="tnote-by">{{ $note->createdBy?->full_name ?? 'Staff' }} · {{ \Carbon\Carbon::parse($note->created_at)->format('d M Y · H:i') }}</div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+    @endif
+@endforeach
+
+<script>
+function openTNotes(id){ const m=document.getElementById('tnotesModal-'+id); if(m) m.classList.add('show'); }
+function closeTNotes(id){ const m=document.getElementById('tnotesModal-'+id); if(m) m.classList.remove('show'); }
+document.querySelectorAll('.tnotes-overlay').forEach(function(o){
+    o.addEventListener('click', function(e){ if(e.target===this) this.classList.remove('show'); });
+});
 </script>
 @endsection

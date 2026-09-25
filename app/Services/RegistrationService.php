@@ -328,9 +328,9 @@ class RegistrationService
                 if ($old) {
                     foreach (EnrollmentNote::where('enrollment_id', $old->enrollment_id)->get() as $note) {
                         EnrollmentNote::create([
-                            'enrollment_id'    => $enrollment->enrollment_id,
-                            'body'             => $note->body,
-                            'created_by_cs_id' => $note->created_by_cs_id,
+                            'enrollment_id'          => $enrollment->enrollment_id,
+                            'note'                   => $note->note,
+                            'created_by_employee_id' => $note->created_by_employee_id,
                         ]);
                     }
 

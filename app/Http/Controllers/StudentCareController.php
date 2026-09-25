@@ -45,7 +45,7 @@ class StudentCareController extends Controller
             'level',
             'sublevel',
             'teacher',
-            'enrollments',
+            'activeEnrollments',
         ])
         ->withCount([
             'sessions as completed_sessions_count' => fn($q) => $q->where('status', 'Completed'),
@@ -61,6 +61,7 @@ class StudentCareController extends Controller
         $request->validate([
             'waiting_id' => 'required|exists:waiting_list,waiting_id',
             'course_instance_id' => 'required|exists:course_instance,course_instance_id',
+            'note' => 'nullable|string|max:2000',
         ]);
 
         $waiting = WaitingList::with('enrollment')->findOrFail($request->waiting_id);
@@ -124,6 +125,17 @@ class StudentCareController extends Controller
         $waiting->update([
             'status' => 'Assigned'
         ]);
+
+        // Optional note SC writes while assigning — stored against the
+        // enrollment so it shows in the course view and on the teacher page,
+        // and follows the student on a resume.
+        if (filled($request->note)) {
+            \App\Models\Enrollment\EnrollmentNote::create([
+                'enrollment_id'          => $waiting->enrollment->enrollment_id,
+                'note'                   => trim($request->note),
+                'created_by_employee_id' => \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id'),
+            ]);
+        }
 
         return back()->with('success', 'Student assigned successfully');
     }
@@ -345,6 +357,58 @@ class StudentCareController extends Controller
         }
 
         return back()->with('success', 'Postponement marked as expired. The enrollment is forfeited with no refund.');
+    }
+
+    /* ──────────────────────────────────────────────────────────────
+     |  Enrollment notes
+     |  A free-text note SC writes against a student's enrollment. It
+     |  shows in the course view (SC) and read-only on the teacher's
+     |  course page, and it follows the student across a postpone →
+     |  resume (copied to the new enrollment by RegistrationService).
+     * ────────────────────────────────────────────────────────────── */
+    public function addEnrollmentNote(Request $request, $enrollmentId)
+    {
+        $request->validate(['note' => 'required|string|max:2000']);
+
+        // Enrollment is branch-scoped — findOrFail 404s a cross-branch id.
+        $enrollment = Enrollment::findOrFail($enrollmentId);
+
+        \App\Models\Enrollment\EnrollmentNote::create([
+            'enrollment_id'          => $enrollment->enrollment_id,
+            'note'                   => trim($request->note),
+            'created_by_employee_id' => \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id'),
+        ]);
+
+        return back()->with('success', 'Note added.');
+    }
+
+    public function updateEnrollmentNote(Request $request, $noteId)
+    {
+        $request->validate(['note' => 'required|string|max:2000']);
+
+        $note = \App\Models\Enrollment\EnrollmentNote::with('enrollment')->findOrFail($noteId);
+
+        // enrollment is null when it belongs to another branch (scoped out).
+        if ($note->enrollment === null) {
+            return back()->with('error', 'This note is not available for your branch.');
+        }
+
+        $note->update(['note' => trim($request->note)]);
+
+        return back()->with('success', 'Note updated.');
+    }
+
+    public function deleteEnrollmentNote($noteId)
+    {
+        $note = \App\Models\Enrollment\EnrollmentNote::with('enrollment')->findOrFail($noteId);
+
+        if ($note->enrollment === null) {
+            return back()->with('error', 'This note is not available for your branch.');
+        }
+
+        $note->delete();
+
+        return back()->with('success', 'Note deleted.');
     }
 
     public function dashboard()

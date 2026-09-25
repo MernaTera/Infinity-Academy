@@ -796,6 +796,7 @@ class CourseInstanceController extends Controller
             'sessions',
             'instanceSchedules.timeSlot',
             'enrollments.activePostponement',
+            'enrollments.notes.createdBy',
         ])->find($id);
 
         // The instance may have been auto-removed (e.g. its last active student
