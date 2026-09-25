@@ -206,6 +206,7 @@ Route::middleware(['auth', 'permission:enrollment.create'])
     ->name('student-care.')
     ->group(function () {
         Route::post('/assign',                        [StudentCareController::class, 'assign'])->name('assign');
+        Route::post('/package/continue/{enrollmentId}', [StudentCareController::class, 'continuePackage'])->name('package.continue');
         Route::post('/course-instances/store',        [CourseInstanceController::class, 'storeInstance'])->name('instance.store');
         Route::get('/course-instances/{id}/edit',    [CourseInstanceController::class, 'edit'])->name('instances.edit');
         Route::put('/course-instances/{id}',         [CourseInstanceController::class, 'updateInstance'])->name('instance.update');
