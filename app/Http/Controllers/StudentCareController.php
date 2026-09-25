@@ -35,13 +35,15 @@ class StudentCareController extends Controller
         // Enrollment model, so an SC in one branch only sees their branch's
         // waiting list — never entries from a branch they aren't in.
         $waiting = WaitingList::whereHas('enrollment')->with([
-            'enrollment.student',
+            'enrollment.student.phones',
             'enrollment.courseTemplate',
             'enrollment.level'
         ])->get();
 
         $instances = CourseInstance::with([
             'courseTemplate',
+            'level',
+            'sublevel',
             'teacher',
             'enrollments',
         ])

@@ -254,7 +254,7 @@
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input type="text" id="wlSearch" class="search-input"
-                   placeholder="Search by name, ID, or days..."
+                   placeholder="Search by name, ID, phone, or days..."
                    oninput="searchWaiting(this.value)">
         </div>
 
@@ -323,6 +323,8 @@
                             'Offline' => 'tag-offline',
                             default   => 'tag-offline',
                         };
+                        $phones      = $item->enrollment->student->phones ?? collect();
+                        $studentPhone = optional($phones->firstWhere('is_primary', true) ?? $phones->first())->phone_number;
                     @endphp
                     <tr data-status="{{ $item->status }}"
                         data-dtype="{{ $item->preferred_delivery_type }}"
@@ -330,12 +332,17 @@
                         data-ptype="{{ $item->preferred_type }}"
                         data-name="{{ strtolower($item->enrollment->student->full_name ?? '') }}"
                         data-sid="{{ $item->enrollment->student_id ?? '' }}"
+                        data-phone="{{ $studentPhone ?? '' }}"
                         data-days="{{ str_replace('_',' ',$item->preferred_days ?? '') }}">
 
                         {{-- Student --}}
                         <td>
                             <div class="lead-name">{{ $item->enrollment->student->full_name ?? '—' }}</div>
                             <div class="lead-sub">ID: {{ $item->enrollment->student_id ?? '—' }}</div>
+                            <div class="lead-sub" style="display:inline-flex;align-items:center;gap:4px;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                {{ $studentPhone ?? '—' }}
+                            </div>
                         </td>
 
                         {{-- Course & Level --}}
@@ -558,10 +565,11 @@ function applyFilters() {
         const matchDtype  = !activeDtype  || row.dataset.dtype  === activeDtype;
         const matchMode   = !activeMode   || row.dataset.mode   === activeMode;
         const matchPtype  = !activePtype  || row.dataset.ptype  === activePtype;
-        const name        = row.dataset.name || '';
-        const sid         = row.dataset.sid  || '';
-        const days        = row.dataset.days || '';
-        const matchSearch = !searchQuery || name.includes(searchQuery) || sid.includes(searchQuery) || days.includes(searchQuery);
+        const name        = row.dataset.name  || '';
+        const sid         = row.dataset.sid   || '';
+        const phone       = row.dataset.phone || '';
+        const days        = row.dataset.days  || '';
+        const matchSearch = !searchQuery || name.includes(searchQuery) || sid.includes(searchQuery) || phone.includes(searchQuery) || days.includes(searchQuery);
         row.style.display = (matchStatus && matchDtype && matchMode && matchPtype && matchSearch) ? '' : 'none';
     });
 }
