@@ -248,6 +248,22 @@ class LeadController extends Controller
         $oldStatus = $lead->status;
         $validated = app(\App\Http\Requests\StoreLeadRequest::class)->validated();
 
+        // "Active Lead" toggle — not a validated field, so apply it here.
+        // Turning it OFF archives the lead (mirrors the auto-archive rule:
+        // Archived + inactive + released); turning it back ON reactivates it
+        // (Archived → Waiting, and re-owned by the current CS if it was freed).
+        if ($request->boolean('is_active')) {
+            $validated['is_active'] = true;
+            if ($lead->status === 'Archived') {
+                $validated['status']      = 'Waiting';
+                $validated['owner_cs_id'] = $lead->owner_cs_id ?: $this->currentEmployeeId();
+            }
+        } else {
+            $validated['is_active']   = false;
+            $validated['status']      = 'Archived';
+            $validated['owner_cs_id'] = null;
+        }
+
         $trackedFields = [
             'full_name', 'phone_1', 'phone_2', 'source',
             'interested_course_template_id', 'interested_level_id', 'interested_sublevel_id',
