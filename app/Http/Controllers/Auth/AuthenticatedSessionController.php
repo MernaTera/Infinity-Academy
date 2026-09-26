@@ -78,13 +78,14 @@ class AuthenticatedSessionController extends Controller
             'last_login_at'   => now(),
         ]);
 
-        // 6. Redirect based on role
-        return match((int) $user->role_id) {
-            1 => redirect('/admin/dashboard'),
-            2 => redirect('/dashboard'),
-            3 => redirect('/student-care/dashboard'),
-            4 => redirect('/teacher/dashboard'),
-            default => abort(403),
+        // 6. Redirect based on role (by role, not a hard-coded id, so new roles
+        //    like CS Leader — who lands on the CS dashboard — work correctly).
+        return match(true) {
+            $user->isAdmin()                     => redirect('/admin/dashboard'),
+            $user->isCS(), $user->isCsLeader()   => redirect('/dashboard'),
+            $user->isSC()                        => redirect('/student-care/dashboard'),
+            $user->isTeacher()                   => redirect('/teacher/dashboard'),
+            default                              => abort(403),
         };
     }
 

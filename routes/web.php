@@ -140,6 +140,18 @@ Route::middleware(['auth', 'permission:enrollment.create'])
     });
 
 // ─────────────────────────────────────────────────────────────────
+// CS Leader — team oversight (Admin + CS Leader only, own branch)
+// ─────────────────────────────────────────────────────────────────
+Route::middleware(['auth', 'cs.leader'])
+    ->group(function () {
+        // Reuses the admin sales dashboard (branch-scoped via the Employee
+        // global scope) — leaderboard + per-CS registrations & calls.
+        Route::get('/team/sales', [AdminSalesController::class, 'index'])->name('team.sales');
+        // All leads across the branch, with the owning CS + a CS filter.
+        Route::get('/team/leads', [LeadController::class, 'teamLeads'])->name('team.leads');
+    });
+
+// ─────────────────────────────────────────────────────────────────
 // Customer Service — Sales & Outstanding
 // ─────────────────────────────────────────────────────────────────
 

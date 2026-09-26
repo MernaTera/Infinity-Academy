@@ -44,10 +44,11 @@ class EmployeeController extends Controller
             'total'    => Employee::count(),
             'active'   => Employee::where('status', 'Active')->count(),
             'inactive' => Employee::where('status', 'Inactive')->count(),
-            'cs'       => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))->count(),
+            // A CS Leader is a CS too — count both under the CS tile.
+            'cs'       => Employee::whereHas('user.role', fn($q) => $q->whereIn('role_name', ['Customer Service', 'CS Leader']))->count(),
             'teachers' => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Teacher'))->count(),
             'sc'       => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Student Care'))->count(),
-            'admin'    => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))->count(), 
+            'admin'    => Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))->count(),
 
         ];
 
@@ -66,7 +67,7 @@ class EmployeeController extends Controller
         $englishLevels = EnglishLevel::all();
         $patches       = Patch::whereIn('status', ['Active', 'Upcoming'])->get();
         $contractTypes = \App\Models\HR\ContractType::where('is_active', true)->get();
-        $timeSlots     = \App\Models\Academic\TimeSlot::where('is_active', true)->orderBy('start_time')->get();
+        $timeSlots     = \App\Models\Academic\TimeSlot::where('is_active', true)->orderBy('start_time')->get(); // ✅
 
         return view('admin.employees.create', compact(
             'roles', 'branches', 'englishLevels', 'patches', 'contractTypes', 'timeSlots'
@@ -113,9 +114,10 @@ public function store(Request $request)
                 'user_id'   => $user->id,
                 'branch_id' => $request->branch_id,
                 'salary'    => $request->salary,
-                'work_start_time' => in_array(Role::find($request->role_id)?->role_name, ['Customer Service', 'Student Care'])
+                // Fixed daily shift window — only meaningful for CS / CS Leader / Student Care.
+                'work_start_time' => in_array(Role::find($request->role_id)?->role_name, ['Customer Service', 'CS Leader', 'Student Care'])
                     ? $request->work_start_time : null,
-                'work_end_time'   => in_array(Role::find($request->role_id)?->role_name, ['Customer Service', 'Student Care'])
+                'work_end_time'   => in_array(Role::find($request->role_id)?->role_name, ['Customer Service', 'CS Leader', 'Student Care'])
                     ? $request->work_end_time : null,
                 'status'    => 'Active',
                 'hired_at'  => now(),
@@ -124,6 +126,7 @@ public function store(Request $request)
             $adminId = Employee::where('user_id', auth()->id())->value('employee_id');
             $role    = Role::find($request->role_id);
 
+            // ── Teacher ───────────────────────────────────────────────
             if ($role?->role_name === 'Teacher' && $request->english_level_id) {
 
                 $teacher = Teacher::create([
@@ -154,7 +157,15 @@ public function store(Request $request)
                 }
             }
 
-            if ($role?->role_name === 'Customer Service' && $request->filled('target_amount')) {
+            // ── CS Target ─────────────────────────────────────────────
+            // Save the target keyed by month (same as the edit flow and what
+            // the dashboard/sales reports read). Defaults to the current month
+            // when the form doesn't specify one. Previously this required a
+            // patch and saved no month, so the target never showed up until the
+            // employee was edited and re-saved.
+            if (in_array($role?->role_name, ['Customer Service', 'CS Leader']) && $request->filled('target_amount')) {
+                // Standing (permanent) target — stored with month = NULL so it
+                // applies to every month until an admin changes it.
                 CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminId);
             }
         });
@@ -163,6 +174,11 @@ public function store(Request $request)
             ->with('success', 'Employee created successfully.');
     }
 
+    /*
+    |------------------------------------------------------------------
+    | Show Profile
+    |------------------------------------------------------------------
+    */
     public function show($id)
     {
         $employee = Employee::with([
@@ -179,7 +195,8 @@ public function store(Request $request)
             ->orderBy('start_time')->get();
         $pairLabels = ['sat_tue'=>'Sat & Tue','sun_wed'=>'Sun & Wed','mon_thu'=>'Mon & Thu'];
         $csData = null;
-        if ($roleName === 'Customer Service') {
+        // A CS Leader is a CS too — show the same performance data.
+        if (in_array($roleName, ['Customer Service', 'CS Leader'])) {
             $currentMonth = now()->format('Y-m');
 
             $targetAmount = CsTarget::amountFor($employee->employee_id);
@@ -231,7 +248,7 @@ public function store(Request $request)
             'employee', 'roleName', 'csData', 'teacherData', 'currentPatch', 'timeSlots', 'pairLabels'
         ));
     }
-    
+
     public function assignContract(Request $request, $id)
     {
         $request->validate([
@@ -257,6 +274,11 @@ public function store(Request $request)
 
         return back()->with('success', 'Contract assigned successfully.');
     }
+    /*
+    |------------------------------------------------------------------
+    | Edit
+    |------------------------------------------------------------------
+    */
     public function edit($id)
     {
         $employee      = Employee::with(['user.role', 'teacher'])->findOrFail($id);
@@ -269,6 +291,11 @@ public function store(Request $request)
         return view('admin.employees.edit', compact('employee', 'branches', 'englishLevels', 'patches'));
     }
 
+    /*
+    |------------------------------------------------------------------
+    | Update
+    |------------------------------------------------------------------
+    */
     public function update(Request $request, $id)
     {
         $employee = Employee::with('user')->findOrFail($id);
@@ -294,6 +321,8 @@ public function store(Request $request)
             'status'    => $request->status,
         ]);
 
+        $this->applyCsLeaderToggle($request, $employee);
+
         if ($request->filled('new_password')) {
             $request->validate(['new_password' => 'min:8']);
             $employee->user->update(['password' => Hash::make($request->new_password)]);
@@ -302,11 +331,16 @@ public function store(Request $request)
         return back()->with('success', 'Employee updated successfully.');
     }
 
+    /*
+    |------------------------------------------------------------------
+    | Toggle Active / Inactive
+    |------------------------------------------------------------------
+    */
     public function toggle($id)
     {
         $employee  = Employee::with('user')->findOrFail($id);
         $newStatus = $employee->status === 'Active' ? 'Inactive' : 'Active';
-        $user      = $employee->user; 
+        $user      = $employee->user;
 
         AuditService::updated('employee', $employee->employee_id, 'status', $employee->status, $newStatus);
 
@@ -330,7 +364,7 @@ public function store(Request $request)
         $request->validate([
             'full_name'     => 'required|string|max:255',
             'english_level_id' => 'nullable|exists:english_level,english_level_id',
-            'salary'        => 'nullable|numeric|min:0', 
+            'salary'        => 'nullable|numeric|min:0',
             'target_amount' => 'nullable|numeric|min:0',
             'target_month'  => 'nullable|string',
         ]);
@@ -339,7 +373,7 @@ public function store(Request $request)
 
         $employee->update([
             'full_name' => $request->full_name,
-            'salary'    => $request->salary,        
+            'salary'    => $request->salary,
         ]);
         if ($request->filled('english_level_id') && $employee->teacher) {
             $employee->teacher->update(['english_level_id' => $request->english_level_id]);
@@ -354,6 +388,7 @@ public function store(Request $request)
 
         if ($request->filled('target_amount')) {
             $adminEmployee = Employee::where('user_id', auth()->id())->first();
+            // Standing (permanent) target — one value for every month.
             CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminEmployee?->employee_id);
         }
 
@@ -396,8 +431,10 @@ public function store(Request $request)
         $employee = Employee::with(['user','teacher'])->findOrFail($id);
         $adminId  = Employee::where('user_id', auth()->id())->value('employee_id');
 
+        // Basic
         $employee->update(['full_name' => $request->full_name, 'salary' => $request->salary]);
-        if (in_array($request->role_name, ['Customer Service', 'Student Care'])) {
+        // Fixed daily shift window — CS / CS Leader / Student Care only.
+        if (in_array($request->role_name, ['Customer Service', 'CS Leader', 'Student Care'])) {
             $employee->update([
                 'work_start_time' => $request->work_start_time ?: null,
                 'work_end_time'   => $request->work_end_time ?: null,
@@ -407,6 +444,9 @@ public function store(Request $request)
         if ($request->filled('new_password')) {
             $employee->user->update(['password' => \Hash::make($request->new_password)]);
         }
+
+        // Promote / demote between Customer Service and CS Leader.
+        $this->applyCsLeaderToggle($request, $employee);
 
         if ($request->role_name === 'Teacher' && $employee->teacher) {
             if ($request->filled('english_level_id')) {
@@ -429,10 +469,36 @@ public function store(Request $request)
             }
         }
 
-        if ($request->role_name === 'Customer Service' && $request->filled('target_amount')) {
+        if (($request->role_name === 'Customer Service' || $request->role_name === 'CS Leader') && $request->filled('target_amount')) {
             \App\Models\Enrollment\CsTarget::setStanding($employee->employee_id, $request->target_amount, $adminId);
         }
 
         return back()->with('success', 'Employee updated successfully.');
+    }
+
+    /*
+    |------------------------------------------------------------------
+    | Promote / demote between Customer Service and CS Leader
+    | Only toggles within the CS family (never touches other roles):
+    | checked "is_cs_leader" => CS Leader, unchecked => Customer Service.
+    |------------------------------------------------------------------
+    */
+    private function applyCsLeaderToggle(Request $request, Employee $employee): void
+    {
+        $currentRole = $employee->user?->role?->role_name;
+
+        if (!$employee->user || !in_array($currentRole, ['Customer Service', 'CS Leader'], true)) {
+            return;
+        }
+
+        $targetRoleName = $request->boolean('is_cs_leader') ? 'CS Leader' : 'Customer Service';
+
+        if ($targetRoleName !== $currentRole) {
+            $targetRole = Role::where('role_name', $targetRoleName)->first();
+            if ($targetRole) {
+                AuditService::updated('employee', $employee->employee_id, 'role', $currentRole, $targetRoleName);
+                $employee->user->update(['role_id' => $targetRole->role_id]);
+            }
+        }
     }
 }

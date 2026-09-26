@@ -1,10 +1,17 @@
-@extends('admin.layouts.app')
+@extends(auth()->user()?->isCsLeader() ? 'layouts.leads' : 'admin.layouts.app')
 @section('title', 'Sales Revenue')
 
 @section('content')
 @once
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 @endonce
+
+@php
+    // A CS Leader reaches this page via /team/sales; keep the filter links on
+    // that route (admin.sales.index needs hr.view, which a CS Leader lacks — the
+    // cause of the 403 on By Week / By Day).
+    $salesRoute = auth()->user()?->isCsLeader() ? 'team.sales' : 'admin.sales.index';
+@endphp
 
 <style>
 :root {
@@ -116,27 +123,27 @@
 
     {{-- ── FILTER BAR ── --}}
     <div class="filter-bar">
-        <a href="{{ route('admin.sales.index', ['filter'=>'month','month'=>$month]) }}"
+        <a href="{{ route($salesRoute, ['filter'=>'month','month'=>$month]) }}"
            class="filter-tab {{ $filterType==='month'?'active':'' }}">By Month</a>
-        <a href="{{ route('admin.sales.index', ['filter'=>'week','day'=>$day]) }}"
+        <a href="{{ route($salesRoute, ['filter'=>'week','day'=>$day]) }}"
            class="filter-tab {{ $filterType==='week'?'active':'' }}">By Week</a>
-        <a href="{{ route('admin.sales.index', ['filter'=>'day','day'=>$day]) }}"
+        <a href="{{ route($salesRoute, ['filter'=>'day','day'=>$day]) }}"
            class="filter-tab {{ $filterType==='day'?'active':'' }}">By Day</a>
 
         <div class="filter-sep"></div>
 
         @if($filterType === 'month')
         <input type="month" value="{{ $month }}" class="filter-input"
-               onchange="window.location.href='{{ route('admin.sales.index') }}?filter=month&month='+this.value">
+               onchange="window.location.href='{{ route($salesRoute) }}?filter=month&month='+this.value">
         @elseif($filterType === 'week')
         <input type="week" value="{{ \Carbon\Carbon::parse($day)->format('Y-\WW') }}" class="filter-input"
                onchange="
                    const[y,w]=this.value.split('-W');
                    const d=new Date(y,0,1+(w-1)*7);
-                   window.location.href='{{ route('admin.sales.index') }}?filter=week&day='+d.toISOString().split('T')[0]">
+                   window.location.href='{{ route($salesRoute) }}?filter=week&day='+d.toISOString().split('T')[0]">
         @else
         <input type="date" value="{{ $day }}" class="filter-input" style="color-scheme:light;"
-               onchange="window.location.href='{{ route('admin.sales.index') }}?filter=day&day='+this.value">
+               onchange="window.location.href='{{ route($salesRoute) }}?filter=day&day='+this.value">
         @endif
 
         <span style="font-size:11px;color:var(--faint);margin-left:4px;">

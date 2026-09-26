@@ -12,6 +12,7 @@ class RoleSeeder extends Seeder
         $roles = [
             ['role_name' => 'Admin',            'is_active' => true],
             ['role_name' => 'Customer Service', 'is_active' => true],
+            ['role_name' => 'CS Leader',        'is_active' => true],
             ['role_name' => 'Student Care',     'is_active' => true],
             ['role_name' => 'Teacher',          'is_active' => true],
             ['role_name' => 'Student',          'is_active' => true],

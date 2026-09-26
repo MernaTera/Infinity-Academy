@@ -62,9 +62,17 @@ class User extends Authenticatable
 
     public function isAdmin(): bool    { return $this->hasRole('Admin'); }
     public function isCS(): bool       { return $this->hasRole('Customer Service'); }
+    public function isCsLeader(): bool { return $this->hasRole('CS Leader'); }
     public function isSC(): bool       { return $this->hasRole('Student Care'); }
     public function isTeacher(): bool  { return $this->hasRole('Teacher'); }
     public function isStudent(): bool  { return $this->hasRole('Student'); }
+
+    /**
+     * Anyone who works the Customer Service panel — a normal CS or a CS Leader.
+     * Use this wherever CS behaviour is gated by role (the leader is a CS in
+     * every respect, just with extra oversight views).
+     */
+    public function worksCs(): bool    { return $this->isCS() || $this->isCsLeader(); }
 
     // ─────────────────────────────────────────
     // Permission check — always fresh load

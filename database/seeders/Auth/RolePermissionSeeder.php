@@ -36,6 +36,21 @@ class RolePermissionSeeder extends Seeder
                 'notifications.view',
             ],
 
+            // CS Leader: exactly the Customer Service permission set. The extra
+            // team-oversight views (team sales, all-branch leads) are gated by
+            // the cs.leader middleware, not by permissions.
+            'CS Leader' => [
+                'leads.view',
+                'leads.create',
+                'leads.edit',
+                'leads.delete',
+                'enrollment.view',
+                'enrollment.create',
+                'financial.view',
+                'financial.create',
+                'notifications.view',
+            ],
+
             // Student Care: scheduling, enrollment, attendance oversight
             'Student Care' => [
                 'enrollment.view',

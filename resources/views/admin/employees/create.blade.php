@@ -247,9 +247,10 @@
 function onRoleChange() {
     const sel      = document.getElementById('roleSelect');
     const roleName = sel.options[sel.selectedIndex]?.dataset.name ?? '';
-    document.getElementById('teacherSection').style.display = roleName === 'Teacher'           ? 'block' : 'none';
-    document.getElementById('csSection').style.display      = roleName === 'Customer Service'  ? 'block' : 'none';
-    document.getElementById('workHoursSection').style.display = (roleName === 'Customer Service' || roleName === 'Student Care') ? 'block' : 'none';
+    const isCsRole = (roleName === 'Customer Service' || roleName === 'CS Leader');
+    document.getElementById('teacherSection').style.display = roleName === 'Teacher' ? 'block' : 'none';
+    document.getElementById('csSection').style.display      = isCsRole ? 'block' : 'none';
+    document.getElementById('workHoursSection').style.display = (isCsRole || roleName === 'Student Care') ? 'block' : 'none';
 }
 
 function fillMaxSessions() {

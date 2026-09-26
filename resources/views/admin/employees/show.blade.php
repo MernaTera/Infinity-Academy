@@ -46,6 +46,7 @@
 .role-teacher{background:var(--green-l);color:var(--green);border:1px solid rgba(5,150,105,0.15);}
 .role-sc{background:rgba(127,119,221,0.07);color:#534AB7;border:1px solid rgba(127,119,221,0.15);}
 .role-admin{background:var(--orange-l);color:#C47010;border:1px solid rgba(245,145,30,0.2);}
+.leader-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;background:rgba(245,145,30,0.1);color:#C47010;border:1px solid rgba(245,145,30,0.25);font-weight:600;}
 .status-active{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--green);}
 .status-inactive{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--red);}
 .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
@@ -166,9 +167,11 @@
 
     @php
         $roleName  = $employee->user?->role?->role_name ?? '—';
-        $roleCls   = match($roleName) { 'Customer Service'=>'role-cs', 'Teacher'=>'role-teacher', 'Student Care'=>'role-sc', 'Admin'=>'role-admin', default=>'role-cs' };
-        $avatarBg  = match($roleName) { 'Customer Service'=>'var(--blue-l)', 'Teacher'=>'var(--green-l)', 'Student Care'=>'rgba(127,119,221,0.1)', default=>'var(--orange-l)' };
-        $avatarClr = match($roleName) { 'Customer Service'=>'var(--blue)', 'Teacher'=>'var(--green)', 'Student Care'=>'#534AB7', default=>'#C47010' };
+        $isCsFamily = in_array($roleName, ['Customer Service', 'CS Leader']);
+        // A CS Leader is shown with the CS (blue) styling — just tagged "Leader".
+        $roleCls   = match($roleName) { 'Customer Service'=>'role-cs', 'CS Leader'=>'role-cs', 'Teacher'=>'role-teacher', 'Student Care'=>'role-sc', 'Admin'=>'role-admin', default=>'role-cs' };
+        $avatarBg  = match($roleName) { 'Customer Service'=>'var(--blue-l)', 'CS Leader'=>'var(--blue-l)', 'Teacher'=>'var(--green-l)', 'Student Care'=>'rgba(127,119,221,0.1)', default=>'var(--orange-l)' };
+        $avatarClr = match($roleName) { 'Customer Service'=>'var(--blue)', 'CS Leader'=>'var(--blue)', 'Teacher'=>'var(--green)', 'Student Care'=>'#534AB7', default=>'#C47010' };
         $pairLabels= ['sat_tue'=>'Sat & Tue','sun_wed'=>'Sun & Wed','mon_thu'=>'Mon & Thu'];
         $allPairs  = ['sat_tue','sun_wed','mon_thu'];
     @endphp
@@ -187,7 +190,11 @@
                 <div style="font-size:18px;font-weight:600;">{{ $employee->full_name }}</div>
                 <div style="font-size:12px;color:var(--muted);margin-top:2px;">{{ $employee->user?->email ?? '—' }}</div>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
-                    <span class="role-badge {{ $roleCls }}">{{ $roleName }}</span>
+                    {{-- A CS Leader shows as CS + a Leader tag --}}
+                    <span class="role-badge {{ $roleCls }}">{{ $roleName === 'CS Leader' ? 'Customer Service' : $roleName }}</span>
+                    @if($roleName === 'CS Leader')
+                        <span class="leader-tag">★ Leader</span>
+                    @endif
                     @if($employee->status === 'Active')
                         <span class="status-active"><div class="dot"></div> Active</span>
                     @else
@@ -209,7 +216,7 @@
                 <div><div class="slabel" style="font-size:8px;letter-spacing:2px;">Last Login</div><div style="font-size:13px;font-weight:500;">{{ $employee->user?->last_login_at ? \Carbon\Carbon::parse($employee->user->last_login_at)->diffForHumans() : 'Never' }}</div></div>
                 <div><div class="slabel" style="font-size:8px;letter-spacing:2px;">Account</div><div style="font-size:13px;font-weight:500;">{{ $employee->user?->is_active ? '✓ Active' : '✗ Suspended' }}</div></div>
             </div>
-            @if(in_array($roleName, ['Customer Service', 'Student Care']) && ($employee->work_start_time || $employee->work_end_time))
+            @if($isCsFamily && ($employee->work_start_time || $employee->work_end_time))
             <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(27,79,168,0.08);">
                 <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;background:var(--orange-l);">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--orange-dk)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -225,8 +232,8 @@
         </div>
     </div>
 
-    {{-- CS Performance --}}
-    @if($roleName === 'Customer Service' && $csData)
+    {{-- CS Performance (Customer Service AND CS Leader) --}}
+    @if($isCsFamily && $csData)
     <div class="pcard">
         <div class="pcard-header"><div class="pcard-title">CS Performance — {{ now()->format('F Y') }}</div></div>
         <div class="pcard-body">
@@ -363,7 +370,7 @@
                         <label class="field-label">Salary (LE)</label>
                         <input type="number" name="salary" value="{{ $employee->salary }}" class="form-control" min="0" step="0.01">
                     </div>
-                    @if(in_array($roleName, ['Customer Service', 'Student Care']))
+                    @if($isCsFamily)
                     <div class="field-group">
                         <label class="field-label">Shift Start</label>
                         <input type="time" name="work_start_time" value="{{ $employee->work_start_time ? \Carbon\Carbon::parse($employee->work_start_time)->format('H:i') : '' }}" class="form-control">
@@ -453,7 +460,7 @@
                 @endif
 
                 {{-- CS Target --}}
-                @if($roleName === 'Customer Service')
+                @if($isCsFamily)
                 <div class="sec-label">Monthly Target</div>
                 <div class="edit-grid" style="margin-bottom:20px;">
                     <div class="field-group">
@@ -464,6 +471,23 @@
                 @endif
 
                 <div class="divider"></div>
+                    @if($isCsFamily)
+                    <div style="margin-top:16px;padding:14px 16px;border:1px solid rgba(27,79,168,0.15);border-radius:8px;background:rgba(27,79,168,0.03)">
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:#1A2A4A">
+                            <input type="checkbox" name="is_cs_leader" value="1"
+                                {{ $roleName === 'CS Leader' ? 'checked' : '' }}
+                                style="width:16px;height:16px;accent-color:#1B4FA8">
+                            <span>
+                                <strong>CS Leader</strong>
+                                <span style="display:block;font-size:11px;color:#7A8A9A;margin-top:2px">
+                                    Team oversight over the branch's CS (team sales + all leads). Uncheck to make them a regular CS.
+                                </span>
+                            </span>
+                        </label>
+                    </div>
+                    @endif
+                <div class="divider"></div>
+
                 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                     <button type="submit" class="btn-primary">Save All Changes</button>
                 </div>

@@ -19,11 +19,11 @@ class CheckPermission
 
         if (!$user->canDo($permission)) {
             $dashboard = match(true) {
-                $user->isAdmin()   => '/admin/dashboard',
-                $user->isSC()      => '/student-care/dashboard',
-                $user->isTeacher() => '/teacher/dashboard',
-                $user->isCS()      => '/dashboard',
-                default            =>  route('login'),
+                $user->isAdmin()    => '/admin/dashboard',
+                $user->isSC()       => '/student-care/dashboard',
+                $user->isTeacher()  => '/teacher/dashboard',
+                $user->isCS(), $user->isCsLeader() => '/dashboard',
+                default             =>  route('login'),
             };
             abort(403, 'Forbidden');
         }

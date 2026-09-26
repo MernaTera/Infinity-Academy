@@ -10,9 +10,22 @@ use Illuminate\Support\Facades\DB;
 
 class PackagesController extends Controller
 {
+    /**
+     * Level-package dashboard — one row per student on a level package,
+     * showing the course/level they're currently on, how many prepaid units
+     * (levels/sublevels) remain, and a derived state. Mirrors the Private
+     * Hours screen: shared by Admin & Student Care (view-only) and CS
+     * (with the "Continue Package" action).
+     */
     public function index(Request $request)
     {
         $stateFilter = $request->query('state', 'all');
+        // all | active | available | done
+
+        // Every enrolment that belongs to a level package. A student can have
+        // several (one per level already taken); we keep only the most recent
+        // per (student, package) so each package shows as a single row — the
+        // level they're on now.
         $enrollments = Enrollment::with([
                 'student',
                 'courseTemplate',
@@ -22,17 +35,25 @@ class PackagesController extends Controller
                 'courseInstance',
             ])
             ->whereNotNull('package_id')
+            // Mirror the Private Hours screen: only enrolments that represent a
+            // live package belong here. Active/Restricted are on a current level;
+            // Completed still matters while prepaid units remain. Everything else
+            // — most importantly Cancelled (a rejected installment approval) and
+            // Pending_Approval (not yet approved) — must not appear.
             ->where(function ($q) {
                 $q->whereIn('status', ['Active', 'Restricted', 'Completed']);
             })
             ->orderByDesc('enrollment_id')
             ->get();
 
+        // Collapse to the latest enrolment per (student + package).
         $latestPerPackage = $enrollments
             ->groupBy(fn($e) => $e->student_id . '-' . $e->package_id)
-            ->map(fn($group) => $group->first()) 
+            ->map(fn($group) => $group->first()) // already ordered desc by id
             ->values();
 
+        // Map each student to their lead, so the action button can open the
+        // registration form pre-filled from that lead. student_id → lead_id.
         $studentIds = $latestPerPackage->pluck('student_id')->unique()->filter()->all();
         $leadByStudent = empty($studentIds) ? collect() :
             DB::table('lead')
@@ -41,6 +62,7 @@ class PackagesController extends Controller
                 ->orderByDesc('lead_id')
                 ->pluck('lead_id', 'student_id');
 
+        // Attach derived fields + classify state.
         $rows = $latestPerPackage->map(function ($e) use ($leadByStudent) {
             $package    = $e->levelPackage;
             $totalUnits = $package ? (int) $package->levels_count : null;
@@ -50,6 +72,11 @@ class PackagesController extends Controller
                 ? min(100, round(($doneUnits / $totalUnits) * 100))
                 : 0;
 
+            // State classification:
+            //   available → current level finished (Completed) and prepaid
+            //               units remain → CS can open the next (free) course
+            //   done      → package fully consumed (no units left)
+            //   active    → currently studying a level in the package
             if ($e->status === 'Completed' && $remaining > 0) {
                 $state = 'available';
             } elseif ($remaining <= 0) {
@@ -87,7 +114,7 @@ class PackagesController extends Controller
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
 
-        $canAct = auth()->user()?->isCS() ?? false;
+        $canAct = auth()->user()?->worksCs() ?? false;
 
         return view('packages-tracking.index', compact('rows', 'stats', 'stateFilter', 'canAct'));
     }

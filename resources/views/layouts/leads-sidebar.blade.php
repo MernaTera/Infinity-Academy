@@ -294,6 +294,26 @@
         </div>
         @endcando
 
+        {{-- Team (CS Leader only) --}}
+        @if(auth()->user()?->isCsLeader())
+        <div class="sb-section">
+            <div class="sb-section-header" onclick="toggleSection(this)">
+                <span class="sb-section-label">Monitoring</span>
+                <svg class="sb-section-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="sb-section-body">
+                <a href="{{ route('team.sales') }}" class="sl-link {{ request()->routeIs('team.sales') ? 'active' : '' }}" data-label="Team Sales">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+                    <span class="sl-link-text">Monitor Sales</span>
+                </a>
+                <a href="{{ route('team.leads') }}" class="sl-link {{ request()->routeIs('team.leads') ? 'active' : '' }}" data-label="Team Leads">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="sl-link-text">Monitor Leads</span>
+                </a>
+            </div>
+        </div>
+        @endif
+
     </div>
 
     {{-- Collapse toggle --}}
