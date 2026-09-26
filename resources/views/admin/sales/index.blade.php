@@ -223,6 +223,7 @@
                         <th>Registrations</th>
                         <th>Total Leads</th>
                         <th>Active Leads</th>
+                        <th>Calls Made</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -284,10 +285,13 @@
                         <td style="text-align:center;">
                             <span class="stat-pill pill-orange">{{ $row['active_leads'] }}</span>
                         </td>
+                        <td style="text-align:center;">
+                            <span class="stat-pill pill-blue">{{ $row['calls_made'] ?? 0 }}</span>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="9" style="text-align:center;padding:40px;color:var(--faint);font-size:13px;">
+                        <td colspan="10" style="text-align:center;padding:40px;color:var(--faint);font-size:13px;">
                             No CS employees found.
                         </td>
                     </tr>
@@ -308,6 +312,7 @@
                         <td colspan="3"></td>
                         <td style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text);">{{ $rows->sum('total_leads') }}</td>
                         <td></td>
+                        <td style="text-align:center;font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--text);">{{ $rows->sum('calls_made') }}</td>
                     </tr>
                 </tfoot>
                 @endif
@@ -350,6 +355,10 @@
                 <div class="cs-detail-stat">
                     <div class="cs-detail-stat-label">Active Leads</div>
                     <div class="cs-detail-stat-val" style="color:var(--orange);">{{ $row['active_leads'] }}</div>
+                </div>
+                <div class="cs-detail-stat">
+                    <div class="cs-detail-stat-label">Calls Made</div>
+                    <div class="cs-detail-stat-val" style="color:var(--blue);">{{ $row['calls_made'] ?? 0 }}</div>
                 </div>
             </div>
             <div class="cs-detail-prog">
