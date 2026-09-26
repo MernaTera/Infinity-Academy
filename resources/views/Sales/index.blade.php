@@ -228,6 +228,17 @@
                     @endif
                 </div>
             </div>
+
+            <div class="kpi-card" style="--kc:var(--orange)">
+                <div class="kpi-label">Calls Made</div>
+                <div class="kpi-val">{{ $kpis['calls_made'] ?? 0 }}</div>
+                <div class="kpi-sub">call-again
+                    @if($filterType === 'day') today
+                    @elseif($filterType === 'week') this week
+                    @else this month
+                    @endif
+                </div>
+            </div>
         </div>
 
         {{-- ── FOLLOWUP STATS ── --}}

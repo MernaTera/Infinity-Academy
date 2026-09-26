@@ -55,6 +55,7 @@ class SalesService
     {
         $range = $this->getDateRange($filterType, $patch, $month, $day);
 
+        // ── Target by month ──
         $targetMonth = match($filterType) {
             'patch' => $patch?->start_date
                         ? \Carbon\Carbon::parse($patch->start_date)->format('Y-m')
@@ -64,6 +65,7 @@ class SalesService
             'day'   => \Carbon\Carbon::parse($day)->format('Y-m'),
         };
 
+        // Standing (permanent) target — same value every month until admin edits.
         $targetAmount = CsTarget::amountFor($employee->employee_id);
 
         $achieved = RevenueSplit::where('employee_id', $employee->employee_id)
@@ -76,6 +78,19 @@ class SalesService
             ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
             ->count();
 
+        // Calls made = number of times this CS set a lead to "Call Again" from
+        // the leads status dropdown within the selected range. The dropdown
+        // (LeadController@updateStatus) records this in lead_history, writing a
+        // row on EVERY action — so repeated call-agains on the same lead each
+        // count — and it follows the day / week / month filter like the other
+        // KPIs. (lead_call_log is only written by a separate scheduling flow,
+        // not the dropdown, so it would read 0 here.)
+        $callsMade = DB::table('lead_history')
+            ->where('changed_by', $employee->employee_id)
+            ->where('new_status', 'Call_Again')
+            ->when($range['start'], fn($q) => $q->whereBetween('changed_at', [$range['start'], $range['end']]))
+            ->count();
+
         $targetAmount = $targetAmount ?? 0;
         $remaining    = $targetAmount > 0 ? max(0, $targetAmount - $achieved) : null;
         $pct          = $targetAmount > 0 ? round(($achieved / $targetAmount) * 100, 1) : null;
@@ -86,6 +101,7 @@ class SalesService
             'remaining'     => $remaining,
             'percentage'    => $pct,
             'registrations' => $registrations,
+            'calls_made'    => $callsMade,
             'filter_type'   => $filterType,
             'target_month'  => $targetMonth,
         ];
