@@ -1361,4 +1361,79 @@ async function prefillEditForm() {
 }
 @endisset
 </script>
+
+@unless(isset($instance))
+{{-- ── CREATE CONFIRMATION MODAL ─────────────────────────────────────── --}}
+<style>
+    #createConfirmOverlay{position:fixed;inset:0;background:rgba(10,20,40,0.55);backdrop-filter:blur(3px);display:none;align-items:center;justify-content:center;z-index:9999;opacity:0;transition:opacity .25s;}
+    #createConfirmOverlay.show{display:flex;opacity:1;}
+    .ccm-box{background:#fff;border-radius:16px;width:min(440px,92vw);padding:30px 28px 24px;text-align:center;box-shadow:0 30px 80px rgba(10,20,40,0.4);transform:translateY(18px) scale(.96);opacity:0;transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .35s;position:relative;overflow:hidden;font-family:'DM Sans',sans-serif;}
+    #createConfirmOverlay.show .ccm-box{transform:translateY(0) scale(1);opacity:1;}
+    .ccm-box::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#F5911E,#1B4FA8);}
+    .ccm-icon{width:66px;height:66px;border-radius:50%;margin:4px auto 16px;display:flex;align-items:center;justify-content:center;background:rgba(245,145,30,0.1);border:1px solid rgba(245,145,30,0.25);animation:ccmPop .5s cubic-bezier(.16,1,.3,1) both;}
+    .ccm-icon svg{color:#F5911E;}
+    @keyframes ccmPop{0%{transform:scale(0);}60%{transform:scale(1.12);}100%{transform:scale(1);}}
+    .ccm-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px;color:#1A2A4A;margin-bottom:8px;}
+    .ccm-text{font-size:13.5px;color:#5A6A7A;line-height:1.65;margin-bottom:8px;}
+    .ccm-note{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:#C47010;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2);border-radius:8px;padding:9px 13px;margin-bottom:22px;text-align:left;line-height:1.5;}
+    .ccm-actions{display:flex;gap:10px;}
+    .ccm-btn{flex:1;padding:12px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:.5px;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid;}
+    .ccm-cancel{background:#fff;border-color:rgba(27,79,168,0.2);color:#7A8A9A;}
+    .ccm-cancel:hover{border-color:#7A8A9A;color:#4A5A7A;}
+    .ccm-confirm{background:#1B4FA8;border-color:#1B4FA8;color:#fff;}
+    .ccm-confirm:hover{background:#153e85;}
+    .ccm-confirm:disabled{opacity:.6;cursor:default;}
+</style>
+
+<div id="createConfirmOverlay" onclick="if(event.target===this)closeCreateConfirm()">
+    <div class="ccm-box" role="dialog" aria-modal="true" aria-labelledby="ccmTitle">
+        <div class="ccm-icon">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            </svg>
+        </div>
+        <div class="ccm-title" id="ccmTitle">Create this course?</div>
+        <div class="ccm-text">Once created, the course sessions are generated and reserved for the teacher and room.</div>
+        <div class="ccm-note">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>This course <b>can't be cancelled</b> afterwards — it can only be <b>edited</b>.</span>
+        </div>
+        <div class="ccm-actions">
+            <button type="button" class="ccm-btn ccm-cancel" onclick="closeCreateConfirm()">Go back</button>
+            <button type="button" class="ccm-btn ccm-confirm" id="ccmConfirmBtn" onclick="confirmCreateProceed()">Yes, create it</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const form = document.getElementById('mainForm');
+    if (!form) return;
+    let confirmed = false;
+
+    form.addEventListener('submit', function (e) {
+        if (confirmed) return;               // second pass — let it through
+        e.preventDefault();
+        // Let native HTML5 validation run first.
+        if (typeof form.reportValidity === 'function' && !form.reportValidity()) return;
+        openCreateConfirm();
+    });
+
+    window.openCreateConfirm = function () {
+        document.getElementById('createConfirmOverlay').classList.add('show');
+    };
+    window.closeCreateConfirm = function () {
+        document.getElementById('createConfirmOverlay').classList.remove('show');
+    };
+    window.confirmCreateProceed = function () {
+        confirmed = true;
+        const btn = document.getElementById('ccmConfirmBtn');
+        if (btn) { btn.disabled = true; btn.textContent = 'Creating…'; }
+        if (typeof form.requestSubmit === 'function') form.requestSubmit(); else form.submit();
+    };
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') window.closeCreateConfirm(); });
+})();
+</script>
+@endunless
 @endsection

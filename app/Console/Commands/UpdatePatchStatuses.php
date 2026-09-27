@@ -4,13 +4,14 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use App\Models\Academic\Patch;
+use App\Models\Academic\CourseInstance;
 use App\Services\AuditService;
 use Carbon\Carbon;
 
 class UpdatePatchStatuses extends Command
 {
     protected $signature   = 'patches:update-statuses';
-    protected $description = 'Auto-close expired patches and auto-activate patches that have started';
+    protected $description = 'Auto-close expired patches, auto-activate patches/courses that have started, and complete courses that have ended';
 
     public function handle(): void
     {
@@ -23,23 +24,6 @@ class UpdatePatchStatuses extends Command
         foreach ($expired as $patch) {
             $patch->update(['status' => 'Closed', 'is_locked' => true]);
             AuditService::updated('patch', $patch->patch_id, 'status', 'Active', 'Closed');
-
-            \App\Models\Enrollment\Enrollment::where('patch_id', $patch->patch_id)
-                ->where('status', 'Active')
-                ->where(function ($q) {
-                    $q->where(function ($p) {
-                        $p->where('enrollment_type', 'Private')
-                          ->where('hours_remaining', '>', 0);
-                    })->orWhere(function ($p) {
-                        $p->whereNotNull('package_id')
-                          ->where('package_units_remaining', '>', 0);
-                    })->orWhere(function ($p) {
-                        $p->whereNull('package_id')
-                          ->where('enrollment_type', '!=', 'Private');
-                    });
-                })
-                ->update(['status' => 'Completed']);
-
             $this->info("Closed: {$patch->name}");
         }
 
@@ -52,6 +36,37 @@ class UpdatePatchStatuses extends Command
             AuditService::updated('patch', $patch->patch_id, 'status', 'Upcoming', 'Active');
             $this->info("Activated: {$patch->name}");
         }
+
+        // Course instances follow the same rule: once a course's start date
+        // has arrived it becomes Active on its own (across all branches).
+        $startedInstances = CourseInstance::withoutGlobalScope('branch')
+            ->where('status', 'Upcoming')
+            ->whereDate('start_date', '<=', $today)
+            ->get();
+
+        foreach ($startedInstances as $instance) {
+            $instance->update(['status' => 'Active']);
+            AuditService::updated('course_instance', $instance->course_instance_id, 'status', 'Upcoming', 'Active');
+        }
+        $this->info('Activated ' . $startedInstances->count() . ' course instance(s).');
+
+        // Courses whose end date has passed — and that have no non-cancelled
+        // session still to run (postponed courses keep running) — auto-complete
+        // and leave the Active tab (across all branches).
+        $endedInstances = CourseInstance::withoutGlobalScope('branch')
+            ->where('status', 'Active')
+            ->whereDate('end_date', '<', $today)
+            ->whereDoesntHave('sessions', function ($q) use ($today) {
+                $q->where('status', '!=', 'Cancelled')
+                  ->whereDate('session_date', '>=', $today);
+            })
+            ->get();
+
+        foreach ($endedInstances as $instance) {
+            $instance->update(['status' => 'Completed']);
+            AuditService::updated('course_instance', $instance->course_instance_id, 'status', 'Active', 'Completed');
+        }
+        $this->info('Completed ' . $endedInstances->count() . ' course instance(s).');
 
         $this->info('Done.');
     }

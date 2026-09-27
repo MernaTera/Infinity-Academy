@@ -109,7 +109,12 @@ class SchedulingService
             'single_day'             => $data['single_day'] ?? null,
             'time_slot_id'           => $data['time_slot_id'] ?? null,
             'start_time'             => $data['start_time'],
-            'created_by_employee_id' => auth()->user()->employee->first()?->employee_id,
+            // employee() is a hasOne and is branch-scoped, so resolve the
+            // creator without the branch scope and stay null-safe (never call
+            // ->first() on a null relation).
+            'created_by_employee_id' => \App\Models\HR\Employee::withoutGlobalScope('branch')
+                                            ->where('user_id', auth()->id())
+                                            ->value('employee_id'),
         ]);
     }
 
@@ -117,9 +122,9 @@ class SchedulingService
     public function storeMultipleSchedules(
         int $instanceId, 
         array $pairs, 
-        array|string $startTimes, 
+        array|string $startTimes,  // ✅ array أو string
         array|int|null $timeSlotIds = null,
-        array $singleDays = []     
+        array $singleDays = []     // per-pair chosen single day (0-6) or absent = both days
     ): array {
         $schedules = [];
         foreach ($pairs as $pair) {
@@ -127,7 +132,7 @@ class SchedulingService
             $timeSlotId = is_array($timeSlotIds) ? ($timeSlotIds[$pair] ?? null) : $timeSlotIds;
             $singleDay  = $singleDays[$pair] ?? null;
 
-            if (!$startTime) continue;
+            if (!$startTime) continue; // ✅ skip لو مفيش وقت للـ pair دي
 
             $schedules[] = $this->storeSchedule($instanceId, [
                 'day_of_week'  => $pair,

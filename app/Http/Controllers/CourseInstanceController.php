@@ -26,12 +26,43 @@ class CourseInstanceController extends Controller
     // ─────────────────────────────────────────────────────────────────
     public function index()
     {
-        $instances = CourseInstance::with([
-            'courseTemplate','level','sublevel','teacher','patch','sessions','instanceSchedules','room',
+        // Auto-promote: any Upcoming course whose start date has arrived moves
+        // into "Active" on its own, so it leaves the Next Patch tab and shows
+        // in Active without manual action (the daily command does the same
+        // system-wide; this keeps the tab correct even between runs).
+        CourseInstance::where('status', 'Upcoming')
+            ->whereDate('start_date', '<=', today())
+            ->update(['status' => 'Active']);
+
+        // And once a course's end date has passed — with no non-cancelled
+        // session still to run (so postponed courses aren't closed early) —
+        // it moves out of Active into Completed on its own.
+        CourseInstance::where('status', 'Active')
+            ->whereDate('end_date', '<', today())
+            ->whereDoesntHave('sessions', function ($q) {
+                $q->where('status', '!=', 'Cancelled')
+                  ->whereDate('session_date', '>=', today());
+            })
+            ->update(['status' => 'Completed']);
+
+        // Shared eager-loads. Sessions are needed for the "starting soon / live"
+        // layer on active courses, so pull the (non-cancelled) ones in order.
+        $with = [
+            'courseTemplate','level','sublevel','teacher','patch','instanceSchedules','room',
+            'sessions' => fn($q) => $q->where('status', '!=', 'Cancelled')
+                                      ->orderBy('session_date')->orderBy('start_time'),
             // Cancelled enrolments (e.g. rejected installment approvals) must
             // not count toward the capacity chip shown per instance.
             'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
-        ])->latest()->paginate(10);
+        ];
+
+        // Three tabs: Active (running now), Next Patch (upcoming), Completed.
+        $active    = CourseInstance::with($with)->where('status', 'Active')
+                        ->orderBy('start_date')->get();
+        $nextPatch = CourseInstance::with($with)->where('status', 'Upcoming')
+                        ->orderBy('start_date')->get();
+        $completed = CourseInstance::with($with)->where('status', 'Completed')
+                        ->latest('end_date')->limit(40)->get();
 
         $templates = CourseTemplate::all();
         $teachers  = Teacher::whereHas('employee')->with('employee')->get();
@@ -40,7 +71,7 @@ class CourseInstanceController extends Controller
         $rooms     = Room::all();
 
         return view('student-care.course-instances.index', compact(
-            'instances','templates','teachers','patches','branches','rooms'
+            'active','nextPatch','completed','templates','teachers','patches','branches','rooms'
         ));
     }
 
@@ -52,8 +83,15 @@ class CourseInstanceController extends Controller
         $branches   = Branch::orderBy('name')->get();
         $rooms      = Room::where('is_active', true)->orderBy('name')->get();
         $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
-        $employee   = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
-        $userBranch = Branch::find($employee->branch_id);
+
+        // Employee is branch-scoped; look it up without the branch scope so we
+        // always find the current user's own record, and never crash when a
+        // user has no employee/branch (fall back to the first branch).
+        $employee   = \App\Models\HR\Employee::withoutGlobalScope('branch')
+                        ->where('user_id', auth()->id())->first();
+        $userBranch = ($employee && $employee->branch_id)
+                        ? Branch::find($employee->branch_id)
+                        : Branch::first();
 
         return view('student-care.course-instances.create', compact(
             'templates', 'patches', 'branches', 'rooms', 'breakSlots', 'userBranch',
@@ -184,7 +222,7 @@ class CourseInstanceController extends Controller
         }
 
         // ── 4. Main transaction ───────────────────────────────────────
-        $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id');
+        $employeeId = \App\Models\HR\Employee::withoutGlobalScope('branch')->where('user_id', auth()->id())->value('employee_id');
 
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use ($data, $employeeId) {
@@ -358,8 +396,15 @@ class CourseInstanceController extends Controller
         $branches   = Branch::orderBy('name')->get();
         $rooms      = Room::where('is_active', true)->orderBy('name')->get();
         $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
-        $employee   = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
-        $userBranch = Branch::find($employee->branch_id);
+
+        // Employee is branch-scoped; look it up without the branch scope so we
+        // always find the current user's own record, and never crash when a
+        // user has no employee/branch (fall back to the first branch).
+        $employee   = \App\Models\HR\Employee::withoutGlobalScope('branch')
+                        ->where('user_id', auth()->id())->first();
+        $userBranch = ($employee && $employee->branch_id)
+                        ? Branch::find($employee->branch_id)
+                        : Branch::first();
 
         // How many sessions are already completed (locked — cannot be changed)
         $completedCount = $instance->sessions->where('status', 'Completed')->count();
@@ -521,7 +566,7 @@ class CourseInstanceController extends Controller
         }
 
         // ── 4. Main transaction ───────────────────────────────────────
-        $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id');
+        $employeeId = \App\Models\HR\Employee::withoutGlobalScope('branch')->where('user_id', auth()->id())->value('employee_id');
         $teacherChanged = (int)$instance->teacher_id !== (int)$data['teacher_id'];
 
         try {
