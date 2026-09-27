@@ -40,6 +40,9 @@ class PrivateHoursController extends Controller
                 // been carried into a new course yet — once carried, their
                 // hours are zeroed and they should drop off this screen.
                 $q->whereIn('status', ['Active', 'Restricted'])
+                  // Postponed is included so a paused student shows here as
+                  // "Postponed" instead of silently dropping off the screen.
+                  ->orWhere('status', 'Postponed')
                   ->orWhere(function ($q2) {
                       $q2->where('status', 'Completed')
                          ->where('hours_remaining', '>', 0);
@@ -81,7 +84,9 @@ class PrivateHoursController extends Controller
             //   leftover → course finished (Completed) but hours remain
             //   low      → still active but running low (<= 4h)
             //   active   → healthy
-            if ($e->status === 'Restricted' || $remaining <= 0) {
+            if ($e->status === 'Postponed') {
+                $state = 'postponed';
+            } elseif ($e->status === 'Restricted' || $remaining <= 0) {
                 $state = 'depleted';
             } elseif ($e->status === 'Completed' && $remaining > 0) {
                 $state = 'leftover';
@@ -115,11 +120,12 @@ class PrivateHoursController extends Controller
             'low'      => $rows->where('v_state', 'low')->count(),
             'depleted' => $rows->where('v_state', 'depleted')->count(),
             'leftover' => $rows->where('v_state', 'leftover')->count(),
+            'postponed'=> $rows->where('v_state', 'postponed')->count(),
             'hours_left' => round($rows->sum('v_remaining'), 2),
         ];
 
         // Apply the state filter for display.
-        if (in_array($stateFilter, ['active', 'low', 'depleted', 'leftover'])) {
+        if (in_array($stateFilter, ['active', 'low', 'depleted', 'leftover', 'postponed'])) {
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
 

@@ -91,6 +91,7 @@
     .st-active { background:var(--green-l); color:var(--green-dk); }
     .st-available { background:var(--purple-l); color:var(--purple-dk); }
     .st-done { background:var(--blue-l); color:var(--blue); }
+    .st-postponed { background:rgba(100,116,139,0.14); color:#475569; }
 
     .btn-enroll { display:inline-flex; align-items:center; gap:5px; padding:7px 13px; border-radius:7px; font-size:10px; font-weight:600; letter-spacing:0.3px; text-decoration:none; background:var(--purple-l); color:var(--purple-dk); border:1px solid rgba(124,58,237,0.3); transition:all 0.2s; white-space:nowrap; }
     .btn-enroll:hover { background:var(--purple); color:#fff; text-decoration:none; }
@@ -140,6 +141,10 @@
                 <div class="stat-label">Completed</div>
                 <div class="stat-val">{{ $stats['done'] }}</div>
             </div>
+            <div class="stat" style="--sc:#64748B">
+                <div class="stat-label">Postponed</div>
+                <div class="stat-val">{{ $stats['postponed'] }}</div>
+            </div>
             <div class="stat" style="--sc:var(--purple-dk)">
                 <div class="stat-label">Levels Remaining</div>
                 <div class="stat-val">{{ $stats['units_left'] }}</div>
@@ -153,6 +158,7 @@
             <a href="{{ route('packages-tracking.index', ['state' => 'active']) }}" class="filter-pill {{ $stateFilter === 'active' ? 'active' : '' }}">Active</a>
             <a href="{{ route('packages-tracking.index', ['state' => 'available']) }}" class="filter-pill {{ $stateFilter === 'available' ? 'active' : '' }}">Ready to Continue</a>
             <a href="{{ route('packages-tracking.index', ['state' => 'done']) }}" class="filter-pill {{ $stateFilter === 'done' ? 'active' : '' }}">Completed</a>
+            <a href="{{ route('packages-tracking.index', ['state' => 'postponed']) }}" class="filter-pill {{ $stateFilter === 'postponed' ? 'active' : '' }}">Postponed</a>
         </div>
 
         {{-- TABLE --}}
@@ -177,6 +183,7 @@
                                 'active'    => ['st-active','Active','var(--green)'],
                                 'available' => ['st-available','Level Done · Continue','var(--purple)'],
                                 'done'      => ['st-done','Package Complete','var(--blue)'],
+                                'postponed' => ['st-postponed','Postponed','#64748B'],
                                 default     => ['st-active','—','var(--green)'],
                             };
                             $fillColor   = $e->v_state === 'done' ? 'var(--blue)' : 'var(--purple)';

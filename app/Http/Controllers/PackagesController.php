@@ -41,7 +41,10 @@ class PackagesController extends Controller
             // — most importantly Cancelled (a rejected installment approval) and
             // Pending_Approval (not yet approved) — must not appear.
             ->where(function ($q) {
-                $q->whereIn('status', ['Active', 'Restricted', 'Completed']);
+                // Postponed is included so a paused student shows here as
+                // "Postponed" instead of dropping out (or an older level
+                // lingering as active).
+                $q->whereIn('status', ['Active', 'Restricted', 'Completed', 'Postponed']);
             })
             ->orderByDesc('enrollment_id')
             ->get();
@@ -77,7 +80,9 @@ class PackagesController extends Controller
             //               units remain → CS can open the next (free) course
             //   done      → package fully consumed (no units left)
             //   active    → currently studying a level in the package
-            if ($e->status === 'Completed' && $remaining > 0) {
+            if ($e->status === 'Postponed') {
+                $state = 'postponed';
+            } elseif ($e->status === 'Completed' && $remaining > 0) {
                 $state = 'available';
             } elseif ($remaining <= 0) {
                 $state = 'done';
@@ -102,18 +107,23 @@ class PackagesController extends Controller
             return $e;
         });
 
+        // Headline stats (over the full set, before filtering).
         $stats = [
             'total'     => $rows->count(),
             'active'    => $rows->where('v_state', 'active')->count(),
             'available' => $rows->where('v_state', 'available')->count(),
             'done'      => $rows->where('v_state', 'done')->count(),
+            'postponed' => $rows->where('v_state', 'postponed')->count(),
             'units_left'=> (int) $rows->sum('v_remaining'),
         ];
 
-        if (in_array($stateFilter, ['active', 'available', 'done'])) {
+        // Apply the state filter for display.
+        if (in_array($stateFilter, ['active', 'available', 'done', 'postponed'])) {
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
 
+        // CS (the registration/booking role) gets the action button; Admin & SC
+        // are view-only. A CS Leader is a CS too.
         $canAct = auth()->user()?->worksCs() ?? false;
 
         return view('packages-tracking.index', compact('rows', 'stats', 'stateFilter', 'canAct'));

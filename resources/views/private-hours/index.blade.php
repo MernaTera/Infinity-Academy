@@ -96,6 +96,7 @@
     .st-low { background:var(--orange-l); color:var(--orange-dk); }
     .st-depleted { background:var(--red-l); color:var(--red); }
     .st-leftover { background:var(--blue-l); color:var(--blue); }
+    .st-postponed { background:rgba(100,116,139,0.14); color:#475569; }
 
     .btn-enroll { display:inline-flex; align-items:center; gap:5px; padding:7px 13px; border-radius:7px; font-size:10px; font-weight:600; letter-spacing:0.3px; text-decoration:none; background:var(--orange-l); color:var(--orange-dk); border:1px solid rgba(245,145,30,0.3); transition:all 0.2s; white-space:nowrap; }
     .btn-enroll:hover { background:var(--orange); color:#fff; text-decoration:none; }
@@ -149,6 +150,10 @@
                 <div class="stat-label">Leftover Hours</div>
                 <div class="stat-val">{{ $stats['leftover'] }}</div>
             </div>
+            <div class="stat" style="--sc:#64748B">
+                <div class="stat-label">Postponed</div>
+                <div class="stat-val">{{ $stats['postponed'] }}</div>
+            </div>
             <div class="stat" style="--sc:var(--green-dk)">
                 <div class="stat-label">Total Hours Left</div>
                 <div class="stat-val sm">{{ number_format($stats['hours_left'], 1) }}<span style="font-size:11px;"> h</span></div>
@@ -163,6 +168,7 @@
             <a href="{{ route('private-hours.index', ['state' => 'low']) }}" class="filter-pill {{ $stateFilter === 'low' ? 'active' : '' }}">Running Low</a>
             <a href="{{ route('private-hours.index', ['state' => 'depleted']) }}" class="filter-pill {{ $stateFilter === 'depleted' ? 'active' : '' }}">Depleted</a>
             <a href="{{ route('private-hours.index', ['state' => 'leftover']) }}" class="filter-pill {{ $stateFilter === 'leftover' ? 'active' : '' }}">Leftover</a>
+            <a href="{{ route('private-hours.index', ['state' => 'postponed']) }}" class="filter-pill {{ $stateFilter === 'postponed' ? 'active' : '' }}">Postponed</a>
         </div>
 
         {{-- TABLE --}}
@@ -188,6 +194,7 @@
                                 'low'      => ['st-low','Running Low','var(--orange)'],
                                 'depleted' => ['st-depleted','Depleted','var(--red)'],
                                 'leftover' => ['st-leftover','Course Done · Hours Left','var(--blue)'],
+                                'postponed'=> ['st-postponed','Postponed','#64748B'],
                                 default    => ['st-active','—','var(--green)'],
                             };
                             $absClass = $e->v_absences >= 3 ? 'abs-bad' : ($e->v_absences >= 1 ? 'abs-warn' : 'abs-ok');
