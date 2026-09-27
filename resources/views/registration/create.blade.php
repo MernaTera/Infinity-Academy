@@ -607,10 +607,18 @@
                         {{-- Mode --}}
                         <div class="form-field">
                             <label class="form-label">Delivery Mode <span class="required">*</span></label>
-                            <select name="mode" class="form-control-inf">
-                                <option value="Offline">Offline</option>
-                                <option value="Online">Online</option>
-                            </select>
+                            <div class="segmented">
+                                <label>
+                                    <input type="radio" name="mode" value="Offline" checked>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/></svg>
+                                    Offline
+                                </label>
+                                <label>
+                                    <input type="radio" name="mode" value="Online">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 7l-7 5 7 5V7z"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+                                    Online
+                                </label>
+                            </div>
                         </div>
                     </div>
 

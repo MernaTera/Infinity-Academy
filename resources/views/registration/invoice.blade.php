@@ -517,7 +517,9 @@ window.buildInvoice = function() {
     const teacherEl   = document.getElementById('teacher_select');
     const daySelectEl = document.getElementById('day_select');
     const typeInput   = document.querySelector('input[name="type"]:checked');
-    const modeEl      = document.querySelector('[name="mode"]');
+    const modeText    = document.querySelector('input[name="mode"]:checked')?.value
+                      ?? (modeEl && modeEl.options ? modeEl.options[modeEl.selectedIndex]?.text : modeEl?.value)
+                      ?? '—';
     const patchEl     = document.getElementById('patch_select');
     const testScore   = document.getElementById('test_score_input')?.value;
     const testFeeSel  = document.getElementById('test_fee_select');
@@ -545,7 +547,7 @@ window.buildInvoice = function() {
         infRow('Level',    levelText  !== '— Select Level —'   ? levelText : '—') +
         infRow('Sublevel', subText    !== '— Select Sublevel —' ? subText   : '—') +
         infRow('Type',     typeInput?.value === 'private' ? 'Private' : 'Group') +
-        infRow('Mode',     modeEl?.options[modeEl?.selectedIndex]?.text || '—') +
+        infRow('Mode',     modeText) +
         infRow('Start',    patchEl?.options[patchEl?.selectedIndex]?.text || '—');
 
     const p         = typeof pricing !== 'undefined' ? pricing : {courseBasePrice:0,courseDiscount:0,courseFinalPrice:0,isPackage:false};
