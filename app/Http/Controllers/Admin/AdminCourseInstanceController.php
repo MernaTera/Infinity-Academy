@@ -18,54 +18,39 @@ class AdminCourseInstanceController extends Controller
 
     public function index(Request $request)
     {
-        $statusFilter = $request->query('status', 'all'); 
+        // Auto-promote: a course moves Upcoming -> Active when its start date
+        // arrives, and Active -> Completed once its end date has passed (as
+        // long as no non-cancelled session is still to run, so postponed
+        // courses keep running). Mirrors the Student Care board + the daily
+        // patches:update-statuses command.
+        CourseInstance::where('status', 'Upcoming')
+            ->whereDate('start_date', '<=', today())
+            ->update(['status' => 'Active']);
 
-        $query = CourseInstance::with([
-            'courseTemplate',
-            'level',
-            'sublevel',
-            'teacher.employee',
-            'patch',
-            'room',
-            'branch',
-            'enrollments',
-        ])
-        ->withCount([
-            'sessions as total_sessions_count',
-            'sessions as completed_sessions_count' => fn($q) => $q->where('status', 'Completed'),
-            'enrollments as enrollments_count' => fn($q) => $q->where('status', '!=', 'Cancelled'),
-        ]);
+        CourseInstance::where('status', 'Active')
+            ->whereDate('end_date', '<', today())
+            ->whereDoesntHave('sessions', function ($q) {
+                $q->where('status', '!=', 'Cancelled')
+                  ->whereDate('session_date', '>=', today());
+            })
+            ->update(['status' => 'Completed']);
 
-        if (in_array($statusFilter, ['Active', 'Upcoming', 'Completed', 'Cancelled'])) {
-            $query->where('status', $statusFilter);
-        } else {
-
-            $query->orderByRaw("FIELD(status, 'Active','Upcoming','Completed','Cancelled')");
-        }
-
-        $instances = $query->orderBy('start_date')->get();
-
-        $revenueByInstance = $this->revenueByInstance($instances->pluck('course_instance_id')->all());
-
-        foreach ($instances as $ci) {
-            $ci->revenue_total = $revenueByInstance[$ci->course_instance_id] ?? 0;
-            $ci->remaining_sessions = max(0, ($ci->total_sessions_count ?? 0) - ($ci->completed_sessions_count ?? 0));
-            $ci->progress_pct = ($ci->total_sessions_count ?? 0) > 0
-                ? round(($ci->completed_sessions_count / $ci->total_sessions_count) * 100)
-                : 0;
-        }
-
-        $all = CourseInstance::selectRaw('status, COUNT(*) as c')->groupBy('status')->pluck('c', 'status');
-        $stats = [
-            'active'    => (int) ($all['Active'] ?? 0),
-            'upcoming'  => (int) ($all['Upcoming'] ?? 0),
-            'completed' => (int) ($all['Completed'] ?? 0),
-            'cancelled' => (int) ($all['Cancelled'] ?? 0),
-            'total'     => (int) $all->sum(),
-            'revenue'   => array_sum($revenueByInstance),
+        $with = [
+            'courseTemplate','level','sublevel','teacher','patch','instanceSchedules','room','branch',
+            'sessions' => fn($q) => $q->where('status', '!=', 'Cancelled')
+                                      ->orderBy('session_date')->orderBy('start_time'),
+            'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
         ];
 
-        return view('admin.course-instances.index', compact('instances', 'stats', 'statusFilter'));
+        // Three tabs: Active / Next Patch (upcoming) / Completed.
+        $active    = CourseInstance::with($with)->where('status', 'Active')
+                        ->orderBy('start_date')->get();
+        $nextPatch = CourseInstance::with($with)->where('status', 'Upcoming')
+                        ->orderBy('start_date')->get();
+        $completed = CourseInstance::with($with)->where('status', 'Completed')
+                        ->latest('end_date')->limit(40)->get();
+
+        return view('admin.course-instances.index', compact('active', 'nextPatch', 'completed'));
     }
 
 

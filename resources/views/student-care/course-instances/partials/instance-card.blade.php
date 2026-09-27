@@ -9,6 +9,10 @@
 --}}
 @php
     $context = $context ?? 'active';
+    // Route names for the card's links, so the same card serves both the
+    // Student Care and Admin panels. Default to the SC routes.
+    $showRoute = $showRoute ?? 'student-care.instances.show';
+    $editRoute = $editRoute ?? 'student-care.instances.edit';  // pass '' to hide Edit
 
     $count    = $instance->enrollments->count();
     $capacity = (int) ($instance->capacity ?? 0);
@@ -72,12 +76,6 @@
      data-time-label="{{ $todayTimeLabel ?? '' }}"
      data-sessions='@json($todaysSessions)'>
 
-    {{-- Live ribbon (shown/updated by JS) --}}
-    @if($context === 'active')
-        <span class="ci-live-badge {{ $liveState === 'live' ? 'is-live' : 'is-soon' }}"
-              style="{{ $liveState ? '' : 'display:none;' }}">{{ $liveLabel }}</span>
-    @endif
-
     {{-- Header --}}
     <div class="ci-card-head">
         <div>
@@ -88,7 +86,13 @@
                 @if(!$instance->level && !$instance->sublevel)<span style="color:#AAB8C8;">No level</span>@endif
             </div>
         </div>
-        <span class="status-badge {{ $statusClass }}">{{ $instance->status }}</span>
+        <div class="ci-head-badges">
+            <span class="status-badge {{ $statusClass }}">{{ $instance->status }}</span>
+            @if($context === 'active')
+                <span class="ci-live-badge {{ $liveState === 'live' ? 'is-live' : 'is-soon' }}"
+                      style="{{ $liveState ? '' : 'display:none;' }}">{{ $liveLabel }}</span>
+            @endif
+        </div>
     </div>
 
     {{-- Tags --}}
@@ -140,12 +144,12 @@
 
     {{-- Actions --}}
     <div class="ci-card-actions">
-        <a href="{{ route('student-care.instances.show', $instance->course_instance_id) }}" class="btn-action ci-btn-view">
+        <a href="{{ route($showRoute, $instance->course_instance_id) }}" class="btn-action ci-btn-view">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             View
         </a>
-        @if(!in_array($instance->status, ['Completed','Cancelled']))
-        <a href="{{ route('student-care.instances.edit', $instance->course_instance_id) }}" class="btn-action ci-btn-edit">
+        @if($editRoute && !in_array($instance->status, ['Completed','Cancelled']))
+        <a href="{{ route($editRoute, $instance->course_instance_id) }}" class="btn-action ci-btn-edit">
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
             Edit
         </a>

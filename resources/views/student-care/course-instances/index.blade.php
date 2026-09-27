@@ -39,6 +39,7 @@
     .la-title .la-when-live { color:#15803D; }
     .la-meta { font-size:11px; color:#7A8A9A; margin-top:2px; display:flex; gap:12px; flex-wrap:wrap; }
     .la-meta b { color:#4A5A7A; font-weight:600; }
+    .la-meta svg { display:inline-block; vertical-align:-2px; }
     .la-go { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; padding:6px 12px; border-radius:4px; text-decoration:none; border:1px solid rgba(27,79,168,0.25); color:#1B4FA8; white-space:nowrap; }
     .la-go:hover { background:rgba(27,79,168,0.07); }
 
@@ -79,13 +80,14 @@
     .ci-card.ci-live { border-color:rgba(21,128,61,0.55); box-shadow:0 0 0 2px rgba(21,128,61,0.3),0 8px 22px rgba(21,128,61,0.12); }
     .ci-card.ci-live::before { background:#15803D; height:3px; }
 
-    .ci-live-badge { position:absolute; top:12px; right:12px; display:inline-flex; align-items:center; gap:5px; font-size:8.5px; letter-spacing:1px; text-transform:uppercase; font-weight:600; padding:3px 8px; border-radius:20px; z-index:2; }
+    .ci-head-badges { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+    .ci-live-badge { display:inline-flex; align-items:center; gap:5px; font-size:8.5px; letter-spacing:1px; text-transform:uppercase; font-weight:600; padding:3px 8px; border-radius:20px; white-space:nowrap; }
     .ci-live-badge::before { content:''; width:5px; height:5px; border-radius:50%; background:currentColor; }
     .ci-live-badge.is-soon { color:#C47010; background:rgba(245,145,30,0.12); border:1px solid rgba(245,145,30,0.3); }
     .ci-live-badge.is-live { color:#15803D; background:rgba(21,128,61,0.12); border:1px solid rgba(21,128,61,0.3); }
     .ci-live-badge.is-live::before { animation:pulse 1.4s infinite; }
 
-    .ci-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px; padding-right:70px; }
+    .ci-card-head { display:flex; justify-content:space-between; align-items:flex-start; gap:10px; margin-bottom:10px;}
     .ci-card-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:1px; color:#1A2A4A; line-height:1.05; }
     .ci-card-sub { font-size:11px; color:#7A8A9A; margin-top:3px; }
     .ci-card-tags { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:12px; }
@@ -135,7 +137,7 @@
     .now-item-when.is-live { background:rgba(74,222,128,0.2); color:#BBF7D0; }
     .now-item-course { font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:1px; margin-bottom:6px; }
     .now-item-meta { font-size:11px; color:rgba(255,255,255,0.75); line-height:1.7; }
-    .now-item-meta svg { vertical-align:-2px; margin-right:5px; opacity:0.7; }
+    .now-item-meta svg { display:inline-block; vertical-align:-2px; margin-right:5px; opacity:0.7; }
     .now-empty { text-align:center; padding:16px 6px; color:rgba(255,255,255,0.55); font-size:12px; line-height:1.6; }
     .now-empty svg { opacity:0.4; margin-bottom:8px; }
 
