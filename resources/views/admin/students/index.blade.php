@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends(auth()->user()->panelLayout())
 @section('title', 'Students')
 
 @section('content')
@@ -19,6 +19,13 @@
 .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--blue));}
 .kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:6px;}
 .kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--kc,var(--blue));line-height:1;}
+/* Clickable KPI cards double as status filters */
+a.kpi-card{text-decoration:none;display:block;cursor:pointer;transition:transform .15s,box-shadow .15s;}
+a.kpi-card:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(27,79,168,0.10);text-decoration:none;}
+a.kpi-card.active{box-shadow:0 0 0 2px var(--kc,var(--blue));border-color:var(--kc,var(--blue));}
+a.kpi-card.active::before{height:3px;}
+.kpi-hint{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);margin-top:4px;opacity:0;transition:opacity .15s;}
+a.kpi-card:hover .kpi-hint{opacity:1;}
 
 /* Filters */
 .filter-bar{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;}
@@ -32,6 +39,16 @@
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--faint);}
 .btn-filter{padding:8px 20px;background:var(--blue);border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;}
 .btn-reset{padding:8px 16px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1px;text-decoration:none;display:inline-flex;align-items:center;}
+.btn-reset:hover{border-color:var(--red);color:var(--red);text-decoration:none;}
+.search-wrap .search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--faint);text-decoration:none;font-size:17px;line-height:1;padding:0 2px;}
+.search-wrap .search-clear:hover{color:var(--red);}
+.result-line{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:11px;color:var(--muted);flex-wrap:wrap;gap:6px;}
+.result-line .rl-pill{color:var(--blue);background:var(--blue-l);border:1px solid var(--border);padding:2px 9px;border-radius:99px;font-size:10px;letter-spacing:.5px;}
+/* Stacked phone list in table */
+.phone-cell{display:flex;flex-direction:column;gap:2px;}
+.phone-cell .pc-row{display:flex;align-items:center;gap:5px;}
+.phone-cell .pc-star{color:var(--orange);font-size:10px;line-height:1;}
+.phone-cell .pc-more{font-size:9px;color:var(--faint);}
 
 /* Table */
 .tbl-card{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(27,79,168,0.04);}
@@ -69,26 +86,47 @@
 </style>
 
 <div class="st-page">
-    <div class="page-eyebrow">Admin Panel</div>
+    <div class="page-eyebrow">{{ auth()->user()->panelLabel() }}</div>
     <h1 class="page-title">Students</h1>
 
-    {{-- KPIs --}}
+    {{-- KPIs (click to filter by status) --}}
+    @php $kpiBase = array_filter(['search' => $search, 'cs_id' => $csFilter]); @endphp
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:var(--blue)"><div class="kpi-label">Total</div><div class="kpi-val">{{ $stats['total'] }}</div></div>
-        <div class="kpi-card" style="--kc:var(--green)"><div class="kpi-label">Active</div><div class="kpi-val">{{ $stats['active'] }}</div></div>
-        <div class="kpi-card" style="--kc:#7F77DD"><div class="kpi-label">Waiting</div><div class="kpi-val">{{ $stats['waiting'] }}</div></div>
-        <div class="kpi-card" style="--kc:var(--orange)"><div class="kpi-label">Completed</div><div class="kpi-val">{{ $stats['completed'] }}</div></div>
+        <a href="{{ route('students.index', $kpiBase) }}"
+           class="kpi-card {{ !$status ? 'active' : '' }}" style="--kc:var(--blue)">
+            <div class="kpi-label">Total</div><div class="kpi-val">{{ $stats['total'] }}</div>
+            <div class="kpi-hint">Show all</div>
+        </a>
+        <a href="{{ route('students.index', array_merge($kpiBase, ['status' => 'Active'])) }}"
+           class="kpi-card {{ $status === 'Active' ? 'active' : '' }}" style="--kc:var(--green)">
+            <div class="kpi-label">Active</div><div class="kpi-val">{{ $stats['active'] }}</div>
+            <div class="kpi-hint">Filter</div>
+        </a>
+        <a href="{{ route('students.index', array_merge($kpiBase, ['status' => 'Waiting'])) }}"
+           class="kpi-card {{ $status === 'Waiting' ? 'active' : '' }}" style="--kc:#7F77DD">
+            <div class="kpi-label">Waiting</div><div class="kpi-val">{{ $stats['waiting'] }}</div>
+            <div class="kpi-hint">Filter</div>
+        </a>
+        <a href="{{ route('students.index', array_merge($kpiBase, ['status' => 'Completed'])) }}"
+           class="kpi-card {{ $status === 'Completed' ? 'active' : '' }}" style="--kc:var(--orange)">
+            <div class="kpi-label">Completed</div><div class="kpi-val">{{ $stats['completed'] }}</div>
+            <div class="kpi-hint">Filter</div>
+        </a>
     </div>
 
     {{-- Filters --}}
-    <form method="GET" action="{{ route('admin.students.index') }}">
+    <form method="GET" action="{{ route('students.index') }}" id="studentFilterForm">
         <div class="filter-bar">
             <div class="search-wrap">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-                <input type="text" name="search" placeholder="Search name, phone, email, or INV-000012..." value="{{ $search }}">            </div>
+                <input type="text" name="search" placeholder="Search name, phone, email, or INV-000012…" value="{{ $search }}">
+                @if($search)
+                    <a href="{{ route('students.index', array_filter(['status' => $status, 'cs_id' => $csFilter])) }}" class="search-clear" title="Clear search">×</a>
+                @endif
+            </div>
             <div class="filter-field">
                 <label class="filter-label">Status</label>
-                <select name="status" class="filter-control">
+                <select name="status" class="filter-control" onchange="document.getElementById('studentFilterForm').submit()">
                     <option value="">All Statuses</option>
                     <option value="Pending_Approval" {{ $status === 'Pending_Approval' ? 'selected' : '' }}>Pending Approval</option>
                     <option value="Active"           {{ $status === 'Active'           ? 'selected' : '' }}>Active</option>
@@ -101,7 +139,7 @@
             </div>
             <div class="filter-field">
                 <label class="filter-label">CS User</label>
-                <select name="cs_id" class="filter-control">
+                <select name="cs_id" class="filter-control" onchange="document.getElementById('studentFilterForm').submit()">
                     <option value="">All CS</option>
                     @foreach($csUsers as $cs)
                     <option value="{{ $cs->employee_id }}" {{ $csFilter == $cs->employee_id ? 'selected' : '' }}>
@@ -110,10 +148,25 @@
                     @endforeach
                 </select>
             </div>
-            <button type="submit" class="btn-filter">Filter</button>
-            <a href="{{ route('admin.students.index') }}" class="btn-reset">Reset</a>
+            <button type="submit" class="btn-filter">Search</button>
+            @if($search || $status || $csFilter)
+                <a href="{{ route('students.index') }}" class="btn-reset">Clear all</a>
+            @endif
         </div>
     </form>
+
+    {{-- Result summary --}}
+    <div class="result-line">
+        <div>
+            Showing <strong style="color:var(--text);">{{ $students->firstItem() ?? 0 }}–{{ $students->lastItem() ?? 0 }}</strong>
+            of <strong style="color:var(--text);">{{ $students->total() }}</strong> students
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            @if($status)<span class="rl-pill">Status: {{ str_replace('_', ' ', $status) }}</span>@endif
+            @if($csFilter)<span class="rl-pill">CS: {{ $csUsers->firstWhere('employee_id', $csFilter)?->full_name ?? '#'.$csFilter }}</span>@endif
+            @if($search)<span class="rl-pill">“{{ $search }}”</span>@endif
+        </div>
+    </div>
 
     {{-- Table --}}
     <div class="tbl-card">
@@ -157,7 +210,7 @@
                             $latestEnr = $student->enrollments->first();
                         @endphp
                         @if($latestEnr)
-                            <a href="{{ route('admin.students.show', $student->student_id) }}" 
+                            <a href="{{ route('students.show', $student->student_id) }}" 
                             style="font-family:monospace;font-size:11px;color:var(--blue);text-decoration:none;font-weight:500;">
                                 INV-{{ str_pad($latestEnr->enrollment_id, 6, '0', STR_PAD_LEFT) }}
                             </a>
@@ -169,7 +222,15 @@
                         @endif
                     </td>
                         <td style="font-family:monospace;font-size:12px;">
-                            {{ $student->phones->where('is_primary',true)->first()?->phone_number ?? '—' }}
+                            @php $phones = $student->phones->sortByDesc('is_primary'); @endphp
+                            @forelse($phones as $ph)
+                                <div class="pc-row">
+                                    @if($ph->is_primary)<span class="pc-star" title="Primary">★</span>@endif
+                                    <span>{{ $ph->phone_number }}</span>
+                                </div>
+                            @empty
+                                <span style="color:var(--faint);">—</span>
+                            @endforelse
                         </td>
                         <td>
                             @if($e)
@@ -210,14 +271,14 @@
                             {{ $student->created_at?->format('d M Y') }}
                         </td>
                         <td>
-                            <a href="{{ route('admin.students.show', $student->student_id) }}" class="btn-view">
+                            <a href="{{ route('students.show', $student->student_id) }}" class="btn-view">
                                 View
                             </a>
                         </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="10" style="text-align:center;padding:48px;color:var(--faint);font-size:13px;">
+                        <td colspan="11" style="text-align:center;padding:48px;color:var(--faint);font-size:13px;">
                             No students found.
                         </td>
                     </tr>

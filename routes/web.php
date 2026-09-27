@@ -246,6 +246,23 @@ Route::middleware(['auth', 'permission:enrollment.edit'])
     });
 
 // ─────────────────────────────────────────────────────────────────
+// Students (shared) — Admin, Customer Service, CS Leader, Student Care
+// Guarded by enrollment.view (Admin bypasses). The view/layout adapts
+// to whoever is logged in, so all roles get the same students screen
+// inside their own panel.
+// ─────────────────────────────────────────────────────────────────
+Route::middleware(['auth', 'permission:enrollment.view'])
+    ->group(function () {
+        Route::get('/students',      [AdminStudentController::class, 'index'])->name('students.index');
+        Route::get('/students/{id}', [AdminStudentController::class, 'show'])->name('students.show');
+
+        // Student phone numbers (multiple per student)
+        Route::post('/students/{id}/phones',                    [AdminStudentController::class, 'storePhone'])->name('students.phones.store');
+        Route::patch('/students/{id}/phones/{phoneId}/primary', [AdminStudentController::class, 'setPrimaryPhone'])->name('students.phones.primary');
+        Route::delete('/students/{id}/phones/{phoneId}',        [AdminStudentController::class, 'deletePhone'])->name('students.phones.destroy');
+    });
+
+// ─────────────────────────────────────────────────────────────────
 // Admin
 // ─────────────────────────────────────────────────────────────────
 
@@ -271,9 +288,8 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::patch('/employees/{id}/update-all', [EmployeeController::class, 'updateAll'])->name('employees.update-all');
 
 
-        //Students
-        Route::get('/students',      [AdminStudentController::class, 'index'])->name('students.index');
-        Route::get('/students/{id}', [AdminStudentController::class, 'show'])->name('students.show');
+        // Students — routes moved to the shared `students.*` group below so
+        // Customer Service, CS Leader and Student Care can reach the same view.
 
         //Teacher
         Route::get('/reports',                    [AdminReportController::class, 'index'])->name('reports.index');

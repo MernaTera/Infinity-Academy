@@ -157,7 +157,7 @@ class Student extends Model
 
     public function primaryPhone()
     {
-        return $this->student_phones()->where('is_primary', true)->first();
+        return $this->phones()->where('is_primary', true)->first();
     }
 
     public function activeEnrollment()

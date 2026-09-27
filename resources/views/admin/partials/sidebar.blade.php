@@ -183,8 +183,8 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             <span class="sl-txt">Employees</span>
         </a>
-        <a href="{{ route('admin.students.index') }}" data-tip="Students"
-           class="sl {{ request()->routeIs('admin.students.*') ? 'active' : '' }}">
+        <a href="{{ route('students.index') }}" data-tip="Students"
+           class="sl {{ request()->routeIs('students.*') ? 'active' : '' }}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             <span class="sl-txt">Students</span>
         </a>

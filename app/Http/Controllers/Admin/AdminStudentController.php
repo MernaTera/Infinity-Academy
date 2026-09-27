@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student\Student;
+use App\Models\Student\StudentPhone;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
 
@@ -129,5 +130,79 @@ class AdminStudentController extends Controller
         ])->findOrFail($id);
 
         return view('admin.students.show', compact('student'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Phone numbers (multiple per student)
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Add a phone number to a student.
+     * The first number added becomes the primary automatically.
+     */
+    public function storePhone(Request $request, $id)
+    {
+        $student = Student::findOrFail($id);
+
+        $data = $request->validate([
+            'phone_number' => [
+                'required', 'string', 'max:20',
+                'regex:/^[0-9+\-\s()]{6,20}$/',
+                'unique:student_phone,phone_number',
+            ],
+        ], [
+            'phone_number.unique' => 'This phone number is already registered.',
+            'phone_number.regex'  => 'Please enter a valid phone number.',
+            'phone_number.max'    => 'Phone number is too long.',
+        ]);
+
+        $isFirst = $student->phones()->count() === 0;
+        $makePrimary = $isFirst || $request->boolean('is_primary');
+
+        if ($makePrimary) {
+            $student->phones()->update(['is_primary' => false]);
+        }
+
+        StudentPhone::create([
+            'student_id'   => $student->student_id,
+            'phone_number' => trim($data['phone_number']),
+            'is_primary'   => $makePrimary,
+        ]);
+
+        return back()->with('success', 'Phone number added.');
+    }
+
+    /**
+     * Mark one of the student's numbers as the primary one.
+     */
+    public function setPrimaryPhone($id, $phoneId)
+    {
+        $student = Student::findOrFail($id);
+        $phone   = $student->phones()->where('phone_id', $phoneId)->firstOrFail();
+
+        $student->phones()->update(['is_primary' => false]);
+        $phone->update(['is_primary' => true]);
+
+        return back()->with('success', 'Primary number updated.');
+    }
+
+    public function deletePhone($id, $phoneId)
+    {
+        $student = Student::findOrFail($id);
+        $phone   = $student->phones()->where('phone_id', $phoneId)->firstOrFail();
+
+        $wasPrimary = (bool) $phone->is_primary;
+        $phone->delete();
+
+        if ($wasPrimary) {
+            $next = $student->phones()->oldest('phone_id')->first();
+            if ($next) {
+                $next->update(['is_primary' => true]);
+            }
+        }
+
+        return back()->with('success', 'Phone number removed.');
     }
 }

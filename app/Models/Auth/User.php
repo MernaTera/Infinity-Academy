@@ -74,6 +74,29 @@ class User extends Authenticatable
      */
     public function worksCs(): bool    { return $this->isCS() || $this->isCsLeader(); }
 
+    /**
+     * The panel layout this user's shared pages (e.g. the Students view)
+     * should render inside, so one Blade view serves every role in its
+     * own panel chrome.
+     */
+    public function panelLayout(): string
+    {
+        if ($this->isAdmin())  return 'admin.layouts.app';
+        if ($this->worksCs())  return 'layouts.leads';
+        if ($this->isSC())     return 'student-care.layouts.app';
+        return 'admin.layouts.app';
+    }
+
+    /** Human label for the current panel (used in page eyebrows). */
+    public function panelLabel(): string
+    {
+        if ($this->isAdmin())    return 'Admin Panel';
+        if ($this->isCsLeader()) return 'CS Leader';
+        if ($this->isCS())       return 'Customer Service';
+        if ($this->isSC())       return 'Student Care';
+        return 'Panel';
+    }
+
     // ─────────────────────────────────────────
     // Permission check — always fresh load
     // ─────────────────────────────────────────

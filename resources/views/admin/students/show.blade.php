@@ -1,4 +1,4 @@
-@extends('admin.layouts.app')
+@extends(auth()->user()->panelLayout())
 @section('title', 'Student Profile')
 
 @section('content')
@@ -80,15 +80,38 @@
 .total-banner{background:linear-gradient(135deg,#1A2A4A,var(--blue));border-radius:8px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
 .total-banner-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;}
 .total-banner-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#fff;}
+
+/* Phone numbers manager */
+.phones-block{padding:10px 0 4px;border-bottom:1px solid rgba(27,79,168,0.04);}
+.phones-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.phones-count{font-size:9px;color:var(--faint);letter-spacing:1px;}
+.phone-item{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid rgba(27,79,168,0.05);}
+.phone-item:last-child{border-bottom:none;}
+.phone-num{font-family:monospace;font-size:12px;color:var(--text);flex:1;word-break:break-all;}
+.phone-star{cursor:pointer;color:var(--orange);font-size:14px;line-height:1;background:none;border:none;padding:0;}
+.phone-star.inactive{color:var(--faint);opacity:.45;}
+.phone-star.inactive:hover{opacity:1;color:var(--orange);}
+.phone-tag{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--orange);background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);padding:1px 5px;border-radius:3px;}
+.phone-wa{color:var(--green);display:inline-flex;align-items:center;}
+.phone-wa:hover{opacity:.7;}
+.phone-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
+.phone-del:hover{color:var(--red);}
+.phone-add{display:flex;gap:6px;margin-top:10px;}
+.phone-add input{flex:1;min-width:0;padding:7px 9px;border:1px solid rgba(27,79,168,0.15);border-radius:4px;font-size:12px;font-family:monospace;outline:none;}
+.phone-add input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l);}
+.phone-add button{padding:7px 13px;background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.phone-add button:hover{background:#153e85;}
+.flash-ok{background:var(--green-l);border:1px solid rgba(5,150,105,0.2);color:var(--green);font-size:11px;padding:6px 10px;border-radius:4px;margin-bottom:10px;}
+.flash-err{background:var(--red-l);border:1px solid rgba(220,38,38,0.15);color:var(--red);font-size:11px;padding:6px 10px;border-radius:4px;margin-bottom:10px;}
 </style>
 
 <div class="sp-page">
     <div class="page-header">
         <div>
-            <div class="page-eyebrow">Admin Panel — Students</div>
+            <div class="page-eyebrow">{{ auth()->user()->panelLabel() }} — Students</div>
             <h1 class="page-title">{{ $student->full_name }}</h1>
         </div>
-        <a href="{{ route('admin.students.index') }}" class="btn-back">
+        <a href="{{ route('students.index') }}" class="btn-back">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Back to Students
         </a>
@@ -142,11 +165,52 @@
                     <span class="badge badge-{{ strtolower($student->status) }}">{{ $student->status }}</span>
                 </div>
                 <div class="card-body" style="border-top:1px solid var(--border);padding-top:14px;">
-                    <div class="meta-row">
-                        <span class="meta-key">Phone</span>
-                        <span class="meta-val" style="font-family:monospace;font-size:12px;">
-                            {{ $student->phones->where('is_primary',true)->first()?->phone_number ?? '—' }}
-                        </span>
+                    <div class="phones-block">
+                        <div class="phones-head">
+                            <span class="meta-key">Phone Numbers</span>
+                            <span class="phones-count">{{ $student->phones->count() }}</span>
+                        </div>
+
+                        @if(session('success'))
+                            <div class="flash-ok">{{ session('success') }}</div>
+                        @endif
+                        @error('phone_number')
+                            <div class="flash-err">{{ $message }}</div>
+                        @enderror
+
+                        @forelse($student->phones->sortByDesc('is_primary') as $ph)
+                            <div class="phone-item">
+                                @if($ph->is_primary)
+                                    <span class="phone-star" title="Primary number">★</span>
+                                @else
+                                    <form method="POST" action="{{ route('students.phones.primary', [$student->student_id, $ph->phone_id]) }}" style="display:inline;">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="phone-star inactive" title="Set as primary">☆</button>
+                                    </form>
+                                @endif
+
+                                <span class="phone-num">{{ $ph->phone_number }}</span>
+
+                                @if($ph->is_primary)<span class="phone-tag">Primary</span>@endif
+
+                                <a class="phone-wa" href="https://wa.me/{{ $ph->whatsappFormat() }}" target="_blank" rel="noopener" title="Open in WhatsApp">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.15-1.7-.85-2-.95-.25-.1-.45-.15-.65.15-.2.3-.75.95-.9 1.15-.15.2-.35.2-.65.05-1.5-.75-2.5-1.35-3.5-3.05-.25-.45.25-.4.75-1.35.1-.2 0-.4-.05-.55-.05-.15-.65-1.6-.9-2.2-.25-.55-.5-.5-.65-.5h-.6c-.2 0-.5.05-.8.35-.3.3-1.05 1-1.05 2.5s1.1 2.9 1.25 3.1c.15.2 2.1 3.25 5.1 4.55 3 1.3 3 .85 3.55.8.55-.05 1.75-.7 2-1.4.25-.7.25-1.3.15-1.4-.05-.1-.25-.15-.55-.3M12 2a10 10 0 0 0-8.55 15.15L2 22l4.95-1.3A10 10 0 1 0 12 2"/></svg>
+                                </a>
+
+                                <form method="POST" action="{{ route('students.phones.destroy', [$student->student_id, $ph->phone_id]) }}" style="display:inline;" onsubmit="return confirm('Remove this number?');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="phone-del" title="Remove">×</button>
+                                </form>
+                            </div>
+                        @empty
+                            <div style="font-size:11px;color:var(--faint);padding:6px 0;">No numbers yet.</div>
+                        @endforelse
+
+                        <form method="POST" action="{{ route('students.phones.store', $student->student_id) }}" class="phone-add">
+                            @csrf
+                            <input type="text" name="phone_number" placeholder="Add number…" value="{{ old('phone_number') }}" required>
+                            <button type="submit">Add</button>
+                        </form>
                     </div>
                     <div class="meta-row">
                         <span class="meta-key">Degree</span>
