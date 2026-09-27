@@ -257,19 +257,19 @@
         <span class="sec-label">Outstanding & Collections</span>
         <div class="kpi-grid" style="grid-template-columns:repeat(3,1fr);">
             <a href="{{ route('outstanding.index') }}" class="kpi-card" style="--kc:var(--red)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
                 <div class="kpi-label">Outstanding Students</div>
                 <div class="kpi-val">{{ $outstandingStats['count'] }}</div>
                 <div class="kpi-sub">with balance due</div>
             </a>
             <a href="{{ route('outstanding.index') }}" class="kpi-card" style="--kc:var(--orange-dk)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/></svg></div>
                 <div class="kpi-label">Total Outstanding</div>
                 <div class="kpi-val">{{ number_format($outstandingStats['total_le']) }}</div>
                 <div class="kpi-sub">LE to collect</div>
             </a>
             <a href="{{ route('outstanding.index') }}" class="kpi-card" style="--kc:var(--red)">
-                <div class="kpi-icon"></div>
+                <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2z"/></svg></div>
                 <div class="kpi-label">Restricted</div>
                 <div class="kpi-val">{{ $outstandingStats['restricted'] }}</div>
                 <div class="kpi-sub">access restricted</div>
