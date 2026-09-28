@@ -13,67 +13,64 @@
         --blue:#1B4FA8; --blue-2:#2D6FDB; --blue-l:rgba(27,79,168,0.06);
         --orange:#F5911E; --orange-dk:#C47010; --orange-l:rgba(245,145,30,0.07);
         --green:#059669; --green-dk:#15803D; --green-l:rgba(5,150,105,0.07);
-        --red:#DC2626; --red-l:rgba(220,38,38,0.05);
-        --dark:#0F1F3D; --text:#1A2A4A; --muted:#7A8A9A; --faint:#AAB8C8;
-        --bg:#F8F6F2; --card:#fff; --border:rgba(27,79,168,0.1);
+        --red:#DC2626; --red-l:rgba(220,38,38,0.05); --purple:#7C3AED;
+        --dark:#0F1F3D; --text:#16233F; --muted:#5A6A85; --faint:#93A3BC;
+        --bg:#F8F6F2; --card:rgba(255,255,255,0.72); --border:rgba(255,255,255,0.6);
+        --line:rgba(27,79,168,0.08); --glass-sh:0 12px 34px -14px rgba(23,45,90,0.2);
     }
     * { box-sizing:border-box; }
 
-    .rf-page { background:var(--bg); min-height:100vh; padding:28px 32px; color:var(--text); font-family:'DM Sans',sans-serif; }
-
-    /* ═══ HEADER ═══ */
-    .rf-header {
-        margin:0 auto 22px;
-        background:linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
-        border-radius:14px; padding:24px 30px;
-        position:relative; overflow:hidden; box-shadow:0 8px 32px rgba(15,31,61,0.15);
+    .rf-page {
+        min-height:100vh; padding:40px 34px 52px; color:var(--text); font-family:'DM Sans',sans-serif;
+        background:#F8F6F2;
     }
-    .rf-header::before { content:''; position:absolute; top:-70px; right:-50px; width:220px; height:220px; border-radius:50%; background:rgba(245,145,30,0.06); }
-    .rf-header::after { content:''; position:absolute; bottom:-60px; left:26%; width:150px; height:150px; border-radius:50%; background:rgba(27,79,168,0.15); }
+    .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3 { width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
+
+    .rf-header { margin:0 auto 18px; }
     .rf-header-inner { position:relative; z-index:1; }
-    .rf-eyebrow { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin-bottom:5px; font-weight:600; display:flex; align-items:center; gap:8px; }
+    .rf-eyebrow { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue); margin-bottom:7px; font-weight:600; display:flex; align-items:center; gap:8px; }
     .rf-eyebrow::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--orange); box-shadow:0 0 8px var(--orange); }
-    .rf-title { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:4px; color:#fff; line-height:1; margin:0; }
-    .rf-sub { font-size:11px; color:rgba(255,255,255,0.5); margin-top:5px; letter-spacing:0.5px; }
+    .rf-title { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:2px; color:var(--text); line-height:0.95; margin:0; }
+    .rf-sub { font-size:12px; color:var(--muted); margin-top:6px; letter-spacing:0.3px; }
 
     .rf-wrap { margin:0 auto; }
 
-    /* ═══ POLICY BANNER ═══ */
     .policy-banner {
-        background:var(--blue-l); border:1px solid var(--border); border-left:3px solid var(--blue);
-        border-radius:10px; padding:14px 18px; margin-bottom:22px;
+        background:rgba(27,79,168,0.06); border:1px solid var(--border); border-left:3px solid var(--blue);
+        border-radius:14px; padding:14px 18px; margin-bottom:22px;
         display:flex; align-items:flex-start; gap:12px; font-size:13px; color:var(--text); line-height:1.5;
     }
     .policy-banner svg { flex-shrink:0; margin-top:2px; }
     .policy-banner strong { color:var(--blue); font-weight:600; }
 
-    /* ═══ STATS ═══ */
     .rf-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:26px; }
     @media (max-width:600px){ .rf-stats{ grid-template-columns:1fr; } }
-    .rf-stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:18px 20px; position:relative; overflow:hidden; box-shadow:0 2px 10px rgba(27,79,168,0.04); }
+    .rf-stat { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:20px; position:relative; overflow:hidden; box-shadow:var(--glass-sh); }
     .rf-stat::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--sc,var(--blue)); }
     .rf-stat-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
     .rf-stat-val { font-family:'Bebas Neue',sans-serif; font-size:38px; letter-spacing:1px; line-height:0.9; color:var(--sc,var(--blue)); }
 
-    .sec-label { display:block; font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange); margin:0 0 16px; font-weight:600; }
+    .sec-label { display:flex; align-items:center; gap:10px; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text); font-weight:700; margin:0 0 16px; }
+    .sec-label::before { content:''; width:20px; height:3px; border-radius:3px; background:linear-gradient(90deg, var(--orange), var(--blue)); flex-shrink:0; }
 
-    /* ═══ ELIGIBLE CARDS ═══ */
     .elig-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:16px; margin-bottom:32px; }
     .elig-card {
-        background:var(--card); border:1px solid var(--border); border-radius:14px;
-        overflow:hidden; box-shadow:0 2px 12px rgba(27,79,168,0.05);
+        background:var(--card); border:1px solid var(--border); border-radius:18px;
+        overflow:hidden; box-shadow:var(--glass-sh);
         transition:transform 0.2s, box-shadow 0.2s;
     }
-    .elig-card:hover { transform:translateY(-3px); box-shadow:0 10px 28px rgba(27,79,168,0.1); }
+    .elig-card:hover { transform:translateY(-3px); box-shadow:0 18px 42px -14px rgba(23,45,90,0.28); }
     .elig-card-top { padding:18px 20px 16px; border-bottom:1px solid var(--border); }
     .elig-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px; }
     .elig-name { font-size:16px; font-weight:700; color:var(--text); line-height:1.2; }
     .elig-course { font-size:11px; color:var(--muted); margin-top:3px; }
     .elig-timer {
-        display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:9px;
+        display:flex; align-items:center; gap:6px; padding:7px 12px; border-radius:20px;
         font-size:11px; font-weight:600; white-space:nowrap; flex-shrink:0;
     }
-    .timer-ok   { background:var(--green-l); color:var(--green); }
+    .timer-ok   { background:var(--green-l); color:var(--green-dk); }
     .timer-warn { background:var(--orange-l); color:var(--orange-dk); }
     .timer-crit { background:var(--red-l); color:var(--red); }
 
@@ -81,15 +78,14 @@
     .elig-meta-row { display:flex; align-items:center; justify-content:space-between; font-size:11px; }
     .elig-meta-key { color:var(--muted); letter-spacing:0.3px; }
     .elig-meta-val { color:var(--text); font-weight:600; }
-    .day-pill { display:inline-block; padding:2px 9px; border-radius:12px; font-size:10px; font-weight:600; background:var(--blue-l); color:var(--blue); }
+    .day-pill { display:inline-block; padding:2px 9px; border-radius:20px; font-size:10px; font-weight:600; background:var(--blue-l); color:var(--blue); }
 
-    /* Payment methods breakdown */
     .method-breakdown { margin-top:12px; padding-top:12px; border-top:1px dashed var(--border); }
     .method-breakdown-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--faint); font-weight:600; margin-bottom:8px; }
     .method-chips { display:flex; flex-wrap:wrap; gap:6px; }
     .method-chip {
-        display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:7px;
-        font-size:11px; font-weight:500; background:var(--bg); border:1px solid var(--border);
+        display:inline-flex; align-items:center; gap:6px; padding:5px 10px; border-radius:9px;
+        font-size:11px; font-weight:500; background:rgba(255,255,255,0.5); border:1px solid var(--border);
     }
     .method-chip .mc-method { color:var(--muted); }
     .method-chip .mc-amount { color:var(--text); font-weight:700; }
@@ -105,29 +101,28 @@
     .elig-total-val { font-family:'Bebas Neue',sans-serif; font-size:26px; letter-spacing:1px; color:var(--blue); line-height:1; }
     .btn-refund {
         display:inline-flex; align-items:center; gap:7px; padding:11px 20px;
-        background:transparent; border:1.5px solid var(--red); border-radius:8px;
+        background:rgba(220,38,38,0.06); border:1.5px solid var(--red); border-radius:12px;
         color:var(--red); font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600;
         letter-spacing:0.5px; cursor:pointer; transition:all 0.2s; white-space:nowrap;
     }
-    .btn-refund:hover { background:var(--red); color:#fff; }
+    .btn-refund:hover { background:var(--red); color:#fff; box-shadow:0 8px 18px rgba(220,38,38,0.3); }
     .btn-refund:disabled { opacity:0.4; cursor:not-allowed; }
 
     .elig-empty {
         grid-column:1/-1; text-align:center; padding:50px 20px;
-        background:var(--card); border:1px dashed var(--border); border-radius:14px; color:var(--faint);
+        background:var(--card); border:1px dashed var(--border); border-radius:18px; color:var(--faint);
     }
     .elig-empty svg { opacity:0.35; margin-bottom:12px; }
     .elig-empty-title { font-size:15px; font-weight:600; color:var(--muted); margin-bottom:4px; }
     .elig-empty-sub { font-size:12px; }
 
-    /* ═══ REQUESTS TABLE ═══ */
-    .rf-table-card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; box-shadow:0 2px 12px rgba(27,79,168,0.05); }
+    .rf-table-card { background:rgba(255,255,255,0.72); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:var(--glass-sh); }
     .rf-table-scroll { overflow-x:auto; }
     .rf-table { width:100%; border-collapse:collapse; min-width:760px; }
-    .rf-table thead th { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:14px 18px; text-align:left; border-bottom:1px solid var(--border); font-weight:600; background:var(--bg); white-space:nowrap; }
-    .rf-table tbody td { padding:14px 18px; border-bottom:1px solid rgba(27,79,168,0.05); font-size:12px; color:var(--text); vertical-align:middle; }
+    .rf-table thead th { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:15px 18px; text-align:left; border-bottom:1px solid var(--border); font-weight:700; background:rgba(255,255,255,0.55); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); white-space:nowrap; }
+    .rf-table tbody td { padding:14px 18px; border-bottom:1px solid rgba(27,79,168,0.06); font-size:12px; color:var(--text); vertical-align:middle; }
     .rf-table tbody tr:last-child td { border-bottom:none; }
-    .rf-table tbody tr:hover { background:var(--blue-l); }
+    .rf-table tbody tr:hover { background:rgba(27,79,168,0.04); }
     .rf-amount { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:1px; color:var(--blue); }
 
     .rf-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:10px; font-weight:600; letter-spacing:0.3px; white-space:nowrap; }
@@ -139,33 +134,33 @@
 
     .rf-table-empty { text-align:center; padding:44px 20px; color:var(--faint); font-size:13px; }
 
-    /* ═══ MODAL ═══ */
-    .rf-modal { display:none; position:fixed; inset:0; background:rgba(15,31,61,0.5); backdrop-filter:blur(4px); z-index:1000; align-items:center; justify-content:center; }
+    .rf-modal { display:none; position:fixed; inset:0; background:rgba(15,31,61,0.5); backdrop-filter:blur(6px); z-index:1000; align-items:center; justify-content:center; }
     .rf-modal.open { display:flex; }
-    .rf-modal-box { background:var(--card); border-radius:14px; width:90%; max-width:460px; box-shadow:0 20px 60px rgba(15,31,61,0.3); overflow:hidden; }
-    .rf-modal-head { padding:20px 24px; background:linear-gradient(135deg, rgba(220,38,38,0.04), transparent); border-bottom:1px solid var(--border); }
+    .rf-modal-box { background:rgba(255,255,255,0.95); -webkit-backdrop-filter:blur(28px) saturate(160%); backdrop-filter:blur(28px) saturate(160%); border:1px solid var(--border); border-radius:22px; width:90%; max-width:460px; box-shadow:0 30px 70px -18px rgba(23,45,90,0.4); overflow:hidden; }
+    .rf-modal-head { padding:20px 24px; background:rgba(220,38,38,0.05); border-bottom:1px solid var(--border); }
     .rf-modal-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; color:var(--text); }
     .rf-modal-body { padding:22px 24px; }
-    .rf-warn { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; background:var(--red-l); border:1px solid rgba(220,38,38,0.15); border-radius:9px; font-size:12px; color:var(--red); margin-bottom:18px; line-height:1.5; }
+    .rf-warn { display:flex; align-items:flex-start; gap:10px; padding:12px 14px; background:var(--red-l); border:1px solid rgba(220,38,38,0.15); border-radius:12px; font-size:12px; color:var(--red); margin-bottom:18px; line-height:1.5; }
     .rf-warn svg { flex-shrink:0; margin-top:1px; }
     .rf-field { margin-bottom:16px; }
     .rf-field-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:7px; display:block; }
-    .form-control { width:100%; padding:11px 14px; border:1px solid var(--border); border-radius:8px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none; transition:border-color 0.2s, box-shadow 0.2s; }
-    .form-control:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.08); }
-    .form-control[readonly] { background:var(--bg); color:var(--muted); }
+    .form-control { width:100%; padding:12px 14px; border:1px solid rgba(27,79,168,0.1); border-radius:12px; background:rgba(255,255,255,0.6); font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none; transition:border-color 0.2s, box-shadow 0.2s; }
+    .form-control:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.12); }
+    .form-control[readonly] { background:rgba(27,79,168,0.04); color:var(--muted); }
     textarea.form-control { resize:vertical; min-height:80px; }
-    .rf-modal-actions { display:flex; justify-content:flex-end; gap:10px; padding:16px 24px; border-top:1px solid var(--border); background:var(--bg); }
-    .btn-cancel { padding:10px 20px; background:transparent; border:1px solid var(--border); border-radius:7px; color:var(--muted); font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:600; cursor:pointer; transition:all 0.2s; }
+    .rf-modal-actions { display:flex; justify-content:flex-end; gap:10px; padding:16px 24px; border-top:1px solid var(--border); background:rgba(255,255,255,0.4); }
+    .btn-cancel { padding:11px 20px; background:rgba(255,255,255,0.5); border:1px solid var(--border); border-radius:12px; color:var(--muted); font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:600; cursor:pointer; transition:all 0.2s; }
     .btn-cancel:hover { border-color:var(--blue); color:var(--blue); }
-    .btn-submit-refund { padding:10px 22px; background:var(--red); border:none; border-radius:7px; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px; cursor:pointer; transition:background 0.2s; }
-    .btn-submit-refund:hover { background:#B91C1C; }
+    .btn-submit-refund { padding:11px 24px; background:linear-gradient(135deg,var(--red),#EF4444); border:none; border-radius:12px; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px; cursor:pointer; transition:box-shadow 0.2s, filter 0.2s; box-shadow:0 10px 24px rgba(220,38,38,0.3); }
+    .btn-submit-refund:hover { filter:brightness(1.06); box-shadow:0 14px 30px rgba(220,38,38,0.4); }
 
-    @media (max-width:600px){ .rf-page{ padding:16px; } }
+    @media (max-width:600px){ .rf-page{ padding:20px 14px 36px; } .rf-title{ font-size:34px; } }
 </style>
 
 <div class="rf-page">
-
-    {{-- ── HEADER ── --}}
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
     <div class="rf-header">
         <div class="rf-header-inner">
             <div class="rf-eyebrow">Finance</div>
@@ -176,13 +171,11 @@
 
     <div class="rf-wrap">
 
-        {{-- ── POLICY ── --}}
         <div class="policy-banner">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
             <div><strong>Refund Policy:</strong> Students are eligible for a <strong>full deposit refund</strong> within <strong>3 days</strong> of payment. After 3 days — or once any installment is paid — no refund is applicable. Refund requests require admin approval before processing.</div>
         </div>
 
-        {{-- ── STATS ── --}}
         <div class="rf-stats">
             <div class="rf-stat" style="--sc:var(--green)">
                 <div class="rf-stat-label">Eligible Now</div>
@@ -198,7 +191,6 @@
             </div>
         </div>
 
-        {{-- ── ELIGIBLE ── --}}
         <span class="sec-label">Eligible for Refund</span>
         <div class="elig-grid">
             @forelse($eligibleEnrollments as $enrollment)
@@ -253,7 +245,6 @@
                             </div>
                         </div>
 
-                        {{-- Payment methods breakdown (deposit split) --}}
                         <div class="method-breakdown">
                             <div class="method-breakdown-label">Deposit paid via</div>
                             <div class="method-chips">
@@ -297,7 +288,6 @@
             @endforelse
         </div>
 
-        {{-- ── MY REQUESTS ── --}}
         <span class="sec-label">My Refund Requests</span>
         <div class="rf-table-card">
             <div class="rf-table-scroll">
@@ -347,9 +337,8 @@
             </div>
         </div>
 
-    </div>{{-- /rf-wrap --}}
+    </div>
 
-    {{-- ── MODAL ── --}}
     <div id="refundModal" class="rf-modal">
         <form method="POST" action="{{ route('refunds.store') }}">
             @csrf
@@ -370,7 +359,6 @@
                         <input type="text" id="modal_student" class="form-control" readonly>
                     </div>
 
-                    {{-- Material refund choice --}}
                     <div class="rf-field" id="modal_material_wrap" style="display:none;">
                         <label class="rf-field-label">Material</label>
                         <label style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);border-radius:9px;cursor:pointer;">
