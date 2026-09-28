@@ -46,6 +46,7 @@ class DashboardController extends Controller
             'my_overdue'    => (clone $myLeads)->where('updated_at', '<=', now()->subDays(4))
                                 ->whereIn('status', ['Waiting','Call_Again'])->count(),
             'public'        => Lead::whereNull('owner_cs_id')->where('is_active', true)->count(),
+            'archived'      => Lead::where('owner_cs_id', $employee?->employee_id)->where('is_active', false)->count(),
         ];
 
         $currentMonth = now()->format('Y-m');
@@ -75,34 +76,23 @@ class DashboardController extends Controller
                                 ->count(),
         ];
 
-        $myEnrollments = Enrollment::where('created_by_cs_id', $employee?->employee_id)
-            ->whereIn('status', ['Active', 'Restricted'])
-            ->with('financialTransactions')
-            ->get();
-
-        $outstandingCount  = 0;
-        $restrictedCount   = 0;
-        $totalOutstanding  = 0;
-
-        foreach ($myEnrollments as $e) {
-            $paid      = $e->financialTransactions->whereIn('transaction_type', ['Payment','Installment'])->sum('amount')
-                    - $e->financialTransactions->where('transaction_type', 'Refund')->sum('amount');
-            $remaining = max(0, $e->final_price - $paid);
-            if ($remaining > 0) {
-                $outstandingCount++;
-                $totalOutstanding += $remaining;
-            }
-            if ($e->restriction_flag) $restrictedCount++;
-        }
+        $outstandingSummary = $employee
+            ? (app(\App\Services\OutstandingService::class)->getOutstandingData($employee)['summary'] ?? [])
+            : [];
 
         $outstandingStats = [
-            'count'      => $outstandingCount,
-            'restricted' => $restrictedCount,
-            'total_le'   => $totalOutstanding,
+            'count'      => $outstandingSummary['total_students']    ?? 0,
+            'restricted' => $outstandingSummary['restricted_count']  ?? 0,
+            'total_le'   => $outstandingSummary['total_outstanding'] ?? 0,
         ];
+
+        $postponedCount = \App\Models\Enrollment\Postponement::where('status', 'Active')
+            ->whereHas('enrollment', fn ($q) => $q)
+            ->count();
 
         $callsDueToday = Lead::where('owner_cs_id', $employee?->employee_id)
             ->whereDate('next_call_at', today())
+            ->whereIn('status', ['Waiting', 'Call_Again', 'Scheduled_Call'])
             ->count();
 
         $recentLeads = Lead::where('owner_cs_id', $employee?->employee_id)
@@ -124,6 +114,7 @@ class DashboardController extends Controller
             'leadsStats',
             'salesStats',
             'outstandingStats',
+            'postponedCount',
             'callsDueToday',
             'recentLeads',
             'recentPayments',

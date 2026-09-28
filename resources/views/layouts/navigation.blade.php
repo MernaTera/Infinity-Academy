@@ -1,6 +1,6 @@
 <nav id="csNav" style="font-family:'DM Sans',sans-serif;position:sticky;top:0;z-index:50;
-     background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-     border-bottom:1px solid rgba(27,79,168,0.08);transition:box-shadow 0.3s;">
+     background:rgba(255,255,255,0.55);backdrop-filter:blur(20px) saturate(165%);-webkit-backdrop-filter:blur(20px) saturate(165%);
+     border-bottom:1px solid rgba(255,255,255,0.5);">
 
 @once
 <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
@@ -10,32 +10,23 @@
 
 <style>
 *::before,*::after{pointer-events:none;}
-#csNav.scrolled{background:rgba(255,255,255,0.99)!important;box-shadow:0 2px 20px rgba(27,79,168,0.08);}
+#csNav.scrolled{background:rgba(255,255,255,0.66)!important;}
 
-/* ═══════════════════════════════════════════════════════════════
-   CONTAINER
-═══════════════════════════════════════════════════════════════ */
 .anav-container{margin:0 auto;padding:0 clamp(12px,2vw,24px);}
 .anav-inner{display:flex;align-items:center;height:62px;gap:clamp(8px,1.5vw,14px);}
 
-/* ═══════════════════════════════════════════════════════════════
-   LOGO — subtle lift on hover, feels alive
-═══════════════════════════════════════════════════════════════ */
 .anav-logo{transition:transform 0.25s cubic-bezier(0.16,1,0.3,1),filter 0.25s;}
 .anav-logo:hover{transform:translateY(-1px) scale(1.02);filter:drop-shadow(0 2px 6px rgba(27,79,168,0.15));}
 
-/* ═══════════════════════════════════════════════════════════════
-   AVATAR + USER DROPDOWN
-═══════════════════════════════════════════════════════════════ */
-.anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(245,145,30,0.08);
+.anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(245,145,30,0.10);
     border:1.5px solid rgba(245,145,30,0.25);display:flex;align-items:center;justify-content:center;
     transition:border-color 0.2s,transform 0.2s;flex-shrink:0;cursor:pointer;}
 .anav-avatar:hover{border-color:#F5911E;transform:scale(1.05);}
 .anav-avatar:active{transform:scale(0.96);}
 .nav-dropdown{display:none;position:absolute;right:0;top:calc(100% + 10px);
-    background:rgba(255,255,255,0.99);backdrop-filter:blur(16px);
-    border:1px solid rgba(27,79,168,0.1);border-radius:8px;
-    box-shadow:0 12px 40px rgba(27,79,168,0.12);min-width:200px;overflow:hidden;z-index:999;}
+    background:rgba(255,255,255);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.6);border-radius:14px;
+    box-shadow:0 16px 44px rgba(23,45,90,0.16);min-width:200px;overflow:hidden;z-index:999;}
 .nav-dropdown.open{display:block;animation:dropIn 0.22s cubic-bezier(0.16,1,0.3,1) both;}
 @keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(0.98)}to{opacity:1;transform:none}}
 .nav-dropdown-item{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:10px;letter-spacing:2px;
@@ -44,13 +35,11 @@
 .nav-dropdown-item:hover{color:#1B4FA8;background:rgba(27,79,168,0.05);text-decoration:none;padding-left:20px;}
 .nav-dropdown-item.danger:hover{color:#DC2626;background:rgba(220,38,38,0.05);}
 
-/* ═══════════════════════════════════════════════════════════════
-   BELL PANEL
-═══════════════════════════════════════════════════════════════ */
 #abellPanel{display:none;position:absolute;right:0;top:calc(100% + 10px);
-    width:320px;max-width:calc(100vw - 32px);background:rgba(255,255,255,0.99);
-    backdrop-filter:blur(16px);border:1px solid rgba(27,79,168,0.1);border-radius:8px;
-    box-shadow:0 12px 40px rgba(27,79,168,0.12);overflow:hidden;z-index:999;}
+    width:320px;max-width:calc(100vw - 32px);background:rgba(255,255,255);
+    backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.6);border-radius:14px;
+    box-shadow:0 16px 44px rgba(23,45,90,0.16);overflow:hidden;z-index:999;}
 .bell-badge-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;
     border-radius:50%;background:#F5911E;border:1.5px solid #fff;display:none;
     animation:pulseDot 1.8s ease-in-out infinite;}
@@ -62,29 +51,23 @@
 .nav-bell-btn.ringing svg{animation:ring 0.5s ease;}
 @keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(6deg)}80%{transform:rotate(-4deg)}}
 
-/* ═══════════════════════════════════════════════════════════════
-   SIDEBAR TOGGLE + HAMBURGER
-═══════════════════════════════════════════════════════════════ */
-.sb-nav-toggle{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
+.sb-nav-toggle{background:none;border:1px solid rgba(27,79,168,0.14);border-radius:8px;cursor:pointer;
     padding:6px 8px;color:#AAB8C8;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
-.sb-nav-toggle:hover{background:rgba(27,79,168,0.04);color:#1B4FA8;border-color:rgba(27,79,168,0.2);}
-.nav-hamburger{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
+.sb-nav-toggle:hover{background:rgba(27,79,168,0.06);color:#1B4FA8;border-color:rgba(27,79,168,0.25);}
+.nav-hamburger{background:none;border:1px solid rgba(27,79,168,0.14);border-radius:8px;cursor:pointer;
     padding:8px;display:none;flex-direction:column;gap:5px;align-items:center;justify-content:center;
     transition:background 0.2s,border-color 0.2s;}
-.nav-hamburger:hover{background:rgba(27,79,168,0.04);border-color:rgba(27,79,168,0.2);}
+.nav-hamburger:hover{background:rgba(27,79,168,0.06);border-color:rgba(27,79,168,0.25);}
 .nav-ham-line{display:block;width:20px;height:1.5px;background:#7A8A9A;
     transition:all 0.32s cubic-bezier(0.65,0,0.35,1);transform-origin:center;}
 
-/* ═══════════════════════════════════════════════════════════════
-   MOBILE DRAWER — full concept: slide-in panel + backdrop
-═══════════════════════════════════════════════════════════════ */
 .amobile-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.42);backdrop-filter:blur(2px);
     z-index:59;opacity:0;pointer-events:none;transition:opacity 0.28s ease;}
 .amobile-backdrop.open{opacity:1;pointer-events:auto;}
 
 .amobile-menu{position:fixed;top:0;right:0;height:100vh;width:min(320px,86vw);z-index:60;
-    background:rgba(255,255,255,0.99);backdrop-filter:blur(18px);
-    box-shadow:-8px 0 34px rgba(27,79,168,0.14);
+    background:rgba(255,255,255,0.9);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
+    box-shadow:-8px 0 34px rgba(23,45,90,0.16);
     transform:translateX(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);
     display:flex;flex-direction:column;overflow:hidden;}
 .amobile-menu.open{transform:translateX(0);}
@@ -104,7 +87,6 @@
 .amobile-scroll{flex:1;overflow-y:auto;padding:6px 0 10px;scrollbar-width:thin;
     scrollbar-color:rgba(27,79,168,0.15) transparent;}
 
-/* Accordion groups */
 .amgroup{border-bottom:1px solid rgba(27,79,168,0.05);}
 .amgroup-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;
     justify-content:space-between;padding:12px 18px;font-family:'DM Sans',sans-serif;
@@ -134,9 +116,6 @@
     font-family:'DM Sans',sans-serif;font-weight:600;transition:all 0.2s;}
 .amobile-logout:hover{background:rgba(220,38,38,0.06);}
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE — unified breakpoint w/ sidebar's 768px collapse
-═══════════════════════════════════════════════════════════════ */
 .anav-desktop-user-name{display:flex;}
 @media(max-width:768px){
     .anav-desktop-user-name{display:none!important;}
@@ -149,31 +128,24 @@
 <div class="anav-container">
     <div class="anav-inner">
 
-        {{-- Sidebar toggle (desktop only) --}}
         <button class="sb-nav-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
         </button>
 
-        {{-- Hamburger (mobile only — opens the full drawer) --}}
         <button class="nav-hamburger" onclick="openMobileNav()" id="navHamburger" aria-label="Open menu">
             <span class="nav-ham-line" id="hl1"></span>
             <span class="nav-ham-line" id="hl2"></span>
             <span class="nav-ham-line" id="hl3"></span>
         </button>
 
-        {{-- Logo → Dashboard --}}
         <a href="{{ route('dashboard') }}" class="anav-logo" style="text-decoration:none;flex-shrink:0;" title="Go to Dashboard">
             <img src="{{ asset('images/logo.png') }}" alt="Infinity" style="height:34px;width:auto;display:block;">
         </a>
 
-        {{-- ═══════════════════════════════════════════════════════
-             RIGHT — Bell + User menu
-        ═══════════════════════════════════════════════════════ --}}
         <div style="display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;">
 
-            {{-- Bell --}}
             <div style="position:relative;" id="abellWrap">
                 <button class="nav-bell-btn" onclick="toggleBell()" id="navBellBtn">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -263,7 +235,6 @@
                 </div>
             </div>
 
-            {{-- User menu (desktop dropdown) --}}
             <div style="position:relative;" id="auserMenuWrap">
                 <button onclick="toggleUserMenu()"
                         style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;
@@ -303,10 +274,7 @@
     </div>
 </div>
 </nav>
-{{-- ═══════════════════════════════════════════════════════════════
-     MOBILE DRAWER — mirrors every link in the sidebar (26 total),
-     grouped exactly like the sidebar, as a smooth accordion.
-═══════════════════════════════════════════════════════════════ --}}
+
 <div class="amobile-backdrop" id="amobileBackdrop" onclick="closeMobileNav()"></div>
 
 <div class="amobile-menu" id="amobileMenu">
@@ -329,7 +297,6 @@
 
     <div class="amobile-scroll">
 
-        {{-- Overview --}}
         <div class="amgroup" data-group>
             <button class="amgroup-head" onclick="toggleAmGroup(this)">Overview
                 <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
@@ -342,7 +309,6 @@
             </div>
         </div>
 
-        {{-- Leads --}}
         <div class="amgroup" data-group>
             <button class="amgroup-head" onclick="toggleAmGroup(this)">Leads
                 <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
@@ -371,7 +337,6 @@
             </div>
         </div>
 
-        {{-- Sales --}}
         <div class="amgroup" data-group>
             <button class="amgroup-head" onclick="toggleAmGroup(this)">Sales Control
                 <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
@@ -408,7 +373,39 @@
                 </a>
             </div>
         </div>
+                @cando('enrollment.view')
+        <div class="amgroup" data-group>
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Students
+                <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+            <div class="amgroup-body">
+                <a href="{{ route('students.index') }}" class="amobile-nav-link {{ request()->routeIs('students.*') ? 'active' : '' }}" data-label="All Students">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="amobile-nav-link-text">All Students</span>
+                </a>
+            </div>
+        </div>
+        @endcando
+
+        @if(auth()->user()?->isCsLeader())
+        <div class="amgroup" data-group>
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Team
+                <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+            <div class="amgroup-body">
+                <a href="{{ route('team.sales') }}" class="amobile-nav-link {{ request()->routeIs('team.sales') ? 'active' : '' }}" data-label="Team Sales">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+                    <span class="amobile-nav-link-text">Team Sales</span>
+                </a>
+                <a href="{{ route('team.leads') }}" class="amobile-nav-link {{ request()->routeIs('team.leads') ? 'active' : '' }}" data-label="Team Leads">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    <span class="amobile-nav-link-text">Team Leads</span>
+                </a>
+            </div>
+        </div>
+        @endif
     </div>
+    
 
     <div class="amobile-foot">
         <form method="POST" action="{{ route('logout') }}">
@@ -422,16 +419,10 @@
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   SCROLL SHADOW
-═══════════════════════════════════════════════════════════════ */
 window.addEventListener('scroll',()=>{
     document.getElementById('csNav')?.classList.toggle('scrolled',window.scrollY>10);
 },{passive:true});
 
-/* ═══════════════════════════════════════════════════════════════
-   MOBILE DRAWER OPEN/CLOSE
-═══════════════════════════════════════════════════════════════ */
 let mobileNavOpen=false;
 function openMobileNav(){
     mobileNavOpen=true;
@@ -447,7 +438,6 @@ function openMobileNav(){
     document.getElementById('auserMenuPanel')?.classList.remove('open');
     document.getElementById('abellPanel').style.display='none';
 
-    // auto-open the group containing the active link, collapse the rest
     document.querySelectorAll('.amgroup').forEach(g=>{
         const hasActive=g.querySelector('.amobile-nav-link.active');
         setAmGroup(g,!!hasActive || g===document.querySelector('.amgroup'));
@@ -461,7 +451,6 @@ function closeMobileNav(){
     [document.getElementById('hl1'),document.getElementById('hl2'),document.getElementById('hl3')].forEach(l=>l.style.cssText='');
 }
 
-/* Accordion groups inside the drawer */
 function setAmGroup(group,open){
     const body=group.querySelector('.amgroup-body');
     group.classList.toggle('open',open);
@@ -472,9 +461,6 @@ function toggleAmGroup(btn){
     setAmGroup(group,!group.classList.contains('open'));
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BELL TOGGLE
-═══════════════════════════════════════════════════════════════ */
 function toggleBell(){
     const p=document.getElementById('abellPanel');
     const open=p.style.display==='block';
@@ -483,17 +469,11 @@ function toggleBell(){
     if(!open)p.style.animation='dropIn 0.2s ease both';
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   USER MENU TOGGLE
-═══════════════════════════════════════════════════════════════ */
 function toggleUserMenu(){
     document.getElementById('auserMenuPanel').classList.toggle('open');
     document.getElementById('abellPanel').style.display='none';
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   CLOSE DROPDOWNS ON OUTSIDE CLICK / ESC
-═══════════════════════════════════════════════════════════════ */
 document.addEventListener('click',(e)=>{
     if(!document.getElementById('abellWrap')?.contains(e.target))
         document.getElementById('abellPanel').style.display='none';
@@ -504,9 +484,6 @@ document.addEventListener('keydown',(e)=>{
     if(e.key==='Escape' && mobileNavOpen) closeMobileNav();
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   NOTIFICATIONS: BADGE + MARK-AS-READ + SOUND + TOAST
-═══════════════════════════════════════════════════════════════ */
 const unread={{isset($navUnreadCount)?(int)$navUnreadCount:0}};
 if(unread>0)document.getElementById('abellBadge').style.display='block';
 
@@ -524,130 +501,37 @@ async function markRead(id){
 
 const prevUnread={{$navPrevUnread??0}};
 if(unread>prevUnread){
-    // Ring the bell icon
     const bellBtn=document.getElementById('navBellBtn');
-    if(bellBtn){ bellBtn.classList.add('ringing'); setTimeout(()=>bellBtn.classList.remove('ringing'),600); }
+    bellBtn.classList.add('ringing');
+    setTimeout(()=>bellBtn.classList.remove('ringing'),600);
 
-    // Pleasant two-note chime (soft, not harsh)
     try{
         const ctx=new(window.AudioContext||window.webkitAudioContext)();
-        const now=ctx.currentTime;
-        [[784,0],[1047,0.09]].forEach(([f,t])=>{      // G5 → C6
-            const o=ctx.createOscillator(),g=ctx.createGain();
-            o.type='sine'; o.frequency.value=f;
-            o.connect(g); g.connect(ctx.destination);
-            g.gain.setValueAtTime(0.0001,now+t);
-            g.gain.exponentialRampToValueAtTime(0.16,now+t+0.02);
-            g.gain.exponentialRampToValueAtTime(0.0001,now+t+0.32);
-            o.start(now+t); o.stop(now+t+0.34);
-        });
+        const osc=ctx.createOscillator(),gain=ctx.createGain();
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.frequency.value=520;
+        gain.gain.setValueAtTime(0.2,ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+0.4);
+        osc.start(ctx.currentTime);osc.stop(ctx.currentTime+0.4);
     }catch(e){}
 
-    @php
-        $rtTitle = $navLatestNotification->title ?? 'New Notification';
-        $rtMsg   = $navLatestNotification->message ?? 'You have a new notification';
-        $rtUrl   = $navLatestNotification->url ?? '#';
-        $rtType  = $navLatestNotification->related_entity_type ?? '';
-    @endphp
-    showInfToast(@json($rtTitle), @json($rtMsg), @json($rtUrl), @json($rtType));
-}
-
-/* ─── Premium notification toast: detailed, clickable, animated, fast ─── */
-function showInfToast(title, message, url, type){
-    const P={
-        installment_request:{c:'#F5911E',g:'#FFB347'}, installment_approved:{c:'#059669',g:'#34D399'}, installment_rejected:{c:'#DC2626',g:'#F87171'},
-        refund_request:{c:'#F5911E',g:'#FFB347'}, refund_approved:{c:'#059669',g:'#34D399'}, refund_rejected:{c:'#DC2626',g:'#F87171'},
-        report_submitted:{c:'#1B4FA8',g:'#3B82F6'}, report_approved:{c:'#059669',g:'#34D399'}, report_rejected:{c:'#DC2626',g:'#F87171'},
-        waiting_list:{c:'#1B4FA8',g:'#3B82F6'}, course_instance:{c:'#1B4FA8',g:'#3B82F6'}
-    };
-    const IC={
-        installment_request:'<path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
-        installment_approved:'<polyline points="20 6 9 17 4 12"/>', installment_rejected:'<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>',
-        refund_request:'<path d="M3 10h10a8 8 0 0 1 8 8v2M3 10l6 6m-6-6l6-6"/>',
-        report_submitted:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',
-        waiting_list:'<circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/>'
-    };
-    const p=P[type]||{c:'#F5911E',g:'#FFB347'};
-    const icon=IC[type]||'<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>';
-    const clickable=url&&url!=='#';
-    const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;};
-
-    // container (stacks multiple toasts)
-    let host=document.getElementById('inf-toast-host');
-    if(!host){host=document.createElement('div');host.id='inf-toast-host';
-        host.style.cssText='position:fixed;bottom:22px;right:22px;z-index:99999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;';
-        document.body.appendChild(host);}
-
     const t=document.createElement('div');
-    t.className='inf-toast';
-    t.style.setProperty('--ac',p.c); t.style.setProperty('--ac2',p.g);
-    if(clickable) t.style.cursor='pointer';
-    t.innerHTML=`
-        <div class="inf-toast-bar"></div>
-        <div class="inf-toast-body">
-            <div class="inf-toast-ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--ac)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${icon}</svg></div>
-            <div class="inf-toast-txt">
-                <div class="inf-toast-title">${esc(title)}</div>
-                <div class="inf-toast-msg">${esc(message).replace(/\n/g,'<br>')}</div>
-            </div>
-            <button class="inf-toast-x" aria-label="Dismiss">&times;</button>
+    t.innerHTML=`<div style="position:fixed;bottom:24px;right:24px;z-index:99999;display:flex;align-items:center;gap:12px;padding:14px 18px;background:rgba(255,255,255,0.99);border:1px solid rgba(27,79,168,0.1);border-left:3px solid #F5911E;border-radius:8px;box-shadow:0 8px 32px rgba(27,79,168,0.15);animation:toastIn 0.4s cubic-bezier(0.16,1,0.3,1) both;font-family:'DM Sans',sans-serif;min-width:240px;">
+        <div style="width:32px;height:32px;border-radius:50%;background:rgba(245,145,30,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         </div>
-        ${clickable?`<div class="inf-toast-cta">Click to review <span>&rarr;</span></div>`:''}
-        <div class="inf-toast-progress"><i></i></div>`;
-
-    host.appendChild(t);
-    requestAnimationFrame(()=>t.classList.add('in'));
-
-    let dismissed=false;
-    const kill=()=>{ if(dismissed)return; dismissed=true; t.classList.remove('in'); t.classList.add('out'); setTimeout(()=>t.remove(),260); };
-
-    t.querySelector('.inf-toast-x').addEventListener('click',e=>{e.stopPropagation();kill();});
-    if(clickable) t.addEventListener('click',()=>{ window.location=url; });
-
-    // auto-dismiss with a visible progress bar; pause on hover
-    const LIFE=6000; const bar=t.querySelector('.inf-toast-progress i');
-    bar.style.animation=`infToastLife ${LIFE}ms linear forwards`;
-    let timer=setTimeout(kill,LIFE);
-    t.addEventListener('mouseenter',()=>{ clearTimeout(timer); bar.style.animationPlayState='paused'; });
-    t.addEventListener('mouseleave',()=>{
-        const rem=Math.max(1200,LIFE*(1-(parseFloat(getComputedStyle(bar).width)/parseFloat(getComputedStyle(bar.parentElement).width)||0)));
-        bar.style.animationPlayState='running'; timer=setTimeout(kill,rem);
-    });
+        <div><div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#F5911E;margin-bottom:3px;">New Notification</div><div style="font-size:13px;color:#1A2A4A;font-weight:500;">You have a new notification</div></div>
+        <button onclick="this.closest('div').parentElement.remove()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#AAB8C8;font-size:18px;line-height:1;padding:0 2px;">×</button>
+    </div>`;
+    document.body.appendChild(t);
+    setTimeout(()=>{
+        t.firstElementChild.style.animation='toastOut 0.3s ease forwards';
+        setTimeout(()=>t.remove(),300);
+    },4500);
 }
 </script>
 
 <style>
-.inf-toast{
-    width:360px;max-width:calc(100vw - 32px);background:#fff;border-radius:14px;overflow:hidden;
-    box-shadow:0 16px 44px rgba(15,31,61,0.20),0 3px 10px rgba(15,31,61,0.08);
-    font-family:'DM Sans',sans-serif;position:relative;
-    transform:translateX(120%) scale(0.9);opacity:0;
-    transition:transform .42s cubic-bezier(0.16,1,0.3,1),opacity .3s,box-shadow .2s;
-    will-change:transform,opacity;
-}
-.inf-toast.in{transform:translateX(0) scale(1);opacity:1;}
-.inf-toast.out{transform:translateX(120%) scale(0.9);opacity:0;}
-.inf-toast:hover{box-shadow:0 22px 56px rgba(15,31,61,0.28),0 3px 10px rgba(15,31,61,0.1);}
-.inf-toast-bar{height:3px;background:linear-gradient(90deg,var(--ac),var(--ac2),transparent);}
-.inf-toast-body{display:flex;align-items:flex-start;gap:12px;padding:14px 15px 12px;}
-.inf-toast-ic{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:flex;align-items:center;justify-content:center;position:relative;
-    animation:infIcPop .5s cubic-bezier(0.16,1,0.3,1) both;}
-.inf-toast-ic::before{content:'';position:absolute;inset:0;border-radius:11px;background:var(--ac);opacity:0.12;}
-.inf-toast-ic svg{position:relative;z-index:1;}
-.inf-toast-txt{flex:1;min-width:0;}
-.inf-toast-title{font-size:9px;letter-spacing:2.4px;text-transform:uppercase;font-weight:700;color:var(--ac);margin-bottom:4px;}
-.inf-toast-msg{font-size:12.5px;line-height:1.5;color:#1A2A4A;font-weight:500;}
-.inf-toast-x{background:none;border:none;cursor:pointer;color:#C0CAD8;font-size:19px;line-height:1;padding:0 2px;flex-shrink:0;transition:color .15s;}
-.inf-toast-x:hover{color:#7A8A9A;}
-.inf-toast-cta{padding:8px 15px;background:linear-gradient(135deg,#0F1F3D,#1A2A4A);color:#fff;font-size:9px;
-    letter-spacing:2px;text-transform:uppercase;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px;}
-.inf-toast-cta span{font-size:12px;transition:transform .2s;}
-.inf-toast:hover .inf-toast-cta span{transform:translateX(3px);}
-.inf-toast-progress{height:3px;background:rgba(15,31,61,0.06);}
-.inf-toast-progress i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));transform-origin:left;}
-@keyframes infToastLife{from{width:100%}to{width:0%}}
-@keyframes infIcPop{0%{transform:scale(0.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
-/* legacy keyframes kept in case other code references them */
 @keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(0.96)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateX(20px) scale(0.96)}}
 </style>

@@ -20,7 +20,7 @@
             --muted:       #5A6A85;
             --faint:       #8A9AB5;
             --error:       #DC2626;
-            --glass:       rgba(255,255,255,0.10);
+            --glass:       rgba(255,255,255,0.001);
             --glass-border:rgba(255,255,255,0.15);
         }
 

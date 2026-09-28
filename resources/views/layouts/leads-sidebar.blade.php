@@ -2,14 +2,14 @@
 :root {
     --sb-w: 230px;
     --sb-w-collapsed: 64px;
-    --sb-bg: #fff;
+    --sb-bg: rgba(255,255,255,0.5);
     --sb-border: rgba(27,79,168,0.08);
     --sb-blue: #1B4FA8;
     --sb-orange: #F5911E;
     --sb-text: #5A6A7A;
-    --sb-active-bg: rgba(27,79,168,0.06);
+    --sb-active-bg: rgba(27,79,168,0.10);
     --sb-active-text: #1B4FA8;
-    --sb-hover-bg: rgba(27,79,168,0.03);
+    --sb-hover-bg: rgba(27,79,168,0.06);
     --sb-label: #AAB8C8;
     --sb-transition: 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -18,7 +18,9 @@
     width: var(--sb-w);
     flex-shrink: 0;
     background: var(--sb-bg);
-    border-right: 1px solid var(--sb-border);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-right: 1px solid rgba(255,255,255,0.5);
     position: sticky;
     top: 62px;
     height: calc(100vh - 62px);
@@ -27,12 +29,10 @@
     overflow: hidden;
     transition: width var(--sb-transition);
     z-index: 40;
-    box-shadow: 2px 0 12px rgba(27,79,168,0.04);
     font-family: 'DM Sans', sans-serif;
 }
 #mainSidebar.collapsed { width: var(--sb-w-collapsed); }
 
-/* ── SCROLL AREA ── */
 .sb-scroll {
     flex: 1;
     overflow-y: auto;
@@ -45,7 +45,6 @@
 .sb-scroll::-webkit-scrollbar-track { background: transparent; }
 .sb-scroll::-webkit-scrollbar-thumb { background: rgba(27,79,168,0.12); border-radius: 2px; }
 
-/* ── COLLAPSE TOGGLE ── */
 .sb-toggle {
     height: 48px;
     display: flex;
@@ -57,9 +56,9 @@
 }
 .sb-toggle-btn {
     width: 28px; height: 28px;
-    border: 1px solid var(--sb-border);
-    border-radius: 6px;
-    background: transparent;
+    border: 1px solid rgba(27,79,168,0.14);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.4);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -69,7 +68,6 @@
 }
 .sb-toggle-btn:hover { background: var(--sb-hover-bg); color: var(--sb-blue); border-color: rgba(27,79,168,0.2); }
 
-/* ── SECTION HEADERS ── */
 .sb-section { margin-top: 4px; }
 .sb-section-header {
     display: flex;
@@ -103,7 +101,6 @@
 }
 .sb-section.collapsed-section .sb-section-body { max-height: 0; }
 
-/* ── LINKS ── */
 .sl-link {
     display: flex;
     align-items: center;
@@ -143,7 +140,6 @@
 
 .sl-div { height: 1px; background: var(--sb-border); margin: 6px 16px; }
 
-/* ── COLLAPSED STATE ── */
 #mainSidebar.collapsed .sl-link-text,
 #mainSidebar.collapsed .sb-section-label,
 #mainSidebar.collapsed .sb-section-chevron { opacity: 0; width: 0; pointer-events: none; }
@@ -153,7 +149,6 @@
 #mainSidebar.collapsed .sb-section-body { max-height: 600px !important; }
 #mainSidebar.collapsed .sb-toggle-btn svg { transform: rotate(180deg); }
 
-/* Tooltips on collapsed */
 #mainSidebar.collapsed .sl-link::after {
     content: attr(data-label);
     position: absolute;
@@ -167,7 +162,6 @@
 }
 #mainSidebar.collapsed .sl-link:hover::after { opacity: 1; }
 
-/* ── MOBILE OVERLAY ── */
 .sb-overlay {
     display: none;
     position: fixed; inset: 0;
@@ -177,7 +171,6 @@
 }
 .sb-overlay.show { display: block; }
 
-/* ── MOBILE ── */
 @media(max-width: 900px) {
     #mainSidebar {
         position: fixed; top: 0; left: 0; height: 100vh;
@@ -185,7 +178,7 @@
         transform: translateX(-100%);
         transition: transform var(--sb-transition), width var(--sb-transition);
         width: var(--sb-w) !important;
-        box-shadow: 4px 0 24px rgba(27,79,168,0.15);
+        background: rgba(255,255,255,0.92);
     }
     #mainSidebar.mobile-open { transform: translateX(0); }
     .sb-toggle { display: none; }
@@ -197,7 +190,6 @@
 <aside id="mainSidebar">
     <div class="sb-scroll">
 
-        {{-- Overview --}}
         <div class="sb-section">
             <div class="sb-section-header" onclick="toggleSection(this)">
                 <span class="sb-section-label">Overview</span>
@@ -213,7 +205,6 @@
 
         <div class="sl-div"></div>
 
-        {{-- Leads --}}
         @cando('leads.view')
         <div class="sb-section">
             <div class="sb-section-header" onclick="toggleSection(this)">
@@ -246,7 +237,6 @@
 
         <div class="sl-div"></div>
 
-        {{-- Sales --}}
         <div class="sb-section">
             <div class="sb-section-header" onclick="toggleSection(this)">
                 <span class="sb-section-label">Sales</span>
@@ -294,7 +284,6 @@
         </div>
         @endcando
 
-        {{-- Students --}}
         @cando('enrollment.view')
         <div class="sl-div"></div>
         <div class="sb-section">
@@ -311,7 +300,6 @@
         </div>
         @endcando
 
-        {{-- Team (CS Leader only) --}}
         @if(auth()->user()?->isCsLeader())
         <div class="sb-section">
             <div class="sb-section-header" onclick="toggleSection(this)">
@@ -333,7 +321,6 @@
 
     </div>
 
-    {{-- Collapse toggle --}}
     <div class="sb-toggle">
         <button class="sb-toggle-btn" onclick="toggleSidebar()" title="Toggle sidebar">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
@@ -342,7 +329,6 @@
 </aside>
 
 <script>
-// ── Collapse ──
 const sidebar  = document.getElementById('mainSidebar');
 const sbOverlay = document.getElementById('sbOverlay');
 const PREF_KEY = 'cs_sb_collapsed';
@@ -355,7 +341,6 @@ function toggleSidebar() {
     localStorage.setItem(PREF_KEY, sidebar.classList.contains('collapsed') ? '1' : '0');
 }
 
-// ── Mobile ──
 function openMobileSidebar() {
     sidebar.classList.add('mobile-open');
     sbOverlay.classList.add('show');
@@ -367,7 +352,6 @@ function closeMobileSidebar() {
     document.body.style.overflow = '';
 }
 
-// ── Section collapse ──
 function toggleSection(header) {
     const section = header.closest('.sb-section');
     const key = 'sb_sec_cs_' + header.querySelector('.sb-section-label').textContent.trim();
@@ -375,7 +359,6 @@ function toggleSection(header) {
     localStorage.setItem(key, section.classList.contains('collapsed-section') ? '1' : '0');
 }
 
-// Restore section states
 document.querySelectorAll('.sb-section-header').forEach(header => {
     const key = 'sb_sec_cs_' + header.querySelector('.sb-section-label').textContent.trim();
     if (localStorage.getItem(key) === '1') {
@@ -383,10 +366,8 @@ document.querySelectorAll('.sb-section-header').forEach(header => {
     }
 });
 
-// Close on ESC
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeMobileSidebar(); });
 
-// Auto-close on mobile nav
 document.querySelectorAll('.sl-link').forEach(link => {
     link.addEventListener('click', () => {
         if (window.innerWidth <= 900) closeMobileSidebar();
