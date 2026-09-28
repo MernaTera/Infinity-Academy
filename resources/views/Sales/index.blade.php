@@ -56,7 +56,7 @@
     .filter-sel { font-family:'DM Sans',sans-serif; font-size:13px; padding:7px 11px; border:1px solid rgba(27,79,168,0.1); border-radius:10px; background:rgba(255,255,255,0.6); color:var(--text); cursor:pointer; outline:none; color-scheme:light; }
     .filter-sel:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.1); }
 
-    .kpi-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+    .kpi-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:14px; }
     @media (max-width:1000px){ .kpi-grid{ grid-template-columns:repeat(3,1fr); } }
     @media (max-width:600px){ .kpi-grid{ grid-template-columns:1fr 1fr; } }
     .kpi-card { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:20px; position:relative; overflow:hidden; box-shadow:var(--glass-sh); transition:transform 0.2s, box-shadow 0.2s; }

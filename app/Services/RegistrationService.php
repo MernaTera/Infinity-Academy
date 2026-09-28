@@ -847,9 +847,11 @@ private function createFinancialRecords($enrollment, $data, $pricing, $patch)
             'Online'        => 'Online',
         ];
 
-        // Active CS in the branch (for Shared material revenue)
+        // Active CS (incl. CS Leader) in the SAME branch — they share the
+        // Shared-material revenue. Branch-scoped so it never spills to other
+        // branches' CS.
         $activeBranchCsIds = \App\Models\HR\Employee::whereHas('user.role',
-                fn($q) => $q->where('role_name', 'Customer Service'))
+                fn($q) => $q->whereIn('role_name', ['Customer Service', 'CS Leader']))
             ->where('status', 'Active')
             ->where('branch_id', $branchId)
             ->pluck('employee_id')

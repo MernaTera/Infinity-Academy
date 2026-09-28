@@ -22,9 +22,8 @@ class AdminSalesController extends Controller
         $range = $this->getDateRange($filterType, $month, $day);
         $targetMonth = $this->getTargetMonth($filterType, $month, $day);
 
-        // جيبي كل الـ CS employees
         $csEmployees = Employee::with(['user.role', 'branch'])
-            ->whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
+            ->whereHas('user.role', fn($q) => $q->whereIn('role_name', ['Customer Service', 'CS Leader']))
             ->where('status', 'Active')
             ->get();
 
