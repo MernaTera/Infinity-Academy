@@ -24,7 +24,7 @@
     .glass { background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); box-shadow:var(--glass-sh); }
 
     .dash-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
-    .dash-eyebrow { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--orange-dk); font-weight:600; margin-bottom:7px; }
+    .dash-eyebrow { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue); font-weight:600; margin-bottom:7px; }
     .dash-title { font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:2px; color:var(--text); line-height:0.95; margin:0; }
     .dash-actions { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
     .btn-g { display:inline-flex; align-items:center; gap:8px; padding:12px 18px; border-radius:13px; font-size:11px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; text-decoration:none; transition:transform .2s, box-shadow .2s, background .2s; }

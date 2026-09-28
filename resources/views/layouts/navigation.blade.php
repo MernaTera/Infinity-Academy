@@ -19,7 +19,7 @@
 .anav-logo:hover{transform:translateY(-1px) scale(1.02);filter:drop-shadow(0 2px 6px rgba(27,79,168,0.15));}
 
 .anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(245,145,30,0.10);
-    border:1.5px solid rgba(245,145,30,0.25);display:flex;align-items:center;justify-content:center;
+    border:1.5px solid rgba(245, 145, 30, 0.25);display:flex;align-items:center;justify-content:center;
     transition:border-color 0.2s,transform 0.2s;flex-shrink:0;cursor:pointer;}
 .anav-avatar:hover{border-color:#F5911E;transform:scale(1.05);}
 .anav-avatar:active{transform:scale(0.96);}
@@ -248,7 +248,7 @@
                     </div>
                     <div class="anav-desktop-user-name" style="flex-direction:column;align-items:flex-start;line-height:1;">
                         <span style="font-size:12px;font-weight:600;color:#1A2A4A;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;">{{ Auth::user()->name ?? '' }}</span>
-                        <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C47010;margin-top:2px;">Customer Service</span>
+                        <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1B4FA8;margin-top:2px;">Customer Service</span>
                     </div>
                     <svg style="color:#AAB8C8;flex-shrink:0;" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
                 </button>

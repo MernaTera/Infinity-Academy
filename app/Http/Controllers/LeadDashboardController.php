@@ -29,10 +29,26 @@ class LeadDashboardController extends Controller
 
             'waiting'    => (clone $base)->where('status', 'Waiting')->count(),
 
+            'scheduled'  => (clone $base)->where('status', 'Scheduled_Call')->count(),
+
+            'not_interested' => (clone $base)->where('status', 'Not_Interested')->count(),
+
             'archived'   => $totalArchived,
 
             'public'     => Lead::whereNull('owner_cs_id')
                                 ->where('is_active', true)
+                                ->count(),
+
+            'due_today'  => (clone $base)
+                                ->whereNotNull('next_call_at')
+                                ->whereDate('next_call_at', now()->toDateString())
+                                ->whereIn('status', ['Waiting', 'Call_Again', 'Scheduled_Call'])
+                                ->count(),
+
+            'overdue'    => (clone $base)
+                                ->whereNotNull('next_call_at')
+                                ->whereDate('next_call_at', '<', now()->toDateString())
+                                ->whereIn('status', ['Waiting', 'Call_Again', 'Scheduled_Call'])
                                 ->count(),
         ];
 
@@ -72,9 +88,17 @@ class LeadDashboardController extends Controller
 
         $recentLeads = (clone $base)->with('courseTemplate')->latest()->limit(10)->get();
 
+        $upcomingFollowUps = (clone $base)
+            ->whereNotNull('next_call_at')
+            ->whereIn('status', ['Waiting', 'Call_Again', 'Scheduled_Call'])
+            ->with('courseTemplate')
+            ->orderBy('next_call_at')
+            ->limit(8)
+            ->get();
+
         return view('leads.dashboard', compact(
             'stats', 'today', 'week', 'month',
-            'bySource', 'byCourse', 'byCs', 'recentLeads'
+            'bySource', 'byCourse', 'byCs', 'recentLeads', 'upcomingFollowUps'
         ));
     }
 }
