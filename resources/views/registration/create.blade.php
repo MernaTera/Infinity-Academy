@@ -12,68 +12,57 @@
     :root {
         --blue:#1B4FA8; --blue-2:#2D6FDB; --blue-l:rgba(27,79,168,0.06);
         --orange:#F5911E; --orange-dk:#C47010; --orange-l:rgba(245,145,30,0.07);
-        --green:#059669; --green-l:rgba(5,150,105,0.07);
-        --red:#DC2626; --red-l:rgba(220,38,38,0.05);
-        --dark:#0F1F3D; --text:#1A2A4A; --muted:#7A8A9A; --faint:#AAB8C8;
-        --bg:#F8F6F2; --card:#fff; --border:rgba(27,79,168,0.1);
+        --green:#059669; --green-dk:#15803D; --green-l:rgba(5,150,105,0.07);
+        --red:#DC2626; --red-l:rgba(220,38,38,0.05); --purple:#7C3AED;
+        --dark:#0F1F3D; --text:#16233F; --muted:#5A6A85; --faint:#93A3BC;
+        --bg:#F8F6F2; --card:rgba(255,255,255,0.72); --border:rgba(255,255,255,0.6);
+        --line:rgba(27,79,168,0.08); --glass-sh:0 12px 34px -14px rgba(23,45,90,0.2);
     }
     * { box-sizing:border-box; }
 
     .create-page {
-        background: var(--bg);
-        min-height: 100vh;
-        padding: 32px;
-        color: var(--text);
-        font-family: 'DM Sans', sans-serif;
+        min-height:100vh; padding:40px 32px 56px; color:var(--text); font-family:'DM Sans',sans-serif;
+        background:var(--bg);
     }
+    .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3 { width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
 
-    /* ═══════════════ COMMAND HEADER ═══════════════ */
     .reg-header {
-        max-width: 1080px; margin: 0 auto 24px;
-        background: linear-gradient(135deg, var(--dark) 0%, #1A2A4A 60%, #243B69 100%);
-        border-radius: 14px; padding: 24px 30px;
-        display: flex; align-items: center; justify-content: space-between;
-        flex-wrap: wrap; gap: 16px; position: relative; overflow: hidden;
-        box-shadow: 0 8px 32px rgba(15,31,61,0.15);
-    }
-    .reg-header::before {
-        content:''; position:absolute; top:-60px; right:-40px; width:200px; height:200px;
-        border-radius:50%; background:rgba(245,145,30,0.06);
-    }
-    .reg-header::after {
-        content:''; position:absolute; bottom:-50px; left:20%; width:140px; height:140px;
-        border-radius:50%; background:rgba(27,79,168,0.15);
+        max-width:1080px; margin:0 auto 22px;
+        display:flex; align-items:flex-end; justify-content:space-between;
+        flex-wrap:wrap; gap:16px;
     }
     .reg-header-left { position:relative; z-index:1; }
     .reg-eyebrow {
-        font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--orange);
-        margin-bottom:5px; font-weight:600; display:flex; align-items:center; gap:8px;
+        font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--orange-dk);
+        margin-bottom:8px; font-weight:600; display:flex; align-items:center; gap:8px;
     }
     .reg-eyebrow::before {
         content:''; width:6px; height:6px; border-radius:50%; background:var(--orange);
         box-shadow:0 0 8px var(--orange);
     }
     .reg-title {
-        font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:4px;
-        color:#fff; line-height:1; margin:0;
+        font-family:'Bebas Neue',sans-serif; font-size:44px; letter-spacing:2px;
+        color:var(--text); line-height:0.92; margin:0;
     }
-    .reg-sub { font-size:11px; color:rgba(255,255,255,0.5); margin-top:5px; letter-spacing:0.5px; }
+    .reg-sub { font-size:12px; color:var(--muted); margin-top:6px; letter-spacing:0.3px; }
     .btn-back {
         display:inline-flex; align-items:center; gap:8px;
-        padding:10px 20px; background:rgba(255,255,255,0.08);
-        border:1px solid rgba(255,255,255,0.15); border-radius:6px;
-        color:rgba(255,255,255,0.8); font-size:10px; letter-spacing:2.5px;
-        text-transform:uppercase; text-decoration:none; transition:all 0.25s;
-        position:relative; z-index:1; font-weight:600;
+        padding:11px 18px; background:rgba(255,255,255,0.5);
+        -webkit-backdrop-filter:blur(14px) saturate(150%); backdrop-filter:blur(14px) saturate(150%);
+        border:1px solid var(--border); border-radius:13px;
+        color:var(--muted); font-size:10px; letter-spacing:2px;
+        text-transform:uppercase; text-decoration:none; transition:color .25s, border-color .25s, background .25s;
+        position:relative; z-index:1; font-weight:600; box-shadow:0 6px 18px rgba(23,45,90,0.06);
     }
-    .btn-back:hover { background:rgba(255,255,255,0.14); color:#fff; text-decoration:none; }
+    .btn-back:hover { background:rgba(255,255,255,0.7); color:var(--blue); border-color:var(--blue); text-decoration:none; }
 
-    /* ═══════════════ LEAD IDENTITY BAR ═══════════════ */
     .lead-bar {
         max-width:1080px; margin:0 auto 20px;
-        background:var(--card); border:1px solid var(--border); border-radius:12px;
+        background:var(--card); border:1px solid var(--border); border-radius:18px;
         padding:18px 26px; display:flex; align-items:center; gap:28px; flex-wrap:wrap;
-        box-shadow:0 2px 12px rgba(27,79,168,0.04); position:relative; overflow:hidden;
+        box-shadow:var(--glass-sh); position:relative; overflow:hidden;
     }
     .lead-bar::before {
         content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
@@ -84,42 +73,40 @@
         background:linear-gradient(135deg, var(--blue-l), var(--orange-l));
         display:flex; align-items:center; justify-content:center;
         font-family:'Bebas Neue',sans-serif; font-size:22px; color:var(--blue);
-        border:2px solid #fff; box-shadow:0 4px 12px rgba(27,79,168,0.12); flex-shrink:0;
+        border:2px solid rgba(255,255,255,0.8); box-shadow:0 4px 12px rgba(27,79,168,0.12); flex-shrink:0;
     }
     .lead-badge { display:flex; flex-direction:column; gap:3px; }
     .lead-badge-label { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--faint); font-weight:600; }
     .lead-badge-value { font-size:13px; color:var(--text); font-weight:600; }
 
-    /* ═══════════════ MAIN GRID (form + rail) ═══════════════ */
     .reg-layout {
         max-width:1080px; margin:0 auto;
         display:grid; grid-template-columns:1fr; gap:20px;
     }
 
-    /* ═══════════════ SECTION CARD ═══════════════ */
     .sec-card {
-        background:var(--card); border:1px solid var(--border); border-radius:12px;
-        overflow:hidden; box-shadow:0 2px 12px rgba(27,79,168,0.04);
+        background:var(--card); border:1px solid var(--border); border-radius:20px;
+        overflow:hidden; box-shadow:var(--glass-sh);
         animation:secIn 0.4s ease both;
     }
     @keyframes secIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
     .sec-head {
-        padding:15px 22px; background:linear-gradient(135deg, rgba(27,79,168,0.02), transparent);
+        padding:16px 22px; background:rgba(255,255,255,0.4);
         border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px;
     }
     .sec-num {
-        width:26px; height:26px; background:var(--dark); color:var(--orange);
-        border-radius:7px; display:flex; align-items:center; justify-content:center;
-        font-family:'Bebas Neue',sans-serif; font-size:13px; flex-shrink:0;
+        width:28px; height:28px; background:linear-gradient(135deg,var(--blue),var(--blue-2)); color:#fff;
+        border-radius:9px; display:flex; align-items:center; justify-content:center;
+        font-family:'Bebas Neue',sans-serif; font-size:14px; flex-shrink:0;
+        box-shadow:0 6px 14px rgba(27,79,168,0.28);
     }
     .sec-title {
-        font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px;
+        font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:2px;
         color:var(--text); line-height:1;
     }
     .sec-hint { font-size:10px; color:var(--muted); letter-spacing:0.5px; margin-left:auto; }
-    .sec-body { padding:22px; }
+    .sec-body { padding:24px 22px; }
 
-    /* ═══════════════ GRIDS ═══════════════ */
     .form-grid        { display:grid; grid-template-columns:1fr 1fr; gap:16px 20px; }
     .form-grid.cols-1 { grid-template-columns:1fr; }
     .form-grid.cols-3 { grid-template-columns:1fr 1fr 1fr; }
@@ -127,76 +114,74 @@
 
     @media (max-width:820px) {
         .form-grid, .form-grid.cols-3, .form-grid.cols-4 { grid-template-columns:1fr; }
-        .create-page { padding:16px; }
+        .create-page { padding:20px 14px 40px; }
+        .reg-title { font-size:36px; }
     }
 
     .form-field { display:flex; flex-direction:column; gap:7px; }
     .form-label {
-        font-size:9px; letter-spacing:2.5px; text-transform:uppercase;
+        font-size:9px; letter-spacing:2px; text-transform:uppercase;
         color:var(--muted); font-weight:600;
     }
     .form-label .required { color:var(--orange); margin-left:2px; }
 
     .form-control-inf {
-        width:100%; padding:11px 13px; background:#fff;
-        border:1px solid var(--border); border-radius:7px;
+        width:100%; padding:12px 14px; background:rgba(255,255,255,0.55);
+        border:1px solid rgba(27,79,168,0.1); border-radius:13px;
+        box-shadow:inset 0 1px 2px rgba(255,255,255,0.8);
         color:var(--text); font-family:'DM Sans',sans-serif;
         font-size:13px; font-weight:400; outline:none;
-        transition:border-color 0.25s, box-shadow 0.25s;
+        transition:border-color 0.25s, box-shadow 0.25s, background 0.25s;
         appearance:none; -webkit-appearance:none;
     }
-    .form-control-inf::placeholder { color:#B0BCCC; }
+    .form-control-inf::placeholder { color:var(--faint); }
     .form-control-inf:focus {
-        border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.08);
+        border-color:var(--blue); background:rgba(255,255,255,0.85); box-shadow:0 0 0 3px rgba(27,79,168,0.12);
     }
-    .form-control-inf[readonly] { background:var(--bg); color:var(--muted); cursor:default; }
+    .form-control-inf[readonly] { background:rgba(27,79,168,0.04); color:var(--muted); cursor:default; }
     textarea.form-control-inf { resize:vertical; min-height:80px; }
 
     select.form-control-inf {
-        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%237A8A9A'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-        background-repeat:no-repeat; background-position:right 12px center;
-        padding-right:34px; cursor:pointer; background-color:#fff;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%235A6A85'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+        background-repeat:no-repeat; background-position:right 13px center;
+        padding-right:34px; cursor:pointer;
     }
     select.form-control-inf option { background:#fff; color:var(--text); }
 
-    /* ═══════════════ SEGMENTED CONTROL (Type / Mode) ═══════════════ */
     .segmented {
-        display:inline-flex; background:var(--bg); border:1px solid var(--border);
-        border-radius:9px; padding:4px; gap:3px; width:100%;
+        display:inline-flex; background:rgba(27,79,168,0.06); border:1px solid var(--border);
+        border-radius:14px; padding:4px; gap:3px; width:100%;
     }
     .segmented label {
         flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
-        padding:11px 16px; border-radius:6px; cursor:pointer;
+        padding:11px 16px; border-radius:11px; cursor:pointer;
         font-size:12px; font-weight:600; color:var(--muted);
         letter-spacing:1px; transition:all 0.2s; position:relative;
         text-transform:uppercase;
     }
     .segmented label:has(input:checked) {
         background:#fff; color:var(--blue);
-        box-shadow:0 2px 8px rgba(27,79,168,0.12);
+        box-shadow:0 4px 12px rgba(27,79,168,0.18);
     }
     .segmented input { position:absolute; opacity:0; pointer-events:none; }
     .segmented label svg { opacity:0.6; }
     .segmented label:has(input:checked) svg { opacity:1; }
 
-    /* Mode select styled as segmented (native select fallback) */
     .mode-select-wrap { position:relative; }
 
-    /* ═══════════════ MATERIAL TOGGLE ═══════════════ */
-    /* Multiple materials list */
     .mat-item {
         display:flex; align-items:center; gap:12px; padding:12px 14px; margin-bottom:8px;
-        border:1px solid var(--border); border-radius:8px; background:var(--card); transition:all 0.2s; cursor:pointer;
+        border:1px solid var(--border); border-radius:12px; background:rgba(255,255,255,0.5); transition:all 0.2s; cursor:pointer;
     }
-    .mat-item:has(input:checked) { border-color:var(--blue); background:var(--blue-l); }
-    .mat-item.mandatory { border-color:rgba(245,145,30,0.3); background:rgba(245,145,30,0.04); cursor:default; }
+    .mat-item:has(input:checked) { border-color:var(--blue); background:rgba(27,79,168,0.08); }
+    .mat-item.mandatory { border-color:rgba(245,145,30,0.3); background:rgba(245,145,30,0.06); cursor:default; }
     .mat-item input[type="checkbox"] { accent-color:var(--blue); width:16px; height:16px; flex-shrink:0; }
     .mat-item input:disabled { accent-color:#C47010; }
     .mat-item-body { flex:1; min-width:0; }
     .mat-item-name { font-size:13px; font-weight:600; color:var(--text); }
     .mat-item-meta { font-size:10px; color:var(--muted); margin-top:2px; display:flex; gap:8px; align-items:center; }
     .mat-item-price { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:0.5px; color:var(--blue); white-space:nowrap; }
-    .mat-tag { font-size:8px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:3px; font-weight:600; }
+    .mat-tag { font-size:8px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border-radius:20px; font-weight:600; }
     .mat-tag-mand { color:#C47010; background:rgba(245,145,30,0.12); }
     .mat-tag-shared { color:#7C3AED; background:rgba(124,58,237,0.1); }
     .mat-tag-indiv { color:#1B4FA8; background:rgba(27,79,168,0.08); }
@@ -210,13 +195,13 @@
 
     .material-toggle {
         display:flex; align-items:center; gap:11px;
-        padding:14px 16px; background:var(--blue-l);
-        border:1px solid var(--border); border-radius:8px; cursor:pointer;
+        padding:14px 16px; background:rgba(27,79,168,0.05);
+        border:1px solid var(--border); border-radius:12px; cursor:pointer;
         font-size:13px; color:var(--text); font-weight:500;
         transition:all 0.2s; margin-bottom:14px;
     }
     .material-toggle:has(input:checked) {
-        border-color:var(--blue); background:rgba(27,79,168,0.05);
+        border-color:var(--blue); background:rgba(27,79,168,0.08);
     }
     .material-toggle input { accent-color:var(--blue); width:16px; height:16px; }
 
@@ -224,15 +209,14 @@
         display:inline-flex; align-items:center; gap:8px;
         padding:8px 13px; margin-top:10px;
         background:var(--orange-l); border:1px solid rgba(245,145,30,0.2);
-        border-radius:6px; font-size:10px; color:var(--orange-dk); letter-spacing:0.5px; font-weight:500;
+        border-radius:11px; font-size:10px; color:var(--orange-dk); letter-spacing:0.5px; font-weight:500;
     }
 
-    /* ═══════════════ PRICING CARDS ═══════════════ */
     .pricing-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
     @media (max-width:680px){ .pricing-grid{ grid-template-columns:1fr; } }
     .pricing-card {
-        background:var(--bg); border:1px solid var(--border);
-        border-radius:10px; padding:16px 18px;
+        background:rgba(255,255,255,0.5); border:1px solid var(--border);
+        border-radius:16px; padding:16px 18px;
         position:relative; overflow:hidden;
     }
     .pricing-card::before {
@@ -255,20 +239,18 @@
     .mt-2 { margin-top:12px; }
     .mt-3 { margin-top:18px; }
 
-    /* Sub-label inside a section */
     .sub-label {
         font-size:9px; letter-spacing:3px; text-transform:uppercase;
-        color:var(--orange); margin-bottom:14px; padding-bottom:8px;
+        color:var(--orange-dk); margin-bottom:14px; padding-bottom:8px;
         border-bottom:1px solid var(--orange-l); font-weight:600;
     }
     .sub-label.spaced { margin-top:22px; }
-    .divider-soft { height:1px; background:var(--border); margin:22px 0; }
+    .divider-soft { height:1px; background:var(--line); margin:22px 0; }
 
-    /* ═══════════════ PAYMENT SUMMARY ═══════════════ */
     #payment_details { display:none; margin-top:18px; }
     .inf-pay-summary {
-        background:var(--blue-l); border:1px solid var(--border);
-        border-radius:9px; padding:16px 18px; margin-bottom:14px;
+        background:rgba(27,79,168,0.05); border:1px solid var(--border);
+        border-radius:14px; padding:16px 18px; margin-bottom:14px;
     }
     .inf-pay-row {
         display:flex; justify-content:space-between; align-items:baseline;
@@ -277,13 +259,13 @@
     .inf-pay-row:last-child { border-bottom:none; }
     .inf-pay-key { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; }
     .inf-pay-val { font-size:13px; color:var(--text); font-weight:600; }
-    .inf-pay-val.accent  { color:var(--orange); }
+    .inf-pay-val.accent  { color:var(--orange-dk); }
     .inf-pay-val.blue    { color:var(--blue); }
     .inf-pay-val.success { color:var(--green); }
 
     .inf-inst-label {
         font-size:9px; letter-spacing:3px; text-transform:uppercase;
-        color:var(--orange); margin:16px 0 10px; padding-bottom:8px;
+        color:var(--orange-dk); margin:16px 0 10px; padding-bottom:8px;
         border-bottom:1px solid var(--orange-l); font-weight:600;
     }
 
@@ -297,13 +279,12 @@
         font-size:12px; color:var(--text); font-weight:400;
         padding:9px 10px; border-bottom:1px solid rgba(27,79,168,0.05);
     }
-    #installments_table tbody td:last-child { text-align:right; color:var(--orange); }
+    #installments_table tbody td:last-child { text-align:right; color:var(--orange-dk); }
     #installments_table tbody tr:last-child td { border-bottom:none; }
 
-    /* ═══════════════ DEPOSIT METHODS ═══════════════ */
     .deposit-notice {
-        font-size:12px; color:var(--muted); margin-bottom:14px; padding:12px 16px;
-        background:var(--blue-l); border:1px solid var(--border); border-radius:8px;
+        font-size:12px; color:var(--muted); margin-bottom:14px; padding:13px 16px;
+        background:rgba(27,79,168,0.05); border:1px solid var(--border); border-radius:14px;
         display:flex; align-items:center; justify-content:space-between; gap:12px;
     }
     .deposit-notice strong {
@@ -312,37 +293,37 @@
     .payment-method-row {
         display:grid; grid-template-columns:1.5fr 1fr auto; gap:12px;
         align-items:end; margin-bottom:12px; padding:14px 16px;
-        background:var(--bg); border:1px solid var(--border);
-        border-radius:8px; animation:rowIn 0.25s ease both;
+        background:rgba(255,255,255,0.5); border:1px solid var(--border);
+        border-radius:14px; animation:rowIn 0.25s ease both;
     }
     @keyframes rowIn { from{opacity:0;transform:translateY(-4px)} to{opacity:1;transform:none} }
-    .payment-method-row .form-control-inf { margin:0; background:#fff; }
+    .payment-method-row .form-control-inf { margin:0; }
     .btn-remove-method {
-        width:38px; height:38px; display:flex; align-items:center; justify-content:center;
-        background:#fff; border:1px solid rgba(220,38,38,0.2); border-radius:7px;
+        width:40px; height:40px; display:flex; align-items:center; justify-content:center;
+        background:rgba(255,255,255,0.6); border:1px solid rgba(220,38,38,0.2); border-radius:11px;
         cursor:pointer; color:var(--red); transition:all 0.2s; flex-shrink:0;
     }
     .btn-remove-method:hover { background:var(--red-l); border-color:rgba(220,38,38,0.4); }
     .btn-add-method {
         display:inline-flex; align-items:center; gap:7px;
-        padding:10px 18px; margin-top:4px; background:#fff;
-        border:1px dashed rgba(27,79,168,0.3); border-radius:7px; color:var(--muted);
+        padding:11px 18px; margin-top:4px; background:rgba(255,255,255,0.5);
+        border:1px dashed rgba(27,79,168,0.3); border-radius:12px; color:var(--muted);
         font-family:'DM Sans',sans-serif; font-size:11px; letter-spacing:2px;
         text-transform:uppercase; cursor:pointer; transition:all 0.2s; font-weight:600;
     }
-    .btn-add-method:hover { border-color:var(--blue); color:var(--blue); background:var(--blue-l); }
+    .btn-add-method:hover { border-color:var(--blue); color:var(--blue); background:rgba(27,79,168,0.06); }
     .payment-total-row {
         display:flex; justify-content:space-between; align-items:center;
-        padding:14px 16px; margin-top:12px; background:var(--dark);
-        border-radius:8px; font-size:12px;
+        padding:15px 18px; margin-top:12px; background:linear-gradient(120deg,var(--blue),var(--blue-2));
+        border-radius:14px; font-size:12px; box-shadow:0 10px 24px rgba(27,79,168,0.3);
     }
-    .payment-total-label { color:rgba(255,255,255,0.6); letter-spacing:2px; text-transform:uppercase; font-size:10px; font-weight:600; }
+    .payment-total-label { color:rgba(255,255,255,0.7); letter-spacing:2px; text-transform:uppercase; font-size:10px; font-weight:600; }
     .payment-total-value { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; color:#fff; }
-    .payment-total-value.error { color:#FF6B6B; }
-    .payment-total-value.success { color:#10B981; }
+    .payment-total-value.error { color:#FFD2D2; }
+    .payment-total-value.success { color:#C7F9E3; }
     .payment-validation-msg {
         font-size:11px; margin-top:8px; padding:10px 14px;
-        border-radius:7px; display:none; font-weight:500;
+        border-radius:11px; display:none; font-weight:500;
     }
     .payment-validation-msg.error { color:var(--red); background:var(--red-l); border:1px solid rgba(220,38,38,0.15); }
     .payment-validation-msg.success { color:var(--green); background:var(--green-l); border:1px solid rgba(5,150,105,0.15); }
@@ -351,13 +332,12 @@
         display:flex; align-items:center; gap:8px; margin-top:12px;
         padding:12px 16px; background:var(--red-l);
         border:1px solid rgba(220,38,38,0.2); border-left:3px solid var(--red);
-        border-radius:8px; font-size:12px; color:var(--red); font-weight:500;
+        border-radius:12px; font-size:12px; color:var(--red); font-weight:500;
     }
 
-    /* ═══════════════ PACKAGE CARDS ═══════════════ */
     .package-card {
-        padding:16px 20px; background:var(--bg);
-        border:1.5px solid var(--border); border-radius:10px; cursor:pointer;
+        padding:16px 20px; background:rgba(255,255,255,0.5);
+        border:1.5px solid var(--border); border-radius:16px; cursor:pointer;
         transition:all 0.25s; min-width:170px; position:relative; overflow:hidden;
     }
     .package-card::before {
@@ -365,7 +345,7 @@
         background:var(--blue); opacity:0; transition:opacity 0.25s;
     }
     .package-card:hover { border-color:rgba(27,79,168,0.3); transform:translateY(-2px); }
-    .package-card.selected { border-color:var(--blue); background:rgba(27,79,168,0.05); }
+    .package-card.selected { border-color:var(--blue); background:rgba(27,79,168,0.08); }
     .package-card.selected::before { opacity:1; }
     .package-card-levels {
         font-family:'Bebas Neue',sans-serif; font-size:28px; letter-spacing:2px;
@@ -382,12 +362,11 @@
     .package-card.selected .package-card-check { display:flex; }
     .optional-label { color:var(--faint); font-size:8px; letter-spacing:1px; }
 
-    /* ═══════════════ STICKY FOOTER ═══════════════ */
     .reg-footer {
         max-width:1080px; margin:20px auto 0;
-        background:var(--card); border:1px solid var(--border); border-radius:12px;
+        background:var(--card); border:1px solid var(--border); border-radius:18px;
         padding:18px 26px; display:flex; align-items:center; justify-content:space-between;
-        gap:14px; box-shadow:0 -2px 16px rgba(27,79,168,0.05);
+        gap:14px; box-shadow:var(--glass-sh);
         position:sticky; bottom:16px; z-index:10;
     }
     .reg-footer-hint {
@@ -395,35 +374,36 @@
     }
     .reg-footer-actions { display:flex; align-items:center; gap:10px; }
     .btn-cancel {
-        padding:11px 24px; background:transparent;
-        border:1px solid var(--border); border-radius:7px;
+        padding:12px 24px; background:rgba(255,255,255,0.5);
+        border:1px solid var(--border); border-radius:12px;
         color:var(--muted); font-family:'DM Sans',sans-serif;
         font-size:11px; letter-spacing:2px; text-transform:uppercase;
         text-decoration:none; transition:all 0.25s; cursor:pointer; font-weight:600;
     }
-    .btn-cancel:hover { border-color:rgba(27,79,168,0.3); color:var(--blue); text-decoration:none; }
+    .btn-cancel:hover { border-color:var(--blue); color:var(--blue); text-decoration:none; }
     .btn-submit {
         display:inline-flex; align-items:center; gap:9px;
-        padding:13px 32px; background:linear-gradient(135deg, var(--blue), var(--blue-2));
-        border:none; border-radius:7px; color:#fff;
-        font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:4px;
-        cursor:pointer; transition:all 0.25s; box-shadow:0 4px 16px rgba(27,79,168,0.25);
+        padding:14px 34px; background:linear-gradient(135deg, var(--blue), var(--blue-2));
+        border:none; border-radius:13px; color:#fff;
+        font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px;
+        cursor:pointer; transition:all 0.25s; box-shadow:0 12px 28px rgba(27,79,168,0.34);
     }
-    .btn-submit:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(27,79,168,0.35); }
+    .btn-submit:hover { transform:translateY(-2px); box-shadow:0 18px 40px rgba(27,79,168,0.44); }
     .btn-submit svg { stroke:#fff; }
 
-    /* Error alert */
     .reg-alert {
         max-width:1080px; margin:0 auto 16px; padding:14px 20px;
         background:var(--red-l); border:1px solid rgba(220,38,38,0.2);
-        border-left:3px solid var(--red); border-radius:8px;
+        border-left:3px solid var(--red); border-radius:14px;
         display:flex; align-items:center; gap:12px; font-size:13px; color:var(--red);
     }
 </style>
 
 <div class="create-page">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
-    {{-- ═══════════════ COMMAND HEADER ═══════════════ --}}
     <div class="reg-header">
         <div class="reg-header-left">
             <div class="reg-eyebrow">Registration</div>
@@ -447,7 +427,6 @@
     </div>
     @endif
 
-    {{-- ═══════════════ LEAD IDENTITY BAR ═══════════════ --}}
     <div class="lead-bar">
         <div class="lead-avatar">{{ strtoupper(substr($lead->full_name, 0, 1)) }}</div>
         <div class="lead-badge">
@@ -485,10 +464,7 @@
         @endif
 
         @if(!empty($resumeContext))
-        {{-- Resuming a postponed student — the enrolment was already paid for, so
-             this re-registration is FREE. Private hours / prepaid package units
-             are carried over automatically; do not raise the level beyond what
-             was postponed ({{ $resumeContext['level_name'] ?? $resumeContext['course_name'] }}). --}}
+        
         <div style="margin-bottom:18px;padding:14px 18px;border-radius:10px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.25);border-left:3px solid #059669;color:#047857;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="flex-shrink:0;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             <div>
@@ -509,8 +485,7 @@
         @endif
 
         @if(!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0)
-        {{-- Student is on a level package with prepaid levels remaining. The next
-             group level is already paid for, so this enrolment should be free. --}}
+        
         <div style="margin-bottom:18px;padding:14px 18px;border-radius:10px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.25);border-left:3px solid #7C3AED;color:#6D28D9;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" style="flex-shrink:0;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             <div>
@@ -524,7 +499,6 @@
 
         <div class="reg-layout">
 
-            {{-- ═══════════ 1 · COURSE SETUP ═══════════ --}}
             <div class="sec-card">
                 <div class="sec-head">
                     <div class="sec-num">1</div>
@@ -578,7 +552,6 @@
                 </div>
             </div>
 
-            {{-- ═══════════ 2 · ENROLLMENT & SCHEDULE ═══════════ --}}
             <div class="sec-card">
                 <div class="sec-head">
                     <div class="sec-num">2</div>
@@ -587,7 +560,7 @@
                 </div>
                 <div class="sec-body">
                     <div class="form-grid">
-                        {{-- Type --}}
+                        
                         <div class="form-field">
                             <label class="form-label">Enrollment Type <span class="required">*</span></label>
                             <div class="segmented">
@@ -604,7 +577,6 @@
                             </div>
                         </div>
 
-                        {{-- Mode --}}
                         <div class="form-field">
                             <label class="form-label">Delivery Mode <span class="required">*</span></label>
                             <div class="segmented">
@@ -624,7 +596,6 @@
 
                     <div class="divider-soft"></div>
 
-                    {{-- Start Option --}}
                     <div class="form-field">
                         <label class="form-label">Start Option <span class="required">*</span></label>
                         <select id="patch_select" name="patch_option" class="form-control-inf"></select>
@@ -640,7 +611,6 @@
                         </div>
                     </div>
 
-                    {{-- Private Extra (teacher + days + bundle) --}}
                     <div id="private_extra" style="display:none;">
                         <div class="divider-soft"></div>
 
@@ -665,7 +635,7 @@
                             </div>
                             <div class="form-field">
                                 @if(!empty($leftoverHours) && $leftoverHours > 0)
-                                {{-- Student has leftover hours carried from finished courses --}}
+                                
                                 <div style="margin-bottom:12px;padding:12px 15px;border-radius:8px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.25);border-left:3px solid #059669;color:#15803D;font-size:12px;line-height:1.5;">
                                     <strong>{{ rtrim(rtrim(number_format($leftoverHours, 2), '0'), '.') }} hours</strong> carried over from this student's completed courses. These will be added to the new enrollment automatically — a new bundle is optional.
                                 </div>
@@ -681,7 +651,7 @@
                                         </option>
                                     @endforeach
                                 </select>
-                                {{-- Warning when the selected course needs more hours than the bundle --}}
+                                
                                 <div id="bundle_hours_warning" style="display:none;margin-top:8px;padding:10px 13px;border-radius:7px;background:rgba(245,145,30,0.07);border:1px solid rgba(245,145,30,0.25);border-left:3px solid #F5911E;color:#C47010;font-size:11px;line-height:1.5;">
                                     <strong>Heads up:</strong> <span id="bundle_hours_warning_text"></span>
                                 </div>
@@ -691,7 +661,6 @@
                 </div>
             </div>
 
-            {{-- ═══════════ 3 · MATERIAL & PACKAGE ═══════════ --}}
             <div class="sec-card" id="material_package_card">
                 <div class="sec-head">
                     <div class="sec-num">3</div>
@@ -699,16 +668,15 @@
                     <div class="sec-hint">Optional add-ons</div>
                 </div>
                 <div class="sec-body">
-                    {{-- Materials (supports multiple per course) --}}
+                    
                     <div id="material_section" style="display:none;">
                         <div class="sub-label">Study Materials</div>
                         <div id="materials_list"></div>
-                        {{-- selected material ids are injected here as hidden inputs by JS --}}
+                        
                         <div id="material_ids_container"></div>
                         <input type="hidden" name="material_price" id="material_price_hidden" value="0">
                     </div>
 
-                    {{-- Package --}}
                     <div id="package_section" style="display:none;">
                         <div class="sub-label spaced">Level Package <span class="optional-label">(Optional)</span></div>
                         <div id="package_options" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:12px;"></div>
@@ -720,14 +688,12 @@
                         </div>
                     </div>
 
-                    {{-- Empty state hint --}}
                     <div id="addon_empty_hint" style="text-align:center;padding:20px;color:var(--faint);font-size:12px;">
                         Select a course to see available materials &amp; packages.
                     </div>
                 </div>
             </div>
 
-            {{-- ═══════════ 4 · PRICING & PLACEMENT ═══════════ --}}
             <div class="sec-card">
                 <div class="sec-head">
                     <div class="sec-num">4</div>
@@ -773,17 +739,11 @@
                                 value="{{ old('test_fee', 0) }}">
                             <input type="hidden" name="test_fee_setting_id" id="test_fee_setting_id">
                         </div>
-                        <!-- <div class="form-field">
-                            <label class="form-label">Test Score</label>
-                            <input name="test_score" id="test_score_input" class="form-control-inf"
-                                placeholder="e.g. 85" value="{{ old('test_score') }}"
-                                oninput="onTestScoreChange()">
-                        </div> -->
+                        
                     </div>
                 </div>
             </div>
 
-            {{-- ═══════════ 5 · PAYMENT ═══════════ --}}
             <div class="sec-card">
                 <div class="sec-head">
                     <div class="sec-num">5</div>
@@ -814,7 +774,6 @@
                         </select>
                     </div>
 
-                    {{-- Payment Summary --}}
                     <div id="payment_details">
                         <div class="inf-pay-summary" id="payment_summary"></div>
                         <div class="inf-inst-label" id="installments_label" style="display:none;">Installment Schedule</div>
@@ -826,7 +785,6 @@
                         </table>
                     </div>
 
-                    {{-- Deposit Payment Methods --}}
                     <div id="deposit_section" style="display:none;">
                         <div class="divider-soft"></div>
                         <div class="sub-label">Deposit Payment Methods</div>
@@ -885,7 +843,6 @@
                 </div>
             </div>
 
-            {{-- ═══════════ 6 · NOTES ═══════════ --}}
             <div class="sec-card">
                 <div class="sec-head">
                     <div class="sec-num">6</div>
@@ -903,11 +860,9 @@
 
         </div>
 
-        {{-- Hidden fields for invoice --}}
         <input type="hidden" id="student_name"  value="{{ $lead->full_name }}">
         <input type="hidden" id="student_phone" value="{{ $lead->phone }}">
 
-        {{-- ═══════════════ STICKY FOOTER ═══════════════ --}}
         <div class="reg-footer">
             <div class="reg-footer-hint">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

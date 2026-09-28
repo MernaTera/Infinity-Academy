@@ -358,7 +358,12 @@ window.infOpenModal = function() {
 };
 
 window.infCloseModal = function() {
-    document.getElementById('invoiceModal').classList.remove('show');
+    const modal = document.getElementById('invoiceModal');
+    if (modal && modal.dataset.locked === 'true') {
+        window.location.href = window.__invRedirect || '{{ route("leads.index") }}';
+        return;
+    }
+    modal.classList.remove('show');
     document.body.style.overflow = '';
 };
 
@@ -428,6 +433,8 @@ document.getElementById('confirm_register_btn').addEventListener('click', async 
             }
 
             const targetUrl = data.redirect || '{{ route("leads.index") }}';
+            window.__invRedirect = targetUrl;
+            document.getElementById('invoiceModal').dataset.locked = 'true';
             const safeRedirect = () => window.location.href = targetUrl;
 
             const backBtn = document.getElementById('inv_close_btn_2');
