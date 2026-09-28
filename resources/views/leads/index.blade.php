@@ -21,6 +21,9 @@
     * { box-sizing:border-box; }
 
     .leads-page { background:var(--bg); min-height:100vh; padding:30px 34px 44px; color:var(--text); font-family:'DM Sans',sans-serif; }
+    .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3 { width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
 
     .page-header {
         margin:0 auto 16px; display:flex; align-items:flex-end; justify-content:space-between;
@@ -212,6 +215,9 @@
 <script src="{{ asset('js/register/register-modal.js') }}"></script>
 
 <div class="leads-page">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div>

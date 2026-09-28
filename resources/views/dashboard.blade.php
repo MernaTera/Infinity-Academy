@@ -20,6 +20,9 @@
 
     .dash {background:var(--bg); min-height:100vh; padding:30px 34px 44px; color:var(--text); font-family:'DM Sans',sans-serif; }
     @media (max-width:600px){ .dash{ padding:18px 16px 32px; } }
+    .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3 { width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
 
     .glass { background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); box-shadow:var(--glass-sh); }
 
@@ -105,6 +108,9 @@
 </style>
 
 <div class="dash">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="dash-head">
         <div>
