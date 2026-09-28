@@ -35,7 +35,7 @@
     }
     .reg-header-left { position:relative; z-index:1; }
     .reg-eyebrow {
-        font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--orange-dk);
+        font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue);
         margin-bottom:8px; font-weight:600; display:flex; align-items:center; gap:8px;
     }
     .reg-eyebrow::before {
