@@ -31,7 +31,7 @@
     .rf-header { margin:0 auto 18px; }
     .rf-header-inner { position:relative; z-index:1; }
     .rf-eyebrow { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue); margin-bottom:7px; font-weight:600; display:flex; align-items:center; gap:8px; }
-    .rf-eyebrow::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--orange); box-shadow:0 0 8px var(--orange); }
+    .rf-eyebrow::before { content:''; width:6px; height:6px; border-radius:50%; background:var(--blue); box-shadow:0 0 8px var(--orange); }
     .rf-title { font-family:'Bebas Neue',sans-serif; font-size:42px; letter-spacing:2px; color:var(--text); line-height:0.95; margin:0; }
     .rf-sub { font-size:12px; color:var(--muted); margin-top:6px; letter-spacing:0.3px; }
 
@@ -154,6 +154,48 @@
     .btn-submit-refund { padding:11px 24px; background:linear-gradient(135deg,var(--red),#EF4444); border:none; border-radius:12px; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px; cursor:pointer; transition:box-shadow 0.2s, filter 0.2s; box-shadow:0 10px 24px rgba(220,38,38,0.3); }
     .btn-submit-refund:hover { filter:brightness(1.06); box-shadow:0 14px 30px rgba(220,38,38,0.4); }
 
+    .rfn-pill {
+        display:inline-flex; align-items:center; gap:6px; max-width:200px;
+        padding:5px 11px; border-radius:16px; cursor:pointer;
+        background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.18);
+        color:var(--red); font-size:11px; font-family:'DM Sans',sans-serif;
+        transition:all 0.18s; text-align:left;
+    }
+    .rfn-pill:hover { background:rgba(220,38,38,0.12); border-color:rgba(220,38,38,0.35); }
+    .rfn-pill-text { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .rfn-overlay {
+        display:none; position:fixed; inset:0; z-index:1100;
+        background:rgba(10,20,40,0.5); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+        align-items:center; justify-content:center; padding:20px;
+    }
+    .rfn-overlay.open { display:flex; animation:rfnFade 0.2s ease both; }
+    @keyframes rfnFade { from{opacity:0} to{opacity:1} }
+
+    .rfn-modal {
+        background:#fff; border-radius:16px; max-width:520px; width:100%;
+        max-height:80vh; display:flex; flex-direction:column; overflow:hidden;
+        box-shadow:0 24px 64px rgba(15,31,61,0.32); animation:rfnPop 0.25s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes rfnPop { from{opacity:0;transform:scale(0.96) translateY(10px)} to{opacity:1;transform:none} }
+
+    .rfn-modal-head {
+        background:linear-gradient(135deg,#0F1F3D,#243B69); padding:18px 22px;
+        display:flex; align-items:center; justify-content:space-between; gap:12px;
+    }
+    .rfn-modal-head-sub { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--orange); margin-bottom:3px; }
+    .rfn-modal-head-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; color:#fff; line-height:1; }
+    .rfn-modal-close {
+        background:rgba(255,255,255,0.12); border:none; width:30px; height:30px; border-radius:8px;
+        color:#fff; cursor:pointer; font-size:18px; line-height:1; flex-shrink:0;
+        display:flex; align-items:center; justify-content:center; transition:background 0.2s;
+    }
+    .rfn-modal-close:hover { background:rgba(255,255,255,0.22); }
+    .rfn-modal-body {
+        padding:22px; overflow-y:auto; font-size:14px; line-height:1.65; color:#1A2A4A;
+        white-space:pre-wrap; word-break:break-word;
+    }
+
     @media (max-width:600px){ .rf-page{ padding:20px 14px 36px; } .rf-title{ font-size:34px; } }
 </style>
 
@@ -161,6 +203,7 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
+
     <div class="rf-header">
         <div class="rf-header-inner">
             <div class="rf-eyebrow">Finance</div>
@@ -196,7 +239,6 @@
             @forelse($eligibleEnrollments as $enrollment)
                 @php
                     $deposits    = $enrollment->financialTransactions;
-                    // Course + Material shown separately; Test is excluded from refunds
                     $courseDeposits   = $deposits->where('transaction_category', 'Course');
                     $materialDeposits = $deposits->where('transaction_category', 'Material');
                     $courseTotal      = $courseDeposits->sum('amount');
@@ -206,7 +248,6 @@
                     $daysAgo     = $firstPaid ? (int) $firstPaid->created_at->diffInDays(now()) : 0;
                     $hoursLeft   = $firstPaid ? max(0, 72 - (int) $firstPaid->created_at->diffInHours(now())) : 0;
 
-                    // Merge Course deposits by payment_method for the breakdown
                     $byMethod = $courseDeposits->groupBy('payment_method')->map(fn($g) => $g->sum('amount'));
 
                     $timerClass = $hoursLeft > 48 ? 'timer-ok' : ($hoursLeft > 12 ? 'timer-warn' : 'timer-crit');
@@ -319,9 +360,15 @@
                                 <td><span class="rf-amount">{{ number_format($req->amount, 0) }} LE</span></td>
                                 <td><span class="rf-badge {{ $rfBadge[0] }}">{{ $rfBadge[1] }}</span></td>
                                 <td style="color:var(--faint);">{{ $req->created_at?->format('d M Y · H:i') }}</td>
-                                <td style="color:var(--muted);max-width:180px;">
+                                <td style="max-width:200px;">
                                     @if($req->rejection_note)
-                                        <span title="{{ $req->rejection_note }}" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $req->rejection_note }}</span>
+                                        <button type="button" class="rfn-pill"
+                                                onclick="openRfNote(this)"
+                                                data-note="{{ e($req->rejection_note) }}"
+                                                data-student="{{ e($req->enrollment?->student?->full_name ?? 'Refund Request') }}">
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                            <span class="rfn-pill-text">{{ \Illuminate\Support\Str::limit($req->rejection_note, 24) }}</span>
+                                        </button>
                                     @else
                                         <span style="color:var(--faint);">—</span>
                                     @endif
@@ -391,6 +438,19 @@
         </form>
     </div>
 
+    <div class="rfn-overlay" id="rfnOverlay" onclick="if(event.target===this)closeRfNote()">
+        <div class="rfn-modal">
+            <div class="rfn-modal-head">
+                <div>
+                    <div class="rfn-modal-head-sub">Rejection Note</div>
+                    <div class="rfn-modal-head-title" id="rfnModalStudent">Note</div>
+                </div>
+                <button type="button" class="rfn-modal-close" onclick="closeRfNote()">&times;</button>
+            </div>
+            <div class="rfn-modal-body" id="rfnModalBody"></div>
+        </div>
+    </div>
+
 </div>
 
 @if(session('success'))
@@ -421,7 +481,6 @@ function openRefundModal(enrollmentId, student, course, courseAmount, materialAm
     document.getElementById('modal_student').value       = student + (course ? ' — ' + course : '');
     document.getElementById('modal_reason').value        = '';
 
-    // Reset + show/hide the material option
     const matWrap  = document.getElementById('modal_material_wrap');
     const matCheck = document.getElementById('modal_include_material');
     matCheck.checked = false;
@@ -450,6 +509,18 @@ function closeRefundModal() {
 document.getElementById('refundModal').addEventListener('click', function(e) {
     if (e.target === this) closeRefundModal();
 });
+
+function openRfNote(btn) {
+    document.getElementById('rfnModalBody').textContent = btn.getAttribute('data-note') || '';
+    document.getElementById('rfnModalStudent').textContent = btn.getAttribute('data-student') || 'Note';
+    document.getElementById('rfnOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+function closeRfNote() {
+    document.getElementById('rfnOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeRfNote(); });
 </script>
 
 @endsection
