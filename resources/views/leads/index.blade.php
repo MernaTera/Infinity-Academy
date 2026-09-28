@@ -81,7 +81,7 @@
     .reg-section-head .rsh-count { font-size:11px; color:var(--muted); background:var(--green-l); padding:3px 10px; border-radius:20px; font-weight:600; }
 
     .table-card {
-        background:var(--glass); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%);
+        background:rgba(255,255,255,0.72);
         border:1px solid var(--glass-bd); border-radius:20px; overflow:hidden; box-shadow:var(--glass-sh);
     }
     .table-scroll { overflow-x:auto; }
@@ -192,13 +192,13 @@
 
     .call-modal { display:none; position:fixed; inset:0; background:rgba(15,31,61,0.5); backdrop-filter:blur(4px); z-index:1000; align-items:center; justify-content:center; }
     .call-modal-box {
-        background:rgba(255,255,255,0.75); backdrop-filter:blur(30px) saturate(160%); -webkit-backdrop-filter:blur(30px) saturate(160%);
+        background:rgba(255,255,255,0.96); backdrop-filter:blur(20px) saturate(150%); -webkit-backdrop-filter:blur(20px) saturate(150%);
         border:1px solid var(--glass-bd); border-radius:20px; padding:26px; width:90%; max-width:420px; box-shadow:0 20px 60px rgba(15,31,61,0.3);
     }
     .call-modal-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:2px; color:var(--text); margin-bottom:16px; }
     .call-input { width:100%; padding:11px 14px; border:1px solid var(--glass-bd); border-radius:11px; background:rgba(255,255,255,0.5); font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none; margin-bottom:18px; }
     .call-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.1); }
-    .modal-actions { display:flex; justify-content:flex-end; gap:10px; }
+    .modal-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:10px; }
     .btn-cancel { padding:10px 20px; background:rgba(255,255,255,0.5); border:1px solid var(--glass-bd); border-radius:11px; color:var(--muted); font-size:11px; letter-spacing:1px; text-transform:uppercase; font-weight:600; cursor:pointer; transition:all 0.2s; }
     .btn-cancel:hover { border-color:var(--blue); color:var(--blue); }
     .btn-save { padding:10px 22px; background:linear-gradient(120deg,var(--blue),var(--blue-2)); border:none; border-radius:11px; color:#fff; font-family:'Bebas Neue',sans-serif; font-size:13px; letter-spacing:2px; cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; }
