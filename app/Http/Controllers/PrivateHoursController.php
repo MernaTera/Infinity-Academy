@@ -34,14 +34,7 @@ class PrivateHoursController extends Controller
             ->where('enrollment_type', 'Private')
             ->whereNotNull('hours_remaining')
             ->where(function ($q) {
-                // Active + Restricted always need attention (current course, or
-                // depleted and awaiting a top-up). Completed enrolments only
-                // matter here while they still hold leftover hours that haven't
-                // been carried into a new course yet — once carried, their
-                // hours are zeroed and they should drop off this screen.
-                $q->whereIn('status', ['Active', 'Restricted'])
-                  // Postponed is included so a paused student shows here as
-                  // "Postponed" instead of silently dropping off the screen.
+                $q->whereIn('status', ['Active', 'Restricted', 'Waiting', 'Pending_Approval'])
                   ->orWhere('status', 'Postponed')
                   ->orWhere(function ($q2) {
                       $q2->where('status', 'Completed')

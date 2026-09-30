@@ -1,10 +1,4 @@
-// ═══════════════════════════════════════════════════════════════
-// Infinity Academy — register-modal.js  (fixed)
-// ═══════════════════════════════════════════════════════════════
 
-// ─────────────────────────────────────────
-// Branded Confirm Modal
-// ─────────────────────────────────────────
 (function injectConfirmModal() {
     if (document.getElementById('inf-confirm-overlay')) return;
     const style = document.createElement('style');
@@ -85,9 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// ═══════════════════════════════════════════════════════════════
-// Registration Form
-// ═══════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
 
     const course    = document.getElementById('course_select');
@@ -106,7 +97,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const materialPriceHidden = document.getElementById('material_price_hidden');
     const paymentSelect       = document.getElementById('payment_plan_id');
 
-    // ── Single source of truth for pricing ──
     window.pricing = {
         courseBasePrice:  0,
         courseDiscount:   0,
@@ -122,9 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function fmt(n) { return parseFloat(n||0).toFixed(2) + ' LE'; }
 
-    // ─────────────────────────────────────────
-    // Price display
-    // ─────────────────────────────────────────
     function updatePriceDisplay() {
         const base   = document.getElementById('base_price');
         const disc   = document.getElementById('discount');
@@ -144,13 +131,13 @@ document.addEventListener('DOMContentLoaded', function() {
         if (finalH) finalH.value = pricing.courseFinalPrice;
         if (discH)  discH.value  = pricing.courseDiscount;
 
+        const grand = document.getElementById('grand_total_val');
+        if (grand) grand.textContent = fmt(pricing.courseFinalPrice + pricing.materialPrice + pricing.testFee);
+
         refreshPaymentSummary();
         refreshDepositSection();
     }
 
-    // ─────────────────────────────────────────
-    // Calculate price
-    // ─────────────────────────────────────────
     function calculatePrice() {
         if (pricing.isPackage) return;
         const typeInput = document.querySelector('input[name="type"]:checked');
@@ -165,9 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
             pricing.courseDiscount   = parseFloat(data.discount     || 0);
             pricing.courseFinalPrice = parseFloat(data.final_price  || 0);
 
-            // Package continuation: this student already owns the package and is
-            // taking their next prepaid GROUP level, so it's free. Show 0 in the
-            // form to match what the backend will actually save.
             if (window.__pkgContinuation && typeInput.value === 'group') {
                 pricing.courseBasePrice  = 0;
                 pricing.courseDiscount   = 0;
@@ -178,12 +162,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ─────────────────────────────────────────
-    // Payment summary
-    // ─────────────────────────────────────────
     function refreshPaymentSummary() {
         const detailsEl = document.getElementById('payment_details');
-        if (!paymentSelect?.value || pricing.courseFinalPrice <= 0) {
+        if (!paymentSelect?.value) {
             if (detailsEl) detailsEl.style.display = 'none';
             return;
         }
@@ -232,9 +213,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return `<div class="inf-pay-row"><span class="inf-pay-key">${key}</span><span class="inf-pay-val ${cls}">${val}</span></div>`;
     }
 
-    // ─────────────────────────────────────────
-    // Deposit section
-    // ─────────────────────────────────────────
     function refreshDepositSection() {
         const section  = document.getElementById('deposit_section');
         const amountEl = document.getElementById('deposit_required_amount');
@@ -244,9 +222,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const depositPct = parseFloat(sel.dataset.deposit || 0);
         const coursePrice = pricing.courseFinalPrice;
 
-        if (depositPct > 0 && coursePrice > 0) {
-            const depositAmt    = (coursePrice * depositPct / 100);
-            const totalRequired = depositAmt + pricing.materialPrice + pricing.testFee;
+        const depositAmt    = (coursePrice * depositPct / 100);
+        const totalRequired = depositAmt + pricing.materialPrice + pricing.testFee;
+
+        if (totalRequired > 0) {
             section.style.display = 'block';
             if (amountEl) amountEl.textContent = totalRequired.toFixed(2) + ' LE';
             section.dataset.required = totalRequired.toFixed(2);
@@ -256,9 +235,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // ─────────────────────────────────────────
-    // Material — cache + AbortController
-    // ─────────────────────────────────────────
     function loadMaterial() {
         if (!course.value) {
             if (materialSection) materialSection.style.display = 'none';
@@ -284,11 +260,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 function applyMaterial(data) {
-    // data is now an ARRAY of materials (mandatory + optional) for the course.
     const list          = document.getElementById('materials_list');
     const idsContainer  = document.getElementById('material_ids_container');
 
-    // Normalise: accept array; tolerate a single object or null for safety.
     let materials = Array.isArray(data) ? data : (data && data.material_id ? [data] : []);
 
     if (!materials.length) {
@@ -303,7 +277,6 @@ function applyMaterial(data) {
 
     if (materialSection) materialSection.style.display = 'block';
 
-    // Build the list UI
     let html = '';
     materials.forEach((m, i) => {
         const mandatory = !!m.is_mandatory;
@@ -325,7 +298,6 @@ function applyMaterial(data) {
             </label>`;
     });
 
-    // Total row
     html += `
         <div class="mat-total-row">
             <span class="mat-total-label">Selected Materials Total</span>
@@ -335,18 +307,13 @@ function applyMaterial(data) {
     if (list) list.innerHTML = html;
     if (idsContainer) idsContainer.innerHTML = '';
 
-    // Bind change listeners programmatically so recalcMaterials stays inside
-    // this closure (where pricing / updatePriceDisplay live) — inline onchange
-    // would require a global function.
     list.querySelectorAll('.mat-checkbox').forEach(cb => {
         cb.addEventListener('change', recalcMaterials);
     });
 
-    // Compute initial total (mandatory ones are pre-checked)
     recalcMaterials();
 }
 
-// Recompute the selected materials total, sync hidden inputs + pricing.
 function recalcMaterials() {
     const checks = document.querySelectorAll('.mat-checkbox');
     const idsContainer = document.getElementById('material_ids_container');
@@ -372,11 +339,6 @@ function recalcMaterials() {
     if (typeof updatePriceDisplay === 'function') updatePriceDisplay();
 }
 
-
-
-    // ─────────────────────────────────────────
-    // Test fee
-    // ─────────────────────────────────────────
     const testFeeInput = document.querySelector('[name="test_fee"]');
     if (testFeeInput) {
         testFeeInput.addEventListener('input', function() {
@@ -387,24 +349,12 @@ function recalcMaterials() {
         });
     }
 
-    // ─────────────────────────────────────────
-    // (Materials are handled by applyMaterial / recalcMaterials — multiple
-    //  materials per course, each checkbox wired up on render.)
-    // ─────────────────────────────────────────
-
-
-    // ─────────────────────────────────────────
-    // Level Package
-    // ─────────────────────────────────────────
     function loadPackages(courseId) {
         const section   = document.getElementById('package_section');
         const container = document.getElementById('package_options');
         if (!section || !container) return;
         if (!courseId) { section.style.display='none'; return; }
 
-        // Level packages apply to GROUP enrolments only. If the current type is
-        // private (or none picked), hide the section and clear any selection so
-        // no package is submitted.
         const typeVal = document.querySelector('input[name="type"]:checked')?.value;
         if (typeVal !== 'group') {
             section.style.display = 'none';
@@ -418,10 +368,6 @@ function recalcMaterials() {
         fetch(`/level-packages/${courseId}`)
             .then(r=>r.json())
             .then(packages => {
-                // Re-check the type here: the fetch is async, so the user may
-                // have switched to private (or cleared the type) while it was
-                // in flight. Without this guard a late response would re-show
-                // the section for a private enrolment.
                 const typeNow = document.querySelector('input[name="type"]:checked')?.value;
                 if (typeNow !== 'group') { section.style.display = 'none'; return; }
 
@@ -482,15 +428,11 @@ function recalcMaterials() {
             notice.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>Package applied — <strong>${pkg.levels_count} Levels</strong> at <strong>${parseFloat(pkg.package_price).toFixed(2)} LE</strong>`;
         }
 
-        // Disable bundle when package selected
         if (bundle) { bundle.value=''; bundle.disabled=true; bundle.style.opacity='0.4'; bundle.title='Bundle is disabled when a level package is selected'; }
 
         updatePriceDisplay();
     }
 
-    // ─────────────────────────────────────────
-    // Course / Level / Sublevel
-    // ─────────────────────────────────────────
     course.addEventListener('change', async function() {
         level.innerHTML    = '<option value="">— Select Level —</option>';
         sublevel.innerHTML = '<option value="">— Select Sublevel —</option>';
@@ -527,15 +469,11 @@ function recalcMaterials() {
         modeSelect.addEventListener('change', loadPatch);
     }
 
-
     if (level)    level.addEventListener('change', loadPatch);
     if (sublevel) sublevel.addEventListener('change', loadPatch);
     bundle?.addEventListener('change', calculatePrice);
     paymentSelect?.addEventListener('change', () => { refreshPaymentSummary(); refreshDepositSection(); });
 
-    // ─────────────────────────────────────────
-    // Patch
-    // ─────────────────────────────────────────
     function loadPatch() {
         if (!course.value) return;
 
@@ -615,9 +553,6 @@ function recalcMaterials() {
             });
         }
 
-    // ─────────────────────────────────────────
-    // Teachers
-    // ─────────────────────────────────────────
     function loadTeachers() {
         if (!patch || patch.value!=='current' || !teacherBlock) return;
         fetch('/available-teachers', {
@@ -671,9 +606,6 @@ function recalcMaterials() {
         });
     }
     
-    // ─────────────────────────────────────────
-    // Test Fees
-    // ─────────────────────────────────────────
     window.onTestFeeChange = function() {
         const sel = document.getElementById('test_fee_select');
         const opt = sel.options[sel.selectedIndex];
@@ -688,9 +620,6 @@ function recalcMaterials() {
         updatePriceDisplay();
     }
 
-    // ─────────────────────────────────────────
-    // Deposit payment methods
-    // ─────────────────────────────────────────
     let methodRowCount = 1;
 
     window.addPaymentMethod = function() {
@@ -734,26 +663,15 @@ function recalcMaterials() {
         }
     };
 
-    // ─────────────────────────────────────────
-    // ✅ preview_invoice_btn — validation + open invoice
-    // ─────────────────────────────────────────
     const previewBtn = document.getElementById('preview_invoice_btn');
 
-    // Guard: block ANY native submit of the registration form (e.g. pressing
-    // Enter in a field). Registration must ONLY go through the invoice modal's
-    // Confirm button (which is AJAX + double-submit-guarded). Without this, a
-    // stray Enter on a slow connection natively POSTed the form to
-    // registration.store, bypassing the modal — causing the "refresh, no
-    // redirect" (and possible duplicate) behaviour.
     const mainForm = document.getElementById('main_form');
     if (mainForm) {
         mainForm.addEventListener('submit', function(e){
             e.preventDefault();
-            // Route the intent to the proper review flow instead.
             if (previewBtn) previewBtn.click();
             return false;
         });
-        // Also stop Enter from submitting via single-line inputs.
         mainForm.addEventListener('keydown', function(e){
             if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT') {
                 e.preventDefault();
@@ -764,7 +682,6 @@ function recalcMaterials() {
     if (previewBtn) {
         previewBtn.addEventListener('click', async function() {
 
-            // Validate required fields
             if (!course?.value) {
                 await infConfirm.show({ label:'Validation', title:'Missing Course',
                     message:'Please select a course before continuing.', okText:'OK' });
@@ -776,7 +693,6 @@ function recalcMaterials() {
                 return;
             }
 
-            // Validate deposit payment total
             const depositSection = document.getElementById('deposit_section');
             if (depositSection && depositSection.style.display !== 'none') {
                 const required = parseFloat(depositSection.dataset.required || 0);
@@ -789,16 +705,12 @@ function recalcMaterials() {
                 }
             }
 
-            // All valid → open invoice
             if (typeof window.buildInvoice === 'function') {
                 window.buildInvoice();
             }
         });
     }
 
-    // ─────────────────────────────────────────
-    // Init
-    // ─────────────────────────────────────────
     setTimeout(() => {
         const oldTestFee = parseFloat(document.getElementById('test_fee_input')?.value || 0);
         if (oldTestFee > 0) {

@@ -22,7 +22,7 @@
 
     .create-page {
         min-height:100vh; padding:40px 32px 56px; color:var(--text); font-family:'DM Sans',sans-serif;
-        background:var(--bg);
+        background:#F8F6F2;
     }
     .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
     .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
@@ -35,7 +35,7 @@
     }
     .reg-header-left { position:relative; z-index:1; }
     .reg-eyebrow {
-        font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue);
+        font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--orange-dk);
         margin-bottom:8px; font-weight:600; display:flex; align-items:center; gap:8px;
     }
     .reg-eyebrow::before {
@@ -403,7 +403,6 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
-
     <div class="reg-header">
         <div class="reg-header-left">
             <div class="reg-eyebrow">Registration</div>
@@ -611,7 +610,7 @@
                         </div>
                     </div>
 
-                        <div id="private_extra" style="@if(empty($leftoverHours) || $leftoverHours <= 0)display:none;@endif">
+                    <div id="private_extra" style="@if(empty($leftoverHours) || $leftoverHours <= 0)display:none;@endif">
                         <div class="divider-soft"></div>
 
                         <div id="teacher_block">
@@ -740,6 +739,10 @@
                             <input type="hidden" name="test_fee_setting_id" id="test_fee_setting_id">
                         </div>
                         
+                    </div>
+                    <div style="margin-top:14px;padding:16px 20px;border-radius:14px;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.16);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+                        <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#5A6A85;font-weight:700;">Grand Total <span style="color:#93A3BC;font-weight:500;text-transform:none;letter-spacing:0;">(course + material + test)</span></span>
+                        <span id="grand_total_val" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#1B4FA8;line-height:1;">0.00 LE</span>
                     </div>
                 </div>
             </div>
@@ -888,8 +891,6 @@
 </div>
 
 <script>
-    // True when this student is continuing a level package (next prepaid group
-    // level). The registration JS uses it to show the price as free.
     window.__pkgContinuation = {{ (!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0) ? 'true' : 'false' }};
 </script>
 <script src="{{ asset('js/register/register-modal.js') }}"></script>
@@ -923,10 +924,6 @@
         const warnText    = document.getElementById('bundle_hours_warning_text');
         if (!courseSel || !bundleSel || !warnBox) return;
 
-        // The hours to check against follow the most specific selection made:
-        // sublevel chosen -> only that sublevel's hours matter, then level,
-        // and only fall back to the whole course's hours when neither a
-        // level nor a sublevel has been picked.
         function currentRequiredHours() {
             const sublevelOpt = sublevelSel?.options[sublevelSel.selectedIndex];
             if (sublevelSel?.value && sublevelOpt?.dataset.hours) {
