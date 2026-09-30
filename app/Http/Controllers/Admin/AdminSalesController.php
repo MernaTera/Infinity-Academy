@@ -10,9 +10,17 @@ use App\Models\Enrollment\Enrollment;
 use App\Models\Leads\Lead;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
+use App\Services\SalesService;
 
 class AdminSalesController extends Controller
 {
+    protected SalesService $salesService;
+
+    public function __construct(SalesService $salesService)
+    {
+        $this->salesService = $salesService;
+    }
+
     public function index(Request $request)
     {
         $filterType = $request->query('filter', 'month');
@@ -27,7 +35,7 @@ class AdminSalesController extends Controller
             ->where('status', 'Active')
             ->get();
 
-        $rows = $csEmployees->map(function ($emp) use ($range, $targetMonth, $filterType) {
+        $rows = $csEmployees->map(function ($emp) use ($range, $targetMonth, $filterType, $month, $day) {
             $targetAmount = CsTarget::amountFor($emp->employee_id);
 
             $achieved = RevenueSplit::where('employee_id', $emp->employee_id)
@@ -42,8 +50,6 @@ class AdminSalesController extends Controller
             $totalLeads  = (clone $leads)->count();
             $activeLeads = (clone $leads)->whereIn('status', ['Waiting', 'Call_Again'])->count();
 
-            // Calls made = every "Call Again" this CS logged from the leads
-            // dropdown (recorded in lead_history) within the selected range.
             $callsMade = \Illuminate\Support\Facades\DB::table('lead_history')
                 ->where('changed_by', $emp->employee_id)
                 ->where('new_status', 'Call_Again')
@@ -64,10 +70,10 @@ class AdminSalesController extends Controller
                 'total_leads'   => $totalLeads,
                 'active_leads'  => $activeLeads,
                 'calls_made'    => $callsMade,
+                'revenue_rows'  => $this->salesService->getRevenueTable($emp, null, $filterType, $month, $day),
             ];
         })->sortByDesc('achieved')->values();
 
-        // Overall KPIs
         $overallKpis = [
             'total_target'        => $rows->sum('target'),
             'total_achieved'      => $rows->sum('achieved'),
@@ -76,16 +82,50 @@ class AdminSalesController extends Controller
             'avg_achievement'     => $rows->where('target', '>', 0)->avg('percentage') ?? 0,
         ];
 
-        // Daily breakdown for chart (all CS combined)
         $dailyData = RevenueSplit::whereIn('employee_id', $csEmployees->pluck('employee_id'))
             ->whereBetween('created_at', [$range['start'], $range['end']])
             ->selectRaw('DATE(created_at) as day, SUM(amount_allocated) as total')
             ->groupBy('day')->orderBy('day')->get();
 
+        $patches = \App\Models\Academic\Patch::orderByDesc('start_date')->get();
+
         return view('admin.sales.index', compact(
             'rows', 'overallKpis', 'dailyData',
-            'filterType', 'month', 'day', 'targetMonth'
+            'filterType', 'month', 'day', 'targetMonth', 'patches'
         ));
+    }
+
+    public function csRevenue(Request $request)
+    {
+        $employeeId = (int) $request->query('employee_id');
+        $filterType = $request->query('filter', 'month');
+        $month      = $request->query('month', now()->format('Y-m'));
+        $day        = $request->query('day', now()->format('Y-m-d'));
+        $patchId    = $request->query('patch');
+
+        $employee = Employee::find($employeeId);
+
+        if (! $employee) {
+            return response()->json(['rows' => [], 'totals' => null], 404);
+        }
+
+        $patch = ($filterType === 'patch' && $patchId)
+            ? \App\Models\Academic\Patch::find($patchId)
+            : null;
+
+        $rows = $this->salesService->getRevenueTable($employee, $patch, $filterType, $month, $day);
+
+        return response()->json([
+            'employee' => $employee->full_name,
+            'rows'     => $rows->values(),
+            'totals'   => [
+                'count'    => $rows->count(),
+                'deposit'  => $rows->sum('deposit'),
+                'test_fee' => $rows->sum('test_fee'),
+                'material' => $rows->sum('material'),
+                'total'    => $rows->sum('total'),
+            ],
+        ]);
     }
 
     private function getDateRange(string $filterType, string $month, string $day): array

@@ -147,6 +147,7 @@ Route::middleware(['auth', 'cs.leader'])
         // Reuses the admin sales dashboard (branch-scoped via the Employee
         // global scope) — leaderboard + per-CS registrations & calls.
         Route::get('/team/sales', [AdminSalesController::class, 'index'])->name('team.sales');
+        Route::get('/team/sales/cs-revenue', [AdminSalesController::class, 'csRevenue'])->name('team.sales.cs-revenue');
         // All leads across the branch, with the owning CS + a CS filter.
         Route::get('/team/leads', [LeadController::class, 'teamLeads'])->name('team.leads');
     });
@@ -411,6 +412,7 @@ Route::middleware(['auth', 'permission:hr.view'])
 
         //Sales Tables
         Route::get('/sales', [AdminSalesController::class, 'index'])->name('sales.index');
+        Route::get('/sales/cs-revenue', [AdminSalesController::class, 'csRevenue'])->name('sales.cs-revenue');
 
         //Manual Transaction
         Route::get('/manual-transactions',  [\App\Http\Controllers\Admin\ManualTransactionController::class, 'index'])->name('manual-transactions.index');

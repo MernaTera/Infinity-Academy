@@ -24,7 +24,7 @@
 .anav-avatar:hover{border-color:rgba(30, 69, 245, 0.5);transform:scale(1.05);}
 .anav-avatar:active{transform:scale(0.96);}
 .nav-dropdown{display:none;position:absolute;right:0;top:calc(100% + 10px);
-    background:rgba(255,255,255);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    background:#F8F6F2;backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
     border:1px solid rgba(255,255,255,0.6);border-radius:14px;
     box-shadow:0 16px 44px rgba(23,45,90,0.16);min-width:200px;overflow:hidden;z-index:999;}
 .nav-dropdown.open{display:block;animation:dropIn 0.22s cubic-bezier(0.16,1,0.3,1) both;}
@@ -36,7 +36,7 @@
 .nav-dropdown-item.danger:hover{color:#DC2626;background:rgba(220,38,38,0.05);}
 
 #abellPanel{display:none;position:absolute;right:0;top:calc(100% + 10px);
-    width:320px;max-width:calc(100vw - 32px);background:rgba(255,255,255);
+    width:320px;max-width:calc(100vw - 32px);background:#F8F6F2;
     backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
     border:1px solid rgba(255,255,255,0.6);border-radius:14px;
     box-shadow:0 16px 44px rgba(23,45,90,0.16);overflow:hidden;z-index:999;}
