@@ -67,9 +67,10 @@ class PrivateHoursController extends Controller
         $rows = $enrollments->map(function ($e) use ($absenceCounts, $leadByStudent) {
             $bundleHours = $e->privateBundle?->hours ? (float) $e->privateBundle->hours : null;
             $remaining   = (float) $e->hours_remaining;
-            $used        = $bundleHours !== null ? max(0, $bundleHours - $remaining) : null;
-            $usedPct     = ($bundleHours && $bundleHours > 0)
-                ? min(100, round(($used / $bundleHours) * 100))
+            $totalPool   = max((float) ($bundleHours ?? 0), $remaining);
+            $used        = $totalPool > 0 ? max(0, $totalPool - $remaining) : null;
+            $usedPct     = $totalPool > 0
+                ? min(100, round(($used / $totalPool) * 100))
                 : 0;
 
             // State classification:
@@ -94,7 +95,7 @@ class PrivateHoursController extends Controller
             $levelName  = $e->level?->name ?? '—';
             if ($e->sublevel) $levelName .= ' · ' . $e->sublevel->name;
 
-            $e->setAttribute('v_bundle_hours', $bundleHours);
+            $e->setAttribute('v_bundle_hours', $totalPool > 0 ? $totalPool : null);
             $e->setAttribute('v_remaining', $remaining);
             $e->setAttribute('v_used', $used);
             $e->setAttribute('v_used_pct', $usedPct);

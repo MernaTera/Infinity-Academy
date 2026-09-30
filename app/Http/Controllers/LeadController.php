@@ -76,7 +76,6 @@ class LeadController extends Controller
 
         $registeredRows = collect();
         $registeredLeads = Lead::where('owner_cs_id', $employeeId)
-            ->where('is_active', true)
             ->where('status', 'Registered')
             ->whereNotNull('student_id')
             ->with(['courseTemplate', 'level', 'sublevel'])

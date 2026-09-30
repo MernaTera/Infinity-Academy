@@ -97,8 +97,8 @@
     .st-leftover { background:var(--blue-l); color:var(--blue); }
     .st-postponed { background:rgba(100,116,139,0.14); color:#475569; }
 
-    .btn-enroll { display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:9px; font-size:10px; font-weight:600; letter-spacing:0.3px; text-decoration:none; background:var(--orange-l); color:var(--orange-dk); border:1px solid rgba(245,145,30,0.3); transition:all 0.2s; white-space:nowrap; }
-    .btn-enroll:hover { background:var(--orange); color:#fff; text-decoration:none; }
+    .btn-enroll { display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:9px; font-size:10px; font-weight:600; letter-spacing:0.3px; text-decoration:none; background:var(--blue); color:#ffff; border:1px solid rgba(118, 170, 230, 0.3); transition:all 0.2s; white-space:nowrap; }
+    .btn-enroll:hover { background:var(--blue-2); color:#fff; text-decoration:none; }
 
     .tbl-empty { text-align:center; padding:50px 20px; color:var(--faint); }
     .tbl-empty svg { opacity:0.35; margin-bottom:12px; }
@@ -133,19 +133,19 @@
 
         
         <div class="ph-stats">
-            <div class="stat" style="--sc:var(--dark)">
+            <div class="stat" style="--sc:var(--blue)">
                 <div class="stat-label">Total Private</div>
                 <div class="stat-val">{{ $stats['total'] }}</div>
             </div>
-            <div class="stat" style="--sc:var(--green)">
+            <div class="stat" style="--sc:var(--blue)">
                 <div class="stat-label">Active</div>
                 <div class="stat-val">{{ $stats['active'] }}</div>
             </div>
-            <div class="stat" style="--sc:var(--orange)">
+            <div class="stat" style="--sc:var(--blue)">
                 <div class="stat-label">Running Low</div>
                 <div class="stat-val">{{ $stats['low'] }}</div>
             </div>
-            <div class="stat" style="--sc:var(--red)">
+            <div class="stat" style="--sc:var(--blue)">
                 <div class="stat-label">Depleted</div>
                 <div class="stat-val">{{ $stats['depleted'] }}</div>
             </div>
@@ -153,11 +153,11 @@
                 <div class="stat-label">Leftover Hours</div>
                 <div class="stat-val">{{ $stats['leftover'] }}</div>
             </div>
-            <div class="stat" style="--sc:#64748B">
+            <div class="stat" style="--sc:var(--blue)">
                 <div class="stat-label">Postponed</div>
                 <div class="stat-val">{{ $stats['postponed'] }}</div>
             </div>
-            <div class="stat" style="--sc:var(--green-dk)">
+            <div class="stat" style="--sc:var(--blue)">
                 <div class="stat-label">Total Hours Left</div>
                 <div class="stat-val sm">{{ number_format($stats['hours_left'], 1) }}<span style="font-size:11px;"> h</span></div>
             </div>

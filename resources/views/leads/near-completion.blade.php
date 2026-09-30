@@ -11,7 +11,7 @@
         --blue:#1B4FA8; --blue-2:#2D6FDB; --blue-l:rgba(27,79,168,0.06);
         /* --blue:#F5911E; --blue-dk:#C47010; --blue-l:rgba(245,145,30,0.07); */
         --green:#059669; --green-dk:#15803D;
-        --purple:#7C3AED; --purple-l:rgba(124,58,237,0.07);
+        /* --blue:#7C3AED; --blue-l:rgba(124,58,237,0.07); */
         --red:#DC2626; --red-l:rgba(220,38,38,0.05);
         --text:#16233F; --muted:#5A6A85; --faint:#93A3BC;
         --bg:#F8F6F2; --card:rgba(255,255,255,0.72); --border:rgba(255,255,255,0.6);
@@ -54,7 +54,7 @@
     .badge { display:inline-flex; align-items:center; gap:4px; font-size:9px; letter-spacing:1px; text-transform:uppercase; padding:3px 8px; border-radius:6px; }
     .badge-warning { color:var(--blue-dk); background:var(--blue-l); border:1px solid rgba(245,145,30,0.2); }
     .badge-danger { color:var(--red); background:var(--red-l); border:1px solid rgba(220,38,38,0.15); }
-    .badge-private { color:#6D28D9; background:var(--purple-l); border:1px solid rgba(124,58,237,0.2); }
+    .badge-private { color:#6D28D9; background:var(--blue-l); border:1px solid rgba(124,58,237,0.2); }
     .badge-group { color:var(--blue); background:var(--blue-l); border:1px solid rgba(27,79,168,0.15); }
 
     .progress-wrap { width:120px; height:5px; background:rgba(27,79,168,0.08); border-radius:3px; overflow:hidden; }
@@ -86,12 +86,12 @@
 
     
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:#7F77DD">
+        <div class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Private — Low Hours</div>
             <div class="kpi-val">{{ $privateCount }}</div>
             <div class="kpi-sub">≤ 4 hours remaining</div>
         </div>
-        <div class="kpi-card" style="--kc:#F5911E">
+        <div class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Group — Last Sessions</div>
             <div class="kpi-val">{{ $groupCount }}</div>
             <div class="kpi-sub">≤ 2 sessions remaining</div>

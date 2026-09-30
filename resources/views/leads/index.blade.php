@@ -238,19 +238,19 @@
             <div class="stat-label">Total</div>
             <div class="stat-value">{{ $stats['total'] }}</div>
         </div>
-        <div class="stat-card" style="--accent:#15803D;cursor:pointer;" onclick="filterByStatus('Registered')" data-filter="Registered">
+        <div class="stat-card" style="--accent:#1B4FA8;cursor:pointer;" onclick="filterByStatus('Registered')" data-filter="Registered">
             <div class="stat-label">Registered</div>
             <div class="stat-value">{{ $stats['registered'] }}</div>
         </div>
-        <div class="stat-card" style="--accent:#C47010;cursor:pointer;" onclick="filterByStatus('Call_Again')" data-filter="Call_Again">
+        <div class="stat-card" style="--accent:#1B4FA8;cursor:pointer;" onclick="filterByStatus('Call_Again')" data-filter="Call_Again">
             <div class="stat-label">Call Again</div>
             <div class="stat-value">{{ $stats['call_again'] }}</div>
         </div>
-        <div class="stat-card" style="--accent:#7A8A9A;cursor:pointer;" onclick="filterByStatus('Waiting')" data-filter="Waiting">
+        <div class="stat-card" style="--accent:#1B4FA8;cursor:pointer;" onclick="filterByStatus('Waiting')" data-filter="Waiting">
             <div class="stat-label">Waiting</div>
             <div class="stat-value">{{ $stats['waiting'] }}</div>
         </div>
-        <div class="stat-card" style="--accent:#9A8A7A;cursor:pointer;" onclick="window.location='{{ route('leads.archived') }}'">
+        <div class="stat-card" style="--accent:#1B4FA8;cursor:pointer;" onclick="window.location='{{ route('leads.archived') }}'">
             <div class="stat-label">Archived</div>
             <div class="stat-value">{{ $stats['archived'] }}</div>
         </div>

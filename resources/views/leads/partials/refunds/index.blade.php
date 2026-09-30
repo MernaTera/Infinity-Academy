@@ -220,11 +220,11 @@
         </div>
 
         <div class="rf-stats">
-            <div class="rf-stat" style="--sc:var(--green)">
+            <div class="rf-stat" style="--sc:var(--blue)">
                 <div class="rf-stat-label">Eligible Now</div>
                 <div class="rf-stat-val">{{ $stats['eligible'] }}</div>
             </div>
-            <div class="rf-stat" style="--sc:var(--orange)">
+            <div class="rf-stat" style="--sc:var(--blue)">
                 <div class="rf-stat-label">Pending</div>
                 <div class="rf-stat-val">{{ $stats['pending'] }}</div>
             </div>

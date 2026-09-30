@@ -149,7 +149,7 @@
     @endif
 
     <div class="kpi-grid">
-        <div class="kpi-card glass" style="--kc:#DC2626">
+        <div class="kpi-card glass" style="--kc:#1B4FA8">
             <div class="kpi-label">Total Outstanding</div>
             <div class="kpi-val">{{ number_format($summary['total_outstanding']) }}</div>
             <div class="kpi-sub">LE unpaid</div>
@@ -159,17 +159,17 @@
             <div class="kpi-val">{{ $summary['total_students'] }}</div>
             <div class="kpi-sub">with balance</div>
         </div>
-        <div class="kpi-card glass" style="--kc:#DC2626">
+        <div class="kpi-card glass" style="--kc:#1B4FA8">
             <div class="kpi-label">Restricted</div>
             <div class="kpi-val">{{ $summary['restricted_count'] }}</div>
             <div class="kpi-sub">attendance blocked</div>
         </div>
-        <div class="kpi-card glass" style="--kc:#F5911E">
+        <div class="kpi-card glass" style="--kc:#1B4FA8">
             <div class="kpi-label">Overdue</div>
             <div class="kpi-val">{{ $summary['overdue_count'] }}</div>
             <div class="kpi-sub">past due date</div>
         </div>
-        <div class="kpi-card glass" style="--kc:#059669">
+        <div class="kpi-card glass" style="--kc:#1B4FA8">
             <div class="kpi-label">Fully Paid</div>
             <div class="kpi-val">{{ $summary['finished_count'] }}</div>
             <div class="kpi-sub">this cycle</div>

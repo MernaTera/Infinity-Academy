@@ -67,7 +67,7 @@
     .kpi-na { font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:1px; color:var(--faint); line-height:1; padding:5px 0; }
     .kpi-sub { font-size:10px; color:var(--faint); margin-top:5px; }
     .prog { height:5px; background:var(--line); border-radius:3px; overflow:hidden; margin-top:10px; }
-    .prog-fill { height:100%; background:var(--green); border-radius:3px; transition:width 0.7s cubic-bezier(0.16,1,0.3,1); }
+    .prog-fill { height:100%; background:var(--blue); border-radius:3px; transition:width 0.7s cubic-bezier(0.16,1,0.3,1); }
 
     .fu-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; }
     @media (max-width:900px){ .fu-grid{ grid-template-columns:repeat(3,1fr); } }
@@ -185,7 +185,7 @@
                 @endif
             </div>
 
-            <div class="kpi-card" style="--kc:var(--green)">
+            <div class="kpi-card" style="--kc:var(--blue)">
                 <div class="kpi-label">Achieved</div>
                 <div class="kpi-val">{{ number_format($kpis['achieved']) }}</div>
                 <div class="kpi-sub">LE
@@ -199,7 +199,7 @@
                 @endif
             </div>
 
-            <div class="kpi-card" style="--kc:var(--orange)">
+            <div class="kpi-card" style="--kc:var(--blue)">
                 <div class="kpi-label">Remaining</div>
                 @if($kpis['remaining'] !== null)
                     <div class="kpi-val">{{ number_format($kpis['remaining']) }}</div>
@@ -210,7 +210,7 @@
                 @endif
             </div>
 
-            <div class="kpi-card" style="--kc:var(--purple)">
+            <div class="kpi-card" style="--kc:var(--blue)">
                 <div class="kpi-label">Achievement</div>
                 @if($kpis['percentage'] !== null)
                     <div class="kpi-val">{{ $kpis['percentage'] }}%</div>
@@ -221,7 +221,7 @@
                 @endif
             </div>
 
-            <div class="kpi-card" style="--kc:var(--green-dk)">
+            <div class="kpi-card" style="--kc:var(--blue)">
                 <div class="kpi-label">Registrations</div>
                 <div class="kpi-val">{{ $kpis['registrations'] }}</div>
                 <div class="kpi-sub">students
@@ -232,7 +232,7 @@
                 </div>
             </div>
 
-            <div class="kpi-card" style="--kc:var(--orange)">
+            <div class="kpi-card" style="--kc:var(--blue)">
                 <div class="kpi-label">Calls Made</div>
                 <div class="kpi-val">{{ $kpis['calls_made'] ?? 0 }}</div>
                 <div class="kpi-sub">call-again

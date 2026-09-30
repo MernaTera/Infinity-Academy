@@ -22,11 +22,13 @@
 
     .create-page {
         min-height:100vh; padding:40px 32px 56px; color:var(--text); font-family:'DM Sans',sans-serif;
-        background:#F8F6F2;
+        background:
+            radial-gradient(circle at 12% 14%, rgba(27,79,168,0.12), transparent 40%),
+            radial-gradient(circle at 88% 10%, rgba(245,145,30,0.11), transparent 40%),
+            radial-gradient(circle at 82% 90%, rgba(124,58,237,0.11), transparent 44%),
+            radial-gradient(circle at 15% 92%, rgba(5,150,105,0.09), transparent 40%),
+            linear-gradient(180deg, #F6F8FC 0%, #F8F6F2 100%);
     }
-    .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
-    .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
-    .orb-3 { width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
 
     .reg-header {
         max-width:1080px; margin:0 auto 22px;
@@ -400,9 +402,7 @@
 </style>
 
 <div class="create-page">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+
     <div class="reg-header">
         <div class="reg-header-left">
             <div class="reg-eyebrow">Registration</div>
@@ -464,8 +464,8 @@
 
         @if(!empty($resumeContext))
         
-        <div style="margin-bottom:18px;padding:14px 18px;border-radius:10px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.25);border-left:3px solid #059669;color:#047857;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2" style="flex-shrink:0;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <div style="margin-bottom:18px; margin:0 auto 22px; padding:14px 18px;border-radius:10px;background:rgba(5, 92, 150, 0.06);border:1px solid rgba(5, 80, 150, 0.25);border-left:3px solid #054996;color:#1B4FA8;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px; max-width:1080px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#056196" stroke-width="2" style="flex-shrink:0;"><polygon points="5 3 19 12 5 21 5 3"/></svg>
             <div>
                 <strong>Resuming a postponed student.</strong>
                 This re-registration is <strong>FREE</strong> — the course
@@ -485,8 +485,8 @@
 
         @if(!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0)
         
-        <div style="margin-bottom:18px;margin:0 auto 22px;padding:14px 18px;border-radius:10px;background:rgba(58, 91, 237, 0.06);border:1px solid rgba(58, 106, 237, 0.25);border-left:3px solid #3a55ed;color:#1B4FA8;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px; max-width:1080px;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3a64ed" stroke-width="2" style="flex-shrink:0;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <div style="margin-bottom:18px; margin:0 auto 22px; padding:14px 18px;border-radius:10px;background:rgba(58, 91, 237, 0.06);border:1px solid rgba(58, 121, 237, 0.25);border-left:3px solid #3a82ed;color:#1B4FA8;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px; max-width:1080px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3a55ed" stroke-width="2" style="flex-shrink:0;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             <div>
                 This student is on the <strong>{{ $packageInfo['name'] }}</strong> package with
                 <strong>{{ $packageInfo['remaining'] }} {{ \Illuminate\Support\Str::plural('level', $packageInfo['remaining']) }}</strong>
@@ -561,15 +561,16 @@
                     <div class="form-grid">
                         
                         <div class="form-field">
+                            @php $__privateDefault = (!empty($leftoverHours) && $leftoverHours > 0) || (!empty($resumeContext) && ($resumeContext['type'] ?? '') === 'private'); @endphp
                             <label class="form-label">Enrollment Type <span class="required">*</span></label>
                             <div class="segmented">
                                 <label>
-                                    <input type="radio" name="type" value="group" @if(empty($leftoverHours) || $leftoverHours <= 0) checked @endif>
+                                    <input type="radio" name="type" value="group" @if(!$__privateDefault) checked @endif>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                     Group
                                 </label>
                                 <label>
-                                    <input type="radio" name="type" value="private" @if(!empty($leftoverHours) && $leftoverHours > 0) checked @endif>
+                                    <input type="radio" name="type" value="private" @if($__privateDefault) checked @endif>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                     Private
                                 </label>
@@ -610,7 +611,7 @@
                         </div>
                     </div>
 
-                    <div id="private_extra" style="@if(empty($leftoverHours) || $leftoverHours <= 0)display:none;@endif">
+                    <div id="private_extra" style="@if(!$__privateDefault)display:none;@endif">
                         <div class="divider-soft"></div>
 
                         <div id="teacher_block">
@@ -635,7 +636,7 @@
                             <div class="form-field">
                                 @if(!empty($leftoverHours) && $leftoverHours > 0)
                                 
-                                <div style="margin-bottom:12px;padding:12px 15px;border-radius:8px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.25);border-left:3px solid #059669;color:#15803D;font-size:12px;line-height:1.5;">
+                                <div style="margin-bottom:12px;padding:12px 15px;border-radius:8px;background:rgba(5, 68, 150, 0.06);border:1px solid rgba(5, 80, 150, 0.25);border-left:3px solid #055c96;color:#1B4FA8;font-size:12px;line-height:1.5;">
                                     <strong>{{ rtrim(rtrim(number_format($leftoverHours, 2), '0'), '.') }} hours</strong> carried over from this student's completed courses. These will be added to the new enrollment automatically — a new bundle is optional.
                                 </div>
                                 <label class="form-label">Bundle <span style="color:#7A8A9A;font-weight:400;">(optional — student already has {{ rtrim(rtrim(number_format($leftoverHours, 2), '0'), '.') }}h)</span></label>
@@ -706,14 +707,19 @@
                             <div class="pricing-card-label">Base Price</div>
                             <input id="base_price" class="form-control-inf" readonly placeholder="—">
                         </div>
-                        <div class="pricing-card accent-orange">
+                        <div class="pricing-card">
                             <div class="pricing-card-label">Discount</div>
                             <input id="discount" class="form-control-inf" readonly placeholder="—">
                         </div>
-                        <div class="pricing-card accent-green">
+                        <div class="pricing-card">
                             <div class="pricing-card-label">Final Price (Course)</div>
                             <input id="final_price" class="form-control-inf" readonly placeholder="—">
                         </div>
+                    </div>
+
+                    <div style="margin-top:14px;padding:16px 20px;border-radius:14px;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.16);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+                        <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#5A6A85;font-weight:700;">Grand Total <span style="color:#93A3BC;font-weight:500;text-transform:none;letter-spacing:0;">(course + material + test)</span></span>
+                        <span id="grand_total_val" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#1B4FA8;line-height:1;">0.00 LE</span>
                     </div>
 
                     <div class="sub-label spaced">Placement Test</div>
@@ -739,10 +745,6 @@
                             <input type="hidden" name="test_fee_setting_id" id="test_fee_setting_id">
                         </div>
                         
-                    </div>
-                    <div style="margin-top:14px;padding:16px 20px;border-radius:14px;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.16);display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
-                        <span style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#5A6A85;font-weight:700;">Grand Total <span style="color:#93A3BC;font-weight:500;text-transform:none;letter-spacing:0;">(course + material + test)</span></span>
-                        <span id="grand_total_val" style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:#1B4FA8;line-height:1;">0.00 LE</span>
                     </div>
                 </div>
             </div>
@@ -892,6 +894,7 @@
 
 <script>
     window.__pkgContinuation = {{ (!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0) ? 'true' : 'false' }};
+    window.__resume = {{ !empty($resumeContext) ? 'true' : 'false' }};
 </script>
 <script src="{{ asset('js/register/register-modal.js') }}"></script>
 

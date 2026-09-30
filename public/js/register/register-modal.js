@@ -158,6 +158,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 pricing.courseFinalPrice = 0;
             }
 
+            if (window.__resume) {
+                pricing.courseBasePrice  = 0;
+                pricing.courseDiscount   = 0;
+                pricing.courseFinalPrice = 0;
+            }
+
             updatePriceDisplay();
         });
     }
@@ -717,6 +723,7 @@ function recalcMaterials() {
             pricing.testFee = oldTestFee;
             refreshPaymentSummary();
             refreshDepositSection();
+   
         }
         loadPatch();
         calculatePrice();
