@@ -48,7 +48,8 @@
     .rf-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:26px; }
     @media (max-width:600px){ .rf-stats{ grid-template-columns:1fr; } }
     .rf-stat { background:var(--card); border:1px solid var(--border); border-radius:18px; padding:20px; position:relative; overflow:hidden; box-shadow:var(--glass-sh); }
-    .rf-stat::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--sc,var(--blue)); }
+    /* .rf-stat::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--sc,var(--blue)); } */
+    .elig-card:hover { transform:translateY(-3px); box-shadow:0 18px 42px -14px rgba(23,45,90,0.28); }
     .rf-stat-label { font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }
     .rf-stat-val { font-family:'Bebas Neue',sans-serif; font-size:38px; letter-spacing:1px; line-height:0.9; color:var(--sc,var(--blue)); }
 

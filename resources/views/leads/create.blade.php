@@ -49,10 +49,10 @@
         border:1px solid var(--glass-bd); border-radius:28px; overflow:hidden;
         box-shadow:0 30px 70px -22px rgba(23,45,90,0.28), inset 0 1px 0 rgba(255,255,255,0.7);
     }
-    .form-card::before {
+    /* .form-card::before {
         content:''; position:absolute; top:0; left:0; right:0; height:4px;
         background:linear-gradient(90deg, var(--orange), var(--blue), var(--purple));
-    }
+    } */
     .form-card-body { padding:34px 38px 36px; }
     @media (max-width:680px){ .create-page{ padding:22px 14px 40px; } .form-card-body{ padding:22px; } .page-title{ font-size:38px; } }
 

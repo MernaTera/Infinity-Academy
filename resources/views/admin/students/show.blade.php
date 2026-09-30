@@ -7,105 +7,116 @@
 @endonce
 
 <style>
-:root{--blue:#1B4FA8;--blue-l:rgba(27,79,168,0.08);--orange:#F5911E;--orange-l:rgba(245,145,30,0.08);--green:#059669;--green-l:rgba(5,150,105,0.08);--red:#DC2626;--red-l:rgba(220,38,38,0.06);--purple:#7F77DD;--purple-l:rgba(127,119,221,0.08);--border:rgba(27,79,168,0.1);--bg:#F8F6F2;--card:#fff;--text:#1A2A4A;--muted:#7A8A9A;--faint:#AAB8C8;}
+:root{
+    --blue:#1B4FA8; --blue-2:#2D6FDB; --blue-dk:#12305F; --blue-l:rgba(27,79,168,0.06);
+    --orange:#12305F; --orange-l:rgba(27,79,168,0.06);
+    --green:#2D6FDB; --green-l:rgba(45,111,219,0.08);
+    --red:#5A6A85; --red-l:rgba(90,106,133,0.08);
+    --purple:#2D6FDB; --purple-l:rgba(45,111,219,0.08);
+    --border:rgba(255,255,255,0.6); --line:rgba(27,79,168,0.08);
+    --bg:#F8F6F2; --card:rgba(255,255,255,0.72);
+    --text:#16233F; --muted:#5A6A85; --faint:#93A3BC;
+    --glass-sh:0 12px 34px -14px rgba(23,45,90,0.2);
+}
 *{box-sizing:border-box;}
-.sp-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text);}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:4px;}
+.sp-page{
+    min-height:100vh; padding:40px 32px 52px; font-family:'DM Sans',sans-serif; color:var(--text);
+    background:#F8F6F2;
+}
+    .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3 { width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
+
+.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;}
 .page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--blue);margin:0;}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
-.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:1px solid var(--border);border-radius:11px;color:var(--muted);font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;background:rgba(255,255,255,0.5);transition:all 0.2s;}
 .btn-back:hover{border-color:var(--blue);color:var(--blue);text-decoration:none;}
 
 .layout{display:grid;grid-template-columns:300px 1fr;gap:20px;align-items:start;}
 @media(max-width:1000px){.layout{grid-template-columns:1fr;}}
 
-/* Cards */
-.card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:16px;position:relative;}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),var(--blue),transparent);}
+.card{background:var(--card);-webkit-backdrop-filter:blur(20px) saturate(150%);backdrop-filter:blur(20px) saturate(150%);border:1px solid var(--border);border-radius:18px;overflow:hidden;margin-bottom:16px;position:relative;box-shadow:var(--glass-sh);}
+/* .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue-2),var(--blue),transparent);} */
 .card-header{padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
 .card-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;color:var(--blue);}
 .card-body{padding:18px 20px;}
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(245,145,30,0.15);display:block;}
+.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(27,79,168,0.15);display:block;}
 
-/* Profile card */
 .profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--blue-l),rgba(27,79,168,0.15));display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--blue);margin:0 auto 14px;letter-spacing:2px;border:2px solid rgba(27,79,168,0.1);}
 .profile-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text);text-align:center;margin-bottom:4px;}
 .profile-email{font-size:12px;color:var(--faint);text-align:center;margin-bottom:16px;}
 
-/* Meta rows */
-.meta-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(27,79,168,0.04);font-size:12px;}
+.meta-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(27,79,168,0.06);font-size:12px;}
 .meta-row:last-child{border-bottom:none;}
 .meta-key{color:var(--faint);font-size:10px;letter-spacing:1px;text-transform:uppercase;}
 .meta-val{color:var(--text);font-weight:500;text-align:right;}
 
-/* Status badges */
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-weight:500;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:20px;font-weight:600;}
 .badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;}
-.badge-active{color:var(--green);background:var(--green-l);border:1px solid rgba(5,150,105,0.2);}
-.badge-restricted{color:var(--red);background:var(--red-l);border:1px solid rgba(220,38,38,0.15);}
-.badge-archived{color:var(--faint);background:rgba(170,184,200,0.1);border:1px solid rgba(170,184,200,0.2);}
-.badge-pending_approval{color:var(--orange);background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);}
-.badge-completed{color:var(--purple);background:var(--purple-l);border:1px solid rgba(127,119,221,0.2);}
-.badge-waiting{color:#7F77DD;background:var(--purple-l);border:1px solid rgba(127,119,221,0.2);}
-.badge-cancelled{color:var(--faint);background:rgba(170,184,200,0.08);border:1px solid rgba(170,184,200,0.15);}
-.badge-postponed{color:var(--orange);background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);}
+.badge-active{color:var(--blue);background:var(--blue-l);border:1px solid rgba(27,79,168,0.2);}
+.badge-restricted{color:var(--muted);background:rgba(90,106,133,0.1);border:1px solid rgba(90,106,133,0.2);}
+.badge-archived{color:var(--faint);background:rgba(147,163,188,0.12);border:1px solid rgba(147,163,188,0.25);}
+.badge-pending_approval{color:var(--blue-2);background:rgba(45,111,219,0.1);border:1px solid rgba(45,111,219,0.22);}
+.badge-completed{color:var(--blue);background:var(--blue-l);border:1px solid rgba(27,79,168,0.2);}
+.badge-waiting{color:var(--blue-2);background:rgba(45,111,219,0.1);border:1px solid rgba(45,111,219,0.22);}
+.badge-cancelled{color:var(--faint);background:rgba(147,163,188,0.1);border:1px solid rgba(147,163,188,0.2);}
+.badge-postponed{color:var(--blue-dk);background:rgba(18,48,95,0.08);border:1px solid rgba(18,48,95,0.2);}
 
-/* Enrollment card */
-.enrollment-card{background:rgba(27,79,168,0.02);border:1px solid rgba(27,79,168,0.08);border-radius:8px;padding:16px;margin-bottom:12px;position:relative;}
-.enrollment-card.active-enroll{border-color:rgba(5,150,105,0.2);background:rgba(5,150,105,0.02);}
-.enrollment-card.active-enroll::before{content:'Active';position:absolute;top:10px;right:12px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--green);background:var(--green-l);border:1px solid rgba(5,150,105,0.2);padding:2px 7px;border-radius:3px;}
+.enrollment-card{background:rgba(27,79,168,0.03);border:1px solid rgba(27,79,168,0.1);border-radius:12px;padding:16px;margin-bottom:12px;position:relative;}
+.enrollment-card.active-enroll{border-color:rgba(45,111,219,0.28);background:rgba(45,111,219,0.05);}
+.enrollment-card.active-enroll::before{content:'Active';position:absolute;top:10px;right:12px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--blue-2);background:rgba(45,111,219,0.1);border:1px solid rgba(45,111,219,0.22);padding:2px 7px;border-radius:20px;}
 .enroll-course{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--blue);margin-bottom:4px;}
 .enroll-meta{font-size:11px;color:var(--faint);margin-bottom:12px;}
 
-/* Payment breakdown */
-.pay-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(27,79,168,0.04);font-size:12px;}
+.pay-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(27,79,168,0.06);font-size:12px;}
 .pay-row:last-child{border-bottom:none;font-weight:600;color:var(--text);}
 .pay-key{color:var(--muted);}
 .pay-val{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;}
 
-/* Installment table */
 .inst-tbl{width:100%;border-collapse:collapse;margin-top:10px;}
 .inst-tbl th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);padding:6px 8px;text-align:left;border-bottom:1px solid var(--border);}
-.inst-tbl td{font-size:11px;color:var(--muted);padding:7px 8px;border-bottom:1px solid rgba(27,79,168,0.04);}
+.inst-tbl td{font-size:11px;color:var(--muted);padding:7px 8px;border-bottom:1px solid rgba(27,79,168,0.06);}
 .inst-tbl tr:last-child td{border-bottom:none;}
 
-/* Lead history */
-.history-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(27,79,168,0.04);}
+.history-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid rgba(27,79,168,0.06);}
 .history-item:last-child{border-bottom:none;}
 .history-dot{width:8px;height:8px;border-radius:50%;background:var(--blue-l);border:2px solid var(--blue);flex-shrink:0;margin-top:4px;}
 .history-text{font-size:12px;color:var(--text);}
 .history-meta{font-size:10px;color:var(--faint);margin-top:2px;}
 
-/* Total summary */
-.total-banner{background:linear-gradient(135deg,#1A2A4A,var(--blue));border-radius:8px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
-.total-banner-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;}
+.total-banner{background:linear-gradient(135deg,#12305F,var(--blue));border-radius:16px;padding:18px 22px;display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;box-shadow:0 12px 30px -12px rgba(27,79,168,0.5);}
+.total-banner-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:4px;}
 .total-banner-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:#fff;}
 
-/* Phone numbers manager */
-.phones-block{padding:10px 0 4px;border-bottom:1px solid rgba(27,79,168,0.04);}
+.phones-block{padding:10px 0 4px;border-bottom:1px solid rgba(27,79,168,0.06);}
 .phones-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
 .phones-count{font-size:9px;color:var(--faint);letter-spacing:1px;}
-.phone-item{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid rgba(27,79,168,0.05);}
+.phone-item{display:flex;align-items:center;gap:6px;padding:7px 0;border-bottom:1px solid rgba(27,79,168,0.06);}
 .phone-item:last-child{border-bottom:none;}
 .phone-num{font-family:monospace;font-size:12px;color:var(--text);flex:1;word-break:break-all;}
-.phone-star{cursor:pointer;color:var(--orange);font-size:14px;line-height:1;background:none;border:none;padding:0;}
+.phone-star{cursor:pointer;color:var(--blue-2);font-size:14px;line-height:1;background:none;border:none;padding:0;}
 .phone-star.inactive{color:var(--faint);opacity:.45;}
-.phone-star.inactive:hover{opacity:1;color:var(--orange);}
-.phone-tag{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--orange);background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);padding:1px 5px;border-radius:3px;}
-.phone-wa{color:var(--green);display:inline-flex;align-items:center;}
+.phone-star.inactive:hover{opacity:1;color:var(--blue-2);}
+.phone-tag{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);background:var(--blue-l);border:1px solid rgba(27,79,168,0.2);padding:1px 5px;border-radius:20px;}
+.phone-wa{color:var(--blue-2);display:inline-flex;align-items:center;}
 .phone-wa:hover{opacity:.7;}
 .phone-del{background:none;border:none;color:var(--faint);cursor:pointer;font-size:16px;line-height:1;padding:0 2px;}
 .phone-del:hover{color:var(--red);}
 .phone-add{display:flex;gap:6px;margin-top:10px;}
-.phone-add input{flex:1;min-width:0;padding:7px 9px;border:1px solid rgba(27,79,168,0.15);border-radius:4px;font-size:12px;font-family:monospace;outline:none;}
+.phone-add input{flex:1;min-width:0;padding:7px 9px;border:1px solid rgba(27,79,168,0.15);border-radius:9px;font-size:12px;font-family:monospace;outline:none;background:rgba(255,255,255,0.6);}
 .phone-add input:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l);}
-.phone-add button{padding:7px 13px;background:var(--blue);color:#fff;border:none;border-radius:4px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.phone-add button{padding:7px 13px;background:var(--blue);color:#fff;border:none;border-radius:9px;font-size:11px;letter-spacing:1px;cursor:pointer;font-family:'DM Sans',sans-serif;}
 .phone-add button:hover{background:#153e85;}
-.flash-ok{background:var(--green-l);border:1px solid rgba(5,150,105,0.2);color:var(--green);font-size:11px;padding:6px 10px;border-radius:4px;margin-bottom:10px;}
-.flash-err{background:var(--red-l);border:1px solid rgba(220,38,38,0.15);color:var(--red);font-size:11px;padding:6px 10px;border-radius:4px;margin-bottom:10px;}
+.flash-ok{background:var(--blue-l);border:1px solid rgba(27,79,168,0.2);color:var(--blue);font-size:11px;padding:6px 10px;border-radius:9px;margin-bottom:10px;}
+.flash-err{background:rgba(90,106,133,0.08);border:1px solid rgba(90,106,133,0.2);color:var(--muted);font-size:11px;padding:6px 10px;border-radius:9px;margin-bottom:10px;}
 </style>
 
 <div class="sp-page">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
     <div class="page-header">
         <div>
             <div class="page-eyebrow">{{ auth()->user()->panelLabel() }} — Students</div>
@@ -153,10 +164,10 @@
 
     <div class="layout">
 
-        {{-- ── LEFT SIDEBAR ── --}}
+        
         <div>
 
-            {{-- Profile Card --}}
+            
             <div class="card">
                 <div class="card-body" style="text-align:center;padding-top:24px;">
                     <div class="profile-avatar">{{ strtoupper(substr($student->full_name ?? 'S', 0, 2)) }}</div>
@@ -231,7 +242,7 @@
                 </div>
             </div>
 
-            {{-- Financial Summary --}}
+            
             <div class="card">
                 <div class="card-header"><div class="card-title">Financial Summary</div></div>
                 <div class="card-body">
@@ -252,7 +263,7 @@
                 </div>
             </div>
 
-            {{-- Lead Info --}}
+            
             @if($student->lead)
             <div class="card">
                 <div class="card-header"><div class="card-title">Lead Info</div></div>
@@ -284,10 +295,10 @@
 
         </div>
 
-        {{-- ── RIGHT MAIN ── --}}
+        
         <div>
 
-            {{-- Enrollments --}}
+            
             <div class="card">
                 <div class="card-header">
                     <div class="card-title">Enrollments ({{ $student->enrollments->count() }})</div>
@@ -324,7 +335,7 @@
                             @endif
                         </div>
 
-                        {{-- Payment breakdown --}}
+                        
                         @php
                             $materialTotal = $e->financialTransactions
                                 ->where('transaction_category', 'Material')->sum('amount');
@@ -333,7 +344,7 @@
                             $totalEnrollmentFees = $e->final_price + $materialTotal + $testTotal;
                         @endphp
 
-                        {{-- Final Price --}}
+                        
                         <div class="pay-row">
                             <span class="pay-key">Course Price</span>
                             <span class="pay-val" style="color:var(--blue);">{{ number_format($e->final_price, 0) }} LE</span>
@@ -355,7 +366,7 @@
                             <span class="pay-val" style="color:var(--blue);">{{ number_format($totalEnrollmentFees, 0) }} LE</span>
                         </div>
 
-                        {{-- Payment Plan Details --}}
+                        
                         @if($e->paymentPlan)
                         <div style="background:#fff;border:1px solid var(--border);border-radius:6px;padding:12px 14px;margin-bottom:10px;">
                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
@@ -389,14 +400,14 @@
                             </div>
                             @endif
                             @if($e->paymentPlan->requires_admin_approval)
-                            <div style="margin-top:8px;padding:7px 10px;background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);border-left:3px solid var(--orange);border-radius:4px;font-size:11px;color:#92400E;">
+                            <div style="margin-top:8px;padding:7px 10px;background:var(--orange-l);border:1px solid rgba(27,79,168,0.2);border-left:3px solid var(--orange);border-radius:4px;font-size:11px;color:var(--blue);">
                                 ⚠ Requires Admin Approval
                             </div>
                             @endif
                         </div>
                         @endif
 
-                        {{-- Deposit Methods --}}
+                        
                         @php
                             $depositPayments = \DB::table('deposit_payment')
                                 ->where('enrollment_id', $e->enrollment_id)
@@ -419,7 +430,7 @@
                         </div>
                         @endif
                         
-                        {{-- Installment Schedule --}}
+                        
                         @if($e->installmentSchedules->count() > 0)
                         <details style="margin-top:6px;">
                             <summary style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);cursor:pointer;padding:4px 0;">
@@ -450,9 +461,9 @@
                         </details>
                         @endif
 
-                        {{-- Placement Test --}}
+                        
                         @if($e->placementTest)
-                        <div style="margin-top:10px;padding:8px 12px;background:var(--purple-l);border:1px solid rgba(127,119,221,0.2);border-radius:4px;font-size:11px;color:var(--purple);display:flex;gap:16px;">
+                        <div style="margin-top:10px;padding:8px 12px;background:var(--purple-l);border:1px solid rgba(45,111,219,0.2);border-radius:4px;font-size:11px;color:var(--purple);display:flex;gap:16px;">
                             <span>Test Score: <strong>{{ $e->placementTest->score }}</strong></span>
                             <span>Test Fee: <strong>{{ $e->placementTest->test_fee }} LE</strong></span>
                         </div>
@@ -468,7 +479,7 @@
                 </div>
             </div>
 
-            {{-- Lead History --}}
+            
             @if($student->lead && $student->lead->leadHistories->count() > 0)
             <div class="card">
                 <div class="card-header"><div class="card-title">Lead History</div></div>
@@ -498,3 +509,4 @@
     </div>
 </div>
 @endsection
+           

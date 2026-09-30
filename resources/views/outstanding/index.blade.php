@@ -36,7 +36,7 @@
 .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:28px}
 .kpi-card{border-radius:18px;padding:20px 18px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
 .kpi-card:hover{transform:translateY(-3px);box-shadow:0 18px 42px -14px rgba(23,45,90,0.28)}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--blue))}
+/* .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--blue))} */
 .kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:8px;font-weight:600}
 .kpi-val{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:1px;color:var(--kc,var(--blue));line-height:1}
 .kpi-sub{font-size:10px;color:var(--faint);margin-top:5px}

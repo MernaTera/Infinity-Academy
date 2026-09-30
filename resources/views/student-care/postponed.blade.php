@@ -46,7 +46,7 @@
     .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
     .kpi-card { background:var(--card); -webkit-backdrop-filter:blur(20px) saturate(150%); backdrop-filter:blur(20px) saturate(150%); border:1px solid var(--border); border-radius:18px; padding:18px 20px; position:relative; overflow:hidden; box-shadow:var(--glass-sh); transition:transform 0.2s, box-shadow 0.2s; }
     .kpi-card:hover { transform:translateY(-3px); box-shadow:0 18px 42px -14px rgba(23,45,90,0.28); }
-    .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc,var(--blue)); }
+    /* .kpi-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--kc,var(--blue)); } */
     .kpi-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-bottom:5px; font-weight:600; }
     .kpi-val { font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:1px; color:var(--kc,var(--blue)); line-height:1; }
     .kpi-sub { font-size:9px; color:var(--faint); margin-top:3px; }
@@ -71,8 +71,8 @@
     .postponed-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
     .pp-card { background:var(--card); -webkit-backdrop-filter:blur(20px) saturate(150%); backdrop-filter:blur(20px) saturate(150%); border:1px solid var(--border); border-radius:18px; overflow:hidden; position:relative; box-shadow:var(--glass-sh); transition:transform 0.2s, box-shadow 0.2s; }
     .pp-card:hover { transform:translateY(-3px); box-shadow:0 18px 42px -14px rgba(23,45,90,0.28); }
-    .pp-card.status-active::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,transparent,#C47010,transparent); }
-    .pp-card.status-expired::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,transparent,#DC2626,transparent); }
+    /* .pp-card.status-active::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,transparent,#C47010,transparent); } */
+    /* .pp-card.status-expired::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:linear-gradient(90deg,transparent,#DC2626,transparent); } */
     .pp-card.expiring-soon { border-color:rgba(220,38,38,0.25); }
 
     .pc-header { padding:16px 18px 12px; border-bottom:1px solid var(--border); display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }

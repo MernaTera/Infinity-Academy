@@ -50,7 +50,7 @@
         border:1px solid var(--glass-bd); border-radius:18px; padding:18px 20px; position:relative; overflow:hidden;
         transition:transform 0.2s, box-shadow 0.2s; box-shadow:var(--glass-sh);
     }
-    .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent,var(--blue)); }
+    /* .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent,var(--blue)); } */
     .stat-card:hover { transform:translateY(-3px); box-shadow:0 16px 38px rgba(23,45,90,0.13); }
     .stat-card.active-filter { box-shadow:0 0 0 2px var(--accent), 0 12px 30px rgba(23,45,90,0.12); }
     .stat-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:8px; }

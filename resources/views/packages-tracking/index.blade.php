@@ -50,7 +50,7 @@
     @media (max-width:1100px){ .pk-stats{ grid-template-columns:repeat(3,1fr); } }
     @media (max-width:560px){ .pk-stats{ grid-template-columns:1fr 1fr; } }
     .stat { background:var(--card); -webkit-backdrop-filter:blur(20px) saturate(150%); backdrop-filter:blur(20px) saturate(150%); border:1px solid var(--border); border-radius:18px; padding:18px 20px; position:relative; overflow:hidden; box-shadow:var(--glass-sh); transition:transform 0.2s, box-shadow 0.2s; }
-    .stat::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--sc,var(--blue)); }
+    /* .stat::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--sc,var(--blue)); } */
     .stat:hover { transform:translateY(-3px); box-shadow:0 18px 42px -14px rgba(23,45,90,0.28); }
     .stat-label { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:7px; }
     .stat-val { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:1px; line-height:0.9; color:var(--sc,var(--blue)); }
