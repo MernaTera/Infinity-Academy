@@ -57,7 +57,7 @@
             position: relative;
         }
         @keyframes cardIn { from { opacity: 0; transform: translateY(28px) scale(0.97); } to { opacity: 1; transform: none; } }
-        .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--orange), var(--blue-light), transparent); }
+        /* .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--orange), var(--blue-light), transparent); } */
 
         .card-header { padding: 34px 40px 8px; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .logo-img { width: 150px; height: auto; margin-bottom: 16px; filter: drop-shadow(0 10px 24px rgba(27,79,168,0.22)); }
@@ -91,6 +91,8 @@
         .pw-toggle:hover { color: var(--blue); background: rgba(27,79,168,0.08); }
         .pw-toggle .eye-off { display: none; }
         .pw-toggle.showing .eye-open { display: none; }
+        #password::-ms-reveal,
+        #password::-ms-clear { display: none; }
         .pw-toggle.showing .eye-off { display: block; }
 
         .field-error { display: flex; align-items: center; gap: 6px; margin-top: 7px; font-size: 11px; color: var(--error); letter-spacing: 0.2px; animation: errorIn 0.3s ease both; }

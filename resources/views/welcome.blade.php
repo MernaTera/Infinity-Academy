@@ -53,7 +53,7 @@
             width: 100%;
             position: relative;
         }
-        .glass-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--orange), var(--blue-light), transparent); }
+        /* .glass-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--orange), var(--blue-light), transparent); } */
 
         .scene {
             position: relative;
