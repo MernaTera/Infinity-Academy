@@ -565,12 +565,12 @@
                             <label class="form-label">Enrollment Type <span class="required">*</span></label>
                             <div class="segmented">
                                 <label>
-                                    <input type="radio" name="type" value="group" checked>
+                                    <input type="radio" name="type" value="group" @if(empty($leftoverHours) || $leftoverHours <= 0) checked @endif>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                                     Group
                                 </label>
                                 <label>
-                                    <input type="radio" name="type" value="private">
+                                    <input type="radio" name="type" value="private" @if(!empty($leftoverHours) && $leftoverHours > 0) checked @endif>
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
                                     Private
                                 </label>
@@ -611,7 +611,7 @@
                         </div>
                     </div>
 
-                    <div id="private_extra" style="display:none;">
+                        <div id="private_extra" style="@if(empty($leftoverHours) || $leftoverHours <= 0)display:none;@endif">
                         <div class="divider-soft"></div>
 
                         <div id="teacher_block">

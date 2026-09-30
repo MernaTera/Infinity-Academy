@@ -18,10 +18,10 @@
 .anav-logo{transition:transform 0.25s cubic-bezier(0.16,1,0.3,1),filter 0.25s;}
 .anav-logo:hover{transform:translateY(-1px) scale(1.02);filter:drop-shadow(0 2px 6px rgba(27,79,168,0.15));}
 
-.anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(245,145,30,0.10);
-    border:1.5px solid rgba(245, 145, 30, 0.25);display:flex;align-items:center;justify-content:center;
+.anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(30, 69, 245, 0.1);
+    border:1.5px solid rgba(71, 99, 192, 0.25);display:flex;align-items:center;justify-content:center;
     transition:border-color 0.2s,transform 0.2s;flex-shrink:0;cursor:pointer;}
-.anav-avatar:hover{border-color:#F5911E;transform:scale(1.05);}
+.anav-avatar:hover{border-color:rgba(30, 69, 245, 0.5);transform:scale(1.05);}
 .anav-avatar:active{transform:scale(0.96);}
 .nav-dropdown{display:none;position:absolute;right:0;top:calc(100% + 10px);
     background:rgba(255,255,255);backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
@@ -43,10 +43,10 @@
 .bell-badge-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;
     border-radius:50%;background:#F5911E;border:1.5px solid #fff;display:none;
     animation:pulseDot 1.8s ease-in-out infinite;}
-@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(245,145,30,0.5)}50%{box-shadow:0 0 0 4px rgba(245,145,30,0)}}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(20, 52, 158, 0.5)}50%{box-shadow:0 0 0 4px rgba(245,145,30,0)}}
 .nav-bell-btn{background:none;border:none;cursor:pointer;padding:7px;color:#AAB8C8;
     position:relative;transition:color 0.2s,transform 0.15s;display:flex;align-items:center;border-radius:8px;}
-.nav-bell-btn:hover{color:#F5911E;background:rgba(245,145,30,0.06);}
+.nav-bell-btn:hover{color:#F5911E;background:rgba(30, 69, 245, 0.06);}
 .nav-bell-btn:active{transform:scale(0.92);}
 .nav-bell-btn.ringing svg{animation:ring 0.5s ease;}
 @keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(6deg)}80%{transform:rotate(-4deg)}}
@@ -242,7 +242,7 @@
                         onmouseover="this.style.background='rgba(27,79,168,0.03)'"
                         onmouseout="this.style.background='transparent'">
                     <div class="anav-avatar">
-                        <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#C47010;letter-spacing:1px;">
+                        <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:rgba(30, 69, 245, 0.8);letter-spacing:1px;">
                             {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
                         </span>
                     </div>

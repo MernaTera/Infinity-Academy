@@ -74,14 +74,14 @@ class LeadController extends Controller
                 ->unique()
                 ->all();
 
-        // Registered leads: expand to ONE ROW PER ENROLMENT, so a student with
-        // multiple enrolments (a level package, or private renewals) shows a
-        // separate row + invoice for each. Each row carries its lead plus the
-        // specific enrolment it represents.
         $registeredRows = collect();
-        $registeredLeads = $leads->where('status', 'Registered')
-            ->filter(fn($l) => $l->student_id);
-
+        $registeredLeads = Lead::where('owner_cs_id', $employeeId)
+            ->where('is_active', true)
+            ->where('status', 'Registered')
+            ->whereNotNull('student_id')
+            ->with(['courseTemplate', 'level', 'sublevel'])
+            ->get();
+            
         if ($registeredLeads->isNotEmpty()) {
             $studentIds = $registeredLeads->pluck('student_id')->unique()->all();
 

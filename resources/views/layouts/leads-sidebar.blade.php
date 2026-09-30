@@ -81,7 +81,7 @@
     font-size: 8px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: var(--sb-orange);
+    color: var(--sb-blue);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
