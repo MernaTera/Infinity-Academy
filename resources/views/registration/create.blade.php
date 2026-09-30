@@ -35,12 +35,12 @@
     }
     .reg-header-left { position:relative; z-index:1; }
     .reg-eyebrow {
-        font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--orange-dk);
+        font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue);
         margin-bottom:8px; font-weight:600; display:flex; align-items:center; gap:8px;
     }
     .reg-eyebrow::before {
-        content:''; width:6px; height:6px; border-radius:50%; background:var(--orange);
-        box-shadow:0 0 8px var(--orange);
+        content:''; width:6px; height:6px; border-radius:50%; background:var(--blue);
+        box-shadow:0 0 8px var(--blue);
     }
     .reg-title {
         font-family:'Bebas Neue',sans-serif; font-size:44px; letter-spacing:2px;
@@ -485,8 +485,8 @@
 
         @if(!empty($packageInfo) && ($packageInfo['remaining'] ?? 0) > 0)
         
-        <div style="margin-bottom:18px;padding:14px 18px;border-radius:10px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.25);border-left:3px solid #7C3AED;color:#6D28D9;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px;">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7C3AED" stroke-width="2" style="flex-shrink:0;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <div style="margin-bottom:18px;margin:0 auto 22px;padding:14px 18px;border-radius:10px;background:rgba(58, 91, 237, 0.06);border:1px solid rgba(58, 106, 237, 0.25);border-left:3px solid #3a55ed;color:#1B4FA8;font-size:13px;line-height:1.55;display:flex;align-items:center;gap:12px; max-width:1080px;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3a64ed" stroke-width="2" style="flex-shrink:0;"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
             <div>
                 This student is on the <strong>{{ $packageInfo['name'] }}</strong> package with
                 <strong>{{ $packageInfo['remaining'] }} {{ \Illuminate\Support\Str::plural('level', $packageInfo['remaining']) }}</strong>
