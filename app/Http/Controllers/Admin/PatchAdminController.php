@@ -19,6 +19,7 @@ class PatchAdminController extends Controller
 
     public function index()
     {
+        \Illuminate\Support\Facades\Artisan::call('patches:update-statuses'); 
         $patches = Patch::with('branch')
             ->withCount([
                 'courseInstances',

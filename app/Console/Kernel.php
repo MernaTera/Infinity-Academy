@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->call(function () {
             app(LeadService::class)->archiveOldLeads();
         })->everyMinute();
+        $schedule->command('patches:update-statuses')->hourly();
     }
 
     /**
