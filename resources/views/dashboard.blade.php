@@ -26,6 +26,19 @@
 
     .glass { background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); box-shadow:var(--glass-sh); }
 
+    .patch-bar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:16px 22px;border-radius:16px;margin-bottom:22px;}
+    .patch-bar-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--blue),var(--blue-2));display:grid;place-items:center;flex-shrink:0;box-shadow:0 8px 18px rgba(27,79,168,0.28);}
+    .patch-bar-info{flex:1;min-width:180px;}
+    .patch-bar-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--text);line-height:1;}
+    .patch-bar-dates{font-size:11px;color:var(--muted);margin-top:5px;}
+    .patch-bar-dates b{color:var(--blue);font-weight:600;}
+    .patch-bar-prog{flex:1;min-width:200px;max-width:340px;}
+    .patch-bar-prog-top{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px;}
+    .patch-bar-prog-pct{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--blue);letter-spacing:1px;}
+    .patch-bar-track{background:rgba(27,79,168,0.1);border-radius:5px;height:7px;overflow:hidden;}
+    .patch-bar-fill{height:7px;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--blue-2));transition:width .6s ease;}
+    @media (max-width:600px){ .patch-bar-prog{max-width:none;} }
+    
     .dash-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; margin-bottom:14px; }
     .dash-eyebrow { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue); font-weight:600; margin-bottom:7px; }
     .dash-title { font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:2px; color:var(--text); line-height:0.95; margin:0; }
@@ -112,22 +125,46 @@
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
 
-    <div class="dash-head">
-        <div>
-            <div class="dash-eyebrow">Customer Service · {{ now()->format('l, d M Y') }}@if($currentPatch) · {{ $currentPatch->name }}@endif</div>
-            <h1 class="dash-title">Welcome back{{ $employee?->full_name ? ', '.explode(' ', $employee->full_name)[0] : '' }}</h1>
-        </div>
-        <div class="dash-actions">
-            <a href="{{ route('leads.public') }}" class="btn-g btn-g-ghost">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M17 11l2 2 4-4M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
-                Public Pool
-            </a>
-            <a href="{{ route('leads.create') }}" class="btn-g btn-g-solid">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                New Lead
-            </a>
-        </div>
+<div class="dash-head">
+    <div>
+        <div class="dash-eyebrow">Customer Service · {{ now()->format('l, d M Y') }}@if($currentPatch) · {{ $currentPatch->name }}@endif</div>
+        <h1 class="dash-title">Welcome back{{ $employee?->full_name ? ', '.explode(' ', $employee->full_name)[0] : '' }}</h1>
     </div>
+    <div class="dash-actions">
+        <a href="{{ route('leads.public') }}" class="btn-g btn-g-ghost">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="4"/><path d="M17 11l2 2 4-4M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+            Public Pool
+        </a>
+        <a href="{{ route('leads.create') }}" class="btn-g btn-g-solid">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New Lead
+        </a>
+    </div>
+</div>
+
+@if($currentPatch)
+@php
+    $pStart   = \Carbon\Carbon::parse($currentPatch->start_date);
+    $pEnd     = \Carbon\Carbon::parse($currentPatch->end_date);
+    $pTotal   = max(1, $pStart->diffInDays($pEnd));
+    $pElapsed = max(0, min($pTotal, $pStart->diffInDays(now())));
+    $pPct     = round($pElapsed / $pTotal * 100);
+    $daysLeft = max(0, (int)now()->diffInDays($pEnd, false));
+@endphp
+<div class="patch-bar glass">
+    <div class="patch-bar-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <div class="patch-bar-info">
+        <div class="patch-bar-name">{{ $currentPatch->name }}</div>
+        <div class="patch-bar-dates">{{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }} · <b>{{ $daysLeft }} days left</b></div>
+    </div>
+    <div class="patch-bar-prog">
+        <div class="patch-bar-prog-top"><span>Patch Progress</span><span class="patch-bar-prog-pct">{{ $pPct }}%</span></div>
+        <div class="patch-bar-track"><div class="patch-bar-fill" style="width:{{ $pPct }}%"></div></div>
+    </div>
+</div>
+@endif
 
     @if(!empty($me) && ($me->work_start_time || $me->work_end_time))
     <div class="shift-chip glass">
