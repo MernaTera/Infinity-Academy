@@ -22,13 +22,11 @@
 
     .create-page {
         min-height:100vh; padding:40px 32px 56px; color:var(--text); font-family:'DM Sans',sans-serif;
-        background:
-            radial-gradient(circle at 12% 14%, rgba(27,79,168,0.12), transparent 40%),
-            radial-gradient(circle at 88% 10%, rgba(245,145,30,0.11), transparent 40%),
-            radial-gradient(circle at 82% 90%, rgba(124,58,237,0.11), transparent 44%),
-            radial-gradient(circle at 15% 92%, rgba(5,150,105,0.09), transparent 40%),
-            linear-gradient(180deg, #F6F8FC 0%, #F8F6F2 100%);
+        background:#F8F6F2;
     }
+    .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3 { width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
 
     .reg-header {
         max-width:1080px; margin:0 auto 22px;
@@ -402,7 +400,9 @@
 </style>
 
 <div class="create-page">
-
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
     <div class="reg-header">
         <div class="reg-header-left">
             <div class="reg-eyebrow">Registration</div>
