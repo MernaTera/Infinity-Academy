@@ -199,7 +199,10 @@ class PatchService
             }
 
             $maxAllowed = (int) ($contract->contractType?->max_sessions_allowed ?? 0);
-            if ($maxAllowed <= 0) continue;
+
+            if ($maxAllowed <= 0) {
+                return $teacher;
+            }
 
             $used = $this->countTeacherSessionsInPatch($teacher->teacher_id, $patch->patch_id);
 

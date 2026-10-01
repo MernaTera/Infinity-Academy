@@ -26,11 +26,12 @@ class TeacherProfileController extends Controller
 
         $currentPatch = Patch::where('status', 'Active')->latest('start_date')->first();
 
-        $contract = TeacherContract::with('contractType')
+        $contract = TeacherContract::with('contractType', 'patch')
             ->where('teacher_id', $teacher->teacher_id)
             ->where('is_active', true)
-            ->when($currentPatch, fn($q) => $q->where('patch_id', $currentPatch->patch_id))
-            ->latest('created_at')
+            ->when($currentPatch, fn($q) => $q->whereHas('patch', fn($p) => $p->where('start_date', '<=', $currentPatch->start_date)))
+            ->get()
+            ->sortByDesc(fn($c) => optional($c->patch)->start_date)
             ->first();
 
         $allContracts = TeacherContract::with('contractType', 'patch')
