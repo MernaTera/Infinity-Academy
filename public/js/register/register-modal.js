@@ -477,6 +477,8 @@ function recalcMaterials() {
 
     if (level)    level.addEventListener('change', loadPatch);
     if (sublevel) sublevel.addEventListener('change', loadPatch);
+    document.querySelectorAll('input[name="type"]').forEach(el => el.addEventListener('change', loadPatch));
+    document.querySelectorAll('input[name="mode"]').forEach(el => el.addEventListener('change', loadPatch));
     bundle?.addEventListener('change', calculatePrice);
     paymentSelect?.addEventListener('change', () => { refreshPaymentSummary(); refreshDepositSection(); });
 
@@ -486,7 +488,7 @@ function recalcMaterials() {
         const typeVal = document.querySelector('input[name="type"]:checked')?.value;
         const type    = typeVal ? typeVal.charAt(0).toUpperCase() + typeVal.slice(1).toLowerCase() : null;
 
-        const mode = document.querySelector('select[name="mode"]')?.value || null;
+        const mode = document.querySelector('input[name="mode"]:checked')?.value || null;
 
         const payload = {
             course_template_id: course.value,
