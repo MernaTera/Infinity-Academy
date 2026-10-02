@@ -53,7 +53,7 @@
 .meta-val{color:var(--text);font-weight:500;text-align:right;}
 
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:20px;font-weight:600;}
-.badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;}
+/* .badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0;} */
 .badge-active{color:var(--blue);background:var(--blue-l);border:1px solid rgba(27,79,168,0.2);}
 .badge-restricted{color:var(--muted);background:rgba(90,106,133,0.1);border:1px solid rgba(90,106,133,0.2);}
 .badge-archived{color:var(--faint);background:rgba(147,163,188,0.12);border:1px solid rgba(147,163,188,0.25);}
@@ -110,13 +110,25 @@
 .phone-add button:hover{background:#153e85;}
 .flash-ok{background:var(--blue-l);border:1px solid rgba(27,79,168,0.2);color:var(--blue);font-size:11px;padding:6px 10px;border-radius:9px;margin-bottom:10px;}
 .flash-err{background:rgba(90,106,133,0.08);border:1px solid rgba(90,106,133,0.2);color:var(--muted);font-size:11px;padding:6px 10px;border-radius:9px;margin-bottom:10px;}
+.pi-edit-btn{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:7px 16px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;border-radius:9px;border:1px solid rgba(27,79,168,0.25);color:var(--blue);background:rgba(27,79,168,0.06);cursor:pointer;transition:all .2s;}
+.pi-edit-btn:hover{background:var(--blue);color:#fff;border-color:transparent;}
+.pi-form{text-align:left;margin-top:8px;}
+.pi-field{display:flex;flex-direction:column;gap:4px;margin-bottom:11px;}
+.pi-field label{font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.pi-field input,.pi-field select{padding:8px 11px;border:1px solid rgba(27,79,168,0.15);border-radius:9px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;background:rgba(255,255,255,0.7);outline:none;}
+.pi-field input:focus,.pi-field select:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l);}
+.pi-actions{display:flex;gap:8px;margin-top:4px;}
+.pi-save{flex:1;padding:9px;background:linear-gradient(120deg,var(--blue),var(--blue-2));color:#fff;border:none;border-radius:9px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;}
+.pi-save:hover{box-shadow:0 8px 18px rgba(27,79,168,0.3);}
+.pi-cancel{padding:9px 16px;background:rgba(255,255,255,0.5);border:1px solid var(--border);border-radius:9px;color:var(--muted);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;}
+.pi-cancel:hover{border-color:var(--blue);color:var(--blue);}
+.pi-err{color:#5A6A85;font-size:10px;margin-top:3px;}
 </style>
 
 <div class="sp-page">
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
-
     <div class="page-header">
         <div>
             <div class="page-eyebrow">{{ auth()->user()->panelLabel() }} — Students</div>
@@ -168,12 +180,54 @@
         <div>
 
             
+            @php $piEditOpen = $errors->hasAny(['full_name','email','birthdate','degree','location']); @endphp
             <div class="card">
                 <div class="card-body" style="text-align:center;padding-top:24px;">
                     <div class="profile-avatar">{{ strtoupper(substr($student->full_name ?? 'S', 0, 2)) }}</div>
-                    <div class="profile-name">{{ $student->full_name }}</div>
-                    <div class="profile-email">{{ $student->email ?? 'No email' }}</div>
-                    <span class="badge badge-{{ strtolower($student->status) }}">{{ $student->status }}</span>
+                    <div class="js-pi-view" @if($piEditOpen)style="display:none;"@endif>
+                        <div class="profile-name">{{ $student->full_name }}</div>
+                        <div class="profile-email">{{ $student->email ?? 'No email' }}</div>
+                        <span class="badge badge-{{ strtolower($student->status) }}">{{ $student->status }}</span>
+                        <div><button type="button" class="pi-edit-btn" onclick="piEdit(true)">&#9998; Edit Info</button></div>
+                    </div>
+                    <form method="POST" action="{{ route('students.update', $student->student_id) }}" class="pi-form js-pi-edit" @if(!$piEditOpen)style="display:none;"@endif>
+                        @csrf
+                        @method('PATCH')
+                        <div class="pi-field">
+                            <label>Full Name</label>
+                            <input type="text" name="full_name" value="{{ old('full_name', $student->full_name) }}" placeholder="First Father Grandfather Family" required>
+                            @error('full_name')<div class="pi-err">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="pi-field">
+                            <label>Email</label>
+                            <input type="email" name="email" value="{{ old('email', $student->email) }}" placeholder="No email">
+                            @error('email')<div class="pi-err">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="pi-field">
+                            <label>Birthdate</label>
+                            <input type="date" name="birthdate" value="{{ old('birthdate', $student->birthdate ? \Carbon\Carbon::parse($student->birthdate)->format('Y-m-d') : '') }}">
+                            @error('birthdate')<div class="pi-err">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="pi-field">
+                            <label>Degree</label>
+                            <select name="degree" required>
+                                <option value="">— Select —</option>
+                                @foreach(['Student','Graduate'] as $deg)
+                                <option value="{{ $deg }}" {{ old('degree', $student->degree) === $deg ? 'selected' : '' }}>{{ $deg }}</option>
+                                @endforeach
+                            </select>
+                            @error('degree')<div class="pi-err">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="pi-field">
+                            <label>Location</label>
+                            <input type="text" name="location" value="{{ old('location', $student->location) }}">
+                            @error('location')<div class="pi-err">{{ $message }}</div>@enderror
+                        </div>
+                        <div class="pi-actions">
+                            <button type="submit" class="pi-save">Save</button>
+                            <button type="button" class="pi-cancel" onclick="piEdit(false)">Cancel</button>
+                        </div>
+                    </form>
                 </div>
                 <div class="card-body" style="border-top:1px solid var(--border);padding-top:14px;">
                     <div class="phones-block">
@@ -223,11 +277,11 @@
                             <button type="submit">Add</button>
                         </form>
                     </div>
-                    <div class="meta-row">
+                    <div class="meta-row js-pi-view">
                         <span class="meta-key">Degree</span>
                         <span class="meta-val">{{ $student->degree ?? '—' }}</span>
                     </div>
-                    <div class="meta-row">
+                    <div class="meta-row js-pi-view">
                         <span class="meta-key">Location</span>
                         <span class="meta-val">{{ $student->location ?? '—' }}</span>
                     </div>
@@ -508,5 +562,12 @@
         </div>
     </div>
 </div>
+
+<script>
+function piEdit(on){
+    document.querySelectorAll('.js-pi-view').forEach(function(e){ e.style.display = on ? 'none' : ''; });
+    var f = document.querySelector('.js-pi-edit');
+    if (f) { f.style.display = on ? 'block' : 'none'; }
+}
+</script>
 @endsection
-           

@@ -132,6 +132,40 @@ class AdminStudentController extends Controller
         return view('admin.students.show', compact('student'));
     }
 
+    public function update(Request $request, $id)
+    {
+        $student = Student::findOrFail($id);
+
+        $data = $request->validate([
+            'full_name' => [
+                'required', 'string', 'min:3', 'max:255',
+                'regex:/^\s*([\p{Arabic}A-Za-z]{2,})(\s+[\p{Arabic}A-Za-z]{2,}){3,}\s*$/u',
+            ],
+            'email'     => [
+                'nullable', 'email', 'max:255',
+                \Illuminate\Validation\Rule::unique('student', 'email')->ignore($student->student_id, 'student_id'),
+            ],
+            'degree'    => ['required', 'in:Student,Graduate'],
+            'birthdate' => ['nullable', 'date'],
+            'location'  => ['nullable', 'string', 'max:255'],
+        ], [
+            'full_name.regex' => 'Please enter the full 4-part name (first, father, grandfather, and family name).',
+            'degree.required' => 'Please select a degree.',
+            'degree.in'       => 'Degree must be either Student or Graduate.',
+            'email.unique'    => 'This email is already used by another student.',
+        ]);
+
+        $student->update($data);
+        \App\Models\Leads\Lead::where('student_id', $student->student_id)->update([
+            'full_name' => $data['full_name'],
+            'degree'    => $data['degree'],
+            'birthdate' => $data['birthdate'] ?? null,
+            'location'  => $data['location'] ?? null,
+        ]);
+
+        return back()->with('success', 'Student information updated.');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Phone numbers (multiple per student)

@@ -256,6 +256,7 @@ Route::middleware(['auth', 'permission:enrollment.view'])
     ->group(function () {
         Route::get('/students',      [AdminStudentController::class, 'index'])->name('students.index');
         Route::get('/students/{id}', [AdminStudentController::class, 'show'])->name('students.show');
+        Route::patch('/students/{id}', [AdminStudentController::class, 'update'])->name('students.update');
 
         // Student phone numbers (multiple per student)
         Route::post('/students/{id}/phones',                    [AdminStudentController::class, 'storePhone'])->name('students.phones.store');
