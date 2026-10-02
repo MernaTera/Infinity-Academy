@@ -457,19 +457,24 @@ class StudentCareController extends Controller
             ->with(['student', 'courseInstance.courseTemplate', 'courseInstance.sessions'])
             ->get()
             ->filter(function ($e) {
-                $total     = $e->courseInstance?->sessions?->count() ?? 0;
-                $completed = $e->courseInstance?->sessions?->where('status','Completed')->count() ?? 0;
+                $sessions  = $e->courseInstance?->sessions ?? collect();
+                $total     = $sessions->where('status', '!=', 'Cancelled')->count();
+                $completed = $sessions->where('status', 'Completed')->count();
                 $remaining = $total - $completed;
-                return $remaining <= 1 && $total > 0;
-            });
+                return $total > 0 && $remaining <= 1;
+            })
+            ->reject(fn($e) => $this->hasRenewed($e))
+            ->values();
 
         $nearCompletionPrivate = \App\Models\Enrollment\Enrollment::where('status', 'Active')
             ->where('enrollment_type', 'Private')
             ->whereNotNull('hours_remaining')
             ->where('hours_remaining', '<=', 4)
             ->with(['student', 'courseInstance.courseTemplate'])
-            ->get();
-
+            ->get()
+            ->reject(fn($e) => $this->hasRenewed($e))
+            ->values();
+            
         $recentInstances = \App\Models\Academic\CourseInstance::with([
             'courseTemplate', 'teacher.employee', 'enrollments'
         ])->where('status', 'Active')
@@ -499,11 +504,13 @@ class StudentCareController extends Controller
                 'student.lead',
                 'courseTemplate',
                 'level',
-                'privateBundle',
+                'privateBundle' => fn($q) => $q->withoutGlobalScope('branch'),
                 'teacher',
             ])
             ->orderBy('hours_remaining')
-            ->get();
+            ->get()
+            ->reject(fn($e) => $this->hasRenewed($e))
+            ->values();
 
         $nearCompletionGroup = Enrollment::where('status', 'Active')
             ->where('enrollment_type', 'Group')
@@ -517,11 +524,13 @@ class StudentCareController extends Controller
             ])
             ->get()
             ->filter(function ($e) {
-                $total     = $e->courseInstance?->sessions?->count() ?? 0;
-                $completed = $e->courseInstance?->sessions?->where('status', 'Completed')->count() ?? 0;
+                $sessions  = $e->courseInstance?->sessions ?? collect();
+                $total     = $sessions->where('status', '!=', 'Cancelled')->count();
+                $completed = $sessions->where('status', 'Completed')->count();
                 $remaining = $total - $completed;
-                return $remaining <= 2 && $total > 0;
+                return $total > 0 && $remaining <= 2;
             })
+            ->reject(fn($e) => $this->hasRenewed($e))
             ->values();
 
         $privateCount = $nearCompletionPrivate->count();
@@ -531,17 +540,18 @@ class StudentCareController extends Controller
             'nearCompletionPrivate', 'nearCompletionGroup',
             'privateCount', 'groupCount'
         ));
-}
+    }
 
-    /**
-     * Continue Package — create the next prepaid enrolment in a level package.
-     *
-     * A package covers several units. The unit is a sublevel when the course
-     * has sublevels, otherwise a level. This finds the next unit after the
-     * current enrolment's, creates a new FREE enrolment for it (final_price 0),
-     * decrements the remaining prepaid units, and closes out the current one's
-     * package counter.
-     */
+    private function hasRenewed($e): bool
+    {
+        return Enrollment::where('student_id', $e->student_id)
+            ->where('enrollment_type', $e->enrollment_type)
+            ->where('enrollment_id', '>', $e->enrollment_id)
+            ->whereNotIn('status', ['Cancelled'])
+            ->exists();
+    }
+
+
     public function continuePackage($enrollmentId)
     {
         $current = Enrollment::with(['level', 'sublevel', 'courseTemplate'])

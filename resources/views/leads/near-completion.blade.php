@@ -189,8 +189,9 @@
                 <tbody>
                     @forelse($nearCompletionGroup as $e)
                     @php
-                        $total     = $e->courseInstance?->sessions?->count() ?? 0;
-                        $completed = $e->courseInstance?->sessions?->where('status','Completed')->count() ?? 0;
+                        $sessions  = $e->courseInstance?->sessions ?? collect();
+                        $total     = $sessions->where('status','!=','Cancelled')->count();
+                        $completed = $sessions->where('status','Completed')->count();
                         $remaining = $total - $completed;
                         $pct       = $total > 0 ? round(($completed / $total) * 100) : 0;
                     @endphp
