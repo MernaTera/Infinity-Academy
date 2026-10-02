@@ -20,16 +20,13 @@ class PrivateHoursController extends Controller
     public function index(Request $request)
     {
         $stateFilter = $request->query('state', 'all');
-        // all | active | low | depleted | leftover
-
-        // Every private enrolment that actually tracks hours.
         $enrollments = Enrollment::with([
                 'student',
                 'courseTemplate',
                 'level',
                 'sublevel',
                 'courseInstance.courseTemplate',
-                'privateBundle',
+                'privateBundle' => fn($q) => $q->withoutGlobalScope('branch'),
             ])
             ->where('enrollment_type', 'Private')
             ->whereNotNull('hours_remaining')
