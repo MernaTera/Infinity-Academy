@@ -7,87 +7,112 @@
 @endonce
 
 <style>
-.sc-dash{font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0;line-height:1}
-.page-sub{font-size:12px;color:#7A8A9A;margin-top:4px}
-.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+    :root {
+        --blue:#1B4FA8; --blue-2:#2D6FDB; --orange:#F5911E; --orange-dk:#C47010;
+        --green:#059669; --green-dk:#15803D; --purple:#7C3AED; --red:#DC2626;
+        --text:#16233F; --muted:#5A6A85; --faint:#93A3BC;
+        --card:rgba(255,255,255,0.5); --border:rgba(255,255,255,0.6);
+        --glass-sh:0 8px 30px rgba(23,45,90,0.07);
+        --bg:#F8F6F2;
+    }
+    * { box-sizing:border-box; }
 
-/* Patch Banner */
-.patch-banner{background:linear-gradient(135deg,#1B4FA8 0%,#2D6FDB 100%);border-radius:8px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;overflow:hidden}
-.patch-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.05)}
-.pb-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:4px}
-.pb-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#fff}
-.pb-dates{font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px}
-.pb-stats{display:flex;gap:20px;flex-wrap:wrap}
-.pb-stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:1px;line-height:1}
-.pb-stat-label{font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
-.pb-progress{flex:1;max-width:260px}
-.pb-prog-label{display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.6);margin-bottom:6px}
-.pb-prog-track{background:rgba(255,255,255,0.15);border-radius:4px;height:5px;overflow:hidden}
-.pb-prog-fill{height:5px;border-radius:4px;background:linear-gradient(90deg,#F5911E,#FFB347)}
+    .sc-dash{ position:relative; overflow:hidden; margin:-30px; padding:30px 34px 44px; min-height:calc(100vh - 62px); background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; }
+    @media (max-width:600px){ .sc-dash{ margin:-30px; padding:18px 16px 32px; } }
 
-/* KPI Grid */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px}
-.kpi-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
-.kpi-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;padding:18px 20px;position:relative;overflow:hidden;transition:box-shadow 0.2s;text-decoration:none;display:block;color:inherit}
-.kpi-card:hover{box-shadow:0 4px 20px rgba(27,79,168,0.08);text-decoration:none;color:inherit}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,#1B4FA8)}
-.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:6px}
-.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--kc,#1B4FA8);line-height:1}
-.kpi-sub{font-size:10px;color:#AAB8C8;margin-top:4px}
+    .orb{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2{ width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3{ width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
+    .patch-bar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:16px 22px;border-radius:16px;margin-bottom:22px;}
+    .patch-bar-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--blue),var(--blue-2));display:grid;place-items:center;flex-shrink:0;box-shadow:0 8px 18px rgba(27,79,168,0.28);}
+    .patch-bar-info{flex:1;min-width:180px;}
+    .patch-bar-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--text);line-height:1;}
+    .patch-bar-dates{font-size:11px;color:var(--muted);margin-top:5px;}
+    .patch-bar-dates b{color:var(--blue);font-weight:600;}
+    .patch-bar-prog{flex:1;min-width:200px;max-width:340px;}
+    .patch-bar-prog-top{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px;}
+    .patch-bar-prog-pct{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--blue);letter-spacing:1px;}
+    .patch-bar-track{background:rgba(27,79,168,0.1);border-radius:5px;height:7px;overflow:hidden;}
+    .patch-bar-fill{height:7px;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--blue-2));transition:width .6s ease;}
+    @media (max-width:600px){ .patch-bar-prog{max-width:none;} }
 
-/* Alerts */
-.alert-list{display:flex;flex-direction:column;gap:8px;margin-bottom:20px}
-.alert-item{display:flex;align-items:flex-start;gap:10px;padding:12px 16px;border-radius:6px;font-size:12px;line-height:1.5}
-.alert-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;margin-top:4px}
-.alert-danger{background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);color:#DC2626}
-.alert-warning{background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2);color:#C47010}
-.alert-info{background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.15);color:#1B4FA8}
-.alert-link{color:inherit;font-weight:600;margin-left:4px;text-decoration:underline}
+    .glass{ background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); box-shadow:var(--glass-sh); }
 
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:14px;display:block}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+    .page-header{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:16px; position:relative; z-index:1; }
+    .page-eyebrow{ font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue); font-weight:600; margin-bottom:7px; }
+    .page-title{ font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:2px; color:var(--text); margin:0; line-height:0.95; }
+    .page-sub{ font-size:12px; color:var(--muted); margin-top:7px; }
 
-/* Cards */
-.dash-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;margin-bottom:20px}
-.dash-card-header{padding:14px 18px;border-bottom:1px solid rgba(27,79,168,0.07);display:flex;align-items:center;justify-content:space-between}
-.dash-card-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#1B4FA8}
-.dash-card-sub{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#AAB8C8}
-.dash-card-body{padding:16px 18px}
+    .patch-banner{ background:linear-gradient(120deg,var(--blue),var(--blue-2)); border-radius:18px; padding:20px 24px; margin-bottom:22px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; position:relative; overflow:hidden; z-index:1; box-shadow:0 10px 24px rgba(27,79,168,0.28); }
+    .patch-banner::before{ content:''; position:absolute; top:-30px; right:-30px; width:120px; height:120px; border-radius:50%; background:rgba(255,255,255,0.06); }
+    .pb-label{ font-size:9px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.6); margin-bottom:4px; }
+    .pb-name{ font-family:'Bebas Neue',sans-serif; font-size:24px; letter-spacing:3px; color:#fff; }
+    .pb-dates{ font-size:11px; color:rgba(255,255,255,0.72); margin-top:2px; }
+    .pb-stats{ display:flex; gap:22px; flex-wrap:wrap; }
+    .pb-stat-val{ font-family:'Bebas Neue',sans-serif; font-size:24px; color:#fff; letter-spacing:1px; line-height:1; }
+    .pb-stat-label{ font-size:9px; color:rgba(255,255,255,0.5); letter-spacing:1px; text-transform:uppercase; margin-top:2px; }
+    .pb-progress{ flex:1; max-width:260px; }
+    .pb-prog-label{ display:flex; justify-content:space-between; font-size:10px; color:rgba(255,255,255,0.6); margin-bottom:6px; }
+    .pb-prog-track{ background:rgba(255,255,255,0.15); border-radius:6px; height:6px; overflow:hidden; }
+    .pb-prog-fill{ height:6px; border-radius:6px; background:linear-gradient(90deg,var(--orange),#FFB347); }
 
-/* Instance Row */
-.inst-row{display:flex;align-items:center;gap:10px;padding:10px 18px;border-bottom:1px solid rgba(27,79,168,0.04);transition:background 0.2s;text-decoration:none;color:inherit}
-.inst-row:last-child{border-bottom:none}
-.inst-row:hover{background:rgba(27,79,168,0.02);text-decoration:none}
-.inst-avatar{width:32px;height:32px;border-radius:6px;background:rgba(27,79,168,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.inst-name{font-size:13px;color:#1A2A4A;font-weight:500;flex:1}
-.inst-meta{font-size:10px;color:#AAB8C8;margin-top:1px}
+    .sec-label{ font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); font-weight:600; margin:26px 2px 12px; display:block; position:relative; z-index:1; }
+    .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; position:relative; z-index:1; }
 
-/* Retention Row */
-.ret-row{display:flex;align-items:center;gap:10px;padding:8px 18px;border-bottom:1px solid rgba(27,79,168,0.04)}
-.ret-row:last-child{border-bottom:none}
-.ret-name{font-size:12px;color:#1A2A4A;font-weight:500;flex:1}
-.ret-course{font-size:10px;color:#7A8A9A}
-.ret-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:500}
-.ret-last{color:#DC2626;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15)}
-.ret-low{color:#C47010;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2)}
+    .kpi-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px; position:relative; z-index:1; }
+    .kpi-grid-3{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; position:relative; z-index:1; }
+    .kpi-card{ position:relative; overflow:hidden; border-radius:18px; padding:20px; text-decoration:none; display:block; color:inherit; background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); box-shadow:var(--glass-sh); transition:transform .2s, box-shadow .2s; }
+    .kpi-card:hover{ transform:translateY(-3px); box-shadow:0 16px 38px rgba(23,45,90,0.13); text-decoration:none; color:inherit; }
+    .kpi-label{ font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:6px; }
+    .kpi-val{ font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:1px; color:var(--kc,var(--blue)); line-height:1; }
+    .kpi-sub{ font-size:11px; color:var(--faint); margin-top:6px; }
 
-/* Quick Actions */
-.qa-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px}
-.qa-btn{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 12px;background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;text-decoration:none;transition:all 0.2s;color:#7A8A9A}
-.qa-btn:hover{border-color:#1B4FA8;background:rgba(27,79,168,0.03);transform:translateY(-2px);box-shadow:0 4px 16px rgba(27,79,168,0.08);text-decoration:none;color:#1B4FA8}
-.qa-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:rgba(27,79,168,0.08)}
-.qa-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;text-align:center}
+    .alert-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:20px; position:relative; z-index:1; }
+    .alert-item{ display:flex; align-items:flex-start; gap:10px; padding:14px 18px; border-radius:14px; font-size:12px; line-height:1.5; }
+    .alert-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; margin-top:4px; }
+    .alert-danger{ background:rgba(220,38,38,0.07); border:1px solid rgba(220,38,38,0.16); color:var(--red); }
+    .alert-warning{ background:rgba(245,145,30,0.08); border:1px solid rgba(245,145,30,0.2); color:var(--orange-dk); }
+    .alert-info{ background:rgba(27,79,168,0.07); border:1px solid rgba(27,79,168,0.16); color:var(--blue); }
+    .alert-link{ color:inherit; font-weight:600; margin-left:4px; text-decoration:underline; }
 
-.cap-track{background:#F0F0F0;border-radius:3px;height:4px;overflow:hidden;margin-top:4px;width:60px}
-.cap-fill{height:4px;border-radius:3px}
+    .dash-card{ border-radius:20px; overflow:hidden; margin-bottom:16px; background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); box-shadow:var(--glass-sh); }
+    .dash-card-header{ padding:18px 22px 14px; border-bottom:1px solid rgba(27,79,168,0.06); display:flex; align-items:center; justify-content:space-between; }
+    .dash-card-title{ font-family:'Bebas Neue',sans-serif; font-size:17px; letter-spacing:2px; color:var(--text); }
+    .dash-card-sub{ font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--faint); font-weight:600; }
+    .dash-card-body{ padding:16px 22px; }
 
-@media(max-width:1024px){.kpi-grid,.kpi-grid-3{grid-template-columns:repeat(2,1fr)}.two-col{grid-template-columns:1fr}.qa-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:640px){.sc-dash{padding:18px 14px}.kpi-grid,.kpi-grid-3{grid-template-columns:1fr 1fr}}
+    .inst-row{ display:flex; align-items:center; gap:13px; padding:12px 22px; border-bottom:1px solid rgba(27,79,168,0.06); transition:background .15s; text-decoration:none; color:inherit; }
+    .inst-row:last-child{ border-bottom:none; }
+    .inst-row:hover{ background:rgba(27,79,168,0.04); text-decoration:none; }
+    .inst-avatar{ width:40px; height:40px; border-radius:12px; background:rgba(27,79,168,0.10); display:grid; place-items:center; flex-shrink:0; }
+    .inst-name{ font-size:13px; color:var(--text); font-weight:600; flex:1; }
+    .inst-meta{ font-size:11px; color:var(--muted); margin-top:2px; }
+
+    .ret-row{ display:flex; align-items:center; gap:13px; padding:12px 22px; border-bottom:1px solid rgba(27,79,168,0.06); }
+    .ret-row:last-child{ border-bottom:none; }
+    .ret-name{ font-size:13px; color:var(--text); font-weight:600; flex:1; }
+    .ret-course{ font-size:11px; color:var(--muted); margin-top:2px; }
+    .ret-badge{ display:inline-flex; align-items:center; gap:4px; padding:4px 11px; border-radius:20px; font-size:9px; letter-spacing:0.3px; font-weight:600; }
+    .ret-last{ color:var(--red); background:rgba(220,38,38,0.10); }
+    .ret-low{ color:var(--orange-dk); background:rgba(245,145,30,0.12); }
+
+    .qa-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; position:relative; z-index:1; }
+    .qa-btn{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:18px 12px; border-radius:18px; text-decoration:none; transition:transform .2s, box-shadow .2s; color:var(--muted); background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); box-shadow:var(--glass-sh); }
+    .qa-btn:hover{ transform:translateY(-3px); box-shadow:0 16px 38px rgba(23,45,90,0.13); text-decoration:none; color:var(--blue); }
+    .qa-icon{ width:38px; height:38px; border-radius:12px; display:grid; place-items:center; background:rgba(27,79,168,0.10); }
+    .qa-label{ font-size:10px; letter-spacing:1px; text-transform:uppercase; text-align:center; }
+
+    .cap-track{ background:rgba(27,79,168,0.08); border-radius:6px; height:6px; overflow:hidden; margin-top:4px; width:60px; }
+    .cap-fill{ height:6px; border-radius:6px; }
+
+    @media(max-width:1024px){ .kpi-grid,.kpi-grid-3{ grid-template-columns:repeat(2,1fr); } .two-col{ grid-template-columns:1fr; } .qa-grid{ grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:640px){ .kpi-grid,.kpi-grid-3{ grid-template-columns:1fr 1fr; } }
 </style>
 
 <div class="sc-dash">
+
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div>
@@ -96,11 +121,11 @@
             <p class="page-sub">{{ now()->format('l, d M Y') }}</p>
         </div>
         @if(!empty($me) && ($me->work_start_time || $me->work_end_time))
-        <div style="display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:12px;background:#fff;border:1px solid rgba(27,79,168,0.1);box-shadow:0 2px 10px rgba(27,79,168,0.05);">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div style="display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:13px;background:rgba(255,255,255,0.5);border:1px solid var(--border);box-shadow:var(--glass-sh);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#445e8f" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             <div>
-                <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;font-weight:600;">Your Shift</div>
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:19px;color:#C47010;letter-spacing:1px;line-height:1.1;">
+                <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#445e8f;font-weight:600;">Your Shift</div>
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:19px;color:#445e8f;letter-spacing:1px;line-height:1.1;">
                     {{ $me->work_start_time ? \Carbon\Carbon::parse($me->work_start_time)->format('g:i A') : '—' }}
                     <span style="color:#AAB8C8;">→</span>
                     {{ $me->work_end_time ? \Carbon\Carbon::parse($me->work_end_time)->format('g:i A') : '—' }}
@@ -110,7 +135,6 @@
         @endif
     </div>
 
-    {{-- Alerts --}}
     @if($expiredPostponements->isNotEmpty() || $endingSoon->isNotEmpty() || $restrictedStudents > 0 || $expiringSoon->isNotEmpty())
     <div class="alert-list">
         @if($expiredPostponements->isNotEmpty())
@@ -151,7 +175,6 @@
     </div>
     @endif
 
-    {{-- Patch Banner --}}
     @if($currentPatch)
     @php
         $pStart   = \Carbon\Carbon::parse($currentPatch->start_date);
@@ -161,41 +184,21 @@
         $pPct     = round($pElapsed / $pTotal * 100);
         $daysLeft = max(0, (int)now()->diffInDays($pEnd, false));
     @endphp
-    <div class="patch-banner">
-        <div>
-            <div class="pb-label">Current Patch</div>
-            <div class="pb-name">{{ $currentPatch->name }}</div>
-            <div class="pb-dates">
-                {{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }}
-                · {{ $daysLeft }} days remaining
-            </div>
+    <div class="patch-bar glass">
+        <div class="patch-bar-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
-        <div class="pb-progress">
-            <div class="pb-prog-label">
-                <span>Progress</span><span>{{ $pPct }}%</span>
-            </div>
-            <div class="pb-prog-track">
-                <div class="pb-prog-fill" style="width:{{ $pPct }}%"></div>
-            </div>
+        <div class="patch-bar-info">
+            <div class="patch-bar-name">{{ $currentPatch->name }}</div>
+            <div class="patch-bar-dates">{{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }} · <b>{{ $daysLeft }} days left</b></div>
         </div>
-        <div class="pb-stats">
-            <div>
-                <div class="pb-stat-val">{{ $activeCourses }}</div>
-                <div class="pb-stat-label">Active</div>
-            </div>
-            <div>
-                <div class="pb-stat-val">{{ $upcomingCourses }}</div>
-                <div class="pb-stat-label">Upcoming</div>
-            </div>
-            <div>
-                <div class="pb-stat-val">{{ $totalStudents }}</div>
-                <div class="pb-stat-label">Students</div>
-            </div>
+        <div class="patch-bar-prog">
+            <div class="patch-bar-prog-top"><span>Patch Progress</span><span class="patch-bar-prog-pct">{{ $pPct }}%</span></div>
+            <div class="patch-bar-track"><div class="patch-bar-fill" style="width:{{ $pPct }}%"></div></div>
         </div>
     </div>
     @endif
 
-    {{-- Quick Actions --}}
     <div class="qa-grid">
         <a href="{{ route('student-care.instances') }}?create=1" class="qa-btn">
             <div class="qa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
@@ -215,7 +218,6 @@
         </a>
     </div>
 
-    {{-- KPIs --}}
     <span class="sec-label">Academic Status</span>
     <div class="kpi-grid" style="margin-bottom:24px">
         <a href="{{ route('student-care.instances') }}" class="kpi-card" style="--kc:#059669">
@@ -255,10 +257,8 @@
         </div>
     </div>
 
-    {{-- Main Two Column --}}
     <div class="two-col">
 
-        {{-- LEFT: Active Courses --}}
         <div>
             <div class="dash-card">
                 <div class="dash-card-header">
@@ -295,7 +295,6 @@
                 @endforelse
             </div>
 
-            {{-- Courses Ending Soon --}}
             @if($endingSoon->isNotEmpty())
             <div class="dash-card">
                 <div class="dash-card-header">
@@ -317,9 +316,8 @@
             @endif
         </div>
 
-        {{-- RIGHT: Retention Near Completion --}}
         <div>
-            {{-- Group Near Completion --}}
+
             <div class="dash-card">
                 <div class="dash-card-header">
                     <div class="dash-card-title">Near Completion — Group</div>
@@ -338,7 +336,6 @@
                 @endforelse
             </div>
 
-            {{-- Private Near Completion --}}
             @if($nearCompletionPrivate->isNotEmpty())
             <div class="dash-card">
                 <div class="dash-card-header">
@@ -359,7 +356,6 @@
             </div>
             @endif
 
-            {{-- Expired Postponements --}}
             @if($expiredPostponements->isNotEmpty())
             <div class="dash-card">
                 <div class="dash-card-header">
@@ -383,4 +379,21 @@
     </div>
 
 </div>
+<script>
+document.querySelectorAll('.kpi-val').forEach(el => {
+    const raw = el.textContent.trim();
+    const suffix = raw.includes('%') ? '%' : '';
+    const num = parseFloat(raw.replace(/[^0-9.]/g, ''));
+    if (isNaN(num)) return;
+    if (num === 0) { el.textContent = '0' + suffix; return; }
+    const dur = 700, start = performance.now();
+    (function tick(now) {
+        const pct = Math.min((now - start) / dur, 1);
+        const ease = 1 - Math.pow(1 - pct, 3);
+        el.textContent = Math.round(num * ease).toLocaleString() + suffix;
+        if (pct < 1) requestAnimationFrame(tick);
+    })(start);
+});
+</script>
+
 @endsection

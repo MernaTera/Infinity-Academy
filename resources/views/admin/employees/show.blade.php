@@ -168,6 +168,7 @@
     @php
         $roleName  = $employee->user?->role?->role_name ?? '—';
         $isCsFamily = in_array($roleName, ['Customer Service', 'CS Leader']);
+        $hasShift   = in_array($roleName, ['Customer Service', 'CS Leader', 'Student Care']);
         // A CS Leader is shown with the CS (blue) styling — just tagged "Leader".
         $roleCls   = match($roleName) { 'Customer Service'=>'role-cs', 'CS Leader'=>'role-cs', 'Teacher'=>'role-teacher', 'Student Care'=>'role-sc', 'Admin'=>'role-admin', default=>'role-cs' };
         $avatarBg  = match($roleName) { 'Customer Service'=>'var(--blue-l)', 'CS Leader'=>'var(--blue-l)', 'Teacher'=>'var(--green-l)', 'Student Care'=>'rgba(127,119,221,0.1)', default=>'var(--orange-l)' };
@@ -216,7 +217,7 @@
                 <div><div class="slabel" style="font-size:8px;letter-spacing:2px;">Last Login</div><div style="font-size:13px;font-weight:500;">{{ $employee->user?->last_login_at ? \Carbon\Carbon::parse($employee->user->last_login_at)->diffForHumans() : 'Never' }}</div></div>
                 <div><div class="slabel" style="font-size:8px;letter-spacing:2px;">Account</div><div style="font-size:13px;font-weight:500;">{{ $employee->user?->is_active ? '✓ Active' : '✗ Suspended' }}</div></div>
             </div>
-            @if($isCsFamily && ($employee->work_start_time || $employee->work_end_time))
+            @if($hasShift && ($employee->work_start_time || $employee->work_end_time))
             <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(27,79,168,0.08);">
                 <div style="display:inline-flex;align-items:center;gap:8px;padding:8px 16px;border-radius:10px;background:var(--orange-l);">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--orange-dk)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -370,7 +371,7 @@
                         <label class="field-label">Salary (LE)</label>
                         <input type="number" name="salary" value="{{ $employee->salary }}" class="form-control" min="0" step="0.01">
                     </div>
-                    @if($isCsFamily)
+                    @if($hasShift)
                     <div class="field-group">
                         <label class="field-label">Shift Start</label>
                         <input type="time" name="work_start_time" value="{{ $employee->work_start_time ? \Carbon\Carbon::parse($employee->work_start_time)->format('H:i') : '' }}" class="form-control">
