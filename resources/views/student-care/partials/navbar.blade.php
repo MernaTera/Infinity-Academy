@@ -1,6 +1,6 @@
 <nav id="scNav" style="font-family:'DM Sans',sans-serif;position:sticky;top:0;z-index:50;
-     background:rgba(255,255,255,0.95);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-     border-bottom:1px solid rgba(27,79,168,0.08);transition:box-shadow 0.3s;">
+     background:rgba(255,255,255,0.55);backdrop-filter:blur(20px) saturate(165%);-webkit-backdrop-filter:blur(20px) saturate(165%);
+     border-bottom:1px solid rgba(255,255,255,0.5);">
 
 @once
 <link rel="icon" type="image/png" href="{{ asset('images/favicon.png') }}">
@@ -10,32 +10,23 @@
 
 <style>
 *::before,*::after{pointer-events:none;}
-#scNav.scrolled{background:rgba(255,255,255,0.99)!important;box-shadow:0 2px 20px rgba(27,79,168,0.08);}
+#scNav.scrolled{background:rgba(255,255,255,0.66)!important;}
 
-/* ═══════════════════════════════════════════════════════════════
-   CONTAINER
-═══════════════════════════════════════════════════════════════ */
 .anav-container{margin:0 auto;padding:0 clamp(12px,2vw,24px);}
 .anav-inner{display:flex;align-items:center;height:62px;gap:clamp(8px,1.5vw,14px);}
 
-/* ═══════════════════════════════════════════════════════════════
-   LOGO — subtle lift on hover, feels alive
-═══════════════════════════════════════════════════════════════ */
 .anav-logo{transition:transform 0.25s cubic-bezier(0.16,1,0.3,1),filter 0.25s;}
 .anav-logo:hover{transform:translateY(-1px) scale(1.02);filter:drop-shadow(0 2px 6px rgba(27,79,168,0.15));}
 
-/* ═══════════════════════════════════════════════════════════════
-   AVATAR + USER DROPDOWN
-═══════════════════════════════════════════════════════════════ */
-.anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(245,145,30,0.08);
-    border:1.5px solid rgba(245,145,30,0.25);display:flex;align-items:center;justify-content:center;
+.anav-avatar{width:34px;height:34px;border-radius:50%;background:rgba(30, 69, 245, 0.1);
+    border:1.5px solid rgba(71, 99, 192, 0.25);display:flex;align-items:center;justify-content:center;
     transition:border-color 0.2s,transform 0.2s;flex-shrink:0;cursor:pointer;}
-.anav-avatar:hover{border-color:#F5911E;transform:scale(1.05);}
+.anav-avatar:hover{border-color:rgba(30, 69, 245, 0.5);transform:scale(1.05);}
 .anav-avatar:active{transform:scale(0.96);}
 .nav-dropdown{display:none;position:absolute;right:0;top:calc(100% + 10px);
-    background:rgba(255,255,255,0.99);backdrop-filter:blur(16px);
-    border:1px solid rgba(27,79,168,0.1);border-radius:8px;
-    box-shadow:0 12px 40px rgba(27,79,168,0.12);min-width:200px;overflow:hidden;z-index:999;}
+    background:#F8F6F2;backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.6);border-radius:14px;
+    box-shadow:0 16px 44px rgba(23,45,90,0.16);min-width:200px;overflow:hidden;z-index:999;}
 .nav-dropdown.open{display:block;animation:dropIn 0.22s cubic-bezier(0.16,1,0.3,1) both;}
 @keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(0.98)}to{opacity:1;transform:none}}
 .nav-dropdown-item{display:flex;align-items:center;gap:8px;padding:10px 16px;font-size:10px;letter-spacing:2px;
@@ -44,47 +35,39 @@
 .nav-dropdown-item:hover{color:#1B4FA8;background:rgba(27,79,168,0.05);text-decoration:none;padding-left:20px;}
 .nav-dropdown-item.danger:hover{color:#DC2626;background:rgba(220,38,38,0.05);}
 
-/* ═══════════════════════════════════════════════════════════════
-   BELL PANEL
-═══════════════════════════════════════════════════════════════ */
 #abellPanel{display:none;position:absolute;right:0;top:calc(100% + 10px);
-    width:320px;max-width:calc(100vw - 32px);background:rgba(255,255,255,0.99);
-    backdrop-filter:blur(16px);border:1px solid rgba(27,79,168,0.1);border-radius:8px;
-    box-shadow:0 12px 40px rgba(27,79,168,0.12);overflow:hidden;z-index:999;}
+    width:320px;max-width:calc(100vw - 32px);background:#F8F6F2;
+    backdrop-filter:blur(26px) saturate(180%);-webkit-backdrop-filter:blur(26px) saturate(180%);
+    border:1px solid rgba(255,255,255,0.6);border-radius:14px;
+    box-shadow:0 16px 44px rgba(23,45,90,0.16);overflow:hidden;z-index:999;}
 .bell-badge-dot{position:absolute;top:5px;right:5px;width:7px;height:7px;
     border-radius:50%;background:#F5911E;border:1.5px solid #fff;display:none;
     animation:pulseDot 1.8s ease-in-out infinite;}
-@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(245,145,30,0.5)}50%{box-shadow:0 0 0 4px rgba(245,145,30,0)}}
+@keyframes pulseDot{0%,100%{box-shadow:0 0 0 0 rgba(20, 52, 158, 0.5)}50%{box-shadow:0 0 0 4px rgba(245,145,30,0)}}
 .nav-bell-btn{background:none;border:none;cursor:pointer;padding:7px;color:#AAB8C8;
     position:relative;transition:color 0.2s,transform 0.15s;display:flex;align-items:center;border-radius:8px;}
-.nav-bell-btn:hover{color:#F5911E;background:rgba(245,145,30,0.06);}
+.nav-bell-btn:hover{color:#F5911E;background:rgba(30, 69, 245, 0.06);}
 .nav-bell-btn:active{transform:scale(0.92);}
 .nav-bell-btn.ringing svg{animation:ring 0.5s ease;}
 @keyframes ring{0%,100%{transform:rotate(0)}20%{transform:rotate(14deg)}40%{transform:rotate(-10deg)}60%{transform:rotate(6deg)}80%{transform:rotate(-4deg)}}
 
-/* ═══════════════════════════════════════════════════════════════
-   SIDEBAR TOGGLE + HAMBURGER
-═══════════════════════════════════════════════════════════════ */
-.sb-nav-toggle{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
+.sb-nav-toggle{background:none;border:1px solid rgba(27,79,168,0.14);border-radius:8px;cursor:pointer;
     padding:6px 8px;color:#AAB8C8;transition:all 0.2s;display:flex;align-items:center;justify-content:center;}
-.sb-nav-toggle:hover{background:rgba(27,79,168,0.04);color:#1B4FA8;border-color:rgba(27,79,168,0.2);}
-.nav-hamburger{background:none;border:1px solid rgba(27,79,168,0.12);border-radius:6px;cursor:pointer;
+.sb-nav-toggle:hover{background:rgba(27,79,168,0.06);color:#1B4FA8;border-color:rgba(27,79,168,0.25);}
+.nav-hamburger{background:none;border:1px solid rgba(27,79,168,0.14);border-radius:8px;cursor:pointer;
     padding:8px;display:none;flex-direction:column;gap:5px;align-items:center;justify-content:center;
     transition:background 0.2s,border-color 0.2s;}
-.nav-hamburger:hover{background:rgba(27,79,168,0.04);border-color:rgba(27,79,168,0.2);}
+.nav-hamburger:hover{background:rgba(27,79,168,0.06);border-color:rgba(27,79,168,0.25);}
 .nav-ham-line{display:block;width:20px;height:1.5px;background:#7A8A9A;
     transition:all 0.32s cubic-bezier(0.65,0,0.35,1);transform-origin:center;}
 
-/* ═══════════════════════════════════════════════════════════════
-   MOBILE DRAWER — full concept: slide-in panel + backdrop
-═══════════════════════════════════════════════════════════════ */
 .amobile-backdrop{position:fixed;inset:0;background:rgba(10,20,40,0.42);backdrop-filter:blur(2px);
     z-index:59;opacity:0;pointer-events:none;transition:opacity 0.28s ease;}
 .amobile-backdrop.open{opacity:1;pointer-events:auto;}
 
 .amobile-menu{position:fixed;top:0;right:0;height:100vh;width:min(320px,86vw);z-index:60;
-    background:rgba(255,255,255,0.99);backdrop-filter:blur(18px);
-    box-shadow:-8px 0 34px rgba(27,79,168,0.14);
+    background:rgba(255,255,255,0.9);backdrop-filter:blur(22px) saturate(160%);-webkit-backdrop-filter:blur(22px) saturate(160%);
+    box-shadow:-8px 0 34px rgba(23,45,90,0.16);
     transform:translateX(100%);transition:transform 0.32s cubic-bezier(0.16,1,0.3,1);
     display:flex;flex-direction:column;overflow:hidden;}
 .amobile-menu.open{transform:translateX(0);}
@@ -104,7 +87,6 @@
 .amobile-scroll{flex:1;overflow-y:auto;padding:6px 0 10px;scrollbar-width:thin;
     scrollbar-color:rgba(27,79,168,0.15) transparent;}
 
-/* Accordion groups */
 .amgroup{border-bottom:1px solid rgba(27,79,168,0.05);}
 .amgroup-head{width:100%;background:none;border:none;cursor:pointer;display:flex;align-items:center;
     justify-content:space-between;padding:12px 18px;font-family:'DM Sans',sans-serif;
@@ -134,9 +116,6 @@
     font-family:'DM Sans',sans-serif;font-weight:600;transition:all 0.2s;}
 .amobile-logout:hover{background:rgba(220,38,38,0.06);}
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE — unified breakpoint w/ sidebar's 768px collapse
-═══════════════════════════════════════════════════════════════ */
 .anav-desktop-user-name{display:flex;}
 @media(max-width:768px){
     .anav-desktop-user-name{display:none!important;}
@@ -149,31 +128,24 @@
 <div class="anav-container">
     <div class="anav-inner">
 
-        {{-- Sidebar toggle (desktop only) --}}
         <button class="sb-nav-toggle" onclick="toggleSidebar()" title="Toggle sidebar">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
             </svg>
         </button>
 
-        {{-- Hamburger (mobile only — opens the full drawer) --}}
         <button class="nav-hamburger" onclick="openMobileNav()" id="navHamburger" aria-label="Open menu">
             <span class="nav-ham-line" id="hl1"></span>
             <span class="nav-ham-line" id="hl2"></span>
             <span class="nav-ham-line" id="hl3"></span>
         </button>
 
-        {{-- Logo → Dashboard --}}
         <a href="{{ route('student-care.dashboard') }}" class="anav-logo" style="text-decoration:none;flex-shrink:0;" title="Go to Dashboard">
             <img src="{{ asset('images/logo.png') }}" alt="Infinity" style="height:34px;width:auto;display:block;">
         </a>
 
-        {{-- ═══════════════════════════════════════════════════════
-             RIGHT — Bell + User menu
-        ═══════════════════════════════════════════════════════ --}}
         <div style="display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;">
 
-            {{-- Bell --}}
             <div style="position:relative;" id="abellWrap">
                 <button class="nav-bell-btn" onclick="toggleBell()" id="navBellBtn">
                     <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -263,7 +235,6 @@
                 </div>
             </div>
 
-            {{-- User menu (desktop dropdown) --}}
             <div style="position:relative;" id="auserMenuWrap">
                 <button onclick="toggleUserMenu()"
                         style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:8px;
@@ -271,13 +242,13 @@
                         onmouseover="this.style.background='rgba(27,79,168,0.03)'"
                         onmouseout="this.style.background='transparent'">
                     <div class="anav-avatar">
-                        <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:#C47010;letter-spacing:1px;">
+                        <span style="font-family:'Bebas Neue',sans-serif;font-size:15px;color:rgba(30, 69, 245, 0.8);letter-spacing:1px;">
                             {{ strtoupper(substr(Auth::user()->name ?? 'A', 0, 1)) }}
                         </span>
                     </div>
                     <div class="anav-desktop-user-name" style="flex-direction:column;align-items:flex-start;line-height:1;">
                         <span style="font-size:12px;font-weight:600;color:#1A2A4A;white-space:nowrap;max-width:110px;overflow:hidden;text-overflow:ellipsis;">{{ Auth::user()->name ?? '' }}</span>
-                        <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#C47010;margin-top:2px;">Student Care</span>
+                        <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1B4FA8;margin-top:2px;">Student Care</span>
                     </div>
                     <svg style="color:#AAB8C8;flex-shrink:0;" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
                 </button>
@@ -303,10 +274,7 @@
     </div>
 </div>
 </nav>
-{{-- ═══════════════════════════════════════════════════════════════
-     MOBILE DRAWER — mirrors every link in the sidebar (26 total),
-     grouped exactly like the sidebar, as a smooth accordion.
-═══════════════════════════════════════════════════════════════ --}}
+
 <div class="amobile-backdrop" id="amobileBackdrop" onclick="closeMobileNav()"></div>
 
 <div class="amobile-menu" id="amobileMenu">
@@ -336,7 +304,6 @@
 
     <div class="amobile-scroll">
 
-        {{-- Overview --}}
         <div class="amgroup" data-group>
             <button class="amgroup-head" onclick="toggleAmGroup(this)">Overview
                 <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
@@ -349,9 +316,8 @@
             </div>
         </div>
 
-        {{-- Enrollment --}}
         <div class="amgroup" data-group>
-            <button class="amgroup-head" onclick="toggleAmGroup(this)">Enrollment 
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Enrollment
                 <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
             </button>
             <div class="amgroup-body">
@@ -362,7 +328,6 @@
             </div>
         </div>
 
-        {{-- Courses --}}
         <div class="amgroup" data-group>
             <button class="amgroup-head" onclick="toggleAmGroup(this)">Courses
                 <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
@@ -408,16 +373,11 @@
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════
-   SCROLL SHADOW
-═══════════════════════════════════════════════════════════════ */
+
 window.addEventListener('scroll',()=>{
     document.getElementById('scNav')?.classList.toggle('scrolled',window.scrollY>10);
 },{passive:true});
 
-/* ═══════════════════════════════════════════════════════════════
-   MOBILE DRAWER OPEN/CLOSE
-═══════════════════════════════════════════════════════════════ */
 let mobileNavOpen=false;
 function openMobileNav(){
     mobileNavOpen=true;
@@ -433,7 +393,6 @@ function openMobileNav(){
     document.getElementById('auserMenuPanel')?.classList.remove('open');
     document.getElementById('abellPanel').style.display='none';
 
-    // auto-open the group containing the active link, collapse the rest
     document.querySelectorAll('.amgroup').forEach(g=>{
         const hasActive=g.querySelector('.amobile-nav-link.active');
         setAmGroup(g,!!hasActive || g===document.querySelector('.amgroup'));
@@ -447,7 +406,6 @@ function closeMobileNav(){
     [document.getElementById('hl1'),document.getElementById('hl2'),document.getElementById('hl3')].forEach(l=>l.style.cssText='');
 }
 
-/* Accordion groups inside the drawer */
 function setAmGroup(group,open){
     const body=group.querySelector('.amgroup-body');
     group.classList.toggle('open',open);
@@ -458,9 +416,6 @@ function toggleAmGroup(btn){
     setAmGroup(group,!group.classList.contains('open'));
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   BELL TOGGLE
-═══════════════════════════════════════════════════════════════ */
 function toggleBell(){
     const p=document.getElementById('abellPanel');
     const open=p.style.display==='block';
@@ -469,17 +424,11 @@ function toggleBell(){
     if(!open)p.style.animation='dropIn 0.2s ease both';
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   USER MENU TOGGLE
-═══════════════════════════════════════════════════════════════ */
 function toggleUserMenu(){
     document.getElementById('auserMenuPanel').classList.toggle('open');
     document.getElementById('abellPanel').style.display='none';
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   CLOSE DROPDOWNS ON OUTSIDE CLICK / ESC
-═══════════════════════════════════════════════════════════════ */
 document.addEventListener('click',(e)=>{
     if(!document.getElementById('abellWrap')?.contains(e.target))
         document.getElementById('abellPanel').style.display='none';
@@ -490,9 +439,6 @@ document.addEventListener('keydown',(e)=>{
     if(e.key==='Escape' && mobileNavOpen) closeMobileNav();
 });
 
-/* ═══════════════════════════════════════════════════════════════
-   NOTIFICATIONS: BADGE + MARK-AS-READ + SOUND + TOAST
-═══════════════════════════════════════════════════════════════ */
 const unread={{isset($navUnreadCount)?(int)$navUnreadCount:0}};
 if(unread>0)document.getElementById('abellBadge').style.display='block';
 
@@ -510,15 +456,14 @@ async function markRead(id){
 
 const prevUnread={{$navPrevUnread??0}};
 if(unread>prevUnread){
-    // Ring the bell icon
+
     const bellBtn=document.getElementById('navBellBtn');
     if(bellBtn){ bellBtn.classList.add('ringing'); setTimeout(()=>bellBtn.classList.remove('ringing'),600); }
 
-    // Pleasant two-note chime (soft, not harsh)
     try{
         const ctx=new(window.AudioContext||window.webkitAudioContext)();
         const now=ctx.currentTime;
-        [[784,0],[1047,0.09]].forEach(([f,t])=>{      // G5 → C6
+        [[784,0],[1047,0.09]].forEach(([f,t])=>{
             const o=ctx.createOscillator(),g=ctx.createGain();
             o.type='sine'; o.frequency.value=f;
             o.connect(g); g.connect(ctx.destination);
@@ -538,7 +483,6 @@ if(unread>prevUnread){
     showInfToast(@json($rtTitle), @json($rtMsg), @json($rtUrl), @json($rtType));
 }
 
-/* ─── Premium notification toast: detailed, clickable, animated, fast ─── */
 function showInfToast(title, message, url, type){
     const P={
         installment_request:{c:'#F5911E',g:'#FFB347'}, installment_approved:{c:'#059669',g:'#34D399'}, installment_rejected:{c:'#DC2626',g:'#F87171'},
@@ -558,7 +502,6 @@ function showInfToast(title, message, url, type){
     const clickable=url&&url!=='#';
     const esc=s=>{const d=document.createElement('div');d.textContent=s==null?'':String(s);return d.innerHTML;};
 
-    // container (stacks multiple toasts)
     let host=document.getElementById('inf-toast-host');
     if(!host){host=document.createElement('div');host.id='inf-toast-host';
         host.style.cssText='position:fixed;bottom:22px;right:22px;z-index:99999;display:flex;flex-direction:column;gap:10px;align-items:flex-end;';
@@ -590,7 +533,6 @@ function showInfToast(title, message, url, type){
     t.querySelector('.inf-toast-x').addEventListener('click',e=>{e.stopPropagation();kill();});
     if(clickable) t.addEventListener('click',()=>{ window.location=url; });
 
-    // auto-dismiss with a visible progress bar; pause on hover
     const LIFE=6000; const bar=t.querySelector('.inf-toast-progress i');
     bar.style.animation=`infToastLife ${LIFE}ms linear forwards`;
     let timer=setTimeout(kill,LIFE);
@@ -633,7 +575,7 @@ function showInfToast(title, message, url, type){
 .inf-toast-progress i{display:block;height:100%;width:100%;background:linear-gradient(90deg,var(--ac),var(--ac2));transform-origin:left;}
 @keyframes infToastLife{from{width:100%}to{width:0%}}
 @keyframes infIcPop{0%{transform:scale(0.4);opacity:0}60%{transform:scale(1.12)}100%{transform:scale(1);opacity:1}}
-/* legacy keyframes kept in case other code references them */
+
 @keyframes toastIn{from{opacity:0;transform:translateX(20px) scale(0.96)}to{opacity:1;transform:none}}
 @keyframes toastOut{to{opacity:0;transform:translateX(20px) scale(0.96)}}
 </style>
