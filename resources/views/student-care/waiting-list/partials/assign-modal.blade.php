@@ -242,6 +242,7 @@
                     @endphp
                     <label class="assign-instance-card {{ $isDisabled ? 'is-full' : '' }}"
                         data-course-type="{{ $instance->type }}"
+                        data-delivery-mood="{{ $instance->delivery_mood }}"
                         onclick="{{ $isDisabled ? '' : "selectInstance(this, '{$instance->course_instance_id}')" }}">
 
                         <input class="assign-card-radio" type="radio"

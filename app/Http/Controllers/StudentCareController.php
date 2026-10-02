@@ -38,7 +38,9 @@ class StudentCareController extends Controller
             'enrollment.student.phones',
             'enrollment.courseTemplate',
             'enrollment.level'
-        ])->get();
+        ])->get()
+          ->sortByDesc(fn($w) => $w->enrollment->enrollment_id)
+          ->values();
 
         $instances = CourseInstance::with([
             'courseTemplate',

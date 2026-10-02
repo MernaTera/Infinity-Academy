@@ -12,179 +12,168 @@
 @endonce
 
 <style>
+    :root {
+        --blue:#1B4FA8; --blue-2:#2D6FDB; --orange:#F5911E; --orange-dk:#C47010;
+        --green:#059669; --green-dk:#15803D; --purple:#7C3AED; --red:#DC2626;
+        --text:#16233F; --muted:#5A6A85; --faint:#93A3BC;
+        --card:rgba(255,255,255,0.5); --border:rgba(255,255,255,0.6);
+        --glass-sh:0 8px 30px rgba(23,45,90,0.07);
+        --bg:#F8F6F2;
+    }
+    * { box-sizing:border-box; }
     body, .wl-page * { font-family: 'DM Sans', sans-serif; }
-    /* body { min-width: fit-content; } */
 
     .wl-page {
-
-        min-height: 100vh;
-
-        color: #1A2A4A;
-        overflow-: hidden;
+        position:relative; overflow:hidden;
+        margin:-30px; padding:30px 34px 44px;
+        min-height:calc(100vh - 62px);
+        background:var(--bg); color:var(--text);
     }
+    @media (max-width:600px){ .wl-page{ margin:-30px; padding:18px 16px 32px; } }
+
+    .orb{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2{ width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3{ width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
+    .wl-page > *:not(.orb){ position:relative; z-index:1; }
 
     .page-header {
-        display: flex; align-items: flex-end; justify-content: space-between;
-        margin-bottom: 28px; padding-bottom: 20px;
-        border-bottom: 1px solid rgba(27,79,168,0.1);
-        flex-wrap: wrap; gap: 16px;
+        display:flex; align-items:flex-end; justify-content:space-between;
+        margin-bottom:22px; padding-bottom:18px;
+        border-bottom:1px solid rgba(27,79,168,0.1);
+        flex-wrap:wrap; gap:16px;
     }
-    .page-eyebrow  { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #F5911E; margin-bottom: 4px; }
-    .page-title    { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 4px; color: #1B4FA8; line-height: 1; }
-    .page-subtitle { font-size: 12px; color: #7A8A9A; margin-top: 4px; }
+    .page-eyebrow  { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue); font-weight:600; margin-bottom:7px; }
+    .page-title    { font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:2px; color:var(--text); line-height:0.95; }
+    .page-subtitle { font-size:12px; color:var(--muted); margin-top:7px; }
 
     .stats-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-        gap: 12px; margin-bottom: 22px;
+        display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr));
+        gap:12px; margin-bottom:22px;
     }
     .stat-card {
-        background: rgba(255,255,255,0.75); backdrop-filter: blur(10px);
-        border: 1px solid rgba(27,79,168,0.1); border-radius: 6px;
-        padding: 14px 16px; position: relative; overflow: hidden;
-        box-shadow: 0 2px 10px rgba(27,79,168,0.04);
-        cursor: pointer; transition: all 0.25s;
+        background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%);
+        border:1px solid var(--border); border-radius:16px;
+        padding:16px 18px; position:relative; overflow:hidden;
+        box-shadow:var(--glass-sh); cursor:pointer; transition:transform .2s, box-shadow .2s;
     }
-    .stat-card::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-        background: linear-gradient(90deg, transparent, var(--accent, #1B4FA8), transparent);
-    }
-    .stat-card:hover         { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(27,79,168,0.1); }
-    .stat-card.active-filter { box-shadow: 0 0 0 2px var(--accent); transform: translateY(-2px); }
-    .stat-label { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #7A8A9A; margin-bottom: 6px; }
-    .stat-value { font-family: 'Bebas Neue', sans-serif; font-size: 26px; letter-spacing: 2px; color: var(--accent, #1B4FA8); line-height: 1; }
 
-    .toolbar {
-        display: flex; align-items: center; gap: 10px;
-        margin-bottom: 16px; flex-wrap: wrap;
-    }
-    .search-wrap { position: relative; flex: 1; min-width: 220px; max-width: 360px; }
-    .search-wrap svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); pointer-events: none; }
+    .stat-card:hover         { transform:translateY(-3px); box-shadow:0 16px 38px rgba(23,45,90,0.13); }
+    .stat-card.active-filter { box-shadow:0 0 0 2px var(--accent); transform:translateY(-3px); }
+    .stat-label { font-size:10px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:6px; }
+    .stat-value { font-family:'Bebas Neue',sans-serif; font-size:30px; letter-spacing:1px; color:var(--accent,#1B4FA8); line-height:1; }
+
+    .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+    .search-wrap { position:relative; flex:1; min-width:220px; max-width:360px; }
+    .search-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); pointer-events:none; }
     .search-input {
-        width: 100%; padding: 10px 14px 10px 40px;
-        background: rgba(255,255,255,0.8);
-        border: 1px solid rgba(27,79,168,0.12); border-radius: 6px;
-        font-family: 'DM Sans', sans-serif; font-size: 13px;
-        color: #1A2A4A; outline: none;
-        transition: border-color 0.3s, box-shadow 0.3s;
+        width:100%; padding:11px 14px 11px 40px;
+        background:var(--card); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+        border:1px solid var(--border); border-radius:12px;
+        font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none;
+        transition:border-color .3s, box-shadow .3s;
     }
-    .search-input:focus { border-color: #1B4FA8; box-shadow: 0 0 0 3px rgba(27,79,168,0.08); }
+    .search-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.08); }
 
     .filter-select {
-        padding: 9px 32px 9px 12px;
-        background: rgba(255,255,255,0.8);
-        border: 1px solid rgba(27,79,168,0.12); border-radius: 6px;
-        font-family: 'DM Sans', sans-serif; font-size: 12px;
-        color: #4A5A7A; outline: none; cursor: pointer;
-        appearance: none; -webkit-appearance: none;
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%237A8A9A'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-        background-repeat: no-repeat; background-position: right 10px center;
-        background-color: rgba(255,255,255,0.8);
-        transition: border-color 0.3s;
+        padding:10px 32px 10px 12px;
+        background-color:var(--card); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+        border:1px solid var(--border); border-radius:12px;
+        font-family:'DM Sans',sans-serif; font-size:12px; color:var(--muted); outline:none; cursor:pointer;
+        appearance:none; -webkit-appearance:none;
+        background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%237A8A9A'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+        background-repeat:no-repeat; background-position:right 10px center;
+        transition:border-color .3s;
     }
-    .filter-select:focus { border-color: #1B4FA8; }
+    .filter-select:focus { border-color:var(--blue); }
 
-    /* keep the search box wide, then lay the four filters out inline,
-       each taking an equal share of the remaining row instead of
-       stacking full-width (the global app-select wrapper is 100% wide
-       by default, which is what pushed them onto separate lines) */
     .toolbar .app-select,
-    .toolbar > .filter-select {
-        flex: 1 1 150px;
-        min-width: 140px;
-        max-width: 260px;
-    }
+    .toolbar > .filter-select { flex:1 1 150px; min-width:140px; max-width:260px; }
 
     .table-card {
-        min-height: 400px; background: rgba(255,255,255,0.75);
-        backdrop-filter: blur(10px); border: 1px solid rgba(27,79,168,0.1);
-        border-radius: 6px; overflow: visible;
-        box-shadow: 0 4px 24px rgba(27,79,168,0.06);
+        min-height:400px;
+        background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%);
+        border:1px solid var(--border); border-radius:20px; overflow:visible;
+        box-shadow:var(--glass-sh);
     }
-    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .table-card table { width: 100%; border-collapse: collapse; min-width: 960px; }
-    .table-card thead tr { border-bottom: 1px solid rgba(27,79,168,0.08); }
+    .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:20px; }
+    .table-card table { width:100%; border-collapse:collapse; min-width:960px; }
+    .table-card thead tr { border-bottom:1px solid var(--border); }
     .table-card thead th {
-        padding: 12px 14px; font-size: 9px; letter-spacing: 2.5px;
-        text-transform: uppercase; color: #7A8A9A; font-weight: 500;
-        white-space: nowrap; background: rgba(27,79,168,0.02); text-align: left;
+        padding:13px 16px; font-size:9px; letter-spacing:2px;
+        text-transform:uppercase; color:var(--muted); font-weight:600;
+        white-space:nowrap; background:rgba(255,255,255,0.4); text-align:left;
     }
-    .table-card tbody tr { border-bottom: 1px solid rgba(27,79,168,0.04); transition: background 0.2s; }
-    .table-card tbody tr:hover { background: rgba(27,79,168,0.025); }
-    .table-card tbody tr:last-child { border-bottom: none; }
-    .table-card tbody td { padding: 12px 14px; font-size: 13px; color: #4A5A7A; vertical-align: middle; }
+    .table-card tbody tr { border-bottom:1px solid rgba(27,79,168,0.06); transition:background .15s; }
+    .table-card tbody tr:hover { background:rgba(27,79,168,0.04); }
+    .table-card tbody tr:last-child { border-bottom:none; }
+    .table-card tbody td { padding:13px 16px; font-size:13px; color:var(--muted); vertical-align:middle; }
 
-    .lead-name  { font-weight: 500; color: #1A2A4A; font-size: 13px; }
-    .lead-sub   { font-size: 11px; color: #7A8A9A; margin-top: 2px; }
+    .lead-name  { font-weight:600; color:var(--text); font-size:13px; }
+    .lead-sub   { font-size:11px; color:var(--muted); margin-top:2px; }
 
     .tag {
-        display: inline-block; font-size: 9px; letter-spacing: 1px;
-        padding: 2px 8px; border-radius: 3px; white-space: nowrap;
-        text-transform: uppercase; font-weight: 500; margin-bottom: 3px;
+        display:inline-block; font-size:9px; letter-spacing:1px;
+        padding:2px 8px; border-radius:6px; white-space:nowrap;
+        text-transform:uppercase; font-weight:600; margin-bottom:3px;
     }
-    .tag-course  { background: rgba(27,79,168,0.07);  border: 1px solid rgba(27,79,168,0.15);  color: #1B4FA8; }
-    .tag-level   { background: rgba(245,145,30,0.07); border: 1px solid rgba(245,145,30,0.2);  color: #C47010; }
-    .tag-group   { background: rgba(27,79,168,0.05);  border: 1px solid rgba(27,79,168,0.12);  color: #2D6FDB; }
-    .tag-private { background: rgba(245,145,30,0.05); border: 1px solid rgba(245,145,30,0.15); color: #C47010; }
-    .tag-online  { background: rgba(21,128,61,0.05);  border: 1px solid rgba(21,128,61,0.15);  color: #15803D; }
-    .tag-offline { background: rgba(122,138,154,0.06);border: 1px solid rgba(122,138,154,0.15);color: #7A8A9A; }
+    .tag-course  { background:rgba(27,79,168,0.07);  border:1px solid rgba(27,79,168,0.15);  color:var(--blue); }
+    .tag-level   { background:rgba(245,145,30,0.07); border:1px solid rgba(245,145,30,0.2);  color:var(--orange-dk); }
+    .tag-group   { background:rgba(27,79,168,0.05);  border:1px solid rgba(27,79,168,0.12);  color:var(--blue-2); }
+    .tag-private { background:rgba(245,145,30,0.05); border:1px solid rgba(245,145,30,0.15); color:var(--orange-dk); }
+    .tag-online  { background:rgba(5,150,105,0.06);  border:1px solid rgba(5,150,105,0.15);  color:var(--green-dk); }
+    .tag-offline { background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.15);color:var(--muted); }
 
     .status-badge {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase;
-        padding: 4px 9px; border-radius: 3px; white-space: nowrap; font-weight: 500;
+        display:inline-flex; align-items:center; gap:5px;
+        font-size:9px; letter-spacing:1.2px; text-transform:uppercase;
+        padding:4px 10px; border-radius:20px; white-space:nowrap; font-weight:600;
     }
-    .status-badge::before {
-        content: ''; width: 4px; height: 4px; border-radius: 50%;
-        background: currentColor; flex-shrink: 0;
-    }
-    .status-active    { color: #C47010; background: rgba(245,145,30,0.08); border: 1px solid rgba(245,145,30,0.25); }
-    .status-assigned  { color: #15803D; background: rgba(21,128,61,0.08);  border: 1px solid rgba(21,128,61,0.2); }
-    .status-cancelled { color: #DC2626; background: rgba(220,38,38,0.06);  border: 1px solid rgba(220,38,38,0.2); }
-    .status-wl-default{ color: #7A8A9A; background: rgba(122,138,154,0.08);border: 1px solid rgba(122,138,154,0.2); }
+    .status-badge::before { content:''; width:4px; height:4px; border-radius:50%; background:currentColor; flex-shrink:0; }
+    .status-active    { color:var(--orange-dk); background:rgba(245,145,30,0.1); }
+    .status-assigned  { color:var(--green-dk); background:rgba(5,150,105,0.1); }
+    .status-cancelled { color:var(--red); background:rgba(220,38,38,0.08); }
+    .status-wl-default{ color:var(--muted); background:rgba(122,138,154,0.1); }
 
-    .action-group { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .action-group { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
     .btn-action {
-        display: inline-flex; align-items: center; gap: 4px;
-        padding: 5px 11px; font-size: 9px; letter-spacing: 1.5px;
-        text-transform: uppercase; border-radius: 3px;
-        font-family: 'DM Sans', sans-serif; font-weight: 500;
-        border: 1px solid; background: transparent; cursor: pointer;
-        transition: all 0.25s; white-space: nowrap;
+        display:inline-flex; align-items:center; gap:4px;
+        padding:6px 12px; font-size:9px; letter-spacing:1.5px;
+        text-transform:uppercase; border-radius:8px;
+        font-family:'DM Sans',sans-serif; font-weight:600;
+        border:1px solid; background:transparent; cursor:pointer;
+        transition:all .2s; white-space:nowrap;
     }
-    .btn-assign    { color: #1B4FA8; border-color: rgba(27,79,168,0.25); }
-    .btn-assign:hover { background: rgba(27,79,168,0.07); border-color: #1B4FA8; }
-    .btn-cancel-wl { color: #DC2626; border-color: rgba(220,38,38,0.2); }
-    .btn-cancel-wl:hover { background: rgba(220,38,38,0.06); border-color: rgba(220,38,38,0.5); }
+    .btn-assign    { color:var(--blue); border-color:rgba(27,79,168,0.25); }
+    .btn-assign:hover { background:rgba(27,79,168,0.07); border-color:var(--blue); }
+    .btn-cancel-wl { color:var(--red); border-color:rgba(220,38,38,0.2); }
+    .btn-cancel-wl:hover { background:rgba(220,38,38,0.06); border-color:rgba(220,38,38,0.5); }
 
-    .empty-state { padding: 60px 24px; text-align: center; }
-    .empty-state svg { margin: 0 auto 14px; opacity: 0.2; }
-    .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 4px; color: #7A8A9A; margin-bottom: 6px; }
-    .empty-sub   { font-size: 12px; color: #AAB8C8; }
+    .empty-state { padding:60px 24px; text-align:center; }
+    .empty-state svg { margin:0 auto 14px; opacity:0.2; }
+    .empty-title { font-family:'Bebas Neue',sans-serif; font-size:18px; letter-spacing:4px; color:var(--muted); margin-bottom:6px; }
+    .empty-sub   { font-size:12px; color:var(--faint); }
 
-    .pagination-wrap { margin-top: 20px; }
+    .pagination-wrap { margin-top:20px; }
     .pagination-wrap .page-link {
-        background: rgba(255,255,255,0.8) !important;
-        border: 1px solid rgba(27,79,168,0.12) !important;
-        color: #7A8A9A !important; font-size: 11px; letter-spacing: 1px;
-        border-radius: 4px !important; padding: 6px 12px; transition: all 0.2s;
+        background:var(--card) !important; border:1px solid var(--border) !important;
+        color:var(--muted) !important; font-size:11px; letter-spacing:1px;
+        border-radius:8px !important; padding:6px 12px; transition:all .2s;
     }
     .pagination-wrap .page-link:hover {
-        background: rgba(27,79,168,0.06) !important;
-        color: #1B4FA8 !important; border-color: rgba(27,79,168,0.3) !important;
+        background:rgba(27,79,168,0.06) !important; color:var(--blue) !important; border-color:rgba(27,79,168,0.3) !important;
     }
     .pagination-wrap .page-item.active .page-link {
-        background: transparent !important; border-color: #1B4FA8 !important;
-        color: #1B4FA8 !important; font-weight: 600 !important;
+        background:transparent !important; border-color:var(--blue) !important; color:var(--blue) !important; font-weight:600 !important;
     }
 
-    @media (max-width: 768px) { .wl-page { padding: 20px 14px; } }
-    @media (max-width: 480px) { .page-header { flex-direction: column; align-items: flex-start; } }
+    @media (max-width:480px) { .page-header { flex-direction:column; align-items:flex-start; } }
 </style>
 
 <div class="wl-page">
 
-    {{-- ── HEADER ── --}}
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
     <div class="page-header">
         <div>
             <div class="page-eyebrow">Student Care</div>
@@ -201,7 +190,6 @@
         </div>
     </div>
 
-    {{-- ── STATS ── --}}
     @php
         $countActive    = $waiting->where('status', 'Active')->count();
         $countAssigned  = $waiting->where('status', 'Assigned')->count();
@@ -225,10 +213,7 @@
             <div class="stat-label">Assigned</div>
             <div class="stat-value">{{ $countAssigned }}</div>
         </div>
-        <!-- <div class="stat-card" style="--accent:#DC2626;" onclick="filterByStatus('Cancelled')" data-filter="Cancelled">
-            <div class="stat-label">Cancelled</div>
-            <div class="stat-value">{{ $countCancelled }}</div>
-        </div> -->
+
         <div class="stat-card" style="--accent:#2D6FDB;" onclick="filterByDeliveryType('Group')" data-filter-dtype="Group">
             <div class="stat-label">Group</div>
             <div class="stat-value">{{ $countGroup }}</div>
@@ -247,7 +232,6 @@
         </div>
     </div>
 
-    {{-- ── TOOLBAR ── --}}
     <div class="toolbar">
         <div class="search-wrap">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="2">
@@ -262,7 +246,7 @@
             <option value="">All Statuses</option>
             <option value="Active">Active</option>
             <option value="Assigned">Assigned</option>
-            <!-- <option value="Cancelled">Cancelled</option> -->
+
         </select>
 
         <select class="filter-select" id="dtypeFilter" onchange="filterByDeliveryTypeSelect(this.value)">
@@ -285,7 +269,6 @@
         </select>
     </div>
 
-    {{-- ── TABLE ── --}}
     <div class="table-card">
         <div class="table-scroll">
             <table>
@@ -323,8 +306,8 @@
                             'Offline' => 'tag-offline',
                             default   => 'tag-offline',
                         };
-                        $phones      = $item->enrollment->student->phones ?? collect();
-                        $studentPhone = optional($phones->firstWhere('is_primary', true) ?? $phones->first())->phone_number;
+                        $phones      = ($item->enrollment->student->phones ?? collect())->sortByDesc(fn($p) => $p->is_primary)->values();
+                        $allPhones   = $phones->pluck('phone_number')->filter()->implode(' ');
                     @endphp
                     <tr data-status="{{ $item->status }}"
                         data-dtype="{{ $item->preferred_delivery_type }}"
@@ -332,20 +315,25 @@
                         data-ptype="{{ $item->preferred_type }}"
                         data-name="{{ strtolower($item->enrollment->student->full_name ?? '') }}"
                         data-sid="{{ $item->enrollment->student_id ?? '' }}"
-                        data-phone="{{ $studentPhone ?? '' }}"
+                        data-phone="{{ $allPhones }}"
                         data-days="{{ str_replace('_',' ',$item->preferred_days ?? '') }}">
 
-                        {{-- Student --}}
                         <td>
                             <div class="lead-name">{{ $item->enrollment->student->full_name ?? '—' }}</div>
                             <div class="lead-sub">ID: {{ $item->enrollment->student_id ?? '—' }}</div>
+                            @forelse($phones as $ph)
                             <div class="lead-sub" style="display:inline-flex;align-items:center;gap:4px;">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                                {{ $studentPhone ?? '—' }}
+                                {{ $ph->phone_number }}
                             </div>
+                            @empty
+                            <div class="lead-sub" style="display:inline-flex;align-items:center;gap:4px;">
+                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                —
+                            </div>
+                            @endforelse
                         </td>
 
-                        {{-- Course & Level --}}
                         <td>
                             @if($item->enrollment->courseTemplate ?? null)
                                 <span class="tag tag-course">{{ $item->enrollment->courseTemplate->name }}</span>
@@ -358,24 +346,20 @@
                             @endif
                         </td>
 
-                        {{-- Delivery Type --}}
                         <td>
                             <span class="tag {{ $dtypeClass }}">{{ $item->preferred_delivery_type }}</span>
                         </td>
 
-                        {{-- Mode --}}
                         <td>
                             <span class="tag {{ $modeClass }}">{{ $item->preferred_delivery_mood }}</span>
                         </td>
 
-                        {{-- Patch Preference --}}
                         <td>
                             <span style="font-size:11px;color:#4A5A7A;letter-spacing:0.5px;">
                                 {{ str_replace('_',' ',$item->preferred_type) }}
                             </span>
                         </td>
 
-                        {{-- Requested Patch --}}
                         <td>
                             @if($item->patch ?? null)
                                 <span style="font-size:12px;color:#1A2A4A;font-weight:500;">{{ $item->patch->name }}</span>
@@ -384,7 +368,6 @@
                             @endif
                         </td>
 
-                        {{-- Preferred Date --}}
                         <td>
                             @if($item->preferred_start_date)
                                 <span style="font-size:12px;color:#1A2A4A;font-weight:500;">
@@ -395,7 +378,6 @@
                             @endif
                         </td>
 
-                        {{-- Preferred Days (private only) --}}
                         <td>
                             @php
                                 $dayLabel = match($item->preferred_days ?? '') {
@@ -412,12 +394,10 @@
                             @endif
                         </td>
 
-                        {{-- Status --}}
                         <td>
                             <span class="status-badge {{ $statusClass }}">{{ $item->status }}</span>
                         </td>
 
-                        {{-- Notes --}}
                         <td>
                             @if($item->notes)
                                 <button type="button"
@@ -433,12 +413,11 @@
                             @endif
                         </td>
 
-                        {{-- Actions --}}
                         <td>
                             <div class="action-group">
                                 @if($item->status !== 'Assigned' && $item->status !== 'Cancelled')
                                 <button class="btn-action btn-assign"
-                                        onclick="openAssignModal({{ $item->waiting_id }}, '{{ $item->enrollment->enrollment_type ?? '' }}')">
+                                        onclick="openAssignModal({{ $item->waiting_id }}, '{{ $item->enrollment->enrollment_type ?? '' }}', '{{ $item->enrollment->delivery_mood ?? '' }}')">
                                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                         <polyline points="22 4 12 14.01 9 11.01"/>
@@ -448,17 +427,7 @@
                                 @endif
 
                                 @if($item->status !== 'Cancelled' && $item->status !== 'Assigned')
-                                <!-- <form method="POST" action="{{ route('student-care.waiting.cancel', $item->waiting_id) }}"
-                                      class="wl-cancel-form" style="display:inline;">
-                                    @csrf
-                                    <button type="submit" class="btn-action btn-cancel-wl">
-                                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <line x1="18" y1="6" x2="6" y2="18"/>
-                                            <line x1="6" y1="6" x2="18" y2="18"/>
-                                        </svg>
-                                        Cancel
-                                    </button>
-                                </form> -->
+
                                 @endif
 
                                 @if($item->status === 'Assigned')
@@ -494,7 +463,6 @@
 
 </div>
 
-{{-- Notes popup --}}
 <style>
     .notes-pill {
         display:inline-flex; align-items:center; gap:6px; max-width:200px;
@@ -611,33 +579,20 @@ function filterByDeliveryTypeSelect(val) { activeDtype  = val; applyFilters(); }
 function filterByModeSelect(val)         { activeMode   = val; applyFilters(); }
 function filterByPrefTypeSelect(val)     { activePtype  = val; applyFilters(); }
 
-// function assignStudent(id) {
-//     if (confirm('Assign this student?')) {
-//         fetch(`/student-care/waiting-list/${id}/assign`, {
-//             method: 'POST',
-//             headers: {
-//                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-//                 'Accept': 'application/json'
-//             }
-//         }).then(res => { if (res.ok) location.reload(); });
-//     }
-// }
-function openAssignModal(id, studentType) {
+function openAssignModal(id, studentType, studentMode) {
     document.getElementById('assign_waiting_id').value = id;
 
-    // Reset any prior selection
     document.getElementById('assign_instance_hidden').value = '';
     document.querySelectorAll('.assign-instance-card').forEach(c => c.classList.remove('selected'));
     document.querySelectorAll('.assign-card-radio').forEach(r => r.checked = false);
 
-    // ── Type validation: only show course instances whose type matches the
-    //    student's enrollment type (Private student → Private courses only,
-    //    Group student → Group courses only). ──
     let visibleCount = 0;
     document.querySelectorAll('.assign-instance-card').forEach(card => {
         const courseType = card.dataset.courseType || '';
-        // If we know the student's type, hide mismatched courses entirely.
-        if (studentType && courseType && courseType !== studentType) {
+        const courseMood = card.dataset.deliveryMood || '';
+        const typeMismatch = studentType && courseType && courseType !== studentType;
+        const moodMismatch = studentMode && courseMood && courseMood !== studentMode;
+        if (typeMismatch || moodMismatch) {
             card.style.display = 'none';
         } else {
             card.style.display = '';
@@ -645,18 +600,20 @@ function openAssignModal(id, studentType) {
         }
     });
 
-    // Show a type banner + handle the "no matching type" case
     const banner = document.getElementById('assign_type_banner');
     if (banner) {
-        banner.textContent = studentType
-            ? `Showing ${studentType} course instances only`
+        const parts = [];
+        if (studentType) parts.push(studentType);
+        if (studentMode) parts.push(studentMode);
+        banner.textContent = parts.length
+            ? `Showing ${parts.join(' · ')} course instances only`
             : 'Showing all course instances';
         banner.style.display = 'block';
     }
 
     const noMatch = document.getElementById('assign_no_type_match');
     if (noMatch) {
-        noMatch.style.display = (studentType && visibleCount === 0) ? 'block' : 'none';
+        noMatch.style.display = ((studentType || studentMode) && visibleCount === 0) ? 'block' : 'none';
     }
 
     document.getElementById('assignModal').style.display = 'flex';
@@ -666,7 +623,6 @@ function closeAssignModal() {
     document.getElementById('assignModal').style.display = 'none';
 }
 
-// Confirm before cancelling (the Cancel button is a real POST form now)
 document.addEventListener('DOMContentLoaded', function () {
     document.querySelectorAll('.wl-cancel-form').forEach(form => {
         form.addEventListener('submit', function (e) {
@@ -676,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
-// ── Notes popup ──
+
 function openNotes(btn){
     const note    = btn.getAttribute('data-note') || '';
     const student = btn.getAttribute('data-student') || 'Note';
