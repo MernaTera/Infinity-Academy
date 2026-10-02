@@ -2,13 +2,13 @@
 :root{
     --scsc-w: 230px;
     --scsc-w-col: 64px;
-    --scsc-bg: #fff;
+    --scsc-bg: rgba(255,255,255,0.5);
     --scsc-border: rgba(27,79,168,0.08);
     --scsc-blue: #1B4FA8;
     --scsc-orange: #F5911E;
-    --scsc-active-bg: rgba(27,79,168,0.06);
+    --scsc-active-bg: rgba(27,79,168,0.10);
     --scsc-active: #1B4FA8;
-    --scsc-hover-bg: rgba(27,79,168,0.03);
+    --scsc-hover-bg: rgba(27,79,168,0.06);
     --scsc-text: #5A6A7A;
     --scsc-transition: 0.25s cubic-bezier(0.16,1,0.3,1);
 }
@@ -17,7 +17,9 @@
     width: var(--scsc-w);
     flex-shrink: 0;
     background: var(--scsc-bg);
-    border-right: 1px solid var(--scsc-border);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-right: 1px solid rgba(255,255,255,0.5);
     position: sticky;
     top: 62px;
     height: calc(100vh - 62px);
@@ -26,10 +28,9 @@
     overflow: hidden;
     transition: width var(--scsc-transition);
     z-index: 40;
-    box-shadow: 2px 0 12px rgba(27,79,168,0.04);
     font-family: 'DM Sans', sans-serif;
 }
-/* ── COLLAPSED ── */
+
 #scSidebar.collapsed { width: var(--scsc-w-col); }
 #scSidebar.collapsed .sl-txt,
 #scSidebar.collapsed .sl-bdg { opacity:0; width:0; pointer-events:none; }
@@ -41,7 +42,6 @@
 #scSidebar.collapsed .sl.active { background: var(--scsc-active-bg); }
 #scSidebar.collapsed .scsc-toggle-btn svg { transform: rotate(180deg); }
 
-/* Tooltip */
 #scSidebar.collapsed .sl::after {
     content: attr(data-tip);
     position: absolute;
@@ -77,9 +77,9 @@
 }
 .scsc-toggle-btn{
     width: 28px; height: 28px;
-    border: 1px solid var(--scsc-border);
-    border-radius: 6px;
-    background: transparent;
+    border: 1px solid rgba(27,79,168,0.14);
+    border-radius: 8px;
+    background: rgba(255,255,255,0.4);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -102,7 +102,7 @@
     font-size: 8px;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: var(--scsc-orange);
+    color: var(--scsc-blue);
     font-weight: 600;
     white-space: nowrap;
     overflow: hidden;
@@ -152,11 +152,10 @@
 }
 .scsl-link svg{ flex-shrink: 0; opacity: 0.55; transition: opacity 0.18s; min-width: 14px; }
 .scsl-link:hover svg,.scsl-link.active svg{ opacity: 1; }
-.scsl-link-text{ transition: opacity var(--scsc-transition); overflow: hidden; }
+.scsl-link-text{ transition: opacity var(--scsc-transition), width var(--scsc-transition); overflow: hidden; }
 
 .scsl-div{ height: 1px; background: var(--scsc-border); margin: 6px 16px; }
 
-/* Collapsed */
 #scSidebar.collapsed .scsl-link-text,
 #scSidebar.collapsed .scsc-section-label,
 #scSidebar.collapsed .scsc-section-chevron{ opacity: 0; width: 0; pointer-events: none; }
@@ -179,7 +178,6 @@
 }
 #scSidebar.collapsed .scsl-link:hover::after{ opacity: 1; }
 
-/* Mobile overlay */
 .scsc-overlay{
     display: none;
     position: fixed; inset: 0;
@@ -196,7 +194,7 @@
         transform: translateX(-100%);
         transition: transform var(--scsc-transition);
         width: var(--scsc-w) !important;
-        box-shadow: 4px 0 24px rgba(27,79,168,0.15);
+        background: rgba(255,255,255,0.92);
     }
     #scSidebar.mobile-open{ transform: translateX(0); }
     .scsc-toggle{ display: none; }
@@ -205,9 +203,9 @@
     #scSidebar {
         position:fixed; top:0; left:0; height:100vh;
         z-index:50; transform:translateX(-100%);
-        transition:transform var(--scsc-ease), width var(--scsc-ease);
+        transition:transform var(--scsc-transition), width var(--scsc-transition);
         width:var(--scsc-w) !important;
-        box-shadow:4px 0 24px rgba(27,79,168,0.15);
+        background: rgba(255,255,255,0.92);
     }
     #scSidebar.mobile-open { transform:translateX(0); }
     .scsc-foot { display:none; }
@@ -219,7 +217,6 @@
 <aside id="scSidebar">
     <div class="scsc-scroll">
 
-        {{-- Overview --}}
         <div class="scsc-section">
             <div class="scsc-section-header" onclick="scToggleSection(this)">
                 <span class="scsc-section-label">Student Care</span>
@@ -235,7 +232,6 @@
 
         <div class="scsl-div"></div>
 
-        {{-- Enrollment --}}
         <div class="scsc-section">
             <div class="scsc-section-header" onclick="scToggleSection(this)">
                 <span class="scsc-section-label">Enrollment</span>
@@ -255,7 +251,6 @@
 
         <div class="scsl-div"></div>
 
-        {{-- Courses --}}
         <div class="scsc-section">
             <div class="scsc-section-header" onclick="scToggleSection(this)">
                 <span class="scsc-section-label">Courses</span>
