@@ -18,7 +18,7 @@
 
             @include('student-care.partials.sidebar')
 
-            <main style="flex:1;overflow-x:hidden;min-width:0;padding:30px;">
+            <main style="flex:1;overflow-x:hidden;min-width:0;padding:30px;background:#F8F6F2;">
                 @yield('content')
             </main>
 
