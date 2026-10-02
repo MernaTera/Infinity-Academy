@@ -106,6 +106,22 @@ class InstallmentApprovalController extends Controller
                     'status'             => 'Pending',
                 ]);
             }
+            
+            if (!empty($enrollment->course_instance_id)) {
+                $sessions = \App\Models\Academic\CourseSession::where('course_instance_id', $enrollment->course_instance_id)
+                    ->orderBy('session_number')->get();
+                if ($sessions->isNotEmpty()) {
+                    $pendingSchedules = InstallmentSchedule::where('enrollment_id', $enrollment->enrollment_id)
+                        ->where('status', 'Pending')
+                        ->orderBy('installment_number')
+                        ->get();
+                    foreach ($pendingSchedules as $idx => $sched) {
+                        if (isset($sessions[$idx])) {
+                            $sched->update(['due_date' => $sessions[$idx]->session_date]);
+                        }
+                    }
+                }
+            }
 
             $lead = Lead::where('student_id', $enrollment->student_id)->first();
             $oldLeadStatus = $lead?->status;
