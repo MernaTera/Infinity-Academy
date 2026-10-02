@@ -36,6 +36,10 @@
     .patch-bar-fill{height:7px;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--blue-2));transition:width .6s ease;}
     @media (max-width:600px){ .patch-bar-prog{max-width:none;} }
 
+    .shift-chip { display:inline-flex; align-items:center; gap:9px; padding:9px 15px; border-radius:13px; margin-bottom:22px; }
+    .shift-chip .sc-k { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--faint); font-weight:600; }
+    .shift-chip .sc-v { font-family:'Bebas Neue',sans-serif; font-size:15px; letter-spacing:1px; color:var(--text); line-height:1; margin-top:2px; }
+
     .glass{ background:var(--card); backdrop-filter:blur(22px) saturate(165%); -webkit-backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); box-shadow:var(--glass-sh); }
 
     .page-header{ display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:16px; position:relative; z-index:1; }
@@ -120,20 +124,44 @@
             <h1 class="page-title">Dashboard</h1>
             <p class="page-sub">{{ now()->format('l, d M Y') }}</p>
         </div>
-        @if(!empty($me) && ($me->work_start_time || $me->work_end_time))
-        <div style="display:inline-flex;align-items:center;gap:9px;padding:11px 18px;border-radius:13px;background:rgba(255,255,255,0.5);border:1px solid var(--border);box-shadow:var(--glass-sh);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#445e8f" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            <div>
-                <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#445e8f;font-weight:600;">Your Shift</div>
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:19px;color:#445e8f;letter-spacing:1px;line-height:1.1;">
-                    {{ $me->work_start_time ? \Carbon\Carbon::parse($me->work_start_time)->format('g:i A') : '—' }}
-                    <span style="color:#AAB8C8;">→</span>
-                    {{ $me->work_end_time ? \Carbon\Carbon::parse($me->work_end_time)->format('g:i A') : '—' }}
-                </div>
+    @if(!empty($me) && ($me->work_start_time || $me->work_end_time))
+    <div class="shift-chip glass">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <div>
+            <div class="sc-k">Your Shift</div>
+            <div class="sc-v">
+                {{ $me->work_start_time ? \Carbon\Carbon::parse($me->work_start_time)->format('g:i A') : '—' }}
+                <span style="color:var(--faint);">→</span>
+                {{ $me->work_end_time ? \Carbon\Carbon::parse($me->work_end_time)->format('g:i A') : '—' }}
             </div>
         </div>
-        @endif
     </div>
+    @endif
+    </div>
+
+    @if($currentPatch)
+    @php
+        $pStart   = \Carbon\Carbon::parse($currentPatch->start_date);
+        $pEnd     = \Carbon\Carbon::parse($currentPatch->end_date);
+        $pTotal   = max(1, $pStart->diffInDays($pEnd));
+        $pElapsed = max(0, min($pTotal, $pStart->diffInDays(now())));
+        $pPct     = round($pElapsed / $pTotal * 100);
+        $daysLeft = max(0, (int)now()->diffInDays($pEnd, false));
+    @endphp
+    <div class="patch-bar glass">
+        <div class="patch-bar-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="patch-bar-info">
+            <div class="patch-bar-name">{{ $currentPatch->name }}</div>
+            <div class="patch-bar-dates">{{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }} · <b>{{ $daysLeft }} days left</b></div>
+        </div>
+        <div class="patch-bar-prog">
+            <div class="patch-bar-prog-top"><span>Patch Progress</span><span class="patch-bar-prog-pct">{{ $pPct }}%</span></div>
+            <div class="patch-bar-track"><div class="patch-bar-fill" style="width:{{ $pPct }}%"></div></div>
+        </div>
+    </div>
+    @endif
 
     @if($expiredPostponements->isNotEmpty() || $endingSoon->isNotEmpty() || $restrictedStudents > 0 || $expiringSoon->isNotEmpty())
     <div class="alert-list">
@@ -175,32 +203,8 @@
     </div>
     @endif
 
-    @if($currentPatch)
-    @php
-        $pStart   = \Carbon\Carbon::parse($currentPatch->start_date);
-        $pEnd     = \Carbon\Carbon::parse($currentPatch->end_date);
-        $pTotal   = max(1, $pStart->diffInDays($pEnd));
-        $pElapsed = max(0, min($pTotal, $pStart->diffInDays(now())));
-        $pPct     = round($pElapsed / $pTotal * 100);
-        $daysLeft = max(0, (int)now()->diffInDays($pEnd, false));
-    @endphp
-    <div class="patch-bar glass">
-        <div class="patch-bar-icon">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        </div>
-        <div class="patch-bar-info">
-            <div class="patch-bar-name">{{ $currentPatch->name }}</div>
-            <div class="patch-bar-dates">{{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }} · <b>{{ $daysLeft }} days left</b></div>
-        </div>
-        <div class="patch-bar-prog">
-            <div class="patch-bar-prog-top"><span>Patch Progress</span><span class="patch-bar-prog-pct">{{ $pPct }}%</span></div>
-            <div class="patch-bar-track"><div class="patch-bar-fill" style="width:{{ $pPct }}%"></div></div>
-        </div>
-    </div>
-    @endif
-
     <div class="qa-grid">
-        <a href="{{ route('student-care.instances') }}?create=1" class="qa-btn">
+        <a href="{{ route('student-care.instances.create') }}?create=1" class="qa-btn">
             <div class="qa-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
             <span class="qa-label">New Course</span>
         </a>
@@ -228,10 +232,10 @@
             <div class="kpi-label">Upcoming Courses</div>
             <div class="kpi-val">{{ $upcomingCourses }}</div>
         </a>
-        <div class="kpi-card" style="--kc:#1B4FA8">
+        <a href="{{ route('students.index') }}" class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Active Students</div>
             <div class="kpi-val">{{ $totalStudents }}</div>
-        </div>
+        </a>
         <a href="{{ route('student-care.outstanding') }}" class="kpi-card" style="--kc:#DC2626">
             <div class="kpi-label">Restricted</div>
             <div class="kpi-val">{{ $restrictedStudents }}</div>
