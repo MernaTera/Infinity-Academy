@@ -7,97 +7,94 @@
 @endonce
 
 <style>
-.cs-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#059669;margin:0;line-height:1}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--border:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+*{box-sizing:border-box}
+.cs-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.page-eyebrow{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:6px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--text);margin:0;line-height:1}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
-.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:transparent;border:1px solid rgba(5,150,105,0.2);border-radius:4px;color:#7A8A9A;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s}
-.btn-back:hover{border-color:#059669;color:#059669;text-decoration:none}
-
-/* Overview */
-.overview-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;padding:22px 26px;margin-bottom:22px;position:relative;overflow:hidden}
-.overview-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#059669,transparent)}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--card);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:11px;color:var(--muted);font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all 0.25s}
+.btn-back:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+    .orb{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2{ width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3{ width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
+.overview-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:20px;padding:24px 26px;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:var(--glass-sh)}
+/* .overview-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),var(--blue),transparent)} */
 .ov-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:18px}
-.ov-label{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px}
-.ov-value{font-size:13px;color:#1A2A4A;font-weight:500}
+.ov-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:5px}
+.ov-value{font-size:13px;color:var(--text);font-weight:500}
 
-/* Today Banner */
-.today-banner{background:linear-gradient(135deg,#059669 0%,#10B981 100%);border-radius:8px;padding:16px 22px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:12px}
-.btn-take-att{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:#fff;border:none;border-radius:4px;color:#059669;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;text-decoration:none;cursor:pointer;transition:all 0.2s}
-.btn-take-att:hover{background:rgba(255,255,255,0.9);text-decoration:none;color:#059669}
+.today-banner{background:linear-gradient(120deg,var(--blue),var(--blue-2));border-radius:18px;padding:16px 22px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 10px 24px rgba(27,79,168,0.28)}
+.btn-take-att{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:#fff;border:none;border-radius:11px;color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;text-decoration:none;cursor:pointer;transition:all 0.2s}
+.btn-take-att:hover{background:rgba(255,255,255,0.9);text-decoration:none;color:var(--blue)}
 
-/* Table */
-.tbl-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;overflow:hidden}
+.tbl-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:var(--glass-sh)}
 .tbl{width:100%;border-collapse:collapse;min-width:700px}
-.tbl thead th{padding:11px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-align:left;font-weight:500;background:rgba(5,150,105,0.02);border-bottom:1px solid rgba(5,150,105,0.07);white-space:nowrap}
-.tbl tbody tr{border-bottom:1px solid rgba(5,150,105,0.04);transition:background 0.2s}
+.tbl thead th{padding:13px 16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;background:rgba(255,255,255,0.4);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl tbody tr{border-bottom:1px solid rgba(27,79,168,0.06);transition:background 0.2s}
 .tbl tbody tr:last-child{border-bottom:none}
-.tbl tbody tr:hover{background:rgba(5,150,105,0.02)}
-.tbl td{padding:13px 14px;font-size:13px;color:#4A5A7A;vertical-align:middle}
+.tbl tbody tr:hover{background:rgba(27,79,168,0.04)}
+.tbl td{padding:13px 16px;font-size:13px;color:var(--muted);vertical-align:middle}
 
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-weight:500;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
 .badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0}
-.badge-active{color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.15)}
-.badge-restricted{color:#DC2626;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15)}
-.badge-exceeded{color:#C47010;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2)}
-.badge-postponed{color:#7A8A9A;background:rgba(122,138,154,0.08);border:1px solid rgba(122,138,154,0.15)}
-.badge-completed{color:#7A8A9A;background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.12)}
+.badge-active{color:var(--blue);background:rgba(27,79,168,0.1);border:1px solid rgba(27,79,168,0.2)}
+.badge-restricted{color:var(--red);background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15)}
+.badge-exceeded{color:var(--orange-dk);background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2)}
+.badge-postponed{color:var(--muted);background:rgba(122,138,154,0.08);border:1px solid rgba(122,138,154,0.15)}
+.badge-completed{color:var(--muted);background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.12)}
 
-/* Tabs */
-.tab-nav{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid rgba(5,150,105,0.08)}
-.tab-btn{padding:10px 20px;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:transparent;border:none;cursor:pointer;color:#7A8A9A;font-family:'DM Sans',sans-serif;font-weight:500;position:relative;transition:color 0.2s;border-radius:4px 4px 0 0}
-.tab-btn::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:#059669;transform:scaleX(0);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}
-.tab-btn:hover{color:#059669}
-.tab-btn.active{color:#059669}
+.tab-nav{display:flex;gap:2px;margin-bottom:20px;border-bottom:1px solid rgba(27,79,168,0.08)}
+.tab-btn{padding:10px 20px;font-size:10px;letter-spacing:2px;text-transform:uppercase;background:transparent;border:none;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:600;position:relative;transition:color 0.2s;border-radius:8px 8px 0 0}
+.tab-btn::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--blue);transform:scaleX(0);transition:transform 0.3s cubic-bezier(0.16,1,0.3,1)}
+.tab-btn:hover{color:var(--blue)}
+.tab-btn.active{color:var(--blue)}
 .tab-btn.active::after{transform:scaleX(1)}
 
-/* Progress */
-.prog-bar{background:#F0F0F0;border-radius:3px;height:5px;overflow:hidden;margin:8px 0 3px}
-.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,#059669,#10B981)}
+.prog-bar{background:rgba(27,79,168,0.1);border-radius:3px;height:5px;overflow:hidden;margin:8px 0 3px}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue-2))}
 
-/* Attendance tab styles */
-.att-session-card{background:#fff;border:1px solid rgba(5,150,105,0.08);border-radius:6px;margin-bottom:12px;overflow:hidden;transition:box-shadow 0.2s;}
-.att-session-card:hover{box-shadow:0 4px 16px rgba(5,150,105,0.08);}
+.att-session-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:16px;margin-bottom:12px;overflow:hidden;box-shadow:var(--glass-sh);transition:box-shadow 0.2s;}
+.att-session-card:hover{box-shadow:0 12px 30px rgba(23,45,90,0.12);}
 .att-session-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;gap:12px;}
-.att-session-header:hover{background:rgba(5,150,105,0.02);}
-.att-session-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#AAB8C8;letter-spacing:1px;line-height:1;min-width:32px;}
+.att-session-header:hover{background:rgba(27,79,168,0.03);}
+.att-session-num{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--faint);letter-spacing:1px;line-height:1;min-width:32px;}
 .att-session-info{flex:1;}
-.att-session-date{font-size:13px;font-weight:500;color:#1A2A4A;}
-.att-session-time{font-size:10px;color:#AAB8C8;margin-top:2px;font-family:monospace;}
+.att-session-date{font-size:13px;font-weight:600;color:var(--text);}
+.att-session-time{font-size:10px;color:var(--faint);margin-top:2px;font-family:monospace;}
 .att-session-body{padding:0 18px 14px;display:none;}
 .att-session-body.open{display:block;}
 
-/* Mini attendance row */
-.mini-att-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(5,150,105,0.04);}
+.mini-att-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(27,79,168,0.04);}
 .mini-att-row:last-child{border-bottom:none;}
-.mini-avatar{width:28px;height:28px;border-radius:50%;background:rgba(5,150,105,0.08);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:#059669;flex-shrink:0;}
-.mini-name{font-size:12px;font-weight:500;color:#1A2A4A;flex:1;}
-.att-pill{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:3px;font-weight:500;}
-.pill-present{background:rgba(5,150,105,0.08);color:#059669;border:1px solid rgba(5,150,105,0.15);}
-.pill-absent{background:rgba(122,138,154,0.06);color:#7A8A9A;border:1px solid rgba(122,138,154,0.12);}
-.pill-restricted{background:rgba(220,38,38,0.06);color:#DC2626;border:1px solid rgba(220,38,38,0.12);}
-.pill-none{background:rgba(245,145,30,0.06);color:#C47010;border:1px solid rgba(245,145,30,0.15);}
+.mini-avatar{width:28px;height:28px;border-radius:50%;background:rgba(27,79,168,0.08);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--blue);flex-shrink:0;}
+.mini-name{font-size:12px;font-weight:500;color:var(--text);flex:1;}
+.att-pill{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 10px;border-radius:20px;font-weight:600;}
+.pill-present{background:rgba(27,79,168,0.08);color:var(--blue);border:1px solid rgba(27,79,168,0.15);}
+.pill-absent{background:rgba(122,138,154,0.06);color:var(--muted);border:1px solid rgba(122,138,154,0.12);}
+.pill-restricted{background:rgba(220,38,38,0.06);color:var(--red);border:1px solid rgba(220,38,38,0.12);}
+.pill-none{background:rgba(245,145,30,0.06);color:var(--orange-dk);border:1px solid rgba(245,145,30,0.15);}
 
-/* Window badge */
-.window-open{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);padding:3px 10px;border-radius:3px;}
-.window-open::before{content:'';width:5px;height:5px;border-radius:50%;background:#059669;animation:pulse 1.5s infinite;}
-.window-closed{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#7A8A9A;}
-.window-future{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#C47010;}
+.window-open{display:inline-flex;align-items:center;gap:5px;font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);background:rgba(27,79,168,0.08);border:1px solid rgba(27,79,168,0.2);padding:3px 10px;border-radius:20px;}
+.window-open::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--blue);animation:pulse 1.5s infinite;}
+.window-closed{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.window-future{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--orange-dk);}
 
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
 
-/* Attendance summary bar */
 .att-summary{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .att-mini-bar{display:flex;gap:3px;align-items:center;}
 .att-dot{width:8px;height:8px;border-radius:50%;}
 
-.take-att-link{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(5,150,105,0.25);color:#059669;text-decoration:none;background:transparent;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
-.take-att-link:hover{background:rgba(5,150,105,0.07);text-decoration:none;}
+.take-att-link{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:8px;border:1px solid rgba(27,79,168,0.25);color:var(--blue);text-decoration:none;background:transparent;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.take-att-link:hover{background:rgba(27,79,168,0.07);text-decoration:none;}
 
 @media(max-width:768px){.cs-page{padding:18px 14px}}
 </style>
 
 <div class="cs-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div>
@@ -116,7 +113,6 @@
         </a>
     </div>
 
-    {{-- Today's Session Banner --}}
     @if($todaySession)
     <div class="today-banner">
         <div>
@@ -134,7 +130,6 @@
     </div>
     @endif
 
-    {{-- Overview --}}
     <div class="overview-card">
         <div class="ov-grid">
             <div>
@@ -159,7 +154,7 @@
             </div>
             <div>
                 <div class="ov-label">Sessions</div>
-                <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#059669;letter-spacing:1px;line-height:1">
+                <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1B4FA8;letter-spacing:1px;line-height:1">
                     {{ $completedSessions }}/{{ $totalSessions }}
                 </div>
                 <div class="prog-bar" style="max-width:80px">
@@ -183,7 +178,6 @@
         </div>
     </div>
 
-    {{-- Tabs --}}
     <div class="tab-nav">
         <button class="tab-btn active" onclick="showTab('studentsTab', this)">
             Students ({{ $instance->enrollments->count() }})
@@ -196,7 +190,6 @@
         </button>
     </div>
 
-    {{-- ══ STUDENTS TAB ══ --}}
     <div id="studentsTab">
         <div class="tbl-card">
             <div style="overflow-x:auto">
@@ -205,7 +198,7 @@
                         <tr>
                             <th>#</th>
                             <th>Student</th>
-                            <!-- <th>Phone</th> -->
+
                             <th>Test Score</th>
                             <th>Attended</th>
                             <th>Absent</th>
@@ -232,13 +225,13 @@
                         <tr>
                             <td style="color:#AAB8C8;font-size:11px">{{ $i + 1 }}</td>
                             <td><div style="font-weight:500;color:#1A2A4A">{{ $enrollment->student?->full_name ?? '—' }}</div></td>
-                            <!-- <td style="font-size:11px;color:#7A8A9A;font-family:monospace">{{ $enrollment->student?->phones?->first()?->phone_number ?? '—' }}</td> -->
+
                             <td>
                                 @if($enrollment->placementTest)
                                 <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#1B4FA8;letter-spacing:1px;line-height:1">{{ $enrollment->placementTest->score }}</div>
                                 @else<span style="color:#AAB8C8;font-size:11px">—</span>@endif
                             </td>
-                            <td><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#059669;letter-spacing:1px">{{ $attended }}</span></td>
+                            <td><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#1B4FA8;letter-spacing:1px">{{ $attended }}</span></td>
                             <td><span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:{{ $absent > 2 ? '#DC2626' : ($absent > 0 ? '#C47010' : '#AAB8C8') }};letter-spacing:1px">{{ $absent }}</span></td>
                             <td>
                                 @if($instance->type === 'Group')
@@ -270,7 +263,6 @@
         </div>
     </div>
 
-    {{-- ══ ATTENDANCE TAB ══ --}}
     <div id="attendanceTab" style="display:none">
         @php
             $sessions = $instance->sessions->sortBy('session_number');
@@ -280,8 +272,7 @@
         <div style="text-align:center;padding:60px;color:#AAB8C8;font-size:13px;">No sessions generated yet.</div>
         @else
 
-        {{-- Summary header --}}
-        <div style="background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+        <div style="background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
             <div>
                 <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-bottom:6px;">Overall Attendance</div>
                 <div style="display:flex;gap:16px;flex-wrap:wrap;">
@@ -294,7 +285,7 @@
                     @endphp
                     <div style="font-size:12px;">
                         <span style="font-weight:500;color:#1A2A4A;">{{ $enrollment->student?->full_name ?? '—' }}</span>
-                        <span style="color:{{ $pct >= 80 ? '#059669' : ($pct >= 60 ? '#C47010' : '#DC2626') }};margin-left:6px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;">{{ $pct }}%</span>
+                        <span style="color:{{ $pct >= 80 ? '#1B4FA8' : ($pct >= 60 ? '#C47010' : '#DC2626') }};margin-left:6px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;">{{ $pct }}%</span>
                         <span style="color:#AAB8C8;font-size:10px;margin-left:4px;">({{ $p }}/{{ $p + $a }})</span>
                     </div>
                     @endforeach
@@ -305,7 +296,6 @@
             </div>
         </div>
 
-        {{-- Session cards --}}
         @foreach($sessions as $session)
         @php
             $isToday   = \Carbon\Carbon::parse($session->session_date)->isToday();
@@ -314,7 +304,6 @@
             $windowOpen = $isToday && $session->status === 'Scheduled' && now()->between($sStart, $deadline);
             $isFuture  = \Carbon\Carbon::parse($session->session_date)->isFuture();
 
-            // Attendance for this session
             $sessionAtt = $instance->enrollments->mapWithKeys(function($e) use ($session) {
                 $att = $e->attendances->where('course_session_id', $session->course_session_id)->first();
                 return [$e->enrollment_id => [
@@ -333,7 +322,7 @@
                 <div class="att-session-info">
                     <div class="att-session-date">
                         {{ \Carbon\Carbon::parse($session->session_date)->format('D, d M Y') }}
-                        @if($isToday)<span style="color:#059669;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-left:8px;background:rgba(5,150,105,0.08);padding:2px 6px;border-radius:2px;">Today</span>@endif
+                        @if($isToday)<span style="color:#1B4FA8;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-left:8px;background:rgba(27,79,168,0.08);padding:2px 6px;border-radius:2px;">Today</span>@endif
                     </div>
                     <div class="att-session-time">
                         {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }}
@@ -341,7 +330,6 @@
                     </div>
                 </div>
 
-                {{-- Status --}}
                 <div style="display:flex;align-items:center;gap:10px;">
                     @if($windowOpen)
                         <span class="window-open">Live</span>
@@ -354,10 +342,10 @@
                         <div class="att-summary">
                             <div class="att-mini-bar">
                                 @for($x = 0; $x < $total; $x++)
-                                <div class="att-dot" style="background:{{ $x < $presentCount ? '#059669' : '#DC2626' }};"></div>
+                                <div class="att-dot" style="background:{{ $x < $presentCount ? '#1B4FA8' : '#DC2626' }};"></div>
                                 @endfor
                             </div>
-                            <span style="font-size:11px;color:#059669;">{{ $presentCount }}P</span>
+                            <span style="font-size:11px;color:#1B4FA8;">{{ $presentCount }}P</span>
                             <span style="font-size:11px;color:#DC2626;">{{ $absentCount }}A</span>
                         </div>
                     @elseif($isFuture)
@@ -374,7 +362,7 @@
             </div>
 
             <div class="att-session-body" id="body_{{ $session->course_session_id }}">
-                <div style="border-top:1px solid rgba(5,150,105,0.06);padding-top:12px;">
+                <div style="border-top:1px solid rgba(27,79,168,0.06);padding-top:12px;">
                     @if($session->status === 'Completed' || $session->status === 'Scheduled')
                         @foreach($sessionAtt as $attData)
                         @php
@@ -397,7 +385,7 @@
                         </div>
                         @endforeach
                         @if($windowOpen)
-                        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(5,150,105,0.06);text-align:right;">
+                        <div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(27,79,168,0.06);text-align:right;">
                             <a href="{{ route('teacher.attendance.show', $session->course_session_id) }}" class="take-att-link">
                                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                                 Take Attendance Now
@@ -416,7 +404,6 @@
         @endif
     </div>
 
-    {{-- ══ SCHEDULE TAB ══ --}}
     <div id="sessionsTab" style="display:none">
         <div class="tbl-card">
             <div style="overflow-x:auto">
@@ -439,12 +426,12 @@
                             $deadline = $sStart->copy()->addMinutes(20);
                             $canTake  = $isToday && $session->status === 'Scheduled' && now()->between($sStart, $deadline);
                             $sClass   = match($session->status) {
-                                'Completed' => 'color:#059669',
+                                'Completed' => 'color:#1B4FA8',
                                 'Cancelled' => 'color:#DC2626',
                                 default     => $isToday ? 'color:#1B4FA8' : 'color:#AAB8C8',
                             };
                         @endphp
-                        <tr style="{{ $isToday ? 'background:rgba(5,150,105,0.03)' : '' }}">
+                        <tr style="{{ $isToday ? 'background:rgba(27,79,168,0.03)' : '' }}">
                             <td>
                                 <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;line-height:1;{{ $sClass }}">
                                     {{ $session->session_number }}
@@ -452,7 +439,7 @@
                             </td>
                             <td>
                                 <div style="font-size:12px;color:#1A2A4A;font-weight:500">{{ \Carbon\Carbon::parse($session->session_date)->format('d M Y') }}</div>
-                                @if($isToday)<div style="font-size:9px;color:#059669;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Today</div>@endif
+                                @if($isToday)<div style="font-size:9px;color:#1B4FA8;letter-spacing:1px;text-transform:uppercase;margin-top:2px">Today</div>@endif
                             </td>
                             <td style="font-size:12px;color:#7A8A9A">{{ \Carbon\Carbon::parse($session->session_date)->format('l') }}</td>
                             <td>
@@ -482,7 +469,7 @@
                                     Take Attendance
                                 </a>
                                 @elseif($session->status === 'Completed')
-                                <span style="font-size:10px;color:#059669;letter-spacing:1px;text-transform:uppercase">✓ Done</span>
+                                <span style="font-size:10px;color:#1B4FA8;letter-spacing:1px;text-transform:uppercase">✓ Done</span>
                                 @else
                                 <span style="font-size:10px;color:#AAB8C8">—</span>
                                 @endif
@@ -516,7 +503,6 @@ function toggleSession(id) {
 }
 </script>
 
-{{-- ══════════════════ STUDENT NOTES (read-only) ══════════════════ --}}
 <style>
     .tnotes-overlay{display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:1000;padding:20px;font-family:'DM Sans',sans-serif}
     .tnotes-overlay.show{display:flex}
