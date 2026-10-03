@@ -11,9 +11,10 @@
 :root{--blue:#1B4FA8;--blue-l:rgba(27,79,168,0.08);--orange:#F5911E;--green:#059669;--green-l:rgba(5,150,105,0.08);--red:#DC2626;--red-l:rgba(220,38,38,0.06);--border:rgba(27,79,168,0.1);--card:#fff;--text:#1A2A4A;--muted:#7A8A9A;--faint:#AAB8C8;}
 *{box-sizing:border-box;}
 .ci-page{min-height:100vh;font-family:'DM Sans',sans-serif;color:var(--text);}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--blue);margin:0 0 28px;}
-.page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;}
+    .page-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:24px; padding-bottom:18px; border-bottom:1px solid rgba(27,79,168,0.1); flex-wrap:wrap; gap:16px; }
+    .page-eyebrow  { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue); font-weight:600; margin-bottom:7px; }
+    .page-title    { font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:2px; color:var(--text); line-height:0.95; }
+    .page-subtitle { font-size:12px; color:var(--muted); margin-top:7px; }
 .btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;transition:all 0.2s;}
 .btn-back:hover{border-color:var(--blue);color:var(--blue);text-decoration:none;}
 
@@ -21,7 +22,6 @@
 @media(max-width:1100px){.form-layout{grid-template-columns:1fr;}}
 
 .form-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;box-shadow:0 2px 12px rgba(27,79,168,0.05);position:relative;}
-.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),var(--blue),transparent);}
 .form-card-body{padding:20px 24px 24px;}
 
 .sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);display:block;margin-bottom:16px;padding-bottom:9px;border-bottom:1px solid rgba(245,145,30,0.15);}
