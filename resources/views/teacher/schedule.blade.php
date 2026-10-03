@@ -7,93 +7,100 @@
 @endonce
 
 <style>
-.sch-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#059669;margin:0}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--border:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+*{box-sizing:border-box}
+    .orb{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2{ width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3{ width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
+.sch-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.page-eyebrow{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:6px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--text);margin:0}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+    .patch-bar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:16px 22px;border-radius:16px;margin-bottom:22px;}
+    .patch-bar-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--blue),var(--blue-2));display:grid;place-items:center;flex-shrink:0;box-shadow:0 8px 18px rgba(27,79,168,0.28);}
+    .patch-bar-info{flex:1;min-width:180px;}
+    .patch-bar-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--text);line-height:1;}
+    .patch-bar-dates{font-size:11px;color:var(--muted);margin-top:5px;}
+    .patch-bar-dates b{color:var(--blue);font-weight:600;}
+    .patch-bar-prog{flex:1;min-width:200px;max-width:340px;}
+    .patch-bar-prog-top{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px;}
+    .patch-bar-prog-pct{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--blue);letter-spacing:1px;}
+    .patch-bar-track{background:rgba(27,79,168,0.1);border-radius:5px;height:7px;overflow:hidden;}
+    .patch-bar-fill{height:7px;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--blue-2));transition:width .6s ease;}
+    @media (max-width:600px){ .patch-bar-prog{max-width:none;} }
 
-/* View Only */
-.view-only-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:4px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#059669;margin-bottom:20px}
+.view-only-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.15);border-radius:20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:20px}
 
-/* Patch Banner */
-.patch-banner{background:linear-gradient(135deg,#059669 0%,#10B981 100%);border-radius:8px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;overflow:hidden}
-.patch-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.05)}
+.patch-banner{background:linear-gradient(120deg,var(--blue),var(--blue-2));border-radius:18px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;overflow:hidden;box-shadow:0 10px 24px rgba(27,79,168,0.28)}
+.patch-banner::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.06)}
 .pb-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:4px}
 .pb-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#fff}
-.pb-dates{font-size:11px;color:rgba(255,255,255,0.7);margin-top:2px}
-.pb-stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:1px;line-height:1}
-.pb-stat-label{font-size:9px;color:rgba(255,255,255,0.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+.pb-dates{font-size:11px;color:rgba(255,255,255,0.72);margin-top:2px}
+.pb-stat-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1B4FA8;letter-spacing:1px;line-height:1}
+.pb-stat-label{font-size:9px;color:rgba(35, 85, 194, 0.5);letter-spacing:1px;text-transform:uppercase;margin-top:2px}
 
-/* Filters */
 .filter-bar{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
     .filter-bar .app-select,
-    .filter-bar > .filter-select {
-        flex: 1 1 150px;
-        min-width: 140px;
-        max-width: 260px;
-    }
-.filter-sel{padding:9px 14px;border:1px solid rgba(5,150,105,0.15);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1A2A4A;background:#fff;cursor:pointer;outline:none}
-.filter-sel:focus{border-color:#059669;box-shadow:0 0 0 3px rgba(5,150,105,0.07)}
-.btn-filter{padding:9px 18px;background:#059669;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer}
-.btn-reset{padding:9px 14px;background:transparent;border:1px solid rgba(5,150,105,0.2);border-radius:4px;color:#7A8A9A;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;transition:all 0.2s}
-.btn-reset:hover{border-color:#059669;color:#059669;text-decoration:none}
+    .filter-bar > .filter-select { flex: 1 1 150px; min-width: 140px; max-width: 260px; }
+.filter-sel{padding:10px 14px;border:1px solid var(--border);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);background:var(--card);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);cursor:pointer;outline:none}
+.filter-sel:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.08)}
+.btn-filter{padding:11px 20px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:11px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 16px rgba(27,79,168,0.28)}
+.btn-reset{padding:10px 16px;background:var(--card);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:11px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;transition:all 0.2s}
+.btn-reset:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
 
-/* Schedule Cards */
 .schedule-grid{display:flex;flex-direction:column;gap:16px}
-.sch-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;overflow:hidden;position:relative;transition:box-shadow 0.2s}
-.sch-card:hover{box-shadow:0 4px 20px rgba(5,150,105,0.08)}
-.sch-card.status-active::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#059669,transparent)}
-.sch-card.status-upcoming::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1B4FA8,transparent)}
-.sch-card.status-completed::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:rgba(122,138,154,0.3)}
+.sch-card{max-width:600px; background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:20px;overflow:hidden;position:relative;box-shadow:var(--glass-sh);transition:transform .2s, box-shadow 0.2s}
+.sch-card:hover{transform:translateY(-3px);box-shadow:0 16px 38px rgba(23,45,90,0.13)}
+.sch-card.status-active::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.sch-card.status-upcoming::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue-2),transparent)}
+.sch-card.status-completed::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:rgba(122,138,154,0.3)}
 
-.sch-header{padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(5,150,105,0.06)}
-.sch-course-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#1A2A4A}
-.sch-level{font-size:11px;color:#7A8A9A;margin-top:3px}
+.sch-header{padding:16px 20px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid rgba(27,79,168,0.06)}
+.sch-course-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)}
+.sch-level{font-size:11px;color:var(--muted);margin-top:3px}
 
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;font-weight:500;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
 .badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0}
-.badge-active{color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.15)}
-.badge-upcoming{color:#1B4FA8;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.15)}
-.badge-completed{color:#7A8A9A;background:rgba(122,138,154,0.08);border:1px solid rgba(122,138,154,0.15)}
+.badge-active{color:var(--blue);background:rgba(27,79,168,0.1);border:1px solid rgba(27,79,168,0.2)}
+.badge-upcoming{color:var(--blue-2);background:rgba(45,111,219,0.08);border:1px solid rgba(45,111,219,0.2)}
+.badge-completed{color:var(--muted);background:rgba(122,138,154,0.1);border:1px solid rgba(122,138,154,0.2)}
 
-.tag{display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:3px;text-transform:uppercase;font-weight:500}
-.tag-group{background:rgba(27,79,168,0.05);border:1px solid rgba(27,79,168,0.12);color:#2D6FDB}
-.tag-private{background:rgba(245,145,30,0.05);border:1px solid rgba(245,145,30,0.15);color:#C47010}
-.tag-online{background:rgba(5,150,105,0.05);border:1px solid rgba(5,150,105,0.15);color:#059669}
-.tag-offline{background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.15);color:#7A8A9A}
+.tag{display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:6px;text-transform:uppercase;font-weight:600}
+.tag-group{background:rgba(27,79,168,0.05);border:1px solid rgba(27,79,168,0.12);color:var(--blue-2)}
+.tag-private{background:rgba(245,145,30,0.05);border:1px solid rgba(245,145,30,0.15);color:var(--orange-dk)}
+.tag-online{background:rgba(27,79,168,0.05);border:1px solid rgba(27,79,168,0.12);color:var(--blue)}
+.tag-offline{background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.15);color:var(--muted)}
 
 .sch-body{padding:16px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:16px}
-.sch-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-bottom:4px}
-.sch-meta-val{font-size:13px;color:#1A2A4A;font-weight:500}
-.sch-time{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#059669;letter-spacing:2px;line-height:1}
+.sch-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.sch-meta-val{font-size:13px;color:var(--text);font-weight:500}
+.sch-time{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--blue);letter-spacing:2px;line-height:1}
 
-/* Progress */
-.prog-wrap{padding:0 20px 14px;border-top:1px solid rgba(5,150,105,0.06)}
-.prog-bar{background:#F0F0F0;border-radius:3px;height:5px;overflow:hidden;margin:10px 0 4px}
-.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,#059669,#10B981)}
-.prog-meta{display:flex;justify-content:space-between;font-size:10px;color:#AAB8C8}
+.prog-wrap{padding:0 20px 14px;border-top:1px solid rgba(27,79,168,0.06)}
+.prog-bar{background:rgba(27,79,168,0.1);border-radius:3px;height:5px;overflow:hidden;margin:10px 0 4px}
+.prog-fill{height:5px;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue-2))}
+.prog-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--faint)}
 
-/* Sessions dropdown */
-.students-toggle{display:flex;align-items:center;gap:6px;padding:8px 20px;border-top:1px solid rgba(5,150,105,0.06);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#059669;cursor:pointer;background:none;border-left:none;border-right:none;border-bottom:none;width:100%;text-align:left;transition:background 0.2s}
-.students-toggle:hover{background:rgba(5,150,105,0.02)}
-.students-panel{display:none;padding:12px 20px;border-top:1px solid rgba(5,150,105,0.04)}
+.students-toggle{display:flex;align-items:center;gap:6px;padding:8px 20px;border-top:1px solid rgba(27,79,168,0.06);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);cursor:pointer;background:none;border-left:none;border-right:none;border-bottom:none;width:100%;text-align:left;transition:background 0.2s}
+.students-toggle:hover{background:rgba(27,79,168,0.03)}
+.students-panel{display:none;padding:12px 20px;border-top:1px solid rgba(27,79,168,0.04)}
 .students-panel.show{display:block}
-.student-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(5,150,105,0.04);font-size:12px}
+.student-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(27,79,168,0.04);font-size:12px}
 .student-row:last-child{border-bottom:none}
-.student-name{color:#1A2A4A;font-weight:500;flex:1}
-.student-phone{font-size:10px;color:#AAB8C8;font-family:monospace}
+.student-name{color:var(--text);font-weight:500;flex:1}
+.student-phone{font-size:10px;color:var(--faint);font-family:monospace}
 
-/* Today indicator */
-.today-session{background:rgba(5,150,105,0.04);border:1px solid rgba(5,150,105,0.15);border-radius:4px;padding:6px 10px;display:flex;align-items:center;gap:8px;font-size:11px;color:#059669;margin-top:10px}
+.today-session{background:rgba(27,79,168,0.04);border:1px solid rgba(27,79,168,0.15);border-radius:10px;padding:6px 10px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--blue);margin-top:10px}
 
-/* Empty */
-.empty-state{text-align:center;padding:60px 24px;background:#fff;border:1px solid rgba(5,150,105,0.08);border-radius:8px}
-.empty-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:#AAB8C8;margin-bottom:6px}
+.empty-state{text-align:center;padding:60px 24px;background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:20px;box-shadow:var(--glass-sh)}
+.empty-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;color:var(--faint);margin-bottom:6px}
 
 @media(max-width:768px){.sch-page{padding:18px 14px}.sch-body{grid-template-columns:1fr 1fr}}
 </style>
 
 <div class="sch-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div>
@@ -109,35 +116,28 @@
         </svg>
         View Only — Contact Student Care to modify schedule
     </div>
-
-    {{-- Patch Banner --}}
     @if($currentPatch)
     @php
-        $pStart  = \Carbon\Carbon::parse($currentPatch->start_date);
-        $pEnd    = \Carbon\Carbon::parse($currentPatch->end_date);
-        $pTotal  = max(1, $pStart->diffInDays($pEnd));
-        $pElap   = max(0, min($pTotal, $pStart->diffInDays(now())));
-        $pPct    = round($pElap / $pTotal * 100);
-        $daysLeft= max(0, (int)now()->diffInDays($pEnd, false));
+        $pStart   = \Carbon\Carbon::parse($currentPatch->start_date);
+        $pEnd     = \Carbon\Carbon::parse($currentPatch->end_date);
+        $pTotal   = max(1, $pStart->diffInDays($pEnd));
+        $pElapsed = max(0, min($pTotal, $pStart->diffInDays(now())));
+        $pPct     = round($pElapsed / $pTotal * 100);
+        $daysLeft = max(0, (int)now()->diffInDays($pEnd, false));
     @endphp
-    <div class="patch-banner">
-        <div>
-            <div class="pb-label">Current Patch</div>
-            <div class="pb-name">{{ $currentPatch->name }}</div>
-            <div class="pb-dates">
-                {{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }}
-                · {{ $daysLeft }} days remaining
-            </div>
+    <div class="patch-bar glass" style= "padding:12px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);box-shadow:var(--glass-sh);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);">
+        <div class="patch-bar-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         </div>
-        <div style="flex:1;max-width:220px">
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:rgba(255,255,255,0.6);margin-bottom:6px">
-                <span>Progress</span><span>{{ $pPct }}%</span>
-            </div>
-            <div style="background:rgba(255,255,255,0.15);border-radius:4px;height:5px;overflow:hidden">
-                <div style="height:5px;border-radius:4px;background:rgba(255,255,255,0.7);width:{{ $pPct }}%"></div>
-            </div>
+        <div class="patch-bar-info">
+            <div class="patch-bar-name">{{ $currentPatch->name }}</div>
+            <div class="patch-bar-dates">{{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }} · <b>{{ $daysLeft }} days left</b></div>
         </div>
-        <div style="display:flex;gap:20px">
+        <div class="patch-bar-prog">
+            <div class="patch-bar-prog-top"><span>Patch Progress</span><span class="patch-bar-prog-pct">{{ $pPct }}%</span></div>
+            <div class="patch-bar-track"><div class="patch-bar-fill" style="width:{{ $pPct }}%"></div></div>
+        </div>
+                <div style="display:flex;gap:20px">
             <div>
                 <div class="pb-stat-val">{{ $instances->count() }}</div>
                 <div class="pb-stat-label">My Courses</div>
@@ -154,7 +154,6 @@
     </div>
     @endif
 
-    {{-- Filters --}}
     <form method="GET" action="{{ route('teacher.schedule') }}">
         <div class="filter-bar">
             <select name="pair" class="filter-sel">
@@ -179,7 +178,6 @@
         </div>
     </form>
 
-    {{-- Schedule Cards --}}
     @if($filtered->isEmpty())
     <div class="empty-state">
         <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="1" style="margin:0 auto 14px;display:block">
@@ -243,9 +241,9 @@
                     </div>
                 </div>
                 @if($todaySession)
-                <div style="background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);border-radius:6px;padding:10px 14px;text-align:center;flex-shrink:0">
-                    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#059669;margin-bottom:3px">Today</div>
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#059669;letter-spacing:1px;line-height:1">
+                <div style="background:rgba(27,79,168,0.08);border:1px solid rgba(27,79,168,0.2);border-radius:6px;padding:10px 14px;text-align:center;flex-shrink:0">
+                    <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1B4FA8;margin-bottom:3px">Today</div>
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#1B4FA8;letter-spacing:1px;line-height:1">
                         {{ \Carbon\Carbon::parse($todaySession->start_time)->format('H:i') }}
                     </div>
                     <div style="font-size:9px;color:#7A8A9A;margin-top:2px">
@@ -293,7 +291,6 @@
                 </div>
             </div>
 
-            {{-- Progress --}}
             @if($total > 0)
             <div class="prog-wrap" style="padding-top:12px">
                 <div class="prog-meta">
@@ -306,7 +303,6 @@
             </div>
             @endif
 
-            {{-- Students Toggle --}}
             @if($instance->enrollments->isNotEmpty())
             <button class="students-toggle"
                 onclick="toggleStudents('students_{{ $instance->course_instance_id }}', this)">
@@ -320,7 +316,7 @@
                     $isRestricted = $enr->status === 'Restricted';
                 @endphp
                 <div class="student-row">
-                    <div style="width:26px;height:26px;border-radius:50%;background:{{ $isRestricted ? 'rgba(220,38,38,0.1)' : 'rgba(5,150,105,0.1)' }};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:11px;color:{{ $isRestricted ? '#DC2626' : '#059669' }};flex-shrink:0">
+                    <div style="width:26px;height:26px;border-radius:50%;background:{{ $isRestricted ? 'rgba(220,38,38,0.1)' : 'rgba(27,79,168,0.1)' }};display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:11px;color:{{ $isRestricted ? '#DC2626' : '#1B4FA8' }};flex-shrink:0">
                         {{ strtoupper(substr($enr->student?->full_name ?? '?', 0, 1)) }}
                     </div>
                     <div style="flex:1">
