@@ -24,7 +24,7 @@
 .form-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;box-shadow:0 2px 12px rgba(27,79,168,0.05);position:relative;}
 .form-card-body{padding:20px 24px 24px;}
 
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);display:block;margin-bottom:16px;padding-bottom:9px;border-bottom:1px solid rgba(245,145,30,0.15);}
+.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--blue-1);display:block;margin-bottom:16px;padding-bottom:9px;border-bottom:1px solid rgba(245,145,30,0.15);}
 .field-grid{display:grid;gap:14px;}
 .field-grid-2{grid-template-columns:1fr 1fr;}
 .field{display:flex;flex-direction:column;gap:5px;}

@@ -8,65 +8,58 @@
 
 <style>
 *{box-sizing:border-box}
-.out-page{min-height:100vh;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0 0 24px}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--green:#059669;--green-dk:#15803D;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--border:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+.out-page{min-height:100vh;font-family:'DM Sans',sans-serif;color:var(--text)}
+.page-eyebrow{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:7px}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--text);margin:0 0 24px;line-height:0.95}
 
-.view-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(122,138,154,0.07);border:1px solid rgba(122,138,154,0.18);border-radius:4px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:20px}
+.view-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(122,138,154,0.07);border:1px solid rgba(122,138,154,0.18);border-radius:20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:20px}
 
-/* KPIs */
 .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
-.kpi-card{background:#fff;border:1px solid rgba(27,79,168,0.09);border-radius:6px;padding:16px 18px;position:relative;overflow:hidden;transition:box-shadow 0.2s}
-.kpi-card:hover{box-shadow:0 4px 16px rgba(27,79,168,0.1)}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,#1B4FA8)}
-.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-bottom:6px;font-weight:500}
-.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--kc,#1B4FA8);line-height:1}
-.kpi-sub{font-size:9px;color:#C4CDD6;margin-top:4px}
+.kpi-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--glass-sh);transition:transform 0.2s, box-shadow 0.2s}
+.kpi-card:hover{transform:translateY(-3px);box-shadow:0 16px 38px rgba(23,45,90,0.13)}
+/* .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--blue))} */
+.kpi-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;color:var(--kc,var(--blue));line-height:1}
+.kpi-sub{font-size:9px;color:var(--faint);margin-top:4px}
 
-/* Pills */
 .pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
-.pill{padding:6px 14px;border:1px solid rgba(27,79,168,0.15);border-radius:20px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#7A8A9A;cursor:pointer;transition:all 0.2s;background:#fff;font-family:'DM Sans',sans-serif;font-weight:500}
-.pill:hover{border-color:#1B4FA8;color:#1B4FA8}
-.pill.active{background:#1B4FA8;color:#fff;border-color:#1B4FA8}
-.pill.p-red.active{background:#DC2626;border-color:#DC2626}
-.pill.p-orange.active{background:#F5911E;border-color:#F5911E}
-.pill.p-green.active{background:#059669;border-color:#059669}
+.pill{padding:7px 14px;border:1px solid var(--border);border-radius:20px;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;background:var(--card);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);font-family:'DM Sans',sans-serif;font-weight:600}
+.pill:hover{border-color:var(--blue);color:var(--blue)}
+.pill.active{background:var(--blue);color:#fff;border-color:var(--blue)}
+.pill.p-red.active{background:var(--red);border-color:var(--red)}
+.pill.p-orange.active{background:var(--orange);border-color:var(--orange)}
+.pill.p-green.active{background:var(--green);border-color:var(--green)}
 
-/* Toolbar */
 .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
 .search-wrap{position:relative;flex:1;min-width:200px}
 .search-wrap svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);pointer-events:none}
-.search-input{width:100%;padding:10px 14px 10px 38px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none}
-.search-input:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
+.search-input{width:100%;padding:11px 14px 11px 38px;border:1px solid var(--border);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:var(--card);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);outline:none}
+.search-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.08)}
 
-/* Sec label */
-.sec-lbl{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(245,145,30,0.15);display:flex;align-items:center;justify-content:space-between}
-.sec-lbl-count{font-family:'Bebas Neue',sans-serif;font-size:18px;color:#AAB8C8;letter-spacing:2px}
+.sec-lbl{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid rgba(27,79,168,0.1);display:flex;align-items:center;justify-content:space-between;font-weight:600}
+.sec-lbl-count{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--faint);letter-spacing:2px}
 
-/* Table */
-.tbl-card{background:#fff;border:1px solid rgba(27,79,168,0.09);border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(27,79,168,0.05)}
+.tbl-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:var(--glass-sh)}
 .tbl-scroll{overflow-x:auto}
 .tbl{width:100%;border-collapse:collapse;min-width:900px}
-.tbl thead th{padding:11px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;text-align:left;font-weight:600;background:rgba(27,79,168,0.02);border-bottom:1px solid rgba(27,79,168,0.07);white-space:nowrap}
-.tbl tbody tr.main-row{border-bottom:1px solid rgba(27,79,168,0.05);transition:background 0.15s;cursor:pointer}
-.tbl tbody tr.main-row:hover{background:rgba(27,79,168,0.02)}
-.tbl td{padding:12px 14px;font-size:13px;color:#4A5A7A;vertical-align:middle}
+.tbl thead th{padding:13px 16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;background:rgba(255,255,255,0.4);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl tbody tr.main-row{border-bottom:1px solid rgba(27,79,168,0.06);transition:background 0.15s;cursor:pointer}
+.tbl tbody tr.main-row:hover{background:rgba(27,79,168,0.04)}
+.tbl td{padding:13px 16px;font-size:13px;color:var(--muted);vertical-align:middle}
 
-/* Expand */
 .expand-row{display:none}
 .expand-row.open{display:table-row}
-.expand-inner{padding:18px 20px;background:rgba(248,246,242,0.6);border-top:1px solid rgba(27,79,168,0.06)}
+.expand-inner{padding:18px 20px;background:rgba(255,255,255,0.35);border-top:1px solid rgba(27,79,168,0.06)}
 .expand-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 
-/* Mini table */
-.mini-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#F5911E;margin-bottom:8px}
+.mini-lbl{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--orange-dk);margin-bottom:8px}
 .mini-tbl{width:100%;border-collapse:collapse}
-.mini-tbl th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;padding:5px 10px;text-align:left;border-bottom:1px solid rgba(27,79,168,0.07);font-weight:600}
-.mini-tbl td{font-size:12px;color:#4A5A7A;padding:7px 10px;border-bottom:1px solid rgba(27,79,168,0.04)}
+.mini-tbl th{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);padding:5px 10px;text-align:left;border-bottom:1px solid rgba(27,79,168,0.07);font-weight:600}
+.mini-tbl td{font-size:12px;color:var(--muted);padding:7px 10px;border-bottom:1px solid rgba(27,79,168,0.04)}
 .mini-tbl tr:last-child td{border-bottom:none}
 
-/* Badges */
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-weight:600;white-space:nowrap}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:20px;font-weight:600;white-space:nowrap}
 .badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0}
 .b-restricted{color:#DC2626;background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.15)}
 .b-active    {color:#059669;background:rgba(5,150,105,0.07);border:1px solid rgba(5,150,105,0.15)}
@@ -80,27 +73,22 @@
 .badge-overdue   {color:#C47010;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2)}
 .badge-waiting   {color:#1B4FA8;background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.12)}
 
-.overdue-tag{display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:3px;font-size:10px;color:#DC2626;font-weight:500;margin-top:3px}
+.overdue-tag{display:inline-block;padding:2px 8px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);border-radius:6px;font-size:10px;color:#DC2626;font-weight:500;margin-top:3px}
 
-/* Progress */
 .pay-prog-wrap{display:flex;align-items:center;gap:8px}
-.pay-prog-track{flex:1;max-width:70px;background:#F0F0F0;border-radius:3px;height:4px;overflow:hidden}
-.pay-prog-fill{height:4px;border-radius:3px}
+.pay-prog-track{flex:1;max-width:70px;background:rgba(27,79,168,0.08);border-radius:6px;height:6px;overflow:hidden}
+.pay-prog-fill{height:6px;border-radius:6px}
 
-/* Buttons */
-.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 11px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap;font-weight:500}
-.btn-expand{color:#1B4FA8;border-color:rgba(27,79,168,0.25)}
+.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:8px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;white-space:nowrap;font-weight:600}
+.btn-expand{color:var(--blue);border-color:rgba(27,79,168,0.25)}
 .btn-expand:hover{background:rgba(27,79,168,0.07)}
 
-/* Chevron */
 .chev{transition:transform 0.25s;display:inline-block;margin-left:4px;opacity:0.3;vertical-align:middle}
 .chev.open{transform:rotate(180deg);opacity:0.7}
 
-/* Notice */
-.notice{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.15);border-radius:4px;font-size:11px;color:#7A8A9A;margin-top:12px}
+.notice{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.15);border-radius:10px;font-size:11px;color:var(--muted);margin-top:12px}
 
-/* Finished */
-.fin-banner{display:flex;align-items:center;gap:12px;padding:14px 18px;background:#fff;border:1px solid rgba(5,150,105,0.15);border-left:4px solid #059669;border-radius:6px;margin-bottom:14px}
+.fin-banner{display:flex;align-items:center;gap:12px;padding:14px 18px;background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-left:4px solid #059669;border-radius:14px;margin-bottom:14px}
 .fin-icon{width:32px;height:32px;border-radius:50%;background:rgba(5,150,105,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
 @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
@@ -117,9 +105,8 @@
         View Only — Contact Admin to override restrictions or modify due dates
     </div>
 
-    {{-- KPIs --}}
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:#DC2626">
+        <div class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Total Outstanding</div>
             <div class="kpi-val">{{ number_format($stats['total_outstanding']) }}</div>
             <div class="kpi-sub">LE unpaid</div>
@@ -129,24 +116,23 @@
             <div class="kpi-val">{{ $stats['count'] }}</div>
             <div class="kpi-sub">with balance</div>
         </div>
-        <div class="kpi-card" style="--kc:#DC2626">
+        <div class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Restricted</div>
             <div class="kpi-val">{{ $stats['restricted'] }}</div>
             <div class="kpi-sub">attendance blocked</div>
         </div>
-        <div class="kpi-card" style="--kc:#F5911E">
+        <div class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Overdue</div>
             <div class="kpi-val">{{ $stats['overdue'] }}</div>
             <div class="kpi-sub">past due date</div>
         </div>
-        <div class="kpi-card" style="--kc:#059669">
+        <div class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Finished</div>
             <div class="kpi-val">{{ $stats['finished_count'] }}</div>
             <div class="kpi-sub">fully settled</div>
         </div>
     </div>
 
-    {{-- Filter Pills --}}
     <div class="pills">
         <button class="pill active"    onclick="setFilter('', this)">All</button>
         <button class="pill p-red"     onclick="setFilter('Restricted', this)">Restricted</button>
@@ -155,7 +141,6 @@
         <button class="pill p-green"   onclick="setFilter('finished', this)">Finished</button>
     </div>
 
-    {{-- Toolbar --}}
     <div class="toolbar">
         <div class="search-wrap">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -163,7 +148,6 @@
         </div>
     </div>
 
-    {{-- ══ OUTSTANDING TABLE ══ --}}
     <div id="mainSection">
         <div class="sec-lbl">
             <span>Outstanding Balances</span>
@@ -198,10 +182,7 @@
                         $nextDue     = $enrollment->installmentSchedules->whereIn('status', ['Pending', 'Overdue'])->sortBy('due_date')->first();
                         $daysOverdue = 0;
                         if ($nextDue && $nextDue->due_date) {
-                            // Not overdue the instant the due date passes — the
-                            // payment plan grants a grace period first. Count
-                            // overdue days from the END of that grace window so
-                            // this matches the restriction job.
+
                             $grace     = (int) ($enrollment->paymentPlan?->grace_period_days ?? 0);
                             $graceEnds = \Carbon\Carbon::parse($nextDue->due_date)->startOfDay()->addDays($grace);
                             $today     = now()->startOfDay();
@@ -291,13 +272,11 @@
                         </td>
                     </tr>
 
-                    {{-- Expand --}}
                     <tr class="expand-row" id="expand-{{ $enrollment->enrollment_id }}">
                         <td colspan="10" style="padding:0">
                             <div class="expand-inner">
                                 <div class="expand-grid">
 
-                                    {{-- Installment Schedule --}}
                                     <div>
                                         <div class="mini-lbl">Installment Schedule</div>
                                         @if($enrollment->installmentSchedules->isNotEmpty())
@@ -338,7 +317,6 @@
                                         @endif
                                     </div>
 
-                                    {{-- Info --}}
                                     <div>
                                         <div class="mini-lbl">Enrollment Info</div>
                                         <div style="display:flex;flex-direction:column;gap:6px">
@@ -392,7 +370,6 @@
         </div>
     </div>
 
-    {{-- ══ FINISHED SECTION ══ --}}
     @if($finishedEnrollments->count())
     <div id="finishedSection" style="display:none;margin-top:28px">
         <div class="fin-banner">
