@@ -2,14 +2,14 @@
 :root{
     --tsb-w: 220px;
     --tsb-w-collapsed: 64px;
-    --tsb-bg: #fff;
-    --tsb-border: rgba(5,150,105,0.08);
-    --tsb-green: #059669;
-    --tsb-active-bg: rgba(5,150,105,0.06);
-    --tsb-active-text: #059669;
-    --tsb-hover-bg: rgba(5,150,105,0.03);
+    --tsb-bg: rgba(255,255,255,0.5);
+    --tsb-border: rgba(27,79,168,0.08);
+    --tsb-green: #1B4FA8;
+    --tsb-active-bg: rgba(27,79,168,0.06);
+    --tsb-active-text: #1B4FA8;
+    --tsb-hover-bg: rgba(27,79,168,0.03);
     --tsb-text: #5A6A7A;
-    --tsb-label: rgba(5,150,105,0.5);
+    --tsb-label: rgba(27,79,168,0.5);
     --tsb-transition: 0.25s cubic-bezier(0.16,1,0.3,1);
 }
 
@@ -17,7 +17,9 @@
     width: var(--tsb-w);
     flex-shrink: 0;
     background: var(--tsb-bg);
-    border-right: 1px solid var(--tsb-border);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-right: 1px solid rgba(255,255,255,0.5);
     position: sticky;
     top: 62px;
     height: calc(100vh - 62px);
@@ -26,7 +28,6 @@
     overflow: hidden;
     transition: width var(--tsb-transition);
     z-index: 40;
-    box-shadow: 2px 0 12px rgba(5,150,105,0.04);
     font-family: 'DM Sans', sans-serif;
 }
 #teacherSidebar.collapsed{ width: var(--tsb-w-collapsed); }
@@ -37,11 +38,11 @@
     overflow-x: hidden;
     padding: 16px 0 24px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(5,150,105,0.1) transparent;
+    scrollbar-color: rgba(27,79,168,0.1) transparent;
 }
 .tsb-scroll::-webkit-scrollbar{ width: 3px; }
 .tsb-scroll::-webkit-scrollbar-track{ background: transparent; }
-.tsb-scroll::-webkit-scrollbar-thumb{ background: rgba(5,150,105,0.12); border-radius: 2px; }
+.tsb-scroll::-webkit-scrollbar-thumb{ background: rgba(27,79,168,0.12); border-radius: 2px; }
 
 .tsb-toggle{
     height: 48px;
@@ -64,7 +65,7 @@
     color: var(--tsb-label);
     transition: all 0.2s;
 }
-.tsb-toggle-btn:hover{ background: var(--tsb-hover-bg); color: var(--tsb-green); border-color: rgba(5,150,105,0.2); }
+.tsb-toggle-btn:hover{ background: var(--tsb-hover-bg); color: var(--tsb-green); border-color: rgba(27,79,168,0.2); }
 
 .tsb-section{ margin-top: 4px; }
 .tsb-section-header{
@@ -118,7 +119,7 @@
 .tsl-link:hover{
     color: var(--tsb-active-text);
     background: var(--tsb-hover-bg);
-    border-left-color: rgba(5,150,105,0.2);
+    border-left-color: rgba(27,79,168,0.2);
     text-decoration: none;
 }
 .tsl-link.active{
@@ -152,38 +153,30 @@
     color: #AAB8C8; margin-left: auto; flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════════
-   COLLAPSED STATE — clean, tight icon-only view
-═══════════════════════════════════════════════════════ */
 #teacherSidebar.collapsed .tsl-link-text,
 #teacherSidebar.collapsed .tsl-badge,
 #teacherSidebar.collapsed .tsl-view-tag{
     opacity: 0; width: 0; pointer-events: none;
 }
 
-/* Hide section headers completely (label + padding) */
 #teacherSidebar.collapsed .tsb-section-header{
     display: none;
 }
 
-/* Show section body without collapse animation */
 #teacherSidebar.collapsed .tsb-section-body{
     max-height: 600px !important;
 }
 
-/* Reduce spacing between sections */
 #teacherSidebar.collapsed .tsb-section{
     margin-top: 0;
 }
 
-/* Add subtle divider between sections instead of section headers */
 #teacherSidebar.collapsed .tsb-section + .tsb-section{
     border-top: 1px solid var(--tsb-border);
     margin-top: 6px;
     padding-top: 6px;
 }
 
-/* Center icons + tight vertical padding */
 #teacherSidebar.collapsed .tsl-link{
     padding: 11px 0;
     justify-content: center;
@@ -191,7 +184,6 @@
     position: relative;
 }
 
-/* Active state: solid green background + green icon */
 #teacherSidebar.collapsed .tsl-link.active{
     background: var(--tsb-active-bg);
 }
@@ -200,7 +192,6 @@
     opacity: 1;
 }
 
-/* Small green dot on the right of active icon for extra clarity */
 #teacherSidebar.collapsed .tsl-link.active::before{
     content: '';
     position: absolute;
@@ -213,22 +204,18 @@
     border-radius: 2px 0 0 2px;
 }
 
-/* Hide dividers when collapsed (we use section borders instead) */
 #teacherSidebar.collapsed .tsl-div{
     display: none;
 }
 
-/* Icon spacing */
 #teacherSidebar.collapsed .tsl-link svg{
     min-width: 16px;
     width: 16px;
     height: 16px;
 }
 
-/* Rotate toggle arrow */
 #teacherSidebar.collapsed .tsb-toggle-btn svg{ transform: rotate(180deg); }
 
-/* Tooltip on hover (kept from original) */
 #teacherSidebar.collapsed .tsl-link::after{
     content: attr(data-label);
     position: absolute;
@@ -255,7 +242,6 @@
 }
 #teacherSidebar.collapsed .tsl-link:hover::after{ opacity: 1; }
 
-/* Mobile overlay */
 .tsb-overlay{
     display: none;
     position: fixed; inset: 0;
@@ -272,7 +258,7 @@
         transform: translateX(-100%);
         transition: transform var(--tsb-transition);
         width: var(--tsb-w) !important;
-        box-shadow: 4px 0 24px rgba(5,150,105,0.15);
+        box-shadow: 4px 0 24px rgba(27,79,168,0.15);
     }
     #teacherSidebar.mobile-open{ transform: translateX(0); }
     .tsb-toggle{ display: none; }
@@ -284,7 +270,6 @@
 <aside id="teacherSidebar">
     <div class="tsb-scroll">
 
-        {{-- Overview --}}
         <div class="tsb-section">
             <div class="tsb-section-header" onclick="toggleTSection(this)">
                 <span class="tsb-section-label">Overview</span>
@@ -300,7 +285,6 @@
 
         <div class="tsl-div"></div>
 
-        {{-- Academic --}}
         <div class="tsb-section">
             <div class="tsb-section-header" onclick="toggleTSection(this)">
                 <span class="tsb-section-label">Academic</span>
@@ -315,8 +299,8 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                     <span class="tsl-link-text">My Courses</span>
                 </a>
-                <a href="{{ route('teacher.pending-approvals') }}" 
-                class="tsl-link {{ request()->routeIs('teacher.pending-approvals') ? 'active' : '' }}" 
+                <a href="{{ route('teacher.pending-approvals') }}"
+                class="tsl-link {{ request()->routeIs('teacher.pending-approvals') ? 'active' : '' }}"
                 data-label="Pending Approvals">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     <span class="tsl-link-text">Pending Approvals</span>
@@ -335,7 +319,6 @@
 
         <div class="tsl-div"></div>
 
-        {{-- Reports --}}
         <div class="tsb-section">
             <div class="tsb-section-header" onclick="toggleTSection(this)">
                 <span class="tsb-section-label">Reports</span>
