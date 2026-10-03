@@ -8,15 +8,18 @@
     <title>@yield('title', 'Teacher') — Infinity Academy</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body style="margin:0;background:#F8F6F2;font-family:'DM Sans',sans-serif;">
+<body style="margin:0;font-family:'DM Sans',sans-serif;">
 
-    @include('teacher.partials.navbar')
+    <div style="min-height:100vh;background:radial-gradient(820px 480px at 8% -5%, rgba(245,145,30,0.16), transparent 60%),radial-gradient(900px 560px at 100% 0%, rgba(45,111,219,0.20), transparent 55%),radial-gradient(700px 520px at 55% 120%, rgba(127,119,221,0.14), transparent 60%),linear-gradient(135deg,#eef2fb 0%,#f5eefb 50%,#fdf1e6 100%);background-attachment:fixed;">
 
-    <div style="display:flex;min-height:calc(100vh - 62px);">
-        @include('teacher.partials.sidebar')
-        <main style="flex:1;overflow-x:hidden;">
-            @yield('content')
-        </main>
+        @include('teacher.partials.navbar')
+
+        <div style="display:flex;min-height:calc(100vh - 62px);">
+            @include('teacher.partials.sidebar')
+            <main style="flex:1;overflow-x:hidden;min-width:0;background:#F8F6F2;">
+                @yield('content')
+            </main>
+        </div>
     </div>
 @include('partials.realtime-notifications')
 </body>
