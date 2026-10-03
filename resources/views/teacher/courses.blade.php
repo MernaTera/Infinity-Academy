@@ -7,79 +7,82 @@
 @endonce
 
 <style>
-.crs-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#059669;margin:0}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--border:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+*{box-sizing:border-box}
+.crs-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.page-eyebrow{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:6px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--text);margin:0}
 .page-header{margin-bottom:28px}
-
+    .orb{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2{ width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3{ width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px}
-.kpi-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:6px;padding:16px 20px;position:relative;overflow:hidden}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,#059669)}
-.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:5px}
-.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;color:var(--kc,#059669);line-height:1}
+.kpi-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--glass-sh)}
+/* .kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc,var(--blue))} */
+.kpi-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--kc,var(--blue));line-height:1}
 
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:14px;display:block;padding-bottom:8px;border-bottom:1px solid rgba(5,150,105,0.1)}
+.sec-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:block;padding-bottom:8px;border-bottom:1px solid rgba(27,79,168,0.1);font-weight:600}
 
-/* Course Cards */
 .courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;margin-bottom:28px}
-.course-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:all 0.2s;position:relative}
-.course-card:hover{box-shadow:0 6px 24px rgba(5,150,105,0.1);transform:translateY(-2px);text-decoration:none;color:inherit}
-.course-card.active::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#059669,transparent)}
-.course-card.upcoming::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1B4FA8,transparent)}
-.course-card.completed::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:rgba(122,138,154,0.3)}
+.course-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:18px;overflow:hidden;text-decoration:none;color:inherit;display:block;transition:transform 0.2s, box-shadow 0.2s;position:relative;box-shadow:var(--glass-sh)}
+.course-card:hover{box-shadow:0 16px 38px rgba(23,45,90,0.13);transform:translateY(-3px);text-decoration:none;color:inherit}
+.course-card.active::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.course-card.upcoming::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue-2),transparent)}
+.course-card.completed::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:rgba(122,138,154,0.3)}
 
-.cc-header{padding:18px 20px 14px;border-bottom:1px solid rgba(5,150,105,0.06)}
-.cc-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#1A2A4A}
-.cc-level{font-size:11px;color:#7A8A9A;margin-top:3px}
+.cc-header{padding:18px 20px 14px;border-bottom:1px solid rgba(27,79,168,0.06)}
+.cc-name{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text)}
+.cc-level{font-size:11px;color:var(--muted);margin-top:3px}
 .cc-badges{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-weight:500}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:20px;font-weight:600}
 .badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0}
-.badge-active{color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.15)}
-.badge-upcoming{color:#1B4FA8;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.15)}
-.badge-completed{color:#7A8A9A;background:rgba(122,138,154,0.08);border:1px solid rgba(122,138,154,0.15)}
-.tag{display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:3px;text-transform:uppercase;font-weight:500}
-.tag-group{background:rgba(27,79,168,0.05);border:1px solid rgba(27,79,168,0.12);color:#2D6FDB}
-.tag-private{background:rgba(245,145,30,0.05);border:1px solid rgba(245,145,30,0.15);color:#C47010}
+.badge-active{color:var(--blue);background:rgba(27,79,168,0.1);border:1px solid rgba(27,79,168,0.2)}
+.badge-upcoming{color:var(--blue-2);background:rgba(45,111,219,0.08);border:1px solid rgba(45,111,219,0.2)}
+.badge-completed{color:var(--muted);background:rgba(122,138,154,0.1);border:1px solid rgba(122,138,154,0.2)}
+.tag{display:inline-block;font-size:9px;letter-spacing:1px;padding:2px 8px;border-radius:6px;text-transform:uppercase;font-weight:600}
+.tag-group{background:rgba(27,79,168,0.05);border:1px solid rgba(27,79,168,0.12);color:var(--blue-2)}
+.tag-private{background:rgba(245,145,30,0.05);border:1px solid rgba(245,145,30,0.15);color:var(--orange-dk)}
 
 .cc-body{padding:14px 20px}
 .cc-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
-.cc-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-bottom:3px}
-.cc-meta-val{font-size:12px;color:#1A2A4A;font-weight:500}
+.cc-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:3px}
+.cc-meta-val{font-size:12px;color:var(--text);font-weight:500}
 
-.prog-bar{background:#F0F0F0;border-radius:3px;height:4px;overflow:hidden;margin:10px 0 4px}
-.prog-fill{height:4px;border-radius:3px;background:linear-gradient(90deg,#059669,#10B981)}
-.prog-meta{display:flex;justify-content:space-between;font-size:10px;color:#AAB8C8}
+.prog-bar{background:rgba(27,79,168,0.1);border-radius:3px;height:4px;overflow:hidden;margin:10px 0 4px}
+.prog-fill{height:4px;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue-2))}
+.prog-meta{display:flex;justify-content:space-between;font-size:10px;color:var(--faint)}
 
-.cc-footer{padding:12px 20px;border-top:1px solid rgba(5,150,105,0.06);display:flex;align-items:center;justify-content:space-between}
-.view-btn{display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#059669;font-weight:500}
-.student-count{font-family:'Bebas Neue',sans-serif;font-size:18px;color:#1A2A4A;letter-spacing:1px}
+.cc-footer{padding:12px 20px;border-top:1px solid rgba(27,79,168,0.06);display:flex;align-items:center;justify-content:space-between}
+.view-btn{display:inline-flex;align-items:center;gap:6px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);font-weight:600}
+.student-count{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--text);letter-spacing:1px}
 
-/* Completed table */
-.tbl-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;overflow:hidden}
+.tbl-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:20px;overflow:hidden;box-shadow:var(--glass-sh)}
 .tbl{width:100%;border-collapse:collapse}
-.tbl thead th{padding:11px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-align:left;font-weight:500;background:rgba(5,150,105,0.02);border-bottom:1px solid rgba(5,150,105,0.07);white-space:nowrap}
-.tbl tbody tr{border-bottom:1px solid rgba(5,150,105,0.04);transition:background 0.2s}
+.tbl thead th{padding:13px 16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;background:rgba(255,255,255,0.4);border-bottom:1px solid var(--border);white-space:nowrap}
+.tbl tbody tr{border-bottom:1px solid rgba(27,79,168,0.06);transition:background 0.2s}
 .tbl tbody tr:last-child{border-bottom:none}
-.tbl tbody tr:hover{background:rgba(5,150,105,0.02)}
-.tbl td{padding:12px 14px;font-size:13px;color:#4A5A7A;vertical-align:middle}
+.tbl tbody tr:hover{background:rgba(27,79,168,0.04)}
+.tbl td{padding:13px 16px;font-size:13px;color:var(--muted);vertical-align:middle}
 
-.empty-state{text-align:center;padding:48px;color:#AAB8C8}
+.empty-state{text-align:center;padding:48px;color:var(--faint)}
 .empty-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:6px}
 
 @media(max-width:768px){.crs-page{padding:18px 14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}.courses-grid{grid-template-columns:1fr}}
 </style>
 
 <div class="crs-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div class="page-eyebrow">Instructor</div>
         <h1 class="page-title">My Courses</h1>
     </div>
 
-    {{-- KPIs --}}
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:#059669">
+        <div class="kpi-card" style="--kc:#1B4FA8">
             <div class="kpi-label">Active</div>
             <div class="kpi-val">{{ $stats['active'] }}</div>
         </div>
@@ -97,11 +100,10 @@
         </div>
     </div>
 
-    {{-- Active & Upcoming --}}
     <span class="sec-label">Active & Upcoming Courses</span>
 
     @if($activeCourses->isEmpty())
-    <div class="empty-state" style="background:#fff;border:1px solid rgba(5,150,105,0.08);border-radius:8px;margin-bottom:28px">
+    <div class="empty-state" style="background:#fff;border:1px solid rgba(27,79,168,0.08);border-radius:8px;margin-bottom:28px">
         <div class="empty-title">No Active Courses</div>
         <div style="font-size:12px">No courses assigned in the current patch</div>
     </div>
@@ -190,7 +192,6 @@
     </div>
     @endif
 
-    {{-- Completed --}}
     @if($completedCourses->isNotEmpty())
     <span class="sec-label">Completed Courses</span>
     <div class="tbl-card">
@@ -229,8 +230,8 @@
                         </td>
                         <td>
                             <a href="{{ route('teacher.courses.show', $instance->course_instance_id) }}"
-                               style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(5,150,105,0.2);color:#059669;text-decoration:none;transition:all 0.2s"
-                               onmouseover="this.style.background='rgba(5,150,105,0.06)'"
+                               style="display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(27,79,168,0.2);color:#1B4FA8;text-decoration:none;transition:all 0.2s"
+                               onmouseover="this.style.background='rgba(27,79,168,0.06)'"
                                onmouseout="this.style.background='transparent'">
                                 View
                             </a>
