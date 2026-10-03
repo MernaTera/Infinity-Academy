@@ -9,7 +9,22 @@
 <style>
 :root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--red:#DC2626;--amber:#D97706;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--border:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
 *{box-sizing:border-box;}
+    .orb{ position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
+    .orb-2{ width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
+    .orb-3{ width:380px; height:380px; background:radial-gradient(circle,#7C3AED,transparent 70%); bottom:-140px; left:35%; }
 .td-wrap { padding: 36px 32px; font-family: 'DM Sans', sans-serif; color:var(--text); min-height:100vh; }
+    .patch-bar{display:flex;align-items:center;gap:20px;flex-wrap:wrap;padding:16px 22px;border-radius:16px;margin-bottom:22px;}
+    .patch-bar-icon{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--blue),var(--blue-2));display:grid;place-items:center;flex-shrink:0;box-shadow:0 8px 18px rgba(27,79,168,0.28);}
+    .patch-bar-info{flex:1;min-width:180px;}
+    .patch-bar-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;color:var(--text);line-height:1;}
+    .patch-bar-dates{font-size:11px;color:var(--muted);margin-top:5px;}
+    .patch-bar-dates b{color:var(--blue);font-weight:600;}
+    .patch-bar-prog{flex:1;min-width:200px;max-width:340px;}
+    .patch-bar-prog-top{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:7px;}
+    .patch-bar-prog-pct{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--blue);letter-spacing:1px;}
+    .patch-bar-track{background:rgba(27,79,168,0.1);border-radius:5px;height:7px;overflow:hidden;}
+    .patch-bar-fill{height:7px;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--blue-2));transition:width .6s ease;}
+    @media (max-width:600px){ .patch-bar-prog{max-width:none;} }
 
 .td-eyebrow { font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:6px;font-weight:600 }
 .td-title   { font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--text);margin:0 0 2px }
@@ -90,6 +105,12 @@
 </style>
 
 <div class="td-wrap">
+    @php
+        $availabilities = \App\Models\HR\TeacherAvailability::where('teacher_id', $teacher->teacher_id)
+            ->with('timeSlot')->orderBy('time_slot_id')->get();
+    @endphp
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px">
         <div>
@@ -97,19 +118,48 @@
             <h1 class="td-title">Dashboard</h1>
             <div class="td-sub">{{ now()->format('l, d F Y') }}</div>
         </div>
-
-        @if($currentPatch)
-        <div class="td-patch-info">
-            <span class="td-patch-dot"></span>
-            {{ $currentPatch->name }}
-            &nbsp;·&nbsp;
-            {{ \Carbon\Carbon::parse($currentPatch->start_date)->format('d M') }}
-            –
-            {{ \Carbon\Carbon::parse($currentPatch->end_date)->format('d M Y') }}
+                @if($availabilities->count())
+        <div style="max-width:380px;padding:12px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);box-shadow:var(--glass-sh);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);">
+            <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#F5911E" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);font-weight:600;">Working Time</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                @foreach($availabilities as $av)
+                <span style="display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;background:rgba(27,79,168,0.08);border:1px solid rgba(27,79,168,0.15);font-size:10px;color:var(--blue);font-weight:600;white-space:nowrap;">
+                    {{ $av->day_of_week }}
+                    @if($av->timeSlot)
+                    <span style="color:var(--faint);font-weight:400;">{{ \Carbon\Carbon::parse($av->timeSlot->start_time)->format('g:i') }}–{{ \Carbon\Carbon::parse($av->timeSlot->end_time)->format('g:i A') }}</span>
+                    @endif
+                </span>
+                @endforeach
+            </div>
         </div>
         @endif
     </div>
-
+    @if($currentPatch)
+    @php
+        $pStart   = \Carbon\Carbon::parse($currentPatch->start_date);
+        $pEnd     = \Carbon\Carbon::parse($currentPatch->end_date);
+        $pTotal   = max(1, $pStart->diffInDays($pEnd));
+        $pElapsed = max(0, min($pTotal, $pStart->diffInDays(now())));
+        $pPct     = round($pElapsed / $pTotal * 100);
+        $daysLeft = max(0, (int)now()->diffInDays($pEnd, false));
+    @endphp
+    <div class="patch-bar glass" style= "padding:12px 16px;border-radius:14px;background:var(--card);border:1px solid var(--border);box-shadow:var(--glass-sh);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);">
+        <div class="patch-bar-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="patch-bar-info">
+            <div class="patch-bar-name">{{ $currentPatch->name }}</div>
+            <div class="patch-bar-dates">{{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }} · <b>{{ $daysLeft }} days left</b></div>
+        </div>
+        <div class="patch-bar-prog">
+            <div class="patch-bar-prog-top"><span>Patch Progress</span><span class="patch-bar-prog-pct">{{ $pPct }}%</span></div>
+            <div class="patch-bar-track"><div class="patch-bar-fill" style="width:{{ $pPct }}%"></div></div>
+        </div>
+    </div>
+    @endif
     @if(count($alerts))
     <div class="td-alerts">
         @foreach($alerts as $alert)
