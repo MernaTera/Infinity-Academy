@@ -7,65 +7,63 @@
 @endonce
 
 <style>
-.att-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#059669;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#059669;margin:0}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--border:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+*{box-sizing:border-box}
+.att-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--text);margin:0}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
-.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:transparent;border:1px solid rgba(5,150,105,0.2);border-radius:4px;color:#7A8A9A;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s}
-.btn-back:hover{border-color:#059669;color:#059669;text-decoration:none}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:var(--card);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:11px;color:var(--muted);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s}
+.btn-back:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
 
-/* Session Info */
-.session-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;padding:18px 22px;margin-bottom:20px;position:relative;overflow:hidden}
-.session-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#059669,transparent)}
+.session-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:18px;padding:18px 22px;margin-bottom:20px;position:relative;overflow:hidden;box-shadow:var(--glass-sh)}
+/* .session-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),var(--blue),transparent)} */
 .session-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:16px}
-.sg-label{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:4px}
-.sg-val{font-size:13px;color:#1A2A4A;font-weight:500}
-.sg-time{font-family:'Bebas Neue',sans-serif;font-size:22px;color:#059669;letter-spacing:2px;line-height:1}
+.sg-label{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:var(--faint);margin-bottom:4px}
+.sg-val{font-size:13px;color:var(--text);font-weight:500}
+.sg-time{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--blue);letter-spacing:2px;line-height:1}
 
-/* Timer */
-.timer-banner{background:linear-gradient(135deg,#059669,#10B981);border-radius:8px;padding:14px 22px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between}
+.timer-banner{background:linear-gradient(135deg,var(--blue),var(--blue-2));border-radius:14px;padding:14px 22px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 10px 30px rgba(27,79,168,0.22)}
 .timer-text{color:rgba(255,255,255,0.8);font-size:12px}
 .timer-val{font-family:'Bebas Neue',sans-serif;font-size:28px;color:#fff;letter-spacing:2px}
-.timer-warn{background:rgba(245,145,30,0.15);border:1px solid rgba(245,145,30,0.3);border-radius:8px;padding:14px 22px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:12px;color:#C47010}
-.timer-closed{background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);border-radius:8px;padding:14px 22px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:12px;color:#DC2626}
-.timer-done{background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.15);border-radius:8px;padding:14px 22px;margin-bottom:20px;font-size:12px;color:#059669}
+.timer-warn{background:rgba(245,145,30,0.12);border:1px solid rgba(245,145,30,0.3);border-radius:14px;padding:14px 22px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--orange-dk)}
+.timer-closed{background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:14px;padding:14px 22px;margin-bottom:20px;display:flex;align-items:center;gap:10px;font-size:12px;color:var(--red)}
+.timer-done{background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.18);border-radius:14px;padding:14px 22px;margin-bottom:20px;font-size:12px;color:var(--blue)}
 
-/* Attendance Table */
-.att-card{background:#fff;border:1px solid rgba(5,150,105,0.1);border-radius:8px;overflow:hidden}
-.att-card-header{padding:14px 20px;border-bottom:1px solid rgba(5,150,105,0.07);display:flex;align-items:center;justify-content:space-between}
-.att-card-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#1A2A4A}
+.att-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:var(--glass-sh)}
+.att-card-header{padding:14px 20px;border-bottom:1px solid rgba(27,79,168,0.08);display:flex;align-items:center;justify-content:space-between}
+.att-card-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--text)}
 
-.att-row{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid rgba(5,150,105,0.04);transition:background 0.2s}
+.att-row{display:flex;align-items:center;gap:16px;padding:14px 20px;border-bottom:1px solid rgba(27,79,168,0.05);transition:background 0.2s}
 .att-row:last-child{border-bottom:none}
-.att-row:hover{background:rgba(5,150,105,0.02)}
-.att-row.restricted{background:rgba(220,38,38,0.02)}
+.att-row:hover{background:rgba(27,79,168,0.03)}
+.att-row.restricted{background:rgba(220,38,38,0.03)}
 
-.att-avatar{width:34px;height:34px;border-radius:50%;background:rgba(5,150,105,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:#059669;flex-shrink:0}
-.att-avatar.restricted{background:rgba(220,38,38,0.1);color:#DC2626}
-.att-name{font-weight:500;color:#1A2A4A;font-size:13px;flex:1}
-.att-phone{font-size:10px;color:#AAB8C8;font-family:monospace;margin-top:2px}
+.att-avatar{width:34px;height:34px;border-radius:50%;background:rgba(27,79,168,0.1);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;color:var(--blue);flex-shrink:0}
+.att-avatar.restricted{background:rgba(220,38,38,0.1);color:var(--red)}
+.att-name{font-weight:500;color:var(--text);font-size:13px;flex:1}
+.att-phone{font-size:10px;color:var(--faint);font-family:monospace;margin-top:2px}
 
-/* Toggle */
-.att-toggle{display:flex;border:1px solid rgba(5,150,105,0.2);border-radius:6px;overflow:hidden;flex-shrink:0}
+.att-toggle{display:flex;border:1px solid rgba(27,79,168,0.2);border-radius:8px;overflow:hidden;flex-shrink:0;background:rgba(255,255,255,0.4);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
 .att-toggle label{display:flex;align-items:center;gap:6px;padding:8px 16px;cursor:pointer;font-size:11px;letter-spacing:1px;text-transform:uppercase;transition:all 0.2s;white-space:nowrap}
 .att-toggle input{position:absolute;opacity:0;pointer-events:none}
 .att-toggle input[value="Present"]:checked ~ label.present,
-.att-toggle .present-wrap input:checked ~ label{background:#059669;color:#fff}
-.att-toggle input[value="Absent"]:checked ~ label.absent{background:#DC2626;color:#fff}
-.att-toggle .divider{width:1px;background:rgba(5,150,105,0.2)}
+.att-toggle .present-wrap input:checked ~ label{background:var(--blue);color:#fff}
+.att-toggle input[value="Absent"]:checked ~ label.absent{background:var(--red);color:#fff}
+.att-toggle .divider{width:1px;background:rgba(27,79,168,0.2)}
 
-/* Submit */
-.submit-wrap{padding:20px;border-top:1px solid rgba(5,150,105,0.07);display:flex;justify-content:flex-end;gap:10px}
-.btn-submit{padding:12px 32px;background:transparent;border:1.5px solid #059669;border-radius:4px;color:#059669;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s}
-.btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#059669,#10B981);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
+.submit-wrap{padding:20px;border-top:1px solid rgba(27,79,168,0.08);display:flex;justify-content:flex-end;gap:10px}
+.btn-submit{padding:12px 32px;background:transparent;border:1.5px solid var(--blue);border-radius:10px;color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s}
+.btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--blue),var(--blue-2));transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
 .btn-submit:hover::before{transform:scaleX(1)}
 .btn-submit:hover{color:#fff}
+.btn-submit span,.btn-submit svg{position:relative;z-index:1}
 
-.quick-btns{display:flex;gap:8px;padding:12px 20px;border-bottom:1px solid rgba(5,150,105,0.06)}
-.quick-btn{padding:6px 14px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
-.quick-all-present{color:#059669;border-color:rgba(5,150,105,0.25)}
-.quick-all-present:hover{background:rgba(5,150,105,0.07)}
-.quick-all-absent{color:#DC2626;border-color:rgba(220,38,38,0.2)}
+.quick-btns{display:flex;gap:8px;padding:12px 20px;border-bottom:1px solid rgba(27,79,168,0.06)}
+.quick-btn{padding:6px 14px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:6px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
+.quick-all-present{color:var(--blue);border-color:rgba(27,79,168,0.25)}
+.quick-all-present:hover{background:rgba(27,79,168,0.07)}
+.quick-all-absent{color:var(--red);border-color:rgba(220,38,38,0.2)}
 .quick-all-absent:hover{background:rgba(220,38,38,0.06)}
 
 @media(max-width:768px){.att-page{padding:18px 14px}.att-toggle label{padding:7px 10px;font-size:10px}}
@@ -84,7 +82,6 @@
         </a>
     </div>
 
-    {{-- Session Info --}}
     <div class="session-card">
         <div class="session-grid">
             <div>
@@ -112,14 +109,13 @@
             </div>
             <div>
                 <div class="sg-label">Status</div>
-                <div class="sg-val" style="color:{{ $session->status === 'Completed' ? '#059669' : '#C47010' }}">
+                <div class="sg-val" style="color:{{ $session->status === 'Completed' ? '#1B4FA8' : '#C47010' }}">
                     {{ $session->status }}
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- Timer / Status Banner --}}
     @if($session->status === 'Completed')
     <div class="timer-done">
         ✓ Attendance already saved for this session.
@@ -147,17 +143,16 @@
     @endif
 
     @if(session('success'))
-    <div style="background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:#059669;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">
+    <div style="background:rgba(27,79,168,0.08);border:1px solid rgba(27,79,168,0.2);color:#1B4FA8;padding:12px 16px;border-radius:10px;margin-bottom:20px;font-size:13px">
         {{ session('success') }}
     </div>
     @endif
 
-    {{-- Attendance Form --}}
     <div class="att-card">
         <div class="att-card-header">
             <div class="att-card-title">Student Attendance</div>
             @if($isOpen)
-            <span style="font-size:10px;color:#059669;letter-spacing:1px;text-transform:uppercase">Window Open</span>
+            <span style="font-size:10px;color:#1B4FA8;letter-spacing:1px;text-transform:uppercase">Window Open</span>
             @endif
         </div>
 
@@ -195,9 +190,8 @@
                 </div>
 
                 @if($isRestricted || !$isOpen)
-                    {{-- Read only --}}
-                    <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-radius:4px;
-                        {{ $isRestricted ? 'color:#DC2626;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2)' : ($existing === 'Present' ? 'color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2)' : 'color:#7A8A9A;background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.15)') }}">
+                    <span style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;font-size:11px;letter-spacing:1px;text-transform:uppercase;border-radius:8px;
+                        {{ $isRestricted ? 'color:#DC2626;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2)' : ($existing === 'Present' ? 'color:#1B4FA8;background:rgba(27,79,168,0.08);border:1px solid rgba(27,79,168,0.2)' : 'color:#5A6A85;background:rgba(90,106,133,0.06);border:1px solid rgba(90,106,133,0.15)') }}">
                         {{ $isRestricted ? 'Restricted' : ($existing ?? '—') }}
                     </span>
                     @if(!$isRestricted)
@@ -205,9 +199,8 @@
                            value="{{ $existing ?? 'Absent' }}">
                     @endif
                 @else
-                    {{-- Toggle buttons --}}
                     <div class="att-toggle" id="toggle_{{ $enrollment->enrollment_id }}">
-                        <label style="{{ ($existing ?? 'Absent') === 'Present' ? 'background:#059669;color:#fff' : 'color:#059669' }}"
+                        <label style="{{ ($existing ?? 'Absent') === 'Present' ? 'background:#1B4FA8;color:#fff' : 'color:#1B4FA8' }}"
                                onclick="setAttendance({{ $enrollment->enrollment_id }}, 'Present', this)">
                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                             Present
@@ -225,7 +218,7 @@
                 @endif
             </div>
             @empty
-            <div style="padding:40px;text-align:center;color:#AAB8C8;font-size:12px">No students enrolled</div>
+            <div style="padding:40px;text-align:center;color:#93A3BC;font-size:12px">No students enrolled</div>
             @endforelse
 
             @if($isOpen)
@@ -240,7 +233,6 @@
 
 @if($isOpen)
 <script>
-// Countdown timer
 let seconds = {{ $minutesLeft }} * 60;
 const display = document.getElementById('timerDisplay');
 
@@ -253,7 +245,7 @@ function updateTimer() {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     display.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
-    if (seconds <= 120) display.style.color = '#FFD700'; // warning yellow
+    if (seconds <= 120) display.style.color = '#FFD700';
     seconds--;
     setTimeout(updateTimer, 1000);
 }
@@ -265,9 +257,9 @@ function setAttendance(id, status, clickedLabel) {
     const labels = toggle.querySelectorAll('label');
     labels.forEach(l => {
         l.style.background = '';
-        l.style.color = l === labels[0] ? '#059669' : '#DC2626';
+        l.style.color = l === labels[0] ? '#1B4FA8' : '#DC2626';
     });
-    clickedLabel.style.background = status === 'Present' ? '#059669' : '#DC2626';
+    clickedLabel.style.background = status === 'Present' ? '#1B4FA8' : '#DC2626';
     clickedLabel.style.color = '#fff';
 }
 
@@ -279,10 +271,10 @@ function markAll(status) {
         const labels = toggle.querySelectorAll('label');
         labels.forEach(l => {
             l.style.background = '';
-            l.style.color = l === labels[0] ? '#059669' : '#DC2626';
+            l.style.color = l === labels[0] ? '#1B4FA8' : '#DC2626';
         });
         if (status === 'Present') {
-            labels[0].style.background = '#059669';
+            labels[0].style.background = '#1B4FA8';
             labels[0].style.color = '#fff';
         } else {
             labels[1].style.background = '#DC2626';
