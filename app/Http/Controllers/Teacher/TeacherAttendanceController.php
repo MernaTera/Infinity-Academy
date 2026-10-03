@@ -8,16 +8,13 @@ use App\Models\Enrollment\Enrollment;
 use App\Models\Attendance\Attendance;
 use App\Models\HR\Teacher;
 use App\Models\HR\Employee;
+use App\Services\AuditService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class TeacherAttendanceController extends Controller
 {
-    /*
-    |------------------------------------------------------------------
-    | Show — 20 min window from session start
-    |------------------------------------------------------------------
-    */
     public function show($sessionId)
     {
         $employee = Employee::where('user_id', auth()->id())->first();
@@ -90,10 +87,6 @@ class TeacherAttendanceController extends Controller
             return back()->with('error', 'Attendance window is closed. You have 20 minutes from session start.');
         }
 
-        $enrollments = Enrollment::where('course_instance_id', $session->course_instance_id)
-            ->whereIn('status', ['Active', 'Restricted'])
-            ->get();
-
         $sessionHours = 0;
         if ($session->start_time && $session->end_time) {
             $mins = Carbon::parse($session->start_time)->diffInMinutes(Carbon::parse($session->end_time));
@@ -104,94 +97,141 @@ class TeacherAttendanceController extends Controller
         }
 
         $csEmployeeId = $employee?->employee_id;
+        $recordedBy   = $teacher->employee_id;
 
-        foreach ($enrollments as $enrollment) {
-            $status = $request->attendance[$enrollment->enrollment_id] ?? 'Absent';
+        DB::transaction(function () use ($request, $session, $sessionId, $recordedBy, $csEmployeeId, $sessionHours) {
 
-            if ($enrollment->status === 'Restricted') {
-                $status = 'Absent';
-            }
+            $enrollments = Enrollment::where('course_instance_id', $session->course_instance_id)
+                ->whereIn('status', ['Active', 'Restricted', 'Cancelled'])
+                ->lockForUpdate()
+                ->get();
 
-            Attendance::updateOrCreate(
-                [
-                    'enrollment_id'     => $enrollment->enrollment_id,
-                    'course_session_id' => $sessionId,
-                ],
-                [
-                    'status'      => $status,
-                    'recorded_by' => $teacher->employee_id,
-                    'recorded_at' => now(),
-                ]
-            );
+            foreach ($enrollments as $enrollment) {
 
-            $isPrivate = $enrollment->enrollment_type === 'Private'
-                && $enrollment->hours_remaining !== null;
+                $priorStatus = Attendance::where('course_session_id', $sessionId)
+                    ->where('enrollment_id', $enrollment->enrollment_id)
+                    ->value('status');
 
-            if ($isPrivate && $sessionHours > 0 && $enrollment->status !== 'Restricted') {
+                $reclaim = (float) DB::table('bundle_usage_log')
+                    ->where('course_session_id', $sessionId)
+                    ->where('enrollment_id', $enrollment->enrollment_id)
+                    ->where('reason', 'ATTENDANCE')
+                    ->sum('hours_deducted');
 
-                $shouldDeduct = false;
+                if ($reclaim > 0) {
+                    DB::table('bundle_usage_log')
+                        ->where('course_session_id', $sessionId)
+                        ->where('enrollment_id', $enrollment->enrollment_id)
+                        ->where('reason', 'ATTENDANCE')
+                        ->delete();
 
-                if ($status === 'Present') {
-                    $shouldDeduct = true;
-                } elseif ($status === 'Absent') {
-                    $priorAbsences = Attendance::where('enrollment_id', $enrollment->enrollment_id)
+                    $enrollment->hours_remaining = (float) $enrollment->hours_remaining + $reclaim;
+
+                    if ($enrollment->status === 'Restricted' && $enrollment->hours_remaining > 0) {
+                        $enrollment->status = 'Active';
+                        $enrollment->restriction_flag = false;
+                    }
+                    $enrollment->save();
+                }
+
+                if ($enrollment->status === 'Cancelled') {
+                    $canRestore = $enrollment->enrollment_type === 'Group' && $priorStatus === 'Absent';
+                    if (!$canRestore) {
+                        continue;
+                    }
+
+                    $desired = $request->attendance[$enrollment->enrollment_id] ?? 'Absent';
+                    if ($desired === 'Absent') {
+                        continue;
+                    }
+
+                    $otherAbsences = Attendance::where('enrollment_id', $enrollment->enrollment_id)
                         ->where('status', 'Absent')
                         ->where('course_session_id', '!=', $sessionId)
                         ->count();
 
-                    if ($priorAbsences >= 2) {
-                        $shouldDeduct = true;
+                    if ($otherAbsences >= 3) {
+                        continue;
                     }
+
+                    $enrollment->status = 'Active';
+                    $enrollment->save();
+                    AuditService::updated('enrollment', $enrollment->enrollment_id, 'status', 'Cancelled', 'Active');
                 }
 
-                if ($shouldDeduct) {
-                    $newRemaining = max(0, (float) $enrollment->hours_remaining - $sessionHours);
-                    $enrollment->hours_remaining = $newRemaining;
+                $status = $request->attendance[$enrollment->enrollment_id] ?? 'Absent';
+                if ($enrollment->status === 'Restricted') {
+                    $status = 'Absent';
+                }
 
-                    \DB::table('bundle_usage_log')->insert([
+                Attendance::updateOrCreate(
+                    [
                         'enrollment_id'     => $enrollment->enrollment_id,
                         'course_session_id' => $sessionId,
-                        'hours_deducted'    => $sessionHours,
-                        'reason'            => 'ATTENDANCE',
-                        'created_by_cs_id'  => $csEmployeeId,
-                        'created_at'        => now(),
-                        'updated_at'        => now(),
-                    ]);
+                    ],
+                    [
+                        'status'      => $status,
+                        'recorded_by' => $recordedBy,
+                        'recorded_at' => now(),
+                    ]
+                );
 
-                    if ($newRemaining <= 0) {
-                        $enrollment->status = 'Restricted';
-                        $enrollment->restriction_flag = true;
+                $isPrivate = $enrollment->enrollment_type === 'Private'
+                    && $enrollment->hours_remaining !== null;
+
+                if ($isPrivate && $sessionHours > 0 && $enrollment->status !== 'Restricted') {
+
+                    $shouldDeduct = false;
+
+                    if ($status === 'Present') {
+                        $shouldDeduct = true;
+                    } elseif ($status === 'Absent') {
+                        $priorAbsences = Attendance::where('enrollment_id', $enrollment->enrollment_id)
+                            ->where('status', 'Absent')
+                            ->where('course_session_id', '!=', $sessionId)
+                            ->count();
+
+                        if ($priorAbsences >= 2) {
+                            $shouldDeduct = true;
+                        }
                     }
 
-                    $enrollment->save();
+                    if ($shouldDeduct) {
+                        $newRemaining = max(0, (float) $enrollment->hours_remaining - $sessionHours);
+                        $enrollment->hours_remaining = $newRemaining;
+
+                        DB::table('bundle_usage_log')->insert([
+                            'enrollment_id'     => $enrollment->enrollment_id,
+                            'course_session_id' => $sessionId,
+                            'hours_deducted'    => $sessionHours,
+                            'reason'            => 'ATTENDANCE',
+                            'created_by_cs_id'  => $csEmployeeId,
+                            'created_at'        => now(),
+                            'updated_at'        => now(),
+                        ]);
+
+                        if ($newRemaining <= 0) {
+                            $enrollment->status = 'Restricted';
+                            $enrollment->restriction_flag = true;
+                        }
+
+                        $enrollment->save();
+                    }
+                }
+
+                if ($enrollment->enrollment_type === 'Group' && $status === 'Absent' && $enrollment->status !== 'Cancelled') {
+                    $totalAbsences = Attendance::where('enrollment_id', $enrollment->enrollment_id)
+                        ->where('status', 'Absent')
+                        ->count();
+
+                    if ($totalAbsences >= 3) {
+                        $enrollment->status = 'Cancelled';
+                        $enrollment->save();
+                        AuditService::updated('enrollment', $enrollment->enrollment_id, 'status', 'Active', 'Cancelled');
+                    }
                 }
             }
-        }
-
-        $session->update(['status' => 'Completed']);
-
-        $instance = $session->courseInstance;
-        $remainingSessions = CourseSession::where('course_instance_id', $instance->course_instance_id)
-            ->whereNotIn('status', ['Completed', 'Cancelled'])
-            ->count();
-
-        if ($remainingSessions === 0) {
-            Enrollment::where('course_instance_id', $instance->course_instance_id)
-                ->where('status', 'Active')
-                ->where(function ($q) {
-                    $q->where(function ($p) {                      
-                        $p->where('enrollment_type', 'Private')
-                          ->where('hours_remaining', '>', 0);
-                    })->orWhere(function ($p) {                    
-                        $p->whereNotNull('package_id')
-                          ->where('package_units_remaining', '>', 0);
-                    })->orWhere(function ($p) {                    
-                        $p->whereNull('package_id')
-                          ->where('enrollment_type', '!=', 'Private');
-                    });
-                })
-                ->update(['status' => 'Completed']);
-        }
+        });
 
         return back()->with('success', 'Attendance saved successfully.');
     }

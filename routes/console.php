@@ -25,5 +25,6 @@ Schedule::command('outstanding:process')->hourly();
 
 Schedule::command('reports:check-deadlines')->hourly();
 
-// Auto-expire postponements whose expected return date has passed.
 Schedule::command('postponements:expire')->dailyAt('00:05');
+
+Schedule::command('sessions:complete-past')->everyFiveMinutes();
