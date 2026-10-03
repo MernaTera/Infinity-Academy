@@ -10,181 +10,98 @@
 @endonce
 
 <style>
+    :root {
+        --blue:#1B4FA8; --blue-2:#2D6FDB; --orange:#F5911E; --orange-dk:#C47010;
+        --green:#059669; --green-dk:#15803D; --purple:#7C3AED; --red:#DC2626;
+        --text:#16233F; --muted:#5A6A85; --faint:#93A3BC;
+        --card:rgba(255,255,255,0.5); --border:rgba(255,255,255,0.6);
+        --glass-sh:0 8px 30px rgba(23,45,90,0.07);
+        --bg:#F8F6F2;
+    }
+    * { box-sizing:border-box; }
     body, .ci-show * { font-family: 'DM Sans', sans-serif; }
-    /* body { min-width: fit-content; } */
 
-    .ci-show {
-        background: #F8F6F2;
-        min-height: 100vh;
-        padding: 36px 32px;
-        color: #1A2A4A;
-    }
+    .ci-show { background:var(--bg); min-height:100vh; padding:36px 32px; color:var(--text); }
 
-    /* ── HEADER ── */
-    .page-header {
-        display: flex; align-items: flex-end; justify-content: space-between;
-        margin-bottom: 28px; padding-bottom: 20px;
-        border-bottom: 1px solid rgba(27,79,168,0.1);
-        flex-wrap: wrap; gap: 16px;
-    }
-    .page-eyebrow  { font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: #F5911E; margin-bottom: 4px; }
-    .page-title    { font-family: 'Bebas Neue', sans-serif; font-size: 34px; letter-spacing: 4px; color: #1B4FA8; line-height: 1; }
-    .page-subtitle { font-size: 12px; color: #7A8A9A; margin-top: 4px; }
+    .page-header { display:flex; align-items:flex-end; justify-content:space-between; margin-bottom:24px; padding-bottom:18px; border-bottom:1px solid rgba(27,79,168,0.1); flex-wrap:wrap; gap:16px; }
+    .page-eyebrow  { font-size:12px; letter-spacing:3px; text-transform:uppercase; color:var(--blue); font-weight:600; margin-bottom:7px; }
+    .page-title    { font-family:'Bebas Neue',sans-serif; font-size:40px; letter-spacing:2px; color:var(--text); line-height:0.95; }
+    .page-subtitle { font-size:12px; color:var(--muted); margin-top:7px; }
 
-    .btn-back {
-        display: inline-flex; align-items: center; gap: 8px;
-        padding: 9px 18px; background: transparent;
-        border: 1px solid rgba(27,79,168,0.2); border-radius: 4px;
-        color: #7A8A9A; font-size: 10px; letter-spacing: 2.5px;
-        text-transform: uppercase; text-decoration: none;
-        transition: all 0.3s; font-family: 'DM Sans', sans-serif;
-    }
-    .btn-back:hover { border-color: #1B4FA8; color: #1B4FA8; text-decoration: none; }
+    .btn-back { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; background:rgba(255,255,255,0.5); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid var(--border); border-radius:11px; color:var(--muted); font-size:10px; letter-spacing:2px; text-transform:uppercase; text-decoration:none; transition:all 0.25s; font-family:'DM Sans',sans-serif; }
+    .btn-back:hover { border-color:var(--blue); color:var(--blue); text-decoration:none; }
 
-    /* ── OVERVIEW ── */
-    .overview-card {
-        background: rgba(255,255,255,0.85); backdrop-filter: blur(12px);
-        border: 1px solid rgba(27,79,168,0.1); border-radius: 6px;
-        padding: 22px 26px; margin-bottom: 22px;
-        box-shadow: 0 4px 24px rgba(27,79,168,0.06);
-        position: relative; overflow: hidden;
-    }
-    .overview-card::before {
-        content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
-        background: linear-gradient(90deg, transparent, #F5911E, #1B4FA8, transparent);
-    }
-    .overview-grid {
-        display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 18px;
-    }
-    .ov-label { font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase; color: #AAB8C8; margin-bottom: 5px; }
-    .ov-value { font-size: 13px; color: #1A2A4A; font-weight: 500; }
-    .ov-divider { height: 1px; background: rgba(27,79,168,0.06); margin: 18px 0; }
+    .overview-card { background:var(--card); -webkit-backdrop-filter:blur(22px) saturate(165%); backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); border-radius:20px; padding:24px 26px; margin-bottom:20px; box-shadow:var(--glass-sh); position:relative; overflow:hidden; }
+    /* .overview-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, var(--orange), var(--blue), transparent); } */
+    .overview-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:18px; }
+    .ov-label { font-size:8.5px; letter-spacing:2px; text-transform:uppercase; color:var(--faint); margin-bottom:5px; }
+    .ov-value { font-size:13px; color:var(--text); font-weight:500; }
+    .ov-divider { height:1px; background:rgba(27,79,168,0.06); margin:18px 0; }
 
-    /* ── TAGS ── */
-    .tag {
-        display: inline-block; font-size: 9px; letter-spacing: 1px;
-        padding: 2px 8px; border-radius: 3px; white-space: nowrap;
-        text-transform: uppercase; font-weight: 500;
-    }
-    .tag-group   { background: rgba(27,79,168,0.05);  border: 1px solid rgba(27,79,168,0.12);  color: #2D6FDB; }
-    .tag-private { background: rgba(245,145,30,0.05); border: 1px solid rgba(245,145,30,0.15); color: #C47010; }
-    .tag-online  { background: rgba(21,128,61,0.05);  border: 1px solid rgba(21,128,61,0.15);  color: #15803D; }
-    .tag-offline { background: rgba(122,138,154,0.06);border: 1px solid rgba(122,138,154,0.15);color: #7A8A9A; }
+    .tag { display:inline-block; font-size:9px; letter-spacing:1px; padding:2px 8px; border-radius:6px; white-space:nowrap; text-transform:uppercase; font-weight:600; }
+    .tag-group   { background:rgba(27,79,168,0.05);  border:1px solid rgba(27,79,168,0.12);  color:var(--blue-2); }
+    .tag-private { background:rgba(245,145,30,0.05); border:1px solid rgba(245,145,30,0.15); color:var(--orange-dk); }
+    .tag-online  { background:rgba(5,150,105,0.05);  border:1px solid rgba(5,150,105,0.15);  color:var(--green-dk); }
+    .tag-offline { background:rgba(122,138,154,0.06);border:1px solid rgba(122,138,154,0.15);color:var(--muted); }
 
-    /* ── STATUS ── */
-    .status-badge {
-        display: inline-flex; align-items: center; gap: 5px;
-        font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase;
-        padding: 4px 9px; border-radius: 3px; white-space: nowrap; font-weight: 500;
-    }
-    .status-badge::before {
-        content: ''; width: 4px; height: 4px; border-radius: 50%;
-        background: currentColor; flex-shrink: 0;
-    }
-    .s-active      { color: #15803D; background: rgba(21,128,61,0.08);   border: 1px solid rgba(21,128,61,0.2); }
-    .s-upcoming    { color: #1B6FA8; background: rgba(27,111,168,0.08);  border: 1px solid rgba(27,111,168,0.2); }
-    .s-completed   { color: #7A8A9A; background: rgba(122,138,154,0.08); border: 1px solid rgba(122,138,154,0.2); }
-    .s-cancelled   { color: #DC2626; background: rgba(220,38,38,0.06);   border: 1px solid rgba(220,38,38,0.2); }
-    .s-waiting     { color: #C47010; background: rgba(245,145,30,0.08);  border: 1px solid rgba(245,145,30,0.25); }
-    .s-restricted  { color: #DC2626; background: rgba(220,38,38,0.06);   border: 1px solid rgba(220,38,38,0.2); }
-    .s-scheduled   { color: #1B6FA8; background: rgba(27,111,168,0.08);  border: 1px solid rgba(27,111,168,0.2); }
-    .s-default     { color: #7A8A9A; background: rgba(122,138,154,0.08); border: 1px solid rgba(122,138,154,0.2); }
+    .status-badge { display:inline-flex; align-items:center; gap:5px; font-size:9px; letter-spacing:1.2px; text-transform:uppercase; padding:4px 10px; border-radius:20px; white-space:nowrap; font-weight:600; }
+    /* .status-badge::before { content:''; width:4px; height:4px; border-radius:50%; background:currentColor; flex-shrink:0; } */
+    .s-active      { color:var(--green-dk); background:rgba(21,128,61,0.1);   border:1px solid rgba(21,128,61,0.2); }
+    .s-upcoming    { color:var(--blue-2); background:rgba(45,111,219,0.1);  border:1px solid rgba(45,111,219,0.2); }
+    .s-completed   { color:var(--muted); background:rgba(122,138,154,0.1); border:1px solid rgba(122,138,154,0.2); }
+    .s-cancelled   { color:var(--red); background:rgba(220,38,38,0.08);   border:1px solid rgba(220,38,38,0.2); }
+    .s-waiting     { color:var(--orange-dk); background:rgba(245,145,30,0.1);  border:1px solid rgba(245,145,30,0.25); }
+    .s-restricted  { color:var(--red); background:rgba(220,38,38,0.08);   border:1px solid rgba(220,38,38,0.2); }
+    .s-scheduled   { color:var(--blue-2); background:rgba(45,111,219,0.1);  border:1px solid rgba(45,111,219,0.2); }
+    .s-default     { color:var(--muted); background:rgba(122,138,154,0.1); border:1px solid rgba(122,138,154,0.2); }
 
-    /* ── CAPACITY ── */
-    .cap-wrap  { display: flex; align-items: center; gap: 8px; }
-    .cap-track { width: 70px; height: 5px; background: rgba(27,79,168,0.08); border-radius: 3px; overflow: hidden; }
-    .cap-fill  { height: 100%; border-radius: 3px; }
+    .cap-wrap  { display:flex; align-items:center; gap:8px; }
+    .cap-track { width:70px; height:6px; background:rgba(27,79,168,0.08); border-radius:6px; overflow:hidden; }
+    .cap-fill  { height:100%; border-radius:6px; }
 
-    /* ── TABS ── */
-    .tab-nav {
-        display: flex; gap: 2px; margin-bottom: 20px;
-        border-bottom: 1px solid rgba(27,79,168,0.08);
-    }
-    .tab-btn {
-        padding: 10px 20px; font-size: 10px; letter-spacing: 2px;
-        text-transform: uppercase; background: transparent;
-        border: none; cursor: pointer; color: #7A8A9A;
-        font-family: 'DM Sans', sans-serif; font-weight: 500;
-        position: relative; transition: color 0.2s;
-        border-radius: 4px 4px 0 0;
-    }
-    .tab-btn::after {
-        content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px;
-        background: #1B4FA8; transform: scaleX(0);
-        transition: transform 0.3s cubic-bezier(0.16,1,0.3,1);
-    }
-    .tab-btn:hover { color: #1B4FA8; }
-    .tab-btn.active { color: #1B4FA8; }
-    .tab-btn.active::after { transform: scaleX(1); }
+    .tab-nav { display:flex; gap:2px; margin-bottom:20px; border-bottom:1px solid rgba(27,79,168,0.1); }
+    .tab-btn { padding:10px 20px; font-size:10px; letter-spacing:2px; text-transform:uppercase; background:transparent; border:none; cursor:pointer; color:var(--muted); font-family:'DM Sans',sans-serif; font-weight:600; position:relative; transition:color 0.2s; border-radius:8px 8px 0 0; }
+    .tab-btn::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; background:var(--blue); transform:scaleX(0); transition:transform 0.3s cubic-bezier(0.16,1,0.3,1); }
+    .tab-btn:hover { color:var(--blue); }
+    .tab-btn.active { color:var(--blue); }
+    .tab-btn.active::after { transform:scaleX(1); }
 
-    /* ── TABLE ── */
-    .table-card {
-        background: rgba(255,255,255,0.75); backdrop-filter: blur(10px);
-        border: 1px solid rgba(27,79,168,0.1); border-radius: 6px;
-        overflow: hidden; box-shadow: 0 4px 24px rgba(27,79,168,0.06);
-    }
-    .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-    .table-card table { width: 100%; border-collapse: collapse; min-width: 600px; }
-    .table-card thead tr { border-bottom: 1px solid rgba(27,79,168,0.08); }
-    .table-card thead th {
-        padding: 12px 14px; font-size: 9px; letter-spacing: 2.5px;
-        text-transform: uppercase; color: #7A8A9A; font-weight: 500;
-        background: rgba(27,79,168,0.02); text-align: left; white-space: nowrap;
-    }
-    .table-card tbody tr {
-        border-bottom: 1px solid rgba(27,79,168,0.04);
-        transition: background 0.2s;
-        animation: rowFadeIn 0.3s ease both;
-    }
-    .table-card tbody tr:hover { background: rgba(27,79,168,0.025); }
-    .table-card tbody tr:last-child { border-bottom: none; }
-    .table-card tbody td { padding: 12px 14px; font-size: 13px; color: #4A5A7A; vertical-align: middle; }
+    .table-card { background:var(--card); -webkit-backdrop-filter:blur(22px) saturate(165%); backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); border-radius:20px; overflow:hidden; box-shadow:var(--glass-sh); }
+    .table-scroll { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .table-card table { width:100%; border-collapse:collapse; min-width:600px; }
+    .table-card thead tr { border-bottom:1px solid var(--border); }
+    .table-card thead th { padding:13px 16px; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; background:rgba(255,255,255,0.4); text-align:left; white-space:nowrap; }
+    .table-card tbody tr { border-bottom:1px solid rgba(27,79,168,0.06); transition:background 0.2s; animation:rowFadeIn 0.3s ease both; }
+    .table-card tbody tr:hover { background:rgba(27,79,168,0.04); }
+    .table-card tbody tr:last-child { border-bottom:none; }
+    .table-card tbody td { padding:13px 16px; font-size:13px; color:var(--muted); vertical-align:middle; }
 
-    @keyframes rowFadeIn {
-        from { opacity: 0; transform: translateY(4px); }
-        to   { opacity: 1; transform: translateY(0); }
-    }
+    @keyframes rowFadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
 
-    .st-name  { font-weight: 500; color: #1A2A4A; font-size: 13px; }
-    .st-phone { font-size: 11px; color: #7A8A9A; font-family: monospace; margin-top: 2px; }
+    .st-name  { font-weight:600; color:var(--text); font-size:13px; }
+    .st-phone { font-size:11px; color:var(--muted); font-family:monospace; margin-top:2px; }
 
-    /* ── ATTENDANCE LINK ── */
-    .att-link {
-        display: inline-flex; align-items: center; gap: 5px;
-        padding: 5px 12px; font-size: 9px; letter-spacing: 1.5px;
-        text-transform: uppercase; border-radius: 3px;
-        font-family: 'DM Sans', sans-serif; font-weight: 500;
-        border: 1px solid rgba(27,79,168,0.25); color: #1B4FA8;
-        background: transparent; text-decoration: none;
-        transition: all 0.25s; white-space: nowrap;
-    }
-    .att-link:hover { background: rgba(27,79,168,0.07); border-color: #1B4FA8; text-decoration: none; }
-    .att-link.done  { color: #15803D; border-color: rgba(21,128,61,0.25); }
-    .att-link.done:hover { background: rgba(21,128,61,0.07); border-color: #15803D; }
+    .att-link { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; border-radius:8px; font-family:'DM Sans',sans-serif; font-weight:600; border:1px solid rgba(27,79,168,0.25); color:var(--blue); background:transparent; text-decoration:none; transition:all 0.25s; white-space:nowrap; }
+    .att-link:hover { background:rgba(27,79,168,0.07); border-color:var(--blue); text-decoration:none; }
+    .att-link.done  { color:var(--green-dk); border-color:rgba(21,128,61,0.25); }
+    .att-link.done:hover { background:rgba(21,128,61,0.07); border-color:var(--green-dk); }
 
-    /* ── EMPTY ── */
-    .empty-state { padding: 50px 24px; text-align: center; }
-    .empty-state svg { margin: 0 auto 12px; opacity: 0.15; }
-    .empty-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 3px; color: #7A8A9A; }
-    .empty-sub   { font-size: 12px; color: #AAB8C8; margin-top: 4px; }
+    .empty-state { padding:50px 24px; text-align:center; }
+    .empty-state svg { margin:0 auto 12px; opacity:0.15; }
+    .empty-title { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px; color:var(--muted); }
+    .empty-sub   { font-size:12px; color:var(--faint); margin-top:4px; }
 
-    /* ── PLACEHOLDER ── */
-    .tab-placeholder {
-        padding: 60px 24px; text-align: center;
-        background: rgba(255,255,255,0.75);
-        border: 1px solid rgba(27,79,168,0.08); border-radius: 6px;
-    }
-    .tab-placeholder svg { margin: 0 auto 12px; opacity: 0.15; }
-    .tab-placeholder-title { font-family: 'Bebas Neue', sans-serif; font-size: 16px; letter-spacing: 3px; color: #7A8A9A; }
-    .tab-placeholder-sub   { font-size: 12px; color: #AAB8C8; margin-top: 4px; }
+    .tab-placeholder { padding:60px 24px; text-align:center; background:var(--card); -webkit-backdrop-filter:blur(22px) saturate(165%); backdrop-filter:blur(22px) saturate(165%); border:1px solid var(--border); border-radius:20px; box-shadow:var(--glass-sh); }
+    .tab-placeholder svg { margin:0 auto 12px; opacity:0.15; }
+    .tab-placeholder-title { font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px; color:var(--muted); }
+    .tab-placeholder-sub   { font-size:12px; color:var(--faint); margin-top:4px; }
 
-    @media (max-width: 768px) { .ci-show { padding: 20px 14px; } }
-    @media (max-width: 480px) { .page-header { flex-direction: column; align-items: flex-start; } }
+    @media (max-width: 768px) { .ci-show { padding:20px 14px; } }
+    @media (max-width: 480px) { .page-header { flex-direction:column; align-items:flex-start; } }
 </style>
 
 <div class="ci-show">
 
-    {{-- ── HEADER ── --}}
     <div class="page-header">
         <div>
             <div class="page-eyebrow">Course Instance</div>
@@ -202,7 +119,6 @@
         </a>
     </div>
 
-    {{-- ── OVERVIEW ── --}}
     @php
         $count    = $instance->enrollments->count();
         $capacity = $instance->capacity;
@@ -296,7 +212,6 @@
         </div>
     </div>
 
-    {{-- ── TABS ── --}}
     <div class="tab-nav">
         <button onclick="showTab('students')" class="tab-btn active">
             Students ({{ $count }})
@@ -305,7 +220,6 @@
         <button onclick="showTab('schedule')" class="tab-btn">Schedule</button>
     </div>
 
-    {{-- ══ STUDENTS TAB ══ --}}
     <div id="studentsTab">
         <div class="table-card">
             <div class="table-scroll">
@@ -380,7 +294,6 @@
                         @endif
                         </td>
 
-                        {{-- ✅ Actions Column --}}
                         <td>
                             <div style="display:flex;gap:6px;flex-wrap:wrap">
                                 @if($enrollment->status === 'Active')
@@ -393,8 +306,6 @@
                                 </button>
                                 @endif
 
-                                {{-- Notes: SC writes a note per student; it also shows on the
-                                     teacher's course page and follows the student on resume. --}}
                                 <button type="button"
                                     onclick="openNotes({{ $enrollment->enrollment_id }})"
                                     style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(27,79,168,0.25);background:transparent;color:#1B4FA8;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
@@ -407,10 +318,6 @@
                                     @endif
                                 </button>
 
-                                {{-- A postponed student is detached from this instance (their seat is
-                                     freed), so they no longer appear in this list. Resuming a student is
-                                     a re-registration handled by Customer Service from the Postponed page,
-                                     not an in-place action here. --}}
                             </div>
                         </td>
                     </tr>
@@ -434,7 +341,6 @@
         </div>
     </div>
 
-    {{-- ══ ATTENDANCE TAB ══ --}}
     <div id="attendanceTab" style="display:none;">
         <div class="table-card">
             <div class="table-scroll">
@@ -513,7 +419,6 @@
         </div>
     </div>
 
-{{-- ══ SCHEDULE TAB ══ --}}
 <div id="scheduleTab" style="display:none;">
 
     @php
@@ -535,7 +440,7 @@
     @endphp
 
     @if(!$schedule)
-        {{-- No schedule yet --}}
+
         <div style="text-align:center;padding:60px 24px;
                     background:rgba(255,255,255,0.75);
                     border:1px solid rgba(27,79,168,0.08);
@@ -555,7 +460,7 @@
         </div>
 
     @else
-        {{-- ── Schedule Info Card ── --}}
+
         <div style="background:rgba(255,255,255,0.85);border:1px solid rgba(27,79,168,0.1);
                     border-radius:6px;padding:20px 24px;margin-bottom:20px;
                     position:relative;overflow:hidden;">
@@ -606,7 +511,6 @@
                 </div>
             </div>
 
-            {{-- Progress --}}
             <div style="border-top:1px solid rgba(27,79,168,0.06);padding-top:16px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
                     <span style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A">Course Progress</span>
@@ -634,7 +538,6 @@
             </div>
         </div>
 
-        {{-- ── Sessions List ── --}}
         @if($sessions->isNotEmpty())
         <div class="table-card">
             <div class="table-scroll">
@@ -663,7 +566,6 @@
                         @endphp
                         <tr style="{{ $isToday ? 'background:rgba(27,79,168,0.03)' : '' }}">
 
-                            {{-- Number --}}
                             <td>
                                 <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;
                                              color:{{ $session->status === 'Completed' ? '#059669' : ($isToday ? '#1B4FA8' : '#AAB8C8') }};
@@ -672,7 +574,6 @@
                                 </span>
                             </td>
 
-                            {{-- Date --}}
                             <td>
                                 <div style="font-size:12px;color:#1A2A4A;font-weight:500">
                                     {{ \Carbon\Carbon::parse($session->session_date)->format('d M Y') }}
@@ -684,12 +585,10 @@
                                 @endif
                             </td>
 
-                            {{-- Day --}}
                             <td style="font-size:12px;color:#7A8A9A">
                                 {{ \Carbon\Carbon::parse($session->session_date)->format('l') }}
                             </td>
 
-                            {{-- Time --}}
                             <td>
                                 @if($session->start_time && $session->end_time)
                                 <span style="font-size:12px;color:#1A2A4A;font-family:monospace">
@@ -702,20 +601,15 @@
                                 @endif
                             </td>
 
-                            {{-- Duration --}}
                             <td style="font-size:12px;color:#7A8A9A">
                                 {{ $instance->session_duration }} hr
                             </td>
 
-                            {{-- Status --}}
                             <td>
                                 <div style="display:flex;gap:6px;flex-wrap:wrap">
 
-                                    {{-- Status badge --}}
-
                                     <span class="status-badge {{ $sClass }}">{{ $session->status }}</span>
 
-                                    {{-- Postpone button -- only if Active and no outstanding --}}
                                     @if($session->status === 'Active')
                                     <button onclick="openPostponeModal({{ $enrollment->enrollment_id }}, '{{ addslashes($enrollment->student?->full_name) }}')"
                                         style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(245,145,30,0.25);background:transparent;color:#C47010;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
@@ -726,16 +620,13 @@
                                     </button>
                                     @endif
 
-                                    {{-- Resuming a postponed student is a re-registration done by
-                                         Customer Service from the Postponed page — not an in-place action. --}}
-
                                 </div>
                             </td>
-                            
+
                         </tr>
                         @endforeach
                     </tbody>
-                
+
                 </table>
             </div>
         </div>
@@ -761,7 +652,7 @@ function openAttendance(sessionId) {
     document.getElementById('attendanceTab').style.display = 'block';
 }
 </script>
-{{-- Postpone Modal --}}
+
 <div id="postponeModal" style="display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:999;padding:20px;font-family:'DM Sans',sans-serif">
     <div style="width:100%;max-width:460px;background:#F8F6F2;border:1px solid rgba(27,79,168,0.15);border-radius:8px;overflow:hidden;position:relative;box-shadow:0 20px 60px rgba(27,79,168,0.18)">
         <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)"></div>
@@ -776,7 +667,6 @@ function openAttendance(sessionId) {
             @csrf
             <div style="padding:18px 22px">
 
-                {{-- Eligibility Warning --}}
                 <div style="background:rgba(245,145,30,0.04);border:1px solid rgba(245,145,30,0.15);border-radius:4px;padding:10px 14px;font-size:11px;color:#C47010;margin-bottom:16px;line-height:1.5">
                     ⚠ Postponement allowed only for students with <strong>100% payment completed</strong> and no outstanding balance. Max duration: <strong>3 months</strong>.
                 </div>
@@ -828,7 +718,7 @@ function openAttendance(sessionId) {
 function openPostponeModal(enrollmentId, studentName) {
     document.getElementById('postponeStudentName').textContent = studentName;
     document.getElementById('postponeForm').action = `/student-care/enrollments/${enrollmentId}/postpone`;
-    // Set min return date to tomorrow
+
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     document.getElementById('postponeReturn').min = tomorrow.toISOString().split('T')[0];
@@ -845,7 +735,7 @@ function updateMaxReturn() {
     if (!start) return;
     const maxDate = new Date(start);
     maxDate.setMonth(maxDate.getMonth() + 3);
-    // No hard max — just warn
+
     document.getElementById('postponeReturn').min = start;
     checkDuration();
 }
@@ -863,7 +753,6 @@ document.getElementById('postponeModal').addEventListener('click', function(e) {
 });
 </script>
 
-{{-- ══════════════════ ENROLLMENT NOTES ══════════════════ --}}
 <style>
     .notes-overlay{display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:1000;padding:20px;font-family:'DM Sans',sans-serif}
     .notes-overlay.show{display:flex}
