@@ -7,29 +7,30 @@
 @endonce
 
 <style>
-:root{--blue:#1B4FA8;--blue-l:rgba(27,79,168,0.08);--orange:#F5911E;--orange-l:rgba(245,145,30,0.08);--green:#059669;--green-l:rgba(5,150,105,0.08);--red:#DC2626;--red-l:rgba(220,38,38,0.06);--border:rgba(27,79,168,0.1);--bg:#F8F6F2;--card:#fff;--text:#1A2A4A;--muted:#7A8A9A;--faint:#AAB8C8;}
+:root{--blue:#1B4FA8;--blue-l:rgba(27,79,168,0.08);--orange:#F5911E;--orange-l:rgba(245,145,30,0.08);--green:#1B4FA8;--green-l:rgba(27,79,168,0.08);--red:#DC2626;--red-l:rgba(220,38,38,0.06);--border:rgba(27,79,168,0.1);--bg:#F8F6F2;--card:rgba(255,255,255,0.5);--glass-bd:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--text:#1A2A4A;--muted:#7A8A9A;--faint:#AAB8C8;}
 *{box-sizing:border-box;}
 .cr-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text);}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:4px;}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--blue);margin:0 0 28px;}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.1;z-index:0;pointer-events:none}
+.orb-2{width:300px;height:300px;background:radial-gradient(circle,#1B4FA8,transparent 70%);top:30px;right:1%}
+.orb-3{width:380px;height:380px;background:radial-gradient(circle,#7C3AED,transparent 70%);bottom:-140px;left:35%}
+.page-eyebrow{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:6px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--text);margin:0}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
 
-.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--glass-bd);border-radius:11px;color:var(--muted);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s;}
 .btn-back:hover{border-color:var(--blue);color:var(--blue);text-decoration:none;}
 
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(245,145,30,0.15);display:block;}
+.sec-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(27,79,168,0.1);display:block;font-weight:600}
 
-/* Card */
-.form-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;position:relative;box-shadow:0 2px 12px rgba(27,79,168,0.06);}
-.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),var(--blue),transparent);}
+.form-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;overflow:hidden;margin-bottom:20px;position:relative;box-shadow:var(--glass-sh);}
+.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent);}
 .form-card-body{padding:24px 28px;}
 
-/* Student selector */
 .student-selector{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:4px;}
 @media(max-width:700px){.student-selector{grid-template-columns:1fr;}}
 .student-option{position:relative;}
 .student-option input[type="radio"]{position:absolute;opacity:0;width:0;height:0;}
-.student-option label{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s;background:var(--bg);}
+.student-option label{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.6);}
 .student-option label:hover{border-color:rgba(27,79,168,0.3);}
 .student-option input:checked + label{border-color:var(--blue);background:var(--blue-l);}
 .student-avatar{width:36px;height:36px;border-radius:50%;background:var(--blue-l);color:var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:16px;flex-shrink:0;}
@@ -37,19 +38,17 @@
 .student-name{font-weight:600;color:var(--text);font-size:13px;}
 .student-meta{font-size:10px;color:var(--faint);margin-top:2px;}
 
-/* Course cards */
 .course-selector{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
 @media(max-width:700px){.course-selector{grid-template-columns:1fr;}}
 .course-option{position:relative;}
 .course-option input[type="radio"]{position:absolute;opacity:0;width:0;height:0;}
-.course-option label{display:flex;flex-direction:column;gap:6px;padding:16px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s;background:var(--bg);}
+.course-option label{display:flex;flex-direction:column;gap:6px;padding:16px;border:1.5px solid var(--border);border-radius:12px;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.6);}
 .course-option label:hover{border-color:rgba(27,79,168,0.3);}
 .course-option input:checked + label{border-color:var(--blue);background:var(--blue-l);}
 .course-name{font-weight:600;color:var(--text);font-size:13px;}
 .course-level{font-size:10px;color:var(--faint);}
 .course-student{font-size:11px;color:var(--blue);margin-top:2px;}
 
-/* Score table */
 .score-table{width:100%;border-collapse:collapse;}
 .score-table thead th{padding:10px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);text-align:left;font-weight:500;background:rgba(27,79,168,0.02);border-bottom:1px solid var(--border);}
 .score-table thead th:last-child{text-align:center;}
@@ -62,42 +61,44 @@
 .max-score-badge{display:inline-flex;align-items:center;justify-content:center;background:var(--blue-l);color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;padding:3px 10px;border-radius:4px;border:1px solid var(--border);}
 
 .score-input-wrap{display:flex;align-items:center;gap:8px;justify-content:center;}
-.score-input{width:70px;padding:8px 10px;border:1.5px solid var(--border);border-radius:4px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);text-align:center;outline:none;background:#fff;transition:border-color 0.2s;}
+.score-input{width:70px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;color:var(--text);text-align:center;outline:none;background:rgba(255,255,255,0.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:border-color 0.2s;}
 .score-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.07);}
 .score-input.error{border-color:var(--red);}
 .score-slash{font-size:14px;color:var(--faint);}
 .score-max{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--faint);letter-spacing:1px;}
 
-/* Score bar live */
 .score-bar-wrap{display:flex;align-items:center;gap:8px;min-width:100px;}
 .score-bar-track{flex:1;background:#F0F0F0;border-radius:3px;height:5px;overflow:hidden;}
 .score-bar-fill{height:5px;border-radius:3px;transition:width 0.3s,background 0.3s;}
 .score-pct{font-size:10px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;white-space:nowrap;min-width:32px;text-align:right;}
 
-/* Total card */
-.total-card{background:linear-gradient(135deg,#1A2A4A 0%,#1B4FA8 100%);border-radius:8px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;margin-top:16px;}
+.total-card{background:linear-gradient(120deg,#1B4FA8,#2D6FDB);border-radius:16px;box-shadow:0 10px 24px rgba(27,79,168,0.28);padding:20px 24px;display:flex;align-items:center;justify-content:space-between;margin-top:16px;}
 .total-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:4px;}
 .total-value{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:3px;color:#fff;line-height:1;}
 .total-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px;}
+.total-grade{font-family:'Bebas Neue',sans-serif;font-size:60px;letter-spacing:2px;color:rgba(46, 4, 4, 0.15);}
+
+.total-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--border);border-radius:18px;padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--glass-sh);margin-bottom:28px}
+.total-card::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,0.08)}
+.total-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600}
+.total-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px;color:var(--kc,var(--blue));line-height:1}
+.total-sub{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600;margin-top:4px}
 .total-grade{font-family:'Bebas Neue',sans-serif;font-size:60px;letter-spacing:2px;color:rgba(255,255,255,0.15);}
 
-/* Comments */
 .form-field{display:flex;flex-direction:column;gap:6px;}
 .form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);}
-.form-control{width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;box-sizing:border-box;resize:vertical;}
+.form-control{width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:rgba(255,255,255,0.7);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);outline:none;box-sizing:border-box;resize:vertical;}
 .form-control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.07);}
 
-/* Footer */
 .form-footer{display:flex;align-items:center;justify-content:flex-end;gap:10px;padding-top:20px;border-top:1px solid var(--border);}
-.btn-draft{padding:10px 22px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-draft{padding:10px 22px;background:rgba(255,255,255,0.6);border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
 .btn-draft:hover{border-color:var(--blue);color:var(--blue);}
-.btn-submit{display:inline-flex;align-items:center;gap:8px;padding:11px 28px;background:transparent;border:1.5px solid var(--blue);border-radius:4px;color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:4px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s;}
+.btn-submit{display:inline-flex;align-items:center;gap:8px;padding:11px 28px;background:transparent;border:1.5px solid var(--blue);border-radius:10px;color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:4px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s;}
 .btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--blue),#2D6FDB);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1);}
 .btn-submit:hover::before{transform:scaleX(1);}
 .btn-submit:hover{color:#fff;}
 .btn-submit span,.btn-submit svg{position:relative;z-index:1;}
 
-/* Empty state */
 .empty-state{text-align:center;padding:60px 20px;color:var(--faint);}
 .empty-state svg{margin:0 auto 16px;display:block;opacity:0.3;}
 
@@ -105,6 +106,8 @@
 </style>
 
 <div class="cr-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div>
@@ -129,7 +132,6 @@
     <form method="POST" action="{{ route('teacher.reports.store') }}" id="reportForm">
         @csrf
 
-        {{-- ── STEP 1: Select Enrollment ── --}}
         @if(!$enrollment)
         <div class="form-card">
             <div class="form-card-body">
@@ -169,10 +171,9 @@
             </div>
         </div>
         @else
-        {{-- Enrollment pre-selected --}}
+
         <input type="hidden" name="enrollment_id" value="{{ $enrollment->enrollment_id }}">
 
-        {{-- ── STUDENT / COURSE INFO ── --}}
         <div class="form-card">
             <div class="form-card-body">
                 <span class="sec-label">Student & Course</span>
@@ -207,7 +208,6 @@
         </div>
         @endif
 
-        {{-- ── SCORES ── --}}
         <div class="form-card" id="scoresSection" style="{{ (!$enrollment && $availableEnrollments->isEmpty()) ? 'display:none;' : '' }}">
             <div class="form-card-body">
                 <span class="sec-label">Score Sheet</span>
@@ -255,7 +255,6 @@
                     </tbody>
                 </table>
 
-                {{-- Total --}}
                 <div class="total-card">
                     <div>
                         <div class="total-label">Total Score</div>
@@ -267,7 +266,6 @@
             </div>
         </div>
 
-        {{-- ── INSTRUCTOR COMMENTS ── --}}
         <div class="form-card">
             <div class="form-card-body">
                 <span class="sec-label">Instructor's Comments</span>
@@ -280,7 +278,6 @@
             </div>
         </div>
 
-        {{-- ── FOOTER ── --}}
         <div class="form-footer">
             <button type="button" class="btn-draft" onclick="submitForm('save_draft')">
                 Save as Draft
@@ -333,21 +330,20 @@ function updateTotal() {
 }
 
 function submitForm(action) {
-    // Validate enrollment selected
+
     const enrollmentInput = document.querySelector('[name="enrollment_id"]');
     if (!enrollmentInput || !enrollmentInput.value) {
         infAlert({ type:'warning', title:'Select a Student', message:'Please select a student/course first.' });
         return;
     }
 
-    // Validate scores if submitting
     if (action === 'submit') {
         const total = scores.reduce((a, b) => a + b, 0);
         if (total === 0) {
             infAlert({ type:'warning', title:'Scores Required', message:'Please fill in the scores before submitting.' });
             return;
         }
-        // Check each score within range
+
         let valid = true;
         document.querySelectorAll('.score-input').forEach((input, i) => {
             const v = parseFloat(input.value) || 0;
@@ -369,7 +365,6 @@ function selectEnrollment(radio) {
     document.getElementById('scoresSection').style.display = '';
 }
 
-// Init if enrollment pre-selected
 @if($enrollment)
 document.getElementById('scoresSection').style.display = '';
 @endif
