@@ -15,8 +15,8 @@
     --faint:#AAB8C8;
     --border:rgba(27,79,168,0.08);
     --border-2:rgba(27,79,168,0.15);
-    --green:#059669;
-    --green-l:rgba(5,150,105,0.08);
+    --green:#1B4FA8;
+    --green-l:rgba(27,79,168,0.08);
     --blue:#1B4FA8;
     --blue-l:rgba(27,79,168,0.06);
     --orange:#F5911E;
@@ -25,59 +25,53 @@
     --red-l:rgba(220,38,38,0.06);
     --purple:#7C3AED;
     --purple-l:rgba(124,58,237,0.07);
+    --card:rgba(255,255,255,0.5);
+    --glass-bd:rgba(255,255,255,0.6);
+    --glass-sh:0 8px 30px rgba(23,45,90,0.07);
 }
 *{box-sizing:border-box}
-.tr-page{background:var(--bg);min-height:100vh;padding:36px 32px;font-family:'DM Sans',sans-serif;color:var(--ink);}
+.tr-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--ink);}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.1;z-index:0;pointer-events:none}
+.orb-2{width:300px;height:300px;background:radial-gradient(circle,#1B4FA8,transparent 70%);top:30px;right:1%}
+.orb-3{width:380px;height:380px;background:radial-gradient(circle,#7C3AED,transparent 70%);bottom:-140px;left:35%}
 
-/* ═══════════════════════════════════════════════════════════════
-   PAGE HEADER
-═══════════════════════════════════════════════════════════════ */
-.tr-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:26px;flex-wrap:wrap;gap:16px;}
+/* .tr-header{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:26px;flex-wrap:wrap;gap:16px;} */
 .tr-header-left{}
-.tr-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--green);margin-bottom:6px;font-weight:500;}
-.tr-title{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:5px;color:var(--blue);margin:0;line-height:1;}
+.tr-eyebrow{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);margin-bottom:6px;font-weight:600}
+.tr-title{font-family:'Bebas Neue',sans-serif;font-size:40px;letter-spacing:2px;color:var(--text);margin:0}
+.tr-header{margin-bottom:28px}
 .tr-subtitle{font-size:12px;color:var(--muted);margin-top:8px;letter-spacing:0.3px;}
 
-/* ═══════════════════════════════════════════════════════════════
-   KPI CARDS
-═══════════════════════════════════════════════════════════════ */
 .tr-kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:26px;}
-.tr-kpi-card{background:#fff;border:1px solid var(--border);border-radius:8px;padding:16px 18px;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;}
+.tr-kpi-card{background:var(--card);-webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--glass-bd);border-radius:16px;padding:16px 18px;position:relative;overflow:hidden;box-shadow:var(--glass-sh);transition:transform 0.2s,box-shadow 0.2s;}
 .tr-kpi-card:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(27,79,168,0.06);}
-.tr-kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-c,var(--blue));}
+/* .tr-kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kpi-c,var(--blue));} */
 .tr-kpi-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:500;}
 .tr-kpi-val{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;color:var(--kpi-c,var(--ink));line-height:1;}
 .tr-kpi-hint{font-size:9px;color:var(--faint);margin-top:4px;letter-spacing:0.5px;}
 
-.tr-kpi-card.pending  {--kpi-c:var(--orange);}
-.tr-kpi-card.overdue  {--kpi-c:var(--red);}
-.tr-kpi-card.submitted{--kpi-c:var(--purple);}
-.tr-kpi-card.approved {--kpi-c:var(--green);}
-.tr-kpi-card.rejected {--kpi-c:var(--red);}
-.tr-kpi-card.sent     {--kpi-c:var(--blue);}
+.tr-kpi-card.pending   {--kpi-c:var(--blue);}
+.tr-kpi-card.overdue   {--kpi-c:var(--blue);}
+.tr-kpi-card.submitted {--kpi-c:var(--blue);}
+.tr-kpi-card.approved  {--kpi-c:var(--blue);}
+.tr-kpi-card.rejected  {--kpi-c:var(--blue);}
+.tr-kpi-card.sent      {--kpi-c:var(--blue);}
 
-/* ═══════════════════════════════════════════════════════════════
-   FILTER PILLS + SEARCH
-═══════════════════════════════════════════════════════════════ */
 .tr-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:22px;flex-wrap:wrap;}
 .tr-search{flex:1;max-width:340px;min-width:200px;position:relative;}
-.tr-search input{width:100%;padding:10px 14px 10px 38px;background:#fff;border:1px solid var(--border-2);border-radius:6px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink);outline:none;transition:border-color 0.2s;}
+.tr-search input{width:100%;padding:10px 14px 10px 38px;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border-2);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--ink);outline:none;transition:border-color 0.2s;}
 .tr-search input:focus{border-color:var(--blue);}
 .tr-search svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);}
 .tr-pills{display:flex;gap:6px;flex-wrap:wrap;}
-.tr-pill{padding:8px 16px;background:#fff;border:1px solid var(--border-2);border-radius:6px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;}
+.tr-pill{padding:8px 16px;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--border-2);border-radius:10px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:6px;}
 .tr-pill:hover{border-color:var(--blue);color:var(--blue);}
 .tr-pill.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 .tr-pill-count{background:rgba(255,255,255,0.15);padding:1px 6px;border-radius:10px;font-size:9px;}
 .tr-pill:not(.active) .tr-pill-count{background:var(--blue-l);color:var(--blue);}
 
-/* ═══════════════════════════════════════════════════════════════
-   COURSE CARDS
-═══════════════════════════════════════════════════════════════ */
-.tr-course-card{background:#fff;border:1px solid var(--border);border-radius:10px;margin-bottom:18px;overflow:hidden;transition:box-shadow 0.2s;}
-.tr-course-card:hover{box-shadow:0 2px 16px rgba(27,79,168,0.04);}
+.tr-course-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;margin-bottom:18px;overflow:hidden;box-shadow:var(--glass-sh);transition:transform 0.25s,box-shadow 0.25s;}
+.tr-course-card:hover{transform:translateY(-2px);box-shadow:0 16px 44px rgba(23,45,90,0.12);}
 
-/* Course header */
 .tr-course-head{padding:20px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;}
 .tr-course-info{flex:1;min-width:260px;}
 .tr-course-meta-top{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
@@ -89,9 +83,8 @@
 .tr-course-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);}
 .tr-course-meta-val{font-size:12px;color:var(--ink-2);font-weight:500;}
 
-/* Deadline badge */
 .tr-deadline{padding:10px 14px;border-radius:6px;text-align:right;min-width:150px;}
-.tr-deadline.ok{background:var(--green-l);border:1px solid rgba(5,150,105,0.15);}
+.tr-deadline.ok{background:var(--green-l);border:1px solid rgba(27,79,168,0.15);}
 .tr-deadline.warn{background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);}
 .tr-deadline.overdue{background:var(--red-l);border:1px solid rgba(220,38,38,0.15);}
 .tr-deadline-label{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;margin-bottom:3px;font-weight:500;}
@@ -103,15 +96,13 @@
 .tr-deadline.warn .tr-deadline-val{color:#C47010;}
 .tr-deadline.overdue .tr-deadline-val{color:var(--red);}
 
-/* Progress bar */
 .tr-progress-strip{padding:12px 24px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px;}
 .tr-progress-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;font-weight:500;}
 .tr-progress-track{flex:1;height:5px;background:rgba(27,79,168,0.08);border-radius:3px;overflow:hidden;}
-.tr-progress-fill{height:100%;background:linear-gradient(90deg,var(--green),#0BA870);border-radius:3px;transition:width 0.4s;}
+.tr-progress-fill{height:100%;background:linear-gradient(90deg,var(--green),#2D6FDB);border-radius:3px;transition:width 0.4s;}
 .tr-progress-text{font-size:11px;color:var(--ink);font-weight:600;font-family:'DM Sans',sans-serif;letter-spacing:0.5px;}
 .tr-progress-pct{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--green);margin-left:4px;}
 
-/* Student rows */
 .tr-students-table{width:100%;border-collapse:collapse;}
 .tr-students-table thead{background:var(--bg);}
 .tr-students-table th{padding:11px 24px;text-align:left;font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);font-weight:500;border-bottom:1px solid var(--border);}
@@ -127,7 +118,6 @@
 .tr-att-present{color:var(--green);font-weight:600;}
 .tr-att-absent{color:var(--red);font-weight:600;}
 
-/* Report status badge */
 .tr-status-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;font-family:'DM Sans',sans-serif;}
 .tr-status-badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;}
 .tr-status-pending  {color:var(--orange);background:var(--orange-l);}
@@ -137,11 +127,10 @@
 .tr-status-rejected {color:var(--red);background:var(--red-l);}
 .tr-status-sent     {color:var(--blue);background:var(--blue-l);}
 
-/* Action buttons */
 .tr-action-cell{text-align:right;}
-.tr-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:4px;font-family:'DM Sans',sans-serif;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;font-weight:600;border:1px solid;background:#fff;cursor:pointer;transition:all 0.2s;white-space:nowrap;}
+.tr-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;font-weight:600;border:1px solid;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);cursor:pointer;transition:all 0.2s;white-space:nowrap;}
 .tr-btn:hover{transform:translateY(-1px);text-decoration:none;}
-.tr-btn-primary  {color:var(--green);border-color:rgba(5,150,105,0.25);}
+.tr-btn-primary  {color:var(--green);border-color:rgba(27,79,168,0.25);}
 .tr-btn-primary:hover  {background:var(--green);color:#fff;border-color:var(--green);}
 .tr-btn-warning  {color:var(--orange);border-color:rgba(245,145,30,0.3);}
 .tr-btn-warning:hover  {background:var(--orange);color:#fff;border-color:var(--orange);}
@@ -151,28 +140,18 @@
 .tr-btn-success:hover  {background:#0F3D8A;border-color:#0F3D8A;}
 .tr-btn svg{opacity:0.9;}
 
-/* Overdue row indicator */
 .tr-row-overdue td{background:linear-gradient(90deg,rgba(220,38,38,0.03),transparent);}
 .tr-row-overdue .tr-student-name::before{content:'●';color:var(--red);margin-right:6px;font-size:8px;}
 
-/* ═══════════════════════════════════════════════════════════════
-   EMPTY STATE
-═══════════════════════════════════════════════════════════════ */
-.tr-empty{background:#fff;border:1px dashed var(--border-2);border-radius:10px;padding:60px 32px;text-align:center;}
+.tr-empty{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px dashed var(--border-2);border-radius:18px;padding:60px 32px;text-align:center;box-shadow:var(--glass-sh);}
 .tr-empty-icon{width:56px;height:56px;background:var(--bg);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
 .tr-empty-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--muted);margin-bottom:8px;}
 .tr-empty-sub{font-size:12px;color:var(--faint);max-width:340px;margin:0 auto;line-height:1.5;}
 
-/* ═══════════════════════════════════════════════════════════════
-   FLASH MESSAGES
-═══════════════════════════════════════════════════════════════ */
 .tr-flash{padding:12px 16px;border-radius:6px;margin-bottom:18px;font-size:12.5px;display:flex;align-items:center;gap:10px;}
-.tr-flash.success{background:var(--green-l);border:1px solid rgba(5,150,105,0.2);color:var(--green);}
+.tr-flash.success{background:var(--green-l);border:1px solid rgba(27,79,168,0.2);color:var(--green);}
 .tr-flash.error{background:var(--red-l);border:1px solid rgba(220,38,38,0.15);color:var(--red);}
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════════════════ */
 @media(max-width:1200px){.tr-kpi-grid{grid-template-columns:repeat(3,1fr);}}
 @media(max-width:900px){
     .tr-page{padding:22px 16px;}
@@ -191,10 +170,9 @@
 </style>
 
 <div class="tr-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
-    {{-- ══════════════════════════════════════════
-         HEADER
-    ══════════════════════════════════════════ --}}
     <div class="tr-header">
         <div class="tr-header-left">
             <div class="tr-eyebrow">Instructor Panel</div>
@@ -203,9 +181,6 @@
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════
-         FLASH MESSAGES
-    ══════════════════════════════════════════ --}}
     @if(session('success'))
     <div class="tr-flash success">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
@@ -219,9 +194,6 @@
     </div>
     @endif
 
-    {{-- ══════════════════════════════════════════
-         KPI STATS
-    ══════════════════════════════════════════ --}}
     <div class="tr-kpi-grid">
         <div class="tr-kpi-card pending">
             <div class="tr-kpi-label">Pending</div>
@@ -262,9 +234,6 @@
         @endif
     </div>
 
-    {{-- ══════════════════════════════════════════
-         FILTER PILLS + SEARCH
-    ══════════════════════════════════════════ --}}
     <div class="tr-toolbar">
         <div class="tr-search">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -294,9 +263,6 @@
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════
-         COURSE CARDS (oldest → newest)
-    ══════════════════════════════════════════ --}}
     <div id="tr-courses-container">
 
         @forelse($completedInstances as $inst)
@@ -304,13 +270,11 @@
                 $enrollments = $inst->enrollments;
                 $totalStudents = $enrollments->count();
 
-                // Report counts
                 $reportsWithStatus = $enrollments->map(fn($e) => $e->report?->status ?? 'Pending');
                 $completedReports = $reportsWithStatus->whereIn(null, ['Approved','Sent'])->count();
                 $doneReports = $enrollments->filter(fn($e) => in_array($e->report?->status, ['Submitted','Approved','Sent']))->count();
                 $progressPct = $totalStudents > 0 ? round(($doneReports / $totalStudents) * 100) : 0;
 
-                // Deadline
                 $endDate = $inst->end_date ? \Carbon\Carbon::parse($inst->end_date) : null;
                 $deadline = $endDate?->copy()->addDays(3);
                 $now = now();
@@ -333,7 +297,6 @@
                     $deadlineVal = $deadline->format('d M Y');
                 }
 
-                // Total sessions
                 $totalSessions = $inst->sessions->count();
             @endphp
 
@@ -341,7 +304,6 @@
                  data-course-name="{{ strtolower($inst->courseTemplate?->name ?? '') }}"
                  data-course-level="{{ strtolower($inst->level?->name ?? '') }}">
 
-                {{-- Course Header --}}
                 <div class="tr-course-head">
                     <div class="tr-course-info">
                         <div class="tr-course-meta-top">
@@ -386,7 +348,6 @@
                     </div>
                 </div>
 
-                {{-- Progress bar --}}
                 <div class="tr-progress-strip">
                     <span class="tr-progress-label">Reports Progress</span>
                     <div class="tr-progress-track">
@@ -396,7 +357,6 @@
                     <span class="tr-progress-pct">{{ $progressPct }}%</span>
                 </div>
 
-                {{-- Students table --}}
                 <table class="tr-students-table">
                     <thead>
                         <tr>
@@ -419,7 +379,6 @@
                                 $presentCount = $enr->attendances?->where('status', 'Present')->count() ?? 0;
                                 $totalAtt = $enr->attendances?->count() ?? 0;
 
-                                // Status label + class
                                 $statusMap = [
                                     'Pending'   => ['tr-status-pending',   'Not Started'],
                                     'Draft'     => ['tr-status-draft',     'Draft'],
@@ -458,21 +417,21 @@
 
                                 <td class="tr-action-cell">
                                     @if(!$report)
-                                        {{-- No report → Create --}}
+
                                         <a href="{{ route('teacher.reports.create', ['enrollment_id' => $enr->enrollment_id]) }}"
                                            class="tr-btn tr-btn-primary">
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                             Start Report
                                         </a>
                                     @elseif($status === 'Draft')
-                                        {{-- Draft → Continue --}}
+
                                         <a href="{{ route('teacher.reports.edit', $report->report_id) }}"
                                            class="tr-btn tr-btn-primary">
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                                             Continue
                                         </a>
                                     @elseif($status === 'Rejected')
-                                        {{-- Rejected → Revise --}}
+
                                         <a href="{{ route('teacher.reports.edit', $report->report_id) }}"
                                            class="tr-btn tr-btn-warning">
                                             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
@@ -572,7 +531,6 @@ function filterReports() {
             const courseName  = card.dataset.courseName  || '';
             const courseLevel = card.dataset.courseLevel || '';
 
-            // Filter match
             let matchFilter = true;
             if (activeFilter === 'pending')   matchFilter = status === 'pending';
             if (activeFilter === 'overdue')   matchFilter = isOverdue;
@@ -582,7 +540,6 @@ function filterReports() {
             if (activeFilter === 'rejected')  matchFilter = status === 'rejected';
             if (activeFilter === 'sent')      matchFilter = status === 'sent';
 
-            // Search match
             const matchSearch = !activeSearch
                 || studentName.includes(activeSearch)
                 || courseName.includes(activeSearch)
