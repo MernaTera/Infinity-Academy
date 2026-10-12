@@ -7,63 +7,67 @@
 @endonce
 
 <style>
-.edit-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--green:#059669;--green-dk:#15803D;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--glass-bd:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+.edit-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.1;z-index:0;pointer-events:none}
+.orb-2{width:300px;height:300px;background:radial-gradient(circle,#1B4FA8,transparent 70%);top:30px;right:1%}
+.orb-3{width:380px;height:380px;background:radial-gradient(circle,#7C3AED,transparent 70%);bottom:-140px;left:35%}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0}
-.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:transparent;border:1px solid rgba(27,79,168,0.2);border-radius:4px;color:#7A8A9A;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s}
-.btn-back:hover{border-color:#1B4FA8;color:#1B4FA8;text-decoration:none}
-.form-card{max-width:900px;background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;position:relative;margin-bottom:20px}
-.form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)}
+.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--text);margin:0}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--glass-bd);border-radius:11px;color:var(--muted);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s}
+.btn-back:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
+.form-card{max-width:900px;background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);box-shadow:var(--glass-sh);border-radius:20px;overflow:hidden;position:relative;margin-bottom:20px}
+/* .form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent)} */
 .form-body{padding:28px 32px}
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(245,145,30,0.15);margin-top:4px}
+.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(27,79,168,0.1);margin-top:4px;font-weight:600}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;margin-bottom:20px}
 .form-field{display:flex;flex-direction:column;gap:5px}
-.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A}
-.form-control,.form-control-sm{width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:13px;color:#1A2A4A;background:#fff;outline:none;box-sizing:border-box}
+.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.form-control,.form-control-sm{width:100%;padding:10px 12px;font-size:13px;border:1px solid rgba(27,79,168,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;color:var(--text);background:rgba(255,255,255,0.65);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);outline:none;box-sizing:border-box}
 .form-control-sm{padding:8px 10px;font-size:12px}
-.form-control:focus,.form-control-sm:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
-.req{color:#DC2626}
+.form-control:focus,.form-control-sm:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.08)}
+.req{color:var(--red)}
 
-/* Level Builder */
-.level-card{background:#F8F6F2;border:1px solid rgba(27,79,168,0.1);border-radius:6px;padding:16px 18px;margin-bottom:12px;position:relative}
-.level-card.existing{border-left:3px solid #059669}
-.level-card.new{border-left:3px solid #F5911E}
+.level-card{background:rgba(255,255,255,0.45);border:1px solid rgba(27,79,168,0.1);border-radius:16px;padding:16px 18px;margin-bottom:12px;position:relative}
+.level-card.existing{border-left:3px solid var(--green)}
+.level-card.new{border-left:3px solid var(--orange)}
 .level-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.level-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:#1B4FA8}
-.level-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:2px 8px;border-radius:3px;margin-left:8px}
-.level-badge.existing{background:rgba(5,150,105,0.1);color:#059669}
-.level-badge.new{background:rgba(245,145,30,0.1);color:#F5911E}
-.btn-remove{padding:5px 10px;background:transparent;border:1px solid rgba(220,38,38,0.2);border-radius:3px;color:#DC2626;font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
-.btn-remove:hover{background:rgba(220,38,38,0.06);border-color:#DC2626}
+.level-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--text)}
+.level-badge{font-size:9px;letter-spacing:2px;text-transform:uppercase;padding:2px 8px;border-radius:20px;margin-left:8px;font-weight:600}
+.level-badge.existing{background:rgba(5,150,105,0.10);color:var(--green-dk)}
+.level-badge.new{background:rgba(245,145,30,0.12);color:var(--orange-dk)}
+.btn-remove{padding:5px 10px;background:rgba(255,255,255,0.5);border:1px solid rgba(220,38,38,0.22);border-radius:8px;color:var(--red);font-size:9px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;font-weight:600}
+.btn-remove:hover{background:rgba(220,38,38,0.07);border-color:var(--red)}
 .level-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
 
-/* Sublevel */
 .sublevels-wrap{margin-top:12px;padding-top:12px;border-top:1px dashed rgba(27,79,168,0.15)}
-.sublevel-item{background:#fff;border:1px solid rgba(27,79,168,0.08);border-radius:4px;padding:10px 12px;margin-bottom:8px}
-.sublevel-item.existing{border-left:2px solid #059669}
-.sublevel-item.new{border-left:2px solid #F5911E}
+.sublevel-item{background:rgba(255,255,255,0.6);border:1px solid rgba(27,79,168,0.08);border-radius:12px;padding:10px 12px;margin-bottom:8px}
+.sublevel-item.existing{border-left:2px solid var(--green)}
+.sublevel-item.new{border-left:2px solid var(--orange)}
 .sub-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.btn-add-sub{padding:6px 12px;background:transparent;border:1px dashed rgba(27,79,168,0.2);border-radius:3px;color:#1B4FA8;font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-top:4px}
-.btn-add-sub:hover{border-color:#1B4FA8;background:rgba(27,79,168,0.03)}
-.btn-add-level{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border:1.5px dashed rgba(27,79,168,0.2);border-radius:6px;background:transparent;color:#1B4FA8;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
-.btn-add-level:hover{border-color:#1B4FA8;background:rgba(27,79,168,0.03)}
+.btn-add-sub{padding:6px 12px;background:rgba(255,255,255,0.45);border:1px dashed rgba(27,79,168,0.25);border-radius:10px;color:var(--blue);font-size:10px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;margin-top:4px;font-weight:600}
+.btn-add-sub:hover{border-color:var(--blue);background:rgba(27,79,168,0.06)}
+.btn-add-level{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;border:1.5px dashed rgba(27,79,168,0.25);border-radius:14px;background:rgba(255,255,255,0.45);color:var(--blue);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;font-weight:600}
+.btn-add-level:hover{border-color:var(--blue);background:rgba(27,79,168,0.06)}
 
-.form-footer{padding:20px 32px;border-top:1px solid rgba(27,79,168,0.07);display:flex;gap:10px;justify-content:flex-end}
-.btn-submit{padding:11px 28px;background:transparent;border:1.5px solid #1B4FA8;border-radius:4px;color:#1B4FA8;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:4px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s}
-.btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#1B4FA8,#2D6FDB);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
-.btn-submit:hover::before{transform:scaleX(1)}
-.btn-submit:hover{color:#fff}
-.btn-cancel{padding:10px 20px;background:transparent;border:1px solid rgba(27,79,168,0.15);border-radius:4px;color:#7A8A9A;font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all 0.2s}
-.btn-cancel:hover{border-color:rgba(27,79,168,0.3);color:#1B4FA8;text-decoration:none}
-.info-box{background:rgba(245,145,30,0.04);border:1px solid rgba(245,145,30,0.15);border-radius:4px;padding:10px 14px;font-size:11px;color:#C47010;margin-bottom:16px}
-.legend{display:flex;gap:14px;font-size:10px;color:#7A8A9A;margin-bottom:14px}
+.form-footer{padding:20px 32px;border-top:1px solid rgba(27,79,168,0.08);display:flex;gap:10px;justify-content:flex-end}
+.btn-submit{padding:11px 28px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:4px;cursor:pointer;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 10px 24px rgba(27,79,168,0.28)}
+.btn-submit::before{display:none}
+.btn-submit:hover::before{transform:none}
+.btn-submit:hover{color:#fff;transform:translateY(-2px);box-shadow:0 14px 30px rgba(27,79,168,0.36)}
+.btn-cancel{padding:10px 20px;background:rgba(255,255,255,0.6);border:1px solid var(--glass-bd);border-radius:11px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;text-decoration:none;transition:all 0.2s}
+.btn-cancel:hover{border-color:rgba(27,79,168,0.3);color:var(--blue);text-decoration:none}
+.info-box{background:rgba(245,145,30,0.07);border:1px solid rgba(245,145,30,0.2);border-radius:12px;padding:10px 14px;font-size:11px;color:var(--orange-dk);margin-bottom:16px}
+.legend{display:flex;gap:14px;font-size:10px;color:var(--muted);margin-bottom:14px}
 .legend-item{display:flex;align-items:center;gap:6px}
 .legend-dot{width:10px;height:3px;border-radius:2px}
 @media(max-width:680px){.form-grid,.level-grid{grid-template-columns:1fr}.edit-page{padding:18px 14px}.form-body{padding:18px 20px}}
 </style>
 
 <div class="edit-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
     <div class="page-header">
         <div>
             <div class="page-eyebrow">Admin Panel</div>
@@ -90,7 +94,6 @@
     <form method="POST" action="{{ route('admin.courses.update', $course->course_template_id) }}">
         @csrf @method('PUT')
 
-        {{-- Basic Info --}}
         <div class="form-card">
             <div class="form-body">
                 <div class="sec-label">Course Information</div>
@@ -131,7 +134,6 @@
             </div>
         </div>
 
-        {{-- Levels Builder --}}
         <div class="form-card">
             <div class="form-body">
                 <div class="sec-label">Levels & Sublevels</div>
@@ -217,7 +219,7 @@ function addLevel(data = null) {
             </div>
         </div>
         <div class="sublevels-wrap">
-            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-bottom:8px">Sublevels (Optional)</div>
+            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#93A3BC;margin-bottom:8px">Sublevels (Optional)</div>
             <div id="sublevels_${i}"></div>
             <button type="button" class="btn-add-sub" onclick="addSublevel(${i})">+ Add Sublevel</button>
         </div>
