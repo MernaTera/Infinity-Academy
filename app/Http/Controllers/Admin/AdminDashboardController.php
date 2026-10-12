@@ -82,8 +82,9 @@ class AdminDashboardController extends Controller
             ->when($from, fn($q) => $q->whereBetween('approved_at', [$from, $to]))
             ->sum('amount');
 
-        $pendingInstallments = InstallmentSchedule::whereHas('enrollment')->where('status', 'Pending')->count();
-        $overdueInstallments = InstallmentSchedule::whereHas('enrollment')->where('status', 'Overdue')->count();
+        $liveEnrollment      = fn($q) => $q->whereIn('status', ['Active', 'Restricted', 'Waiting']);
+        $pendingInstallments = InstallmentSchedule::whereHas('enrollment', $liveEnrollment)->where('status', 'Pending')->count();
+        $overdueInstallments = InstallmentSchedule::whereHas('enrollment', $liveEnrollment)->where('status', 'Overdue')->count();
         $pendingApprovals    = \App\Models\Finance\InstallmentApprovalLog::whereHas('enrollment')->where('status', 'Pending')->count();
         $pendingRefunds      = RefundRequest::whereHas('enrollment')->where('status', 'Pending')->count();
         $pendingReports      = Report::whereHas('enrollment')->where('status', 'Submitted')->count();
@@ -207,7 +208,7 @@ class AdminDashboardController extends Controller
             $enrollValues[] = $enrollTrend[$d]?->total ?? 0;
         }
 
-        $csEmployees = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
+                $csEmployees = Employee::whereHas('user.role', fn($q) => $q->whereIn('role_name', ['Customer Service', 'CS Leader']))
             ->where('status', 'Active')
             ->get()
             ->map(function ($emp) use ($currentPatch, $from, $to, $period) {
@@ -249,7 +250,9 @@ class AdminDashboardController extends Controller
         $totalEmployees = Employee::where('status', 'Active')->count();
         $totalTeachers  = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Teacher'))
             ->where('status', 'Active')->count();
-        $totalCS = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Customer Service'))
+        $totalCS = Employee::whereHas('user.role', fn($q) => $q->whereIn('role_name', ['Customer Service', 'CS Leader']))
+            ->where('status', 'Active')->count();
+        $totalSC = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Student Care'))
             ->where('status', 'Active')->count();
 
         return view('admin.dashboard', compact(
@@ -269,7 +272,7 @@ class AdminDashboardController extends Controller
             'enrollDays','enrollValues',
             'csEmployees','totalTarget','totalAchieved','targetPct',
             'totalLeads','convertedLeads','conversionRate','recentEnrollments',
-            'totalEmployees','totalTeachers','totalCS',
+            'totalEmployees','totalTeachers','totalCS','totalSC'
         ));
     }
 

@@ -8,78 +8,68 @@
 
 <style>
 :root{
-    --blue:#1B4FA8;--blue-l:rgba(27,79,168,0.08);--blue-2:#2D6FDB;
-    --orange:#F5911E;--orange-l:rgba(245,145,30,0.08);--orange-dk:#C47010;
-    --green:#059669;--green-l:rgba(5,150,105,0.08);
-    --red:#DC2626;--red-l:rgba(220,38,38,0.06);
-    --purple:#7F77DD;--purple-l:rgba(127,119,221,0.08);
-    --teal:#0891B2;--teal-l:rgba(8,145,178,0.08);
-    --dark:#0F1F3D;--dark-2:#1A2A4A;
-    --border:rgba(27,79,168,0.09);--border-strong:rgba(27,79,168,0.15);
-    --bg:#F8F6F2;--card:#fff;
-    --text:#1A2A4A;--muted:#7A8A9A;--faint:#AAB8C8;
+    --blue:#1B4FA8;--blue-l:rgba(27,79,168,0.10);--blue-2:#2D6FDB;
+    --orange:#F5911E;--orange-l:rgba(245,145,30,0.12);--orange-dk:#C47010;
+    --green:#059669;--green-dk:#15803D;--green-l:rgba(5,150,105,0.10);
+    --red:#DC2626;--red-l:rgba(220,38,38,0.08);
+    --purple:#7C3AED;--purple-l:rgba(124,58,237,0.10);
+    --teal:#0891B2;--teal-l:rgba(8,145,178,0.10);
+    --dark:#16233F;--dark-2:#16233F;
+    --border:rgba(27,79,168,0.08);--border-strong:rgba(27,79,168,0.14);
+    --bg:#F8F6F2;--card:rgba(255,255,255,0.5);
+    --glass-bd:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);
+    --text:#16233F;--muted:#5A6A85;--faint:#93A3BC;
 }
 *{box-sizing:border-box;}
 .dash{background:var(--bg);min-height:100vh;padding:28px;font-family:'DM Sans',sans-serif;color:var(--text);}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.1;z-index:0;pointer-events:none;}
+.orb-2{width:300px;height:300px;background:radial-gradient(circle,#1B4FA8,transparent 70%);top:30px;right:1%;}
+.orb-3{width:380px;height:380px;background:radial-gradient(circle,#7C3AED,transparent 70%);bottom:-140px;left:35%;}
 
-/* ═══════════════════════════════════════════════════════════════
-   COMMAND STRIP (Sticky top bar with title, filters, refresh)
-═══════════════════════════════════════════════════════════════ */
-.cmd-strip{background:linear-gradient(135deg,var(--dark) 0%,#1A2A4A 60%,#243B69 100%);
-    border-radius:12px;padding:20px 26px;margin-bottom:22px;
+.cmd-strip{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);
+    border:1px solid var(--glass-bd);border-radius:20px;padding:20px 26px;margin-bottom:22px;
     display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
-    box-shadow:0 8px 32px rgba(15,31,61,0.15);position:relative;overflow:hidden;}
-.cmd-strip::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;
-    border-radius:50%;background:rgba(245,145,30,0.06);}
-.cmd-strip::after{content:'';position:absolute;bottom:-40px;left:30%;width:120px;height:120px;
-    border-radius:50%;background:rgba(27,79,168,0.15);}
+    box-shadow:var(--glass-sh);position:relative;overflow:hidden;}
+.cmd-strip::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent);}
+.cmd-strip::after{display:none;}
 .cmd-left{position:relative;z-index:1;}
-.cmd-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:4px;font-weight:600;
+.cmd-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600;
     display:flex;align-items:center;gap:8px;}
 .cmd-eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);
     animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
-.cmd-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#fff;margin:0;line-height:1;}
-.cmd-sub{font-size:11px;color:rgba(255,255,255,0.5);margin-top:4px;letter-spacing:0.5px;}
+.cmd-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--text);margin:0;line-height:1;}
+.cmd-sub{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:0.5px;}
 .cmd-right{display:flex;align-items:center;gap:10px;position:relative;z-index:1;flex-wrap:wrap;}
-.cmd-live{display:flex;align-items:center;gap:5px;padding:5px 10px;background:rgba(5,150,105,0.15);
-    border:1px solid rgba(5,150,105,0.3);border-radius:4px;font-size:9px;letter-spacing:1.5px;
-    text-transform:uppercase;color:#10B981;font-weight:600;}
-.cmd-live-dot{width:5px;height:5px;border-radius:50%;background:#10B981;animation:pulse 1.5s infinite;}
+.cmd-live{display:flex;align-items:center;gap:5px;padding:5px 10px;background:var(--green-l);
+    border:1px solid rgba(5,150,105,0.22);border-radius:20px;font-size:9px;letter-spacing:1.5px;
+    text-transform:uppercase;color:var(--green-dk);font-weight:600;}
+.cmd-live-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
 
-/* ═══════════════════════════════════════════════════════════════
-   PERIOD TABS
-═══════════════════════════════════════════════════════════════ */
-.period-tabs{display:flex;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);
-    border-radius:6px;padding:3px;gap:2px;}
-.period-tab{padding:6px 13px;border-radius:4px;font-size:9px;letter-spacing:1.8px;text-transform:uppercase;
-    text-decoration:none;color:rgba(255,255,255,0.6);font-family:'DM Sans',sans-serif;transition:all 0.2s;
+.period-tabs{display:flex;background:rgba(255,255,255,0.5);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+    border:1px solid var(--glass-bd);border-radius:12px;padding:3px;gap:2px;}
+.period-tab{padding:6px 13px;border-radius:9px;font-size:9px;letter-spacing:1.8px;text-transform:uppercase;
+    text-decoration:none;color:var(--muted);font-family:'DM Sans',sans-serif;transition:all 0.2s;
     white-space:nowrap;border:none;background:none;cursor:pointer;font-weight:600;}
-.period-tab.active{background:var(--orange);color:#fff;box-shadow:0 2px 8px rgba(245,145,30,0.4);}
-.period-tab:hover:not(.active){color:#fff;background:rgba(255,255,255,0.06);text-decoration:none;}
+.period-tab.active{background:linear-gradient(120deg,var(--blue),var(--blue-2));color:#fff;box-shadow:0 6px 14px rgba(27,79,168,0.28);}
+.period-tab:hover:not(.active){color:var(--blue);background:rgba(27,79,168,0.06);text-decoration:none;}
 
-/* ═══════════════════════════════════════════════════════════════
-   SECTION LABEL
-═══════════════════════════════════════════════════════════════ */
 .sec{margin-top:6px;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
-.sec-num{width:22px;height:22px;background:var(--dark);color:var(--orange);border-radius:5px;
+.sec-num{width:22px;height:22px;background:linear-gradient(135deg,var(--blue),var(--blue-2));color:#fff;border-radius:7px;
     display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;
-    font-size:11px;letter-spacing:1px;font-weight:600;flex-shrink:0;}
-.sec-label{font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:var(--dark);font-weight:700;}
-.sec-desc{font-size:10px;color:var(--muted);letter-spacing:0.5px;flex-shrink:0;}
+    font-size:11px;letter-spacing:1px;font-weight:600;flex-shrink:0;box-shadow:0 4px 10px rgba(27,79,168,0.25);}
+.sec-label{font-size:10px;letter-spacing:3.5px;text-transform:uppercase;color:var(--muted);font-weight:700;}
+.sec-desc{font-size:10px;color:var(--faint);letter-spacing:0.5px;flex-shrink:0;}
 .sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--border-strong),transparent);}
 
-/* ═══════════════════════════════════════════════════════════════
-   TIER 1: HERO KPI CARDS
-═══════════════════════════════════════════════════════════════ */
 .hero-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
-.hero-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px 22px;
+.hero-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);
+    border:1px solid var(--glass-bd);border-radius:18px;padding:20px 22px;box-shadow:var(--glass-sh);
     position:relative;overflow:hidden;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);}
-.hero-card:hover{box-shadow:0 12px 30px rgba(27,79,168,0.12);transform:translateY(-3px);}
-.hero-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--hc,var(--blue));}
-.hero-card::after{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;
-    background:var(--hi,var(--blue-l));opacity:0.4;pointer-events:none;}
-.hero-icon{position:absolute;top:18px;right:20px;width:36px;height:36px;border-radius:9px;
+.hero-card:hover{box-shadow:0 16px 38px rgba(23,45,90,0.13);transform:translateY(-3px);}
+.hero-card::before{display:none;}
+.hero-card::after{display:none;}
+.hero-icon{position:absolute;top:18px;right:20px;width:36px;height:36px;border-radius:12px;
     display:flex;align-items:center;justify-content:center;background:var(--hi,var(--blue-l));z-index:1;}
 .hero-label{font-size:9px;letter-spacing:2.5px;text-transform:uppercase;color:var(--muted);
     margin-bottom:8px;font-weight:600;position:relative;z-index:1;}
@@ -88,37 +78,34 @@
 .hero-val-sm{font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;color:var(--muted);margin-left:2px;}
 .hero-meta{display:flex;align-items:center;gap:8px;position:relative;z-index:1;flex-wrap:wrap;}
 .hero-sub{font-size:10px;color:var(--faint);letter-spacing:0.3px;}
-.trend-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;
+.trend-badge{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:20px;
     font-size:9px;font-weight:700;letter-spacing:0.5px;}
-.trend-up  {background:var(--green-l);color:var(--green);}
+.trend-up  {background:var(--green-l);color:var(--green-dk);}
 .trend-down{background:var(--red-l);color:var(--red);}
-.trend-flat{background:rgba(122,138,154,0.1);color:var(--muted);}
+.trend-flat{background:rgba(122,138,154,0.12);color:var(--muted);}
 .hero-link{position:absolute;bottom:14px;right:16px;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;
     color:var(--faint);text-decoration:none;transition:color 0.2s;font-weight:600;}
 .hero-link:hover{color:var(--hc);text-decoration:none;}
 
-/* ═══════════════════════════════════════════════════════════════
-   TIER 2: ACTION QUEUE COMMAND CENTER
-═══════════════════════════════════════════════════════════════ */
-.action-queue{background:linear-gradient(135deg,#fff 0%,#FAFAF7 100%);border:1px solid var(--border);
-    border-radius:12px;overflow:hidden;margin-bottom:26px;box-shadow:0 4px 20px rgba(27,79,168,0.06);}
-.aq-head{padding:16px 22px;background:linear-gradient(135deg,var(--dark) 0%,#1A2A4A 100%);
-    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#fff;}
-.aq-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;display:flex;align-items:center;gap:10px;}
-.aq-title-icon{width:26px;height:26px;background:var(--orange);border-radius:6px;
-    display:flex;align-items:center;justify-content:center;}
+.action-queue{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);
+    border:1px solid var(--glass-bd);border-radius:20px;overflow:hidden;margin-bottom:26px;box-shadow:var(--glass-sh);}
+.aq-head{padding:16px 22px;background:rgba(255,255,255,0.35);border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--text);}
+.aq-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:3px;display:flex;align-items:center;gap:10px;color:var(--text);}
+.aq-title-icon{width:26px;height:26px;background:linear-gradient(135deg,var(--orange),#ffb45f);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(245,145,30,0.3);}
 .aq-count{background:var(--red);color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;
     display:flex;align-items:center;gap:6px;}
 .aq-count.zero{background:var(--green);}
 .aq-count-dot{width:6px;height:6px;background:#fff;border-radius:50%;animation:pulse 1.5s infinite;}
 
 .aq-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);}
-.aq-item{background:#fff;padding:16px 20px;text-decoration:none;transition:all 0.2s;
+.aq-item{background:rgba(255,255,255,0.55);padding:16px 20px;text-decoration:none;transition:all 0.2s;
     display:flex;align-items:center;gap:14px;position:relative;}
-.aq-item:hover{background:var(--blue-l);text-decoration:none;transform:translateX(3px);}
+.aq-item:hover{background:rgba(255,255,255,0.8);text-decoration:none;transform:translateX(3px);}
 .aq-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:var(--ac);transition:width 0.2s;}
 .aq-item:hover::before{width:3px;}
-.aq-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+.aq-icon{width:38px;height:38px;border-radius:12px;display:flex;align-items:center;justify-content:center;
     background:var(--ai);flex-shrink:0;}
 .aq-info{flex:1;min-width:0;}
 .aq-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);
@@ -127,162 +114,122 @@
 .aq-arrow{color:var(--faint);opacity:0.5;transition:all 0.2s;flex-shrink:0;}
 .aq-item:hover .aq-arrow{color:var(--ac);opacity:1;transform:translateX(4px);}
 .aq-critical{--ac:var(--red);--ai:var(--red-l);}
-.aq-warn    {--ac:var(--orange);--ai:var(--orange-l);}
+.aq-warn    {--ac:var(--orange-dk);--ai:var(--orange-l);}
 .aq-info-c  {--ac:var(--blue);--ai:var(--blue-l);}
 .aq-item.empty{opacity:0.35;pointer-events:none;}
 .aq-item.empty .aq-arrow{display:none;}
-.aq-empty{padding:28px;text-align:center;color:var(--faint);font-size:12px;grid-column:1/-1;background:#fff;}
+.aq-empty{padding:28px;text-align:center;color:var(--faint);font-size:12px;grid-column:1/-1;background:transparent;}
 .aq-empty-icon{width:44px;height:44px;background:var(--green-l);border-radius:50%;
     display:flex;align-items:center;justify-content:center;margin:0 auto 10px;}
 
-/* ═══════════════════════════════════════════════════════════════
-   PATCH BANNER
-═══════════════════════════════════════════════════════════════ */
-.patch-banner{background:linear-gradient(135deg,var(--dark-2) 0%,var(--blue) 50%,var(--blue-2) 100%);
-    border-radius:10px;padding:20px 26px;margin-bottom:20px;display:flex;align-items:center;
+.patch-banner{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);
+    border:1px solid var(--glass-bd);border-radius:18px;padding:20px 26px;margin-bottom:20px;display:flex;align-items:center;
     justify-content:space-between;flex-wrap:wrap;gap:20px;position:relative;overflow:hidden;
-    box-shadow:0 8px 24px rgba(27,79,168,0.18);}
-.patch-banner::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;
-    border-radius:50%;background:rgba(245,145,30,0.08);}
+    box-shadow:var(--glass-sh);}
+.patch-banner::before{content:'';position:absolute;top:0;left:0;bottom:0;width:4px;border-radius:0;background:linear-gradient(180deg,var(--blue),var(--blue-2));}
 .pb-info{position:relative;z-index:1;min-width:200px;}
-.pb-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:4px;}
-.pb-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#fff;line-height:1;}
-.pb-dates{font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px;letter-spacing:0.3px;}
+.pb-label{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);margin-bottom:4px;font-weight:600;}
+.pb-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:var(--text);line-height:1;}
+.pb-dates{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:0.3px;}
 .pb-prog-wrap{position:relative;z-index:1;flex:1;max-width:280px;min-width:180px;}
 .pb-prog-label{display:flex;justify-content:space-between;font-size:9px;letter-spacing:2px;
-    text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:6px;}
-.pb-prog-track{background:rgba(255,255,255,0.12);border-radius:4px;height:6px;overflow:hidden;}
-.pb-prog-fill{height:6px;border-radius:4px;background:linear-gradient(90deg,var(--orange),#FFB347);
-    box-shadow:0 0 8px rgba(245,145,30,0.4);}
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600;}
+.pb-prog-track{background:rgba(27,79,168,0.10);border-radius:5px;height:6px;overflow:hidden;}
+.pb-prog-fill{height:6px;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--blue-2));}
 .pb-stats{display:flex;gap:24px;position:relative;z-index:1;}
 .pb-stat{text-align:center;}
-.pb-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:#fff;letter-spacing:1px;line-height:1;}
-.pb-stat-label{font-size:8px;color:rgba(255,255,255,0.5);letter-spacing:2px;text-transform:uppercase;margin-top:4px;}
+.pb-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--blue);letter-spacing:1px;line-height:1;}
+.pb-stat-label{font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:4px;font-weight:600;}
 
-/* ═══════════════════════════════════════════════════════════════
-   PAYMENT METHOD CARDS
-═══════════════════════════════════════════════════════════════ */
 .pm-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
-.pm-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 18px;
+.pm-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);
+    border:1px solid var(--glass-bd);border-radius:18px;padding:16px 18px;box-shadow:var(--glass-sh);
     position:relative;overflow:hidden;transition:all 0.3s;}
-.pm-card:hover{box-shadow:0 6px 20px rgba(27,79,168,0.08);transform:translateY(-2px);}
-.pm-card::before{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--pc,var(--blue));}
+.pm-card:hover{box-shadow:0 16px 38px rgba(23,45,90,0.13);transform:translateY(-2px);}
+.pm-card::before{display:none;}
 .pm-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.pm-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;
+.pm-icon{width:36px;height:36px;border-radius:12px;display:flex;align-items:center;justify-content:center;
     background:var(--pi,var(--blue-l));}
 .pm-share{font-size:9px;font-weight:700;color:var(--pc,var(--blue));background:var(--pi);
     padding:3px 8px;border-radius:12px;letter-spacing:0.3px;}
-.pm-name{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:4px;font-weight:600;}
+.pm-name{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;font-weight:600;}
 .pm-val{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--pc,var(--blue));line-height:1;}
 .pm-sub{font-size:10px;color:var(--faint);margin-top:4px;letter-spacing:0.3px;}
-.pm-bar{margin-top:10px;background:rgba(0,0,0,0.04);border-radius:4px;height:3px;overflow:hidden;}
+.pm-bar{margin-top:10px;background:rgba(27,79,168,0.08);border-radius:4px;height:3px;overflow:hidden;}
 .pm-bar-fill{height:3px;border-radius:4px;background:var(--pc);transition:width 0.8s ease;}
 
-/* ═══════════════════════════════════════════════════════════════
-   CARDS (GENERAL)
-═══════════════════════════════════════════════════════════════ */
-.card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;
-    box-shadow:0 2px 10px rgba(27,79,168,0.04);}
+.card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);
+    border:1px solid var(--glass-bd);border-radius:20px;overflow:hidden;box-shadow:var(--glass-sh);}
 .card-header{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;
-    align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:rgba(27,79,168,0.015);}
+    align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;background:rgba(255,255,255,0.35);}
 .card-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2.5px;color:var(--text);
     display:flex;align-items:center;gap:8px;}
-.card-title-icon{width:22px;height:22px;background:var(--blue-l);border-radius:5px;
+.card-title-icon{width:22px;height:22px;background:var(--blue-l);border-radius:7px;
     display:flex;align-items:center;justify-content:center;}
 .card-body{padding:16px 18px;}
 
-/* Layout grids */
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;}
 .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:24px;}
 .grid-2-1{display:grid;grid-template-columns:2fr 1fr;gap:20px;margin-bottom:24px;}
 .grid-1-2{display:grid;grid-template-columns:1fr 2fr;gap:20px;margin-bottom:24px;}
 
-/* ═══════════════════════════════════════════════════════════════
-   MINI KPI CARDS
-═══════════════════════════════════════════════════════════════ */
 .mini-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
-.mini-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 16px;
+.mini-card{background:rgba(255,255,255,0.55);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    border:1px solid var(--glass-bd);border-radius:14px;padding:14px 16px;box-shadow:0 4px 16px rgba(23,45,90,0.05);
     position:relative;transition:all 0.25s;}
 .mini-card:hover{border-color:var(--mc,var(--blue));transform:translateY(-1px);}
-.mini-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--mc,var(--blue));border-radius:8px 8px 0 0;}
+.mini-card::before{display:none;}
 .mini-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600;}
 .mini-val{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1.5px;color:var(--mc,var(--text));line-height:1;}
 .mini-sub{font-size:9px;color:var(--faint);margin-top:3px;letter-spacing:0.3px;}
 
-/* ═══════════════════════════════════════════════════════════════
-   CS RANKING
-═══════════════════════════════════════════════════════════════ */
-.cs-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(27,79,168,0.04);transition:all 0.15s;}
+.cs-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid rgba(27,79,168,0.06);transition:all 0.15s;}
 .cs-row:last-child{border-bottom:none;}
-.cs-row:hover{background:rgba(27,79,168,0.02);}
+.cs-row:hover{background:rgba(27,79,168,0.04);}
 .cs-rank{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--faint);width:26px;flex-shrink:0;letter-spacing:1px;text-align:center;}
-.cs-rank.gold  {color:#FFD700;text-shadow:0 0 6px rgba(255,215,0,0.4);}
-.cs-rank.silver{color:#C0C0C0;text-shadow:0 0 6px rgba(192,192,192,0.4);}
-.cs-rank.bronze{color:#CD7F32;text-shadow:0 0 6px rgba(205,127,50,0.4);}
-.cs-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--blue-l),var(--purple-l));
+.cs-rank.gold  {color:#E0A800;}
+.cs-rank.silver{color:#9AA5B4;}
+.cs-rank.bronze{color:#CD7F32;}
+.cs-avatar{width:34px;height:34px;border-radius:12px;background:var(--blue-l);
     display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:14px;
-    color:var(--blue);flex-shrink:0;border:2px solid #fff;box-shadow:0 2px 8px rgba(27,79,168,0.1);}
-.cs-prog-track{background:rgba(27,79,168,0.06);border-radius:3px;height:5px;overflow:hidden;margin-top:5px;}
+    color:var(--blue);flex-shrink:0;}
+.cs-prog-track{background:rgba(27,79,168,0.08);border-radius:3px;height:5px;overflow:hidden;margin-top:5px;}
 .cs-prog-fill{height:5px;border-radius:3px;transition:width 0.8s ease;}
 
-/* ═══════════════════════════════════════════════════════════════
-   REVENUE BARS
-═══════════════════════════════════════════════════════════════ */
-.rev-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(27,79,168,0.04);}
+.rev-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid rgba(27,79,168,0.06);}
 .rev-row:last-child{border-bottom:none;}
-.rev-bar-track{flex:1;background:rgba(27,79,168,0.06);border-radius:3px;height:5px;overflow:hidden;min-width:60px;}
+.rev-bar-track{flex:1;background:rgba(27,79,168,0.08);border-radius:3px;height:5px;overflow:hidden;min-width:60px;}
 .rev-bar-fill{height:5px;border-radius:3px;transition:width 0.8s ease;}
 
-/* ═══════════════════════════════════════════════════════════════
-   ENROLLMENT ROWS
-═══════════════════════════════════════════════════════════════ */
-.enr-row{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(27,79,168,0.04);transition:all 0.15s;}
+.enr-row{display:flex;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid rgba(27,79,168,0.06);transition:all 0.15s;}
 .enr-row:last-child{border-bottom:none;}
-.enr-row:hover{background:rgba(27,79,168,0.02);}
-.enr-avatar{width:30px;height:30px;border-radius:50%;background:var(--purple-l);display:flex;align-items:center;
-    justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--purple);flex-shrink:0;border:2px solid #fff;}
+.enr-row:hover{background:rgba(27,79,168,0.04);}
+.enr-avatar{width:30px;height:30px;border-radius:10px;background:var(--purple-l);display:flex;align-items:center;
+    justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--purple);flex-shrink:0;}
 .enr-time{font-size:9px;color:var(--faint);letter-spacing:0.5px;text-transform:uppercase;}
 
-/* ═══════════════════════════════════════════════════════════════
-   CHART
-═══════════════════════════════════════════════════════════════ */
 .chart-wrap{padding:16px 18px;position:relative;}
 canvas{max-width:100%;display:block;}
 
-/* ═══════════════════════════════════════════════════════════════
-   STAT TABLE
-═══════════════════════════════════════════════════════════════ */
 .stat-table{width:100%;border-collapse:collapse;}
-.stat-table td{padding:10px 18px;font-size:12px;border-bottom:1px solid rgba(27,79,168,0.04);}
+.stat-table td{padding:10px 18px;font-size:12px;border-bottom:1px solid rgba(27,79,168,0.06);}
 .stat-table tr:last-child td{border-bottom:none;}
 .stat-table td:first-child{color:var(--muted);letter-spacing:0.3px;}
 .stat-table td:last-child{text-align:right;font-weight:600;color:var(--text);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;font-size:15px;}
 
-/* ═══════════════════════════════════════════════════════════════
-   BADGES
-═══════════════════════════════════════════════════════════════ */
-.mini-badge{display:inline-flex;align-items:center;font-size:9px;letter-spacing:0.5px;padding:3px 8px;border-radius:3px;font-weight:600;}
-.badge-green {background:var(--green-l);color:var(--green);}
+.mini-badge{display:inline-flex;align-items:center;font-size:9px;letter-spacing:0.5px;padding:3px 8px;border-radius:20px;font-weight:600;}
+.badge-green {background:var(--green-l);color:var(--green-dk);}
 .badge-red   {background:var(--red-l);color:var(--red);}
-.badge-orange{background:var(--orange-l);color:#C47010;}
+.badge-orange{background:var(--orange-l);color:var(--orange-dk);}
 .badge-blue  {background:var(--blue-l);color:var(--blue);}
 .badge-purple{background:var(--purple-l);color:var(--purple);}
 
-/* ═══════════════════════════════════════════════════════════════
-   SPARKLINE (Mini chart under KPI)
-═══════════════════════════════════════════════════════════════ */
 .sparkline{margin-top:8px;position:relative;height:24px;}
 .sparkline svg{width:100%;height:100%;}
 
-/* ═══════════════════════════════════════════════════════════════
-   ANIMATIONS
-═══════════════════════════════════════════════════════════════ */
 @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .hero-card,.pm-card,.card,.patch-banner,.action-queue,.mini-card{animation:fadeIn 0.4s ease both;}
 
-/* ═══════════════════════════════════════════════════════════════
-   RESPONSIVE
-═══════════════════════════════════════════════════════════════ */
 @media(max-width:1200px){
     .hero-grid{grid-template-columns:repeat(2,1fr);}
     .pm-grid{grid-template-columns:repeat(2,1fr);}
@@ -300,15 +247,14 @@ canvas{max-width:100%;display:block;}
 </style>
 
 <div class="dash">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
-    {{-- ══════════════════════════════════════════════════════════
-         COMMAND STRIP (Header)
-    ══════════════════════════════════════════════════════════ --}}
     <div class="cmd-strip">
         <div class="cmd-left">
             <div class="cmd-eyebrow">
                 <span class="cmd-live-dot"></span>
-                Command Center · Live
+                Admin Command Center · Live
             </div>
             <h1 class="cmd-title">Executive Dashboard</h1>
             <div class="cmd-sub">{{ now()->format('l, d M Y') }} · Auto-updates on refresh</div>
@@ -327,9 +273,6 @@ canvas{max-width:100%;display:block;}
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════
-         PATCH BANNER
-    ══════════════════════════════════════════════════════════ --}}
     @if($currentPatch)
     @php
         $patchStart    = \Carbon\Carbon::parse($currentPatch->start_date);
@@ -371,123 +314,8 @@ canvas{max-width:100%;display:block;}
     </div>
     @endif
 
-    {{-- ══════════════════════════════════════════════════════════
-         TIER 1: EXECUTIVE OVERVIEW (4 Hero KPIs)
-    ══════════════════════════════════════════════════════════ --}}
-    <div class="sec">
+        <div class="sec">
         <div class="sec-num">1</div>
-        <div class="sec-label">Executive Overview</div>
-        <div class="sec-desc">At-a-glance snapshot</div>
-        <div class="sec-line"></div>
-    </div>
-
-    <div class="hero-grid">
-        {{-- Period Revenue --}}
-        <div class="hero-card" style="--hc:var(--blue);--hi:var(--blue-l)">
-            <div class="hero-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2">
-                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
-                </svg>
-            </div>
-            <div class="hero-label">Period Revenue</div>
-            <div class="hero-val">{{ number_format($periodRevenue) }} <span class="hero-val-sm">LE</span></div>
-            <div class="hero-meta">
-                @if($revenueTrendPct > 0)
-                    <span class="trend-badge trend-up">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-                        +{{ $revenueTrendPct }}%
-                    </span>
-                @elseif($revenueTrendPct < 0)
-                    <span class="trend-badge trend-down">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                        {{ $revenueTrendPct }}%
-                    </span>
-                @else
-                    <span class="trend-badge trend-flat">—</span>
-                @endif
-                <span class="hero-sub">vs previous {{ $period }}</span>
-            </div>
-            {{-- Sparkline --}}
-            @if(!empty($revenueSparkline))
-            @php
-                $spMax = max($revenueSparkline) ?: 1;
-                $spWidth = 100; $spStep = $spWidth / max(1, count($revenueSparkline) - 1);
-                $spPoints = collect($revenueSparkline)->map(function($v, $i) use ($spMax, $spStep) {
-                    return round($i * $spStep, 1) . ',' . round(20 - ($v / $spMax * 18), 1);
-                })->join(' ');
-            @endphp
-            <div class="sparkline">
-                <svg viewBox="0 0 100 22" preserveAspectRatio="none">
-                    <polyline fill="none" stroke="var(--blue)" stroke-width="1.5" points="{{ $spPoints }}" opacity="0.8"/>
-                    <polyline fill="rgba(27,79,168,0.1)" stroke="none" points="0,22 {{ $spPoints }} 100,22"/>
-                </svg>
-            </div>
-            @endif
-        </div>
-
-        {{-- New Enrollments --}}
-        <div class="hero-card" style="--hc:var(--green);--hi:var(--green-l)">
-            <div class="hero-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2">
-                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
-                </svg>
-            </div>
-            <div class="hero-label">New Enrollments</div>
-            <div class="hero-val">{{ $periodEnrollments }}</div>
-            <div class="hero-meta">
-                @if($enrollmentsTrendPct > 0)
-                    <span class="trend-badge trend-up">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
-                        +{{ $enrollmentsTrendPct }}%
-                    </span>
-                @elseif($enrollmentsTrendPct < 0)
-                    <span class="trend-badge trend-down">
-                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
-                        {{ $enrollmentsTrendPct }}%
-                    </span>
-                @else
-                    <span class="trend-badge trend-flat">—</span>
-                @endif
-                <span class="hero-sub">vs previous {{ $period }}</span>
-            </div>
-        </div>
-
-        {{-- Outstanding --}}
-        <div class="hero-card" style="--hc:var(--red);--hi:var(--red-l)">
-            <div class="hero-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-            </div>
-            <div class="hero-label">Outstanding Balance</div>
-            <div class="hero-val">{{ number_format($totalOutstanding) }} <span class="hero-val-sm">LE</span></div>
-            <div class="hero-meta">
-                <span class="mini-badge badge-red">{{ $overdueInstallments }} overdue</span>
-                <span class="hero-sub">across all enrollments</span>
-            </div>
-            <a href="{{ route('admin.outstanding.index') }}" class="hero-link">View →</a>
-        </div>
-
-        {{-- CS Target --}}
-        <div class="hero-card" style="--hc:var(--orange);--hi:var(--orange-l)">
-            <div class="hero-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
-                </svg>
-            </div>
-            <div class="hero-label">Target Achievement</div>
-            <div class="hero-val">{{ $targetPct }}<span class="hero-val-sm">%</span></div>
-            <div class="hero-meta">
-                <span class="hero-sub">{{ number_format($totalAchieved) }} / {{ number_format($totalTarget) }} LE</span>
-            </div>
-        </div>
-    </div>
-
-    {{-- ══════════════════════════════════════════════════════════
-         TIER 2: ACTION QUEUE — Command Center
-    ══════════════════════════════════════════════════════════ --}}
-    <div class="sec">
-        <div class="sec-num">2</div>
         <div class="sec-label">Action Queue</div>
         <div class="sec-desc">Items needing your attention</div>
         <div class="sec-line"></div>
@@ -617,9 +445,112 @@ canvas{max-width:100%;display:block;}
         @endif
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════
-         TIER 3: FINANCIAL BREAKDOWN
-    ══════════════════════════════════════════════════════════ --}}
+    <div class="sec">
+        <div class="sec-num">2</div>
+        <div class="sec-label">Executive Overview</div>
+        <div class="sec-desc">At-a-glance snapshot</div>
+        <div class="sec-line"></div>
+    </div>
+
+    <div class="hero-grid">
+
+        <div class="hero-card" style="--hc:var(--blue);--hi:var(--blue-l)">
+            <div class="hero-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue)" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+                </svg>
+            </div>
+            <div class="hero-label">Period Revenue</div>
+            <div class="hero-val">{{ number_format($periodRevenue) }} <span class="hero-val-sm">LE</span></div>
+            <div class="hero-meta">
+                @if($revenueTrendPct > 0)
+                    <span class="trend-badge trend-up">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+                        +{{ $revenueTrendPct }}%
+                    </span>
+                @elseif($revenueTrendPct < 0)
+                    <span class="trend-badge trend-down">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+                        {{ $revenueTrendPct }}%
+                    </span>
+                @else
+                    <span class="trend-badge trend-flat">—</span>
+                @endif
+                <span class="hero-sub">vs previous {{ $period }}</span>
+            </div>
+
+            @if(!empty($revenueSparkline))
+            @php
+                $spMax = max($revenueSparkline) ?: 1;
+                $spWidth = 100; $spStep = $spWidth / max(1, count($revenueSparkline) - 1);
+                $spPoints = collect($revenueSparkline)->map(function($v, $i) use ($spMax, $spStep) {
+                    return round($i * $spStep, 1) . ',' . round(20 - ($v / $spMax * 18), 1);
+                })->join(' ');
+            @endphp
+            <div class="sparkline">
+                <svg viewBox="0 0 100 22" preserveAspectRatio="none">
+                    <polyline fill="none" stroke="var(--blue)" stroke-width="1.5" points="{{ $spPoints }}" opacity="0.8"/>
+                    <polyline fill="rgba(27,79,168,0.1)" stroke="none" points="0,22 {{ $spPoints }} 100,22"/>
+                </svg>
+            </div>
+            @endif
+        </div>
+
+        <div class="hero-card" style="--hc:var(--green);--hi:var(--green-l)">
+            <div class="hero-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/>
+                </svg>
+            </div>
+            <div class="hero-label">New Enrollments</div>
+            <div class="hero-val">{{ $periodEnrollments }}</div>
+            <div class="hero-meta">
+                @if($enrollmentsTrendPct > 0)
+                    <span class="trend-badge trend-up">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+                        +{{ $enrollmentsTrendPct }}%
+                    </span>
+                @elseif($enrollmentsTrendPct < 0)
+                    <span class="trend-badge trend-down">
+                        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="6 9 12 15 18 9"/></svg>
+                        {{ $enrollmentsTrendPct }}%
+                    </span>
+                @else
+                    <span class="trend-badge trend-flat">—</span>
+                @endif
+                <span class="hero-sub">vs previous {{ $period }}</span>
+            </div>
+        </div>
+
+        <div class="hero-card" style="--hc:var(--red);--hi:var(--red-l)">
+            <div class="hero-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                </svg>
+            </div>
+            <div class="hero-label">Outstanding Balance</div>
+            <div class="hero-val">{{ number_format($totalOutstanding) }} <span class="hero-val-sm">LE</span></div>
+            <div class="hero-meta">
+                <span class="mini-badge badge-red">{{ $overdueInstallments }} overdue</span>
+                <span class="hero-sub">across all enrollments</span>
+            </div>
+            <a href="{{ route('admin.outstanding.index') }}" class="hero-link">View →</a>
+        </div>
+
+        <div class="hero-card" style="--hc:var(--orange);--hi:var(--orange-l)">
+            <div class="hero-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>
+                </svg>
+            </div>
+            <div class="hero-label">Target Achievement</div>
+            <div class="hero-val">{{ $targetPct }}<span class="hero-val-sm">%</span></div>
+            <div class="hero-meta">
+                <span class="hero-sub">{{ number_format($totalAchieved) }} / {{ number_format($totalTarget) }} LE</span>
+            </div>
+        </div>
+    </div>
+
     <div class="sec">
         <div class="sec-num">3</div>
         <div class="sec-label">Financial Breakdown</div>
@@ -627,7 +558,6 @@ canvas{max-width:100%;display:block;}
         <div class="sec-line"></div>
     </div>
 
-    {{-- Payment Methods --}}
     @php
         $totalPMRev = $cashRevenue + $instapayRevenue + $vodafoneRevenue + $cardRevenue;
     @endphp
@@ -693,7 +623,6 @@ canvas{max-width:100%;display:block;}
         </div>
     </div>
 
-    {{-- Charts Row --}}
     <div class="grid-2">
         <div class="card">
             <div class="card-header">
@@ -722,7 +651,6 @@ canvas{max-width:100%;display:block;}
         </div>
     </div>
 
-    {{-- Revenue by Course & Branch --}}
     <div class="grid-2">
         @if($revenueByCourse->isNotEmpty())
         <div class="card">
@@ -775,7 +703,6 @@ canvas{max-width:100%;display:block;}
         @endif
     </div>
 
-    {{-- Refund summary --}}
     <div class="mini-grid" style="margin-bottom:24px;">
         <div class="mini-card" style="--mc:var(--muted)">
             <div class="mini-label">Total Refunded</div>
@@ -807,9 +734,6 @@ canvas{max-width:100%;display:block;}
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════
-         TIER 4: ACADEMIC OPERATIONS
-    ══════════════════════════════════════════════════════════ --}}
     <div class="sec">
         <div class="sec-num">4</div>
         <div class="sec-label">Academic Operations</div>
@@ -863,9 +787,6 @@ canvas{max-width:100%;display:block;}
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════
-         TIER 5: SALES & CS PERFORMANCE
-    ══════════════════════════════════════════════════════════ --}}
     <div class="sec">
         <div class="sec-num">5</div>
         <div class="sec-label">Sales & Performance</div>
@@ -897,7 +818,7 @@ canvas{max-width:100%;display:block;}
     </div>
 
     <div class="grid-2-1">
-        {{-- CS Ranking --}}
+
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
@@ -933,7 +854,6 @@ canvas{max-width:100%;display:block;}
             @endforelse
         </div>
 
-        {{-- Recent Enrollments --}}
         <div class="card">
             <div class="card-header">
                 <div class="card-title">
@@ -963,9 +883,6 @@ canvas{max-width:100%;display:block;}
         </div>
     </div>
 
-    {{-- ══════════════════════════════════════════════════════════
-         TIER 6: WORKFORCE SNAPSHOT
-    ══════════════════════════════════════════════════════════ --}}
     <div class="sec">
         <div class="sec-num">6</div>
         <div class="sec-label">Workforce</div>
@@ -986,6 +903,10 @@ canvas{max-width:100%;display:block;}
             <tr>
                 <td>Customer Service Team</td>
                 <td>{{ $totalCS }}</td>
+            </tr>            
+            <tr>
+                <td>Student Care Team</td>
+                <td>{{ $totalSC }}</td>
             </tr>
             <tr>
                 <td>Total Refunds This Period</td>
@@ -996,15 +917,11 @@ canvas{max-width:100%;display:block;}
 
 </div>
 
-{{-- ══════════════════════════════════════════════════════════
-     CHARTS SCRIPT
-══════════════════════════════════════════════════════════ --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const dmSans = { family: 'DM Sans', size: 10 };
 
-    // Revenue chart
     const rc = document.getElementById('revenueChart');
     if (rc) {
         new Chart(rc, {
