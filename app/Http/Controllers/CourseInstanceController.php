@@ -203,18 +203,14 @@ class CourseInstanceController extends Controller
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use ($data, $employeeId) {
 
-                $contract = \App\Models\HR\TeacherContract::with('contractType')
-                    ->where('teacher_id', $data['teacher_id'])
-                    ->where('patch_id',   $data['patch_id'])
-                    ->where('is_active',  true)
-                    ->first();
+                $contract = \App\Models\HR\TeacherContract::standingFor($data['teacher_id'], $data['patch_id']);
 
                 $newSessions = (int) ceil((float)$data['total_hours'] / (float)$data['session_duration']);
 
                 $sessionCount = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
                     $q->where('teacher_id', $data['teacher_id'])
                       ->where('patch_id',   $data['patch_id'])
-                      ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+                      ->whereIn('status', ['Active', 'Upcoming', 'Completed', 'Pending_Approval'])
                 )->where('status', '!=', 'Cancelled')->count();
 
                 $pendingSessionsCount = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
@@ -519,17 +515,13 @@ class CourseInstanceController extends Controller
                 $regenStartDate, $teacherChanged
             ) {
 
-                $contract = \App\Models\HR\TeacherContract::with('contractType')
-                    ->where('teacher_id', $data['teacher_id'])
-                    ->where('patch_id',   $data['patch_id'])
-                    ->where('is_active',  true)
-                    ->first();
+                $contract = \App\Models\HR\TeacherContract::standingFor($data['teacher_id'], $data['patch_id']);
 
                 $sessionCount = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
                     $q->where('teacher_id', $data['teacher_id'])
                       ->where('patch_id',   $data['patch_id'])
                       ->where('course_instance_id', '!=', $instance->course_instance_id)
-                      ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+                      ->whereIn('status', ['Active', 'Upcoming', 'Completed', 'Pending_Approval'])
                 )->where('status', '!=', 'Cancelled')->count();
 
                 $pendingSessionsCount = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
@@ -1095,18 +1087,14 @@ class CourseInstanceController extends Controller
 
         if (!$teacherId || !$patchId) return response()->json(null);
 
-        $contract = \App\Models\HR\TeacherContract::with('contractType')
-            ->where('teacher_id', $teacherId)
-            ->where('patch_id', $patchId)
-            ->where('is_active', true)
-            ->first();
+        $contract = \App\Models\HR\TeacherContract::standingFor($teacherId, $patchId);
 
         if (!$contract) return response()->json(null);
 
         $sessionCount = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
             $q->where('teacher_id', $teacherId)
               ->where('patch_id', $patchId)
-              ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+              ->whereIn('status', ['Active', 'Upcoming', 'Completed', 'Pending_Approval'])
               ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
         )->where('status', '!=', 'Cancelled')->count();
 

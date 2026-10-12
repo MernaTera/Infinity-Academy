@@ -13,4 +13,9 @@ class EnrollmentMaterial extends Model
         'price',
         'status'
     ];
+
+    public function material()
+    {
+        return $this->belongsTo(Material::class, 'material_id', 'material_id');
+    }
 }

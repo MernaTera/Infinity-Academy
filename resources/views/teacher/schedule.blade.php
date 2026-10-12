@@ -29,6 +29,16 @@
     .patch-bar-fill{height:7px;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--blue-2));transition:width .6s ease;}
     @media (max-width:600px){ .patch-bar-prog{max-width:none;} }
 
+.badge-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.badge-row .view-only-badge{margin-bottom:0}
+.load-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(27,79,168,0.15);border-radius:20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.load-badge b{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;color:var(--blue);font-weight:400;line-height:1}
+.load-badge .load-of{color:var(--faint)}
+.load-badge.is-over{border-color:rgba(245,145,30,0.35);background:rgba(245,145,30,0.08)}
+.load-badge.is-over b{color:var(--orange-dk)}
+.load-tag{padding:2px 8px;border-radius:20px;font-size:8px;letter-spacing:1.5px}
+.load-tag-over{background:rgba(245,145,30,0.15);color:var(--orange-dk)}
+.load-tag-pending{background:rgba(27,79,168,0.08);color:var(--blue)}
 .view-only-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.15);border-radius:20px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:20px}
 
 .patch-banner{background:linear-gradient(120deg,var(--blue),var(--blue-2));border-radius:18px;padding:18px 24px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;position:relative;overflow:hidden;box-shadow:0 10px 24px rgba(27,79,168,0.28)}
@@ -109,12 +119,31 @@
         </div>
     </div>
 
-    <div class="view-only-badge">
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-            <circle cx="12" cy="12" r="3"/>
-        </svg>
-        View Only — Contact Student Care to modify schedule
+    <div class="badge-row">
+        <div class="view-only-badge">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+            </svg>
+            View Only — Contact Student Care to modify schedule
+        </div>
+        @if($contractLoad)
+        <div class="load-badge {{ $contractLoad['over'] > 0 ? 'is-over' : '' }}">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            @if($contractLoad['has_contract'] && $contractLoad['max'])
+                {{ $contractLoad['name'] }} ·
+                <span><b>{{ $contractLoad['assigned'] }}</b> <span class="load-of">/ {{ $contractLoad['max'] }}</span> sessions</span>
+                @if($contractLoad['over'] > 0)
+                    <span class="load-tag load-tag-over">+{{ $contractLoad['over'] }} over contract</span>
+                @endif
+            @else
+                <span><b>{{ $contractLoad['assigned'] }}</b> sessions</span> · No contract this patch
+            @endif
+            @if($contractLoad['pending'] > 0)
+                <span class="load-tag load-tag-pending">+{{ $contractLoad['pending'] }} awaiting your approval</span>
+            @endif
+        </div>
+        @endif
     </div>
     @if($currentPatch)
     @php

@@ -189,9 +189,46 @@ class TeacherController extends Controller
 
         $timeSlots = \App\Models\Academic\TimeSlot::where('is_active', true)->get();
 
+        $contractLoad = null;
+        if ($currentPatch) {
+            $contract = \App\Models\HR\TeacherContract::standingFor($teacher->teacher_id, $currentPatch->patch_id);
+
+            $countFor = function (array $statuses) use ($teacher, $currentPatch) {
+                $withSessions = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
+                    $q->where('teacher_id', $teacher->teacher_id)
+                      ->where('patch_id', $currentPatch->patch_id)
+                      ->whereIn('status', $statuses)
+                )->where('status', '!=', 'Cancelled')->count();
+
+                $planned = \App\Models\Academic\CourseInstance::where('teacher_id', $teacher->teacher_id)
+                    ->where('patch_id', $currentPatch->patch_id)
+                    ->whereIn('status', $statuses)
+                    ->whereDoesntHave('sessions')
+                    ->get()
+                    ->sum(fn($ci) => (float) $ci->session_duration > 0
+                        ? (int) ceil((float) $ci->total_hours / (float) $ci->session_duration)
+                        : 0);
+
+                return $withSessions + $planned;
+            };
+
+            $assigned = $countFor(['Active', 'Upcoming', 'Completed']);
+            $pending  = $countFor(['Pending_Approval']);
+            $max      = $contract?->contractType?->max_sessions_allowed;
+
+            $contractLoad = [
+                'has_contract' => (bool) $contract,
+                'name'         => $contract?->contractType?->name,
+                'max'          => $max !== null ? (int) $max : null,
+                'assigned'     => $assigned,
+                'pending'      => $pending,
+                'over'         => $max ? max(0, $assigned - (int) $max) : 0,
+            ];
+        }
+
         return view('teacher.schedule', compact(
             'currentPatch', 'instances', 'filtered',
-            'timeSlots', 'filterPair', 'filterSlot'
+            'timeSlots', 'filterPair', 'filterSlot', 'contractLoad'
         ));
     }
 

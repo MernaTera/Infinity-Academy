@@ -126,10 +126,16 @@ class AdminStudentController extends Controller
                 'courseInstance.sessions',
                 'courseInstance.teacher.employee' => fn($q2) => $q2->withoutGlobalScope('branch'),
                 'postponements',
+                'enrollmentMaterials.material' => fn($q2) => $q2->withoutGlobalScopes(),
             ])->latest(),
         ])->findOrFail($id);
 
-        return view('admin.students.show', compact('student'));
+        $canBuyMaterial = auth()->user()?->worksCs() ?? false;
+        $buyableMaterials = $canBuyMaterial
+            ? \App\Models\Enrollment\Material::where('is_active', true)->orderBy('name')->get()
+            : collect();
+
+        return view('admin.students.show', compact('student', 'canBuyMaterial', 'buyableMaterials'));
     }
 
     public function update(Request $request, $id)
@@ -238,5 +244,116 @@ class AdminStudentController extends Controller
         }
 
         return back()->with('success', 'Phone number removed.');
+    }
+
+    public function buyMaterial(Request $request, $enrollmentId)
+    {
+        if (!(auth()->user()?->worksCs() ?? false)) {
+            abort(403, 'Only Customer Service can sell materials.');
+        }
+
+        $data = $request->validate([
+            'material_id'    => 'required|integer',
+            'payment_method' => 'required|in:Cash,Card,Instapay,Vodafone_Cash',
+            'notes'          => 'nullable|string|max:500',
+        ]);
+
+        $enrollment = \App\Models\Enrollment\Enrollment::findOrFail($enrollmentId);
+
+        if ($enrollment->status === 'Cancelled') {
+            return back()->with('material_error', 'Cannot sell materials on a cancelled enrollment.');
+        }
+
+        $material = \App\Models\Enrollment\Material::where('is_active', true)
+            ->findOrFail($data['material_id']);
+
+        $price = (float) ($material->price ?? 0);
+        if ($price <= 0) {
+            return back()->with('material_error', 'This material has no price set.');
+        }
+
+        $csEmployee = Employee::where('user_id', auth()->id())->first();
+        if (!$csEmployee) {
+            return back()->with('material_error', 'Your account is not linked to an employee.');
+        }
+
+        $branchId = $csEmployee->branch_id ?? $enrollment->branch_id;
+        $patchId  = \App\Models\Academic\Patch::where('status', 'Active')
+                        ->latest('start_date')->value('patch_id')
+                    ?? $enrollment->patch_id;
+
+        $methodMap = [
+            'Cash'          => 'Cash',
+            'Card'          => 'Card',
+            'Instapay'      => 'Transfer',
+            'Vodafone_Cash' => 'Online',
+        ];
+
+        \Illuminate\Support\Facades\DB::transaction(function () use (
+            $enrollment, $material, $price, $csEmployee, $branchId, $patchId, $methodMap, $data
+        ) {
+            \App\Models\Enrollment\EnrollmentMaterial::create([
+                'enrollment_id' => $enrollment->enrollment_id,
+                'material_id'   => $material->material_id,
+                'price'         => $price,
+                'status'        => 'Paid',
+            ]);
+
+            $notes = 'Material purchase: ' . $material->name;
+            if (!empty($data['notes'])) {
+                $notes .= ' — ' . $data['notes'];
+            }
+
+            $tx = \App\Models\Finance\FinancialTransaction::create([
+                'enrollment_id'          => $enrollment->enrollment_id,
+                'patch_id'               => $patchId,
+                'branch_id'              => $branchId,
+                'transaction_type'       => 'Payment',
+                'transaction_category'   => 'Material',
+                'amount'                 => round($price, 2),
+                'payment_method'         => $methodMap[$data['payment_method']] ?? 'Cash',
+                'notes'                  => $notes,
+                'created_by_employee_id' => $csEmployee->employee_id,
+            ]);
+
+            if ($material->revenue_type === 'Shared') {
+                $csIds = Employee::whereHas('user.role',
+                        fn($q) => $q->whereIn('role_name', ['Customer Service', 'CS Leader']))
+                    ->where('status', 'Active')
+                    ->where('branch_id', $branchId)
+                    ->pluck('employee_id')
+                    ->all();
+                if (empty($csIds)) {
+                    $csIds = [$csEmployee->employee_id];
+                }
+
+                $n    = count($csIds);
+                $each = round($price / $n, 2);
+                $acc  = 0;
+                foreach (array_values($csIds) as $i => $empId) {
+                    $alloc = ($i === $n - 1) ? round($price - $acc, 2) : $each;
+                    $acc  += $alloc;
+                    \App\Models\Finance\RevenueSplit::create([
+                        'transaction_id'   => $tx->transaction_id,
+                        'employee_id'      => $empId,
+                        'branch_id'        => $branchId,
+                        'patch_id'         => $patchId,
+                        'amount_allocated' => $alloc,
+                        'allocation_type'  => 'Shared',
+                    ]);
+                }
+            } else {
+                \App\Models\Finance\RevenueSplit::create([
+                    'transaction_id'   => $tx->transaction_id,
+                    'employee_id'      => $csEmployee->employee_id,
+                    'branch_id'        => $branchId,
+                    'patch_id'         => $patchId,
+                    'amount_allocated' => round($price, 2),
+                    'allocation_type'  => 'Direct',
+                ]);
+            }
+        });
+
+        return back()->with('material_success', $material->name . ' sold — ' . number_format($price, 2) . ' LE recorded.');
     }
 }

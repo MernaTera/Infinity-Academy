@@ -123,6 +123,35 @@
 .pi-cancel{padding:9px 16px;background:rgba(255,255,255,0.5);border:1px solid var(--border);border-radius:9px;color:var(--muted);font-size:11px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;}
 .pi-cancel:hover{border-color:var(--blue);color:var(--blue);}
 .pi-err{color:#5A6A85;font-size:10px;margin-top:3px;}
+.mat-list{margin-top:10px;padding:10px 12px;background:rgba(255,255,255,0.55);border:1px solid rgba(27,79,168,0.10);border-radius:12px;}
+.mat-list-title{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px;}
+.mat-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:4px 0;font-size:12px;color:var(--text);}
+.mat-item-price{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:1px;color:var(--blue);}
+.mat-item-tag{font-size:8px;letter-spacing:1px;text-transform:uppercase;padding:1px 7px;border-radius:20px;background:var(--blue-l);color:var(--blue);border:1px solid rgba(27,79,168,0.15);margin-left:6px;}
+.btn-buy-mat{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:7px 14px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;border-radius:9px;border:1px solid rgba(27,79,168,0.25);color:var(--blue);background:rgba(255,255,255,0.6);cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.btn-buy-mat:hover{background:linear-gradient(120deg,var(--blue),var(--blue-2));color:#fff;border-color:transparent;box-shadow:0 8px 18px rgba(27,79,168,0.28);}
+.bm-backdrop{display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);z-index:999;align-items:center;justify-content:center;padding:20px;}
+.bm-backdrop.open{display:flex;animation:bmFade .2s ease both;}
+@keyframes bmFade{from{opacity:0}to{opacity:1}}
+.bm-box{width:100%;max-width:440px;background:rgba(255,255,255,0.8);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);border:1px solid rgba(255,255,255,0.7);border-radius:20px;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(23,45,90,0.18);animation:bmUp .3s cubic-bezier(.16,1,.3,1) both;}
+@keyframes bmUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+.bm-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent);}
+.bm-head{padding:18px 22px 14px;border-bottom:1px solid rgba(27,79,168,0.08);}
+.bm-eyebrow{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);font-weight:600;margin-bottom:3px;}
+.bm-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--text);}
+.bm-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+.bm-body{padding:18px 22px;}
+.bm-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px;}
+.bm-field label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.bm-field select,.bm-field textarea{width:100%;padding:10px 12px;border:1px solid rgba(27,79,168,0.14);border-radius:10px;font-size:13px;color:var(--text);font-family:'DM Sans',sans-serif;background:rgba(255,255,255,0.75);outline:none;}
+.bm-field select:focus,.bm-field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-l);}
+.bm-field textarea{resize:vertical;min-height:64px;}
+.bm-summary{display:none;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--blue-l);border:1px solid rgba(27,79,168,0.15);border-radius:12px;margin-bottom:14px;font-size:12px;color:var(--muted);}
+.bm-summary b{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--blue);font-weight:400;}
+.bm-foot{padding:14px 22px 18px;border-top:1px solid rgba(27,79,168,0.08);display:flex;gap:10px;justify-content:flex-end;}
+.bm-cancel{padding:9px 18px;background:rgba(255,255,255,0.6);border:1px solid rgba(27,79,168,0.15);border-radius:11px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-weight:600;}
+.bm-submit{padding:10px 22px;background:linear-gradient(120deg,#1B4FA8,#2D6FDB);border:none;border-radius:12px;color:#fff;box-shadow:0 10px 24px rgba(27,79,168,0.28);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;}
+.bm-submit:disabled{opacity:.5;cursor:not-allowed;}
 </style>
 
 <div class="sp-page">
@@ -358,6 +387,17 @@
                     <div class="card-title">Enrollments ({{ $student->enrollments->count() }})</div>
                 </div>
                 <div class="card-body">
+                    @if(session('material_success'))
+                        <div class="flash-ok">{{ session('material_success') }}</div>
+                    @endif
+                    @if(session('material_error'))
+                        <div class="flash-err">{{ session('material_error') }}</div>
+                    @endif
+                    @foreach(['material_id','payment_method','notes'] as $bmField)
+                        @error($bmField)
+                            <div class="flash-err">{{ $message }}</div>
+                        @enderror
+                    @endforeach
                     @php
                         $allDepositPayments = \DB::table('deposit_payment')
                             ->whereIn('enrollment_id', $student->enrollments->pluck('enrollment_id'))
@@ -523,6 +563,29 @@
                         </div>
                         @endif
 
+                        @if($e->enrollmentMaterials->isNotEmpty())
+                        <div class="mat-list">
+                            <div class="mat-list-title">Materials ({{ $e->enrollmentMaterials->count() }})</div>
+                            @foreach($e->enrollmentMaterials as $em)
+                            <div class="mat-item">
+                                <span>
+                                    {{ $em->material?->name ?? 'Material #'.$em->material_id }}
+                                    <span class="mat-item-tag">{{ ($em->created_at && $e->created_at && $em->created_at->gt($e->created_at->copy()->addMinutes(5))) ? 'Bought '.$em->created_at->format('d M Y') : 'At registration' }}</span>
+                                </span>
+                                <span class="mat-item-price">{{ number_format($em->price, 0) }} LE</span>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+
+                        @if($canBuyMaterial && $e->status !== 'Cancelled' && $buyableMaterials->isNotEmpty())
+                        <button type="button" class="btn-buy-mat"
+                                onclick="openBuyMaterial({{ $e->enrollment_id }}, '{{ addslashes(($e->courseTemplate?->name ?? 'Enrollment').($e->level ? ' — '.$e->level->name : '')) }}')">
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                            Buy Material
+                        </button>
+                        @endif
+
                         <div style="font-size:10px;color:var(--faint);margin-top:8px;">
                             Registered {{ $e->created_at?->format('d M Y') }}
                         </div>
@@ -563,11 +626,92 @@
     </div>
 </div>
 
+@if($canBuyMaterial)
+<div class="bm-backdrop" id="buyMaterialModal">
+    <div class="bm-box">
+        <div class="bm-head">
+            <div class="bm-eyebrow">Sell Material</div>
+            <div class="bm-title">Buy Material</div>
+            <div class="bm-sub">{{ $student->full_name }} · <span id="bmEnrollmentLabel">—</span></div>
+        </div>
+        <form method="POST" id="buyMaterialForm" onsubmit="document.getElementById('bmSubmit').disabled = true;">
+            @csrf
+            <div class="bm-body">
+                <div class="bm-field">
+                    <label>Material <span style="color:#DC2626">*</span></label>
+                    <select name="material_id" id="bmMaterial" required onchange="bmUpdateSummary()">
+                        <option value="">— Select material —</option>
+                        @foreach($buyableMaterials as $bm)
+                        <option value="{{ $bm->material_id }}" data-price="{{ $bm->price }}">{{ $bm->name }} — {{ number_format($bm->price, 2) }} LE</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="bm-summary" id="bmSummary">
+                    <span>Amount to collect</span>
+                    <span><b id="bmAmount">0</b> LE</span>
+                </div>
+                <div class="bm-field">
+                    <label>Payment Method <span style="color:#DC2626">*</span></label>
+                    <select name="payment_method" required>
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="Instapay">Instapay</option>
+                        <option value="Vodafone_Cash">Vodafone Cash</option>
+                    </select>
+                </div>
+                <div class="bm-field" style="margin-bottom:0">
+                    <label>Notes <span style="color:var(--faint);font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></label>
+                    <textarea name="notes" maxlength="500" placeholder="Any details about this sale..."></textarea>
+                </div>
+            </div>
+            <div class="bm-foot">
+                <button type="button" class="bm-cancel" onclick="closeBuyMaterial()">Cancel</button>
+                <button type="submit" class="bm-submit" id="bmSubmit">Confirm Sale</button>
+            </div>
+        </form>
+    </div>
+</div>
+@endif
+
 <script>
 function piEdit(on){
     document.querySelectorAll('.js-pi-view').forEach(function(e){ e.style.display = on ? 'none' : ''; });
     var f = document.querySelector('.js-pi-edit');
     if (f) { f.style.display = on ? 'block' : 'none'; }
 }
+
+function openBuyMaterial(enrollmentId, label) {
+    var m = document.getElementById('buyMaterialModal');
+    if (!m) return;
+    document.getElementById('buyMaterialForm').action = '/students/enrollments/' + enrollmentId + '/buy-material';
+    document.getElementById('bmEnrollmentLabel').textContent = label;
+    document.getElementById('bmMaterial').value = '';
+    document.getElementById('bmSubmit').disabled = false;
+    bmUpdateSummary();
+    m.classList.add('open');
+}
+function closeBuyMaterial() {
+    var m = document.getElementById('buyMaterialModal');
+    if (m) m.classList.remove('open');
+}
+function bmUpdateSummary() {
+    var sel = document.getElementById('bmMaterial');
+    var box = document.getElementById('bmSummary');
+    if (!sel || !box) return;
+    var opt = sel.options[sel.selectedIndex];
+    var price = opt ? parseFloat(opt.getAttribute('data-price') || 0) : 0;
+    if (sel.value && price > 0) {
+        document.getElementById('bmAmount').textContent = price.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 2});
+        box.style.display = 'flex';
+    } else {
+        box.style.display = 'none';
+    }
+}
+(function () {
+    var m = document.getElementById('buyMaterialModal');
+    if (!m) return;
+    m.addEventListener('click', function (e) { if (e.target === m) closeBuyMaterial(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeBuyMaterial(); });
+})();
 </script>
 @endsection

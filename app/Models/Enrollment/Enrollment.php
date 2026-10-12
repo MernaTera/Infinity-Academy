@@ -242,6 +242,11 @@ class Enrollment extends Model
 		return $this->hasOne(Report::class, 'enrollment_id');
 	}
 
+	public function enrollmentMaterials()
+	{
+		return $this->hasMany(EnrollmentMaterial::class, 'enrollment_id', 'enrollment_id');
+	}
+
 	public function restrictionLogs()
 	{
 		return $this->hasMany(RestrictionLog::class, 'enrollment_id');

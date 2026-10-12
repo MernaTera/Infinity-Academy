@@ -504,6 +504,9 @@ Route::post('/notifications/{id}/read', function($id) {
 Route::get('/private-hours', [\App\Http\Controllers\PrivateHoursController::class, 'index'])
     ->middleware(['auth', 'permission:enrollment.view'])
     ->name('private-hours.index');
+Route::post('/students/enrollments/{enrollmentId}/buy-material', [AdminStudentController::class, 'buyMaterial'])
+    ->middleware(['auth', 'permission:enrollment.create'])
+    ->name('students.buy-material');
 Route::post('/private-hours/{enrollmentId}/charge-bundle', [\App\Http\Controllers\PrivateHoursController::class, 'chargeBundle'])
     ->middleware(['auth', 'permission:enrollment.create'])
     ->name('private-hours.charge-bundle');

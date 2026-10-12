@@ -101,6 +101,16 @@
     .stat-grid-4,.stat-grid-3,.stat-grid-5{grid-template-columns:1fr 1fr;}
     .edit-grid,.avail-grid{grid-template-columns:1fr;}
 }
+
+.pw-wrap{position:relative}
+.pw-wrap .form-control{padding-right:42px}
+.pw-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;display:grid;place-items:center;background:transparent;border:none;cursor:pointer;color:#93A3BC;border-radius:8px;transition:color 0.2s,background 0.2s}
+.pw-toggle:hover{color:#1B4FA8;background:rgba(27,79,168,0.08)}
+.pw-toggle .eye-off{display:none}
+.pw-toggle.showing .eye-open{display:none}
+.pw-toggle.showing .eye-off{display:block}
+#empPassword::-ms-reveal,#empPassword::-ms-clear{display:none}
+
 </style>
 
 <div class="emp-show">
@@ -346,7 +356,13 @@
                     @endif
                     <div class="field-group">
                         <label class="field-label">New Password (Optional)</label>
-                        <input type="password" name="new_password" placeholder="Leave blank to keep current" class="form-control">
+                        <div class="pw-wrap">
+                            <input type="password" name="new_password" id="empPassword" class="form-control" placeholder="Change current password">
+                            <button type="button" class="pw-toggle" id="empPwToggle" onclick="toggleEmpPassword()" aria-label="Show password">
+                                <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <svg class="eye-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -468,6 +484,14 @@
 </div>
 
 <script>
+function toggleEmpPassword() {
+    const input = document.getElementById('empPassword');
+    const btn   = document.getElementById('empPwToggle');
+    const show  = input.type === 'password';
+    input.type  = show ? 'text' : 'password';
+    btn.classList.toggle('showing', show);
+    btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+}
 function toggleAvailCard(pair, checked) {
     const select = document.getElementById(`slot_select_${pair}`);
     const card   = document.getElementById(`avail_card_${pair}`);
