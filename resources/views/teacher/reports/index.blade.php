@@ -260,6 +260,9 @@
             <button class="tr-pill" data-filter="submitted" onclick="setFilter('submitted', this)">
                 Submitted <span class="tr-pill-count">{{ $stats['submitted'] }}</span>
             </button>
+            <button class="tr-pill" data-filter="sent" onclick="setFilter('sent', this)">
+                Sent <span class="tr-pill-count">{{ $stats['sent'] }}</span>
+            </button>
         </div>
     </div>
 
