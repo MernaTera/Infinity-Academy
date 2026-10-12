@@ -10,11 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class PricingService
 {
-    /**
-     * Calculate course price only.
-     * Material and test fee are handled separately — NOT included here.
-     * Payment plan applies to the returned final_price only.
-     */
+    
     public function calculate($data): array
     {
         if (($data['type'] ?? null) === 'private') {
@@ -25,7 +21,7 @@ class PricingService
 
             $bundle = PrivateBundle::find($data['bundle_id']);
 
-            if (!$bundle) {
+            if (!$bundle || !$bundle->is_active) {
                 throw new \Exception('Invalid bundle selected.');
             }
 

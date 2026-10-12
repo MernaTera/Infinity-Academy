@@ -43,7 +43,7 @@ class RegistrationController extends Controller
 
         $courses      = CourseTemplate::where('is_active', true)->get();
         $paymentPlans = PaymentPlan::where('is_active', true)->get();
-        $bundles      = PrivateBundle::all();
+        $bundles      = PrivateBundle::active()->orderBy('hours')->get();
         $timeSlots    = TimeSlot::all();
         $testFees = TestFeeSetting::active()->orderBy('fee')->get();
 

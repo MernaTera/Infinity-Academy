@@ -12,11 +12,7 @@ use Illuminate\Support\Facades\DB;
 
 class PrivateHoursController extends Controller
 {
-    /**
-     * Private hours dashboard — lists every private enrolment with its
-     * remaining bundle hours, current course/level, absences, and a derived
-     * state. Shared by Admin, Student Care (view-only) and CS (with actions).
-     */
+   
     public function index(Request $request)
     {
         $stateFilter = $request->query('state', 'all');
@@ -41,7 +37,6 @@ class PrivateHoursController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
-        // Absence counts per enrolment (single grouped query).
         $enrollIds = $enrollments->pluck('enrollment_id')->all();
         $absenceCounts = empty($enrollIds) ? collect() :
             Attendance::whereIn('enrollment_id', $enrollIds)
@@ -50,8 +45,6 @@ class PrivateHoursController extends Controller
                 ->groupBy('enrollment_id')
                 ->pluck('c', 'enrollment_id');
 
-        // Map each student to their lead, so the action buttons can open the
-        // registration form pre-filled from that lead. student_id → lead_id.
         $studentIds = $enrollments->pluck('student_id')->unique()->filter()->all();
         $leadByStudent = empty($studentIds) ? collect() :
             DB::table('lead')
@@ -60,7 +53,6 @@ class PrivateHoursController extends Controller
                 ->orderByDesc('lead_id')
                 ->pluck('lead_id', 'student_id');
 
-        // Attach derived fields + classify state.
         $rows = $enrollments->map(function ($e) use ($absenceCounts, $leadByStudent) {
             $bundleHours = $e->privateBundle?->hours ? (float) $e->privateBundle->hours : null;
             $remaining   = (float) $e->hours_remaining;
@@ -104,7 +96,6 @@ class PrivateHoursController extends Controller
             return $e;
         });
 
-        // Headline stats (over the full set, before filtering).
         $stats = [
             'total'    => $rows->count(),
             'active'   => $rows->where('v_state', 'active')->count(),
@@ -115,27 +106,16 @@ class PrivateHoursController extends Controller
             'hours_left' => round($rows->sum('v_remaining'), 2),
         ];
 
-        // Apply the state filter for display.
         if (in_array($stateFilter, ['active', 'low', 'depleted', 'leftover', 'postponed'])) {
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
-
-        // CS (the registration/booking role) gets action buttons; Admin & SC
-        // are view-only. A CS Leader is a CS too.
         $canAct = auth()->user()?->worksCs() ?? false;
 
-        // Bundles list for the "Add Bundle" modal.
-        $bundles = PrivateBundle::orderBy('hours')->get();
+        $bundles = PrivateBundle::active()->orderBy('hours')->get();
 
         return view('private-hours.index', compact('rows', 'stats', 'stateFilter', 'canAct', 'bundles'));
     }
 
-    /**
-     * Add Bundle — top up a private student's hours on the SAME enrolment.
-     * Adds the bundle's hours to hours_remaining, records a Payment
-     * transaction (no revenue split — it still counts toward revenue), lifts
-     * any restriction, and lets the student resume the same course.
-     */
     public function chargeBundle(Request $request, $enrollmentId)
     {
         $data = $request->validate([
@@ -144,7 +124,7 @@ class PrivateHoursController extends Controller
         ]);
 
         $enrollment = Enrollment::where('enrollment_type', 'Private')->findOrFail($enrollmentId);
-        $bundle     = PrivateBundle::findOrFail($data['bundle_id']);
+        $bundle     = PrivateBundle::active()->findOrFail($data['bundle_id']);
 
         $methodMap = [
             'Cash'          => 'Cash',
@@ -157,20 +137,16 @@ class PrivateHoursController extends Controller
 
         DB::transaction(function () use ($enrollment, $bundle, $data, $methodMap, $csEmployeeId) {
 
-            // 1. Add the hours to the SAME enrolment.
             $enrollment->hours_remaining = (float) $enrollment->hours_remaining + (float) $bundle->hours;
 
-            // 2. Lift restriction — the reason (no hours) is now resolved.
             if ($enrollment->status === 'Restricted' || $enrollment->restriction_flag) {
                 $enrollment->status = 'Active';
                 $enrollment->restriction_flag = false;
             }
 
-            // Point the enrolment at the newly purchased bundle.
             $enrollment->bundle_id = $bundle->bundle_id;
             $enrollment->save();
 
-            // 3. Record a Payment transaction (counts as revenue, NO split).
             $tx = \App\Models\Finance\FinancialTransaction::create([
                 'enrollment_id'          => $enrollment->enrollment_id,
                 'patch_id'               => $enrollment->patch_id,
@@ -183,7 +159,6 @@ class PrivateHoursController extends Controller
                 'created_by_employee_id' => $csEmployeeId,
             ]);
 
-            // 4. Audit the raw payment.
             DB::table('deposit_payment')->insert([
                 'enrollment_id'    => $enrollment->enrollment_id,
                 'method'           => $data['payment_method'],
