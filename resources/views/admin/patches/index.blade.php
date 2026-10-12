@@ -82,7 +82,7 @@
 @media(max-width:1024px){.two-col{grid-template-columns:1fr}.ptch-page{padding:18px 14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 
-<div class="ptch-page">
+<div class="ptch-page" style="padding:40px 32px">
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
 
@@ -384,7 +384,7 @@ document.getElementById('newPatchModal').addEventListener('click', function(e) {
 
 <div id="deletePatchModal" style="display:none;position:fixed;inset:0;background:rgba(209,216,231,0.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:999;padding:20px;font-family:'DM Sans',sans-serif">
     <div style="width:100%;max-width:420px;background:rgba(255,255,255,0.78);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);border:1px solid rgba(255,255,255,0.7);border-radius:20px;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(23,45,90,0.18)">
-        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#DC2626,transparent)"></div>
+        <!-- <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#DC2626,transparent)"></div> -->
         <div style="padding:26px 24px 8px;text-align:center">
             <div style="width:52px;height:52px;border-radius:16px;background:rgba(220,38,38,0.10);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
