@@ -7,76 +7,75 @@
 @endonce
 
 <style>
-.audit-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--green:#059669;--green-dk:#15803D;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--glass-bd:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+.audit-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.1;z-index:0;pointer-events:none}
+.orb-2{width:300px;height:300px;background:radial-gradient(circle,#1B4FA8,transparent 70%);top:30px;right:1%}
+.orb-3{width:380px;height:380px;background:radial-gradient(circle,#7C3AED,transparent 70%);bottom:-140px;left:35%}
+.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--text);margin:0}
 .page-header{margin-bottom:28px}
-.page-sub{font-size:12px;color:#7A8A9A;margin-top:4px}
+.page-sub{font-size:12px;color:var(--muted);margin-top:4px}
 
 .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:24px}
-.kpi-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:6px;padding:14px 18px;position:relative;overflow:hidden}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,#1B4FA8)}
-.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:5px}
-.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--kc,#1B4FA8);line-height:1}
+.kpi-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:16px;padding:14px 18px;position:relative;overflow:hidden;box-shadow:var(--glass-sh)}
+.kpi-card::before{display:none}
+.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;color:var(--kc,var(--blue));line-height:1}
 
-/* Filters */
-.filter-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;padding:16px 20px;margin-bottom:20px}
+.filter-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:16px;padding:16px 20px;margin-bottom:20px;box-shadow:var(--glass-sh)}
 .filter-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:10px;align-items:end}
 .form-field{display:flex;flex-direction:column;gap:4px}
-.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A}
-.form-control{width:100%;padding:9px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1A2A4A;background:#fff;outline:none;box-sizing:border-box}
-.form-control:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
-.btn-filter{padding:9px 18px;background:#1B4FA8;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer;white-space:nowrap}
-.btn-reset{padding:9px 14px;background:transparent;border:1px solid rgba(27,79,168,0.15);border-radius:4px;color:#7A8A9A;font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
-.btn-reset:hover{border-color:rgba(27,79,168,0.3);color:#1B4FA8;text-decoration:none}
+.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.form-control{width:100%;padding:9px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);background:rgba(255,255,255,0.7);outline:none;box-sizing:border-box}
+.form-control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.08)}
+.btn-filter{padding:9px 18px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 16px rgba(27,79,168,0.25);transition:transform 0.2s,box-shadow 0.2s}
+.btn-filter:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(27,79,168,0.32)}
+.btn-reset{padding:9px 14px;background:rgba(255,255,255,0.6);border:1px solid rgba(27,79,168,0.15);border-radius:10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:11px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;font-weight:600}
+.btn-reset:hover{border-color:var(--blue);color:var(--blue);text-decoration:none}
 
-/* Table */
-.tbl-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden}
-.tbl-header{padding:12px 16px;border-bottom:1px solid rgba(27,79,168,0.07);display:flex;align-items:center;justify-content:space-between}
-.tbl-title{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#F5911E}
-.tbl-count{font-size:11px;color:#AAB8C8}
+.tbl-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;overflow:hidden;box-shadow:var(--glass-sh)}
+.tbl-header{padding:12px 16px;border-bottom:1px solid rgba(27,79,168,0.08);display:flex;align-items:center;justify-content:space-between}
+.tbl-title{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.tbl-count{font-size:11px;color:var(--faint)}
 .tbl{width:100%;border-collapse:collapse;min-width:900px}
-.tbl thead th{padding:10px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;text-align:left;font-weight:500;background:rgba(27,79,168,0.02);border-bottom:1px solid rgba(27,79,168,0.07);white-space:nowrap}
+.tbl thead th{padding:10px 14px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;background:rgba(255,255,255,0.35);border-bottom:1px solid rgba(27,79,168,0.08);white-space:nowrap}
 .tbl tbody tr{border-bottom:1px solid rgba(27,79,168,0.05);transition:background 0.2s;animation:rowIn 0.3s ease both}
 .tbl tbody tr:last-child{border-bottom:none}
-.tbl tbody tr:hover{background:rgba(27,79,168,0.02)}
-.tbl td{padding:11px 14px;font-size:12px;color:#4A5A7A;vertical-align:middle}
+.tbl tbody tr:hover{background:rgba(27,79,168,0.03)}
+.tbl td{padding:11px 14px;font-size:12px;color:var(--muted);vertical-align:middle}
 
 @keyframes rowIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 
-/* Action badges */
-.action-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-weight:500;white-space:nowrap}
-.action-create{color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.15)}
-.action-update{color:#1B4FA8;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.15)}
-.action-delete{color:#DC2626;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15)}
+.action-badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap}
+.action-create{color:var(--green-dk);background:rgba(5,150,105,0.10);border:1px solid rgba(5,150,105,0.2)}
+.action-update{color:var(--blue);background:rgba(27,79,168,0.08);border:1px solid rgba(27,79,168,0.18)}
+.action-delete{color:var(--red);background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.18)}
 
-/* Table name pill */
-.table-pill{display:inline-block;padding:2px 8px;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.15);border-radius:3px;font-size:9px;color:#C47010;letter-spacing:1px;font-family:monospace}
+.table-pill{display:inline-block;padding:2px 8px;background:rgba(245,145,30,0.10);border:1px solid rgba(245,145,30,0.22);border-radius:6px;font-size:9px;color:var(--orange-dk);letter-spacing:1px;font-family:monospace}
 
-/* Value diff */
 .val-wrap{display:flex;flex-direction:column;gap:2px;max-width:200px}
-.val-old{font-size:10px;color:#DC2626;text-decoration:line-through;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.val-new{font-size:10px;color:#059669;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.val-created{font-size:10px;color:#059669;font-style:italic}
-.val-deleted{font-size:10px;color:#DC2626;font-style:italic}
-.val-none{font-size:10px;color:#AAB8C8;font-style:italic}
+.val-old{font-size:10px;color:var(--red);text-decoration:line-through;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.val-new{font-size:10px;color:var(--green-dk);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.val-created{font-size:10px;color:var(--green-dk);font-style:italic}
+.val-deleted{font-size:10px;color:var(--red);font-style:italic}
+.val-none{font-size:10px;color:var(--faint);font-style:italic}
 
-/* Avatar */
-.emp-avatar{width:28px;height:28px;border-radius:50%;background:rgba(27,79,168,0.1);display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:11px;color:#1B4FA8;flex-shrink:0}
+.emp-avatar{width:28px;height:28px;border-radius:50%;background:rgba(27,79,168,0.1);display:inline-flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:11px;color:var(--blue);flex-shrink:0}
 
-/* Pagination */
-.pagination-wrap{padding:14px 16px;border-top:1px solid rgba(27,79,168,0.07)}
-.pagination-wrap .page-link{background:rgba(255,255,255,0.8)!important;border:1px solid rgba(27,79,168,0.12)!important;color:#7A8A9A!important;font-size:11px;border-radius:4px!important;padding:6px 12px;transition:all 0.2s}
-.pagination-wrap .page-link:hover{background:rgba(27,79,168,0.06)!important;color:#1B4FA8!important;border-color:rgba(27,79,168,0.3)!important}
-.pagination-wrap .page-item.active .page-link{background:transparent!important;border-color:#1B4FA8!important;color:#1B4FA8!important;font-weight:600!important}
+.pagination-wrap{padding:14px 16px;border-top:1px solid rgba(27,79,168,0.08);background:rgba(255,255,255,0.3)}
+.pagination-wrap .page-link{background:rgba(255,255,255,0.6)!important;border:1px solid rgba(27,79,168,0.12)!important;color:var(--muted)!important;font-size:11px;border-radius:9px!important;padding:6px 12px;transition:all 0.2s}
+.pagination-wrap .page-link:hover{background:rgba(27,79,168,0.06)!important;color:var(--blue)!important;border-color:var(--blue)!important}
+.pagination-wrap .page-item.active .page-link{background:linear-gradient(120deg,var(--blue),var(--blue-2))!important;border-color:transparent!important;color:#fff!important;font-weight:600!important}
 
-/* Immutable notice */
-.immutable-notice{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.1);border-radius:4px;font-size:10px;color:#DC2626;letter-spacing:1px;text-transform:uppercase}
+.immutable-notice{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.18);border-radius:20px;font-size:10px;color:var(--red);letter-spacing:1px;text-transform:uppercase;font-weight:600}
 
 @media(max-width:1024px){.filter-grid{grid-template-columns:1fr 1fr}.kpi-grid{grid-template-columns:repeat(3,1fr)}.audit-page{padding:18px 14px}}
 </style>
 
 <div class="audit-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div class="page-eyebrow">Admin Panel</div>
@@ -84,31 +83,29 @@
         <p class="page-sub">Complete immutable activity trail — no records can be deleted or modified</p>
     </div>
 
-    {{-- KPIs --}}
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:#1B4FA8">
+        <div class="kpi-card" style="--kc:var(--blue)">
             <div class="kpi-label">Total Records</div>
             <div class="kpi-val">{{ number_format($stats['total']) }}</div>
         </div>
-        <div class="kpi-card" style="--kc:#F5911E">
+        <div class="kpi-card" style="--kc:var(--orange)">
             <div class="kpi-label">Today</div>
             <div class="kpi-val">{{ number_format($stats['today']) }}</div>
         </div>
-        <div class="kpi-card" style="--kc:#059669">
+        <div class="kpi-card" style="--kc:var(--green-dk)">
             <div class="kpi-label">Creates</div>
             <div class="kpi-val">{{ number_format($stats['creates']) }}</div>
         </div>
-        <div class="kpi-card" style="--kc:#1B6FA8">
+        <div class="kpi-card" style="--kc:var(--blue-2)">
             <div class="kpi-label">Updates</div>
             <div class="kpi-val">{{ number_format($stats['updates']) }}</div>
         </div>
-        <div class="kpi-card" style="--kc:#DC2626">
+        <div class="kpi-card" style="--kc:var(--red)">
             <div class="kpi-label">Deletes</div>
             <div class="kpi-val">{{ number_format($stats['deletes']) }}</div>
         </div>
     </div>
 
-    {{-- Filters --}}
     <div class="filter-card">
         <form method="GET" action="{{ route('admin.audit.index') }}">
             <div class="filter-grid">
@@ -170,7 +167,6 @@
         </form>
     </div>
 
-    {{-- Table --}}
     <div class="tbl-card">
         <div class="tbl-header">
             <span class="tbl-title">Activity Trail</span>
@@ -203,60 +199,52 @@
                         $initial = strtoupper(substr($empName, 0, 1));
                     @endphp
                     <tr>
-                        {{-- ID --}}
-                        <td style="font-family:monospace;font-size:10px;color:#AAB8C8">
+                        <td style="font-family:monospace;font-size:10px;color:#93A3BC">
                             #{{ $log->audit_log_id }}
                         </td>
 
-                        {{-- Timestamp --}}
                         <td>
-                            <div style="font-size:12px;color:#1A2A4A;font-weight:500">
+                            <div style="font-size:12px;color:#16233F;font-weight:500">
                                 {{ \Carbon\Carbon::parse($log->created_at)->format('d M Y') }}
                             </div>
-                            <div style="font-size:10px;color:#AAB8C8;font-family:monospace">
+                            <div style="font-size:10px;color:#93A3BC;font-family:monospace">
                                 {{ \Carbon\Carbon::parse($log->created_at)->format('H:i:s') }}
                             </div>
-                            <div style="font-size:9px;color:#C8D4E0;margin-top:1px">
+                            <div style="font-size:9px;color:#B4C0D0;margin-top:1px">
                                 {{ \Carbon\Carbon::parse($log->created_at)->diffForHumans() }}
                             </div>
                         </td>
 
-                        {{-- Employee --}}
                         <td>
                             <div style="display:flex;align-items:center;gap:8px">
                                 <div class="emp-avatar">{{ $initial }}</div>
                                 <div>
-                                    <div style="font-size:12px;color:#1A2A4A;font-weight:500">{{ $empName }}</div>
-                                    <div style="font-size:9px;color:#AAB8C8">
+                                    <div style="font-size:12px;color:#16233F;font-weight:500">{{ $empName }}</div>
+                                    <div style="font-size:9px;color:#93A3BC">
                                         {{ $log->employee?->user?->role?->role_name ?? '—' }}
                                     </div>
                                 </div>
                             </div>
                         </td>
 
-                        {{-- Action --}}
                         <td>
                             <span class="action-badge {{ $actionClass }}">
                                 {{ $log->action_type }}
                             </span>
                         </td>
 
-                        {{-- Table --}}
                         <td>
                             <span class="table-pill">{{ $log->table_name }}</span>
                         </td>
 
-                        {{-- Record ID --}}
-                        <td style="font-family:monospace;font-size:11px;color:#7A8A9A">
+                        <td style="font-family:monospace;font-size:11px;color:#5A6A85">
                             {{ $log->record_id }}
                         </td>
 
-                        {{-- Field --}}
-                        <td style="font-size:11px;color:#1A2A4A;font-weight:500;font-family:monospace">
+                        <td style="font-size:11px;color:#16233F;font-weight:500;font-family:monospace">
                             {{ $log->field_name }}
                         </td>
 
-                        {{-- Change --}}
                         <td>
                             @if($log->action_type === 'Create')
                                 <div class="val-wrap">
@@ -295,7 +283,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="8" style="text-align:center;padding:60px;color:#AAB8C8">
+                        <td colspan="8" style="text-align:center;padding:60px;color:#93A3BC">
                             <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:6px">No Logs Found</div>
                             <div style="font-size:12px">No activity matches your filters</div>
                         </td>
