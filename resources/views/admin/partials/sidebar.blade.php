@@ -278,7 +278,7 @@
                 <polyline points="12 6 12 12 16 14"/>
             </svg>
             <span class="sl-txt">Postponed</span>
-            @if($pp > 0)<span class="sl-bdg">{{ $pp }}</span>@endif
+            <!-- @if($pp > 0)<span class="sl-bdg">{{ $pp }}</span>@endif -->
         </a>
         <a href="{{ route('private-hours.index') }}" data-tip="Outstanding"
            class="sl {{ request()->routeIs('private-hours.*') ? 'active' : '' }}">
