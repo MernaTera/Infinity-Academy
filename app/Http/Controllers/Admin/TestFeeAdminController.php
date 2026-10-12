@@ -40,7 +40,7 @@ class TestFeeAdminController extends Controller
         TestFeeSetting::findOrFail($id)->update([
             'name'      => $request->name,
             'fee'       => $request->fee,
-            'is_active' => $request->boolean('is_active', true),
+            'is_active' => $request->boolean('is_active'),
         ]);
 
         return back()->with('success', 'Test fee updated.');
