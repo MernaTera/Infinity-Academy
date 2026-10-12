@@ -36,8 +36,8 @@ class InstallmentApprovalController extends Controller
         ])
         ->whereIn('status', ['Approved', 'Rejected'])
         ->latest('approved_at')
-        ->limit(20)
-        ->get();
+        ->paginate(15, ['*'], 'history_page')
+        ->withQueryString();
 
         $stats = [
             'pending'  => InstallmentApprovalLog::whereHas('enrollment')->where('status', 'Pending')->count(),
