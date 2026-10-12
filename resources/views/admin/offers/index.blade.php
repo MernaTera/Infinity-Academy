@@ -7,110 +7,117 @@
 @endonce
 
 <style>
-.off-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--green:#059669;--green-dk:#15803D;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--glass-bd:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+.off-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.1;z-index:0;pointer-events:none}
+.orb-2{width:300px;height:300px;background:radial-gradient(circle,#1B4FA8,transparent 70%);top:30px;right:1%}
+.orb-3{width:380px;height:380px;background:radial-gradient(circle,#7C3AED,transparent 70%);bottom:-140px;left:35%}
+.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--text);margin:0}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
 
-.btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:transparent;border:1.5px solid #1B4FA8;border-radius:4px;color:#1B4FA8;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s}
-.btn-primary::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#1B4FA8,#2D6FDB);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
-.btn-primary:hover::before{transform:scaleX(1)}
-.btn-primary:hover{color:#fff}
+.btn-primary{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 10px 24px rgba(27,79,168,0.28)}
+.btn-primary::before{display:none}
+.btn-primary:hover::before{transform:none}
+.btn-primary:hover{color:#fff;transform:translateY(-2px);box-shadow:0 14px 30px rgba(27,79,168,0.36)}
 .btn-primary span,.btn-primary svg{position:relative;z-index:1}
 
 .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
-.kpi-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:6px;padding:16px 20px;position:relative;overflow:hidden}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,#1B4FA8)}
-.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:5px}
-.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--kc,#1B4FA8);line-height:1}
+.kpi-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:16px;padding:16px 20px;position:relative;overflow:hidden;box-shadow:var(--glass-sh)}
+.kpi-card::before{display:none}
+.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--kc,var(--blue));line-height:1}
 
 .two-col{display:grid;grid-template-columns:1fr 400px;gap:20px;align-items:start}
 
-/* Offer Cards */
 .offers-list{display:flex;flex-direction:column;gap:12px}
-.offer-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;position:relative;transition:box-shadow 0.2s}
-.offer-card:hover{box-shadow:0 4px 20px rgba(27,79,168,0.08)}
+.offer-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;overflow:hidden;position:relative;transition:transform 0.2s,box-shadow 0.2s;box-shadow:var(--glass-sh)}
+.offer-card:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(23,45,90,0.13)}
 .offer-card.inactive{opacity:0.6}
-.offer-card.active-now::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#059669,transparent)}
-.offer-card.upcoming::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1B4FA8,transparent)}
-.offer-card.expired::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:rgba(122,138,154,0.3)}
+.offer-card.active-now::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--green-dk),transparent)}
+.offer-card.upcoming::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.offer-card.expired::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:rgba(122,138,154,0.3)}
 
 .oc-header{padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(27,79,168,0.06)}
-.oc-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#1B4FA8}
+.oc-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--text)}
 .oc-discount{display:flex;align-items:baseline;gap:4px}
-.oc-disc-val{font-family:'Bebas Neue',sans-serif;font-size:32px;color:#F5911E;letter-spacing:1px;line-height:1}
-.oc-disc-unit{font-size:12px;color:#C47010;font-weight:500}
+.oc-disc-val{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--orange);letter-spacing:1px;line-height:1}
+.oc-disc-unit{font-size:12px;color:var(--orange-dk);font-weight:600}
 
 .oc-body{padding:14px 20px}
 .oc-meta{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px}
 .oc-meta-item{display:flex;flex-direction:column;gap:2px}
-.oc-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8}
-.oc-meta-val{font-size:12px;color:#1A2A4A;font-weight:500}
+.oc-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);font-weight:600}
+.oc-meta-val{font-size:12px;color:var(--text);font-weight:500}
 
-/* Course tags */
 .course-tags{display:flex;flex-wrap:wrap;gap:6px}
-.course-tag{display:inline-block;padding:3px 10px;background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.12);border-radius:3px;font-size:10px;color:#1B4FA8;letter-spacing:0.5px}
+.course-tag{display:inline-block;padding:3px 10px;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.15);border-radius:6px;font-size:10px;color:var(--blue);letter-spacing:0.5px;font-weight:600}
 
-/* Validity bar */
 .validity-wrap{margin-top:10px}
-.validity-bar{background:#F0F0F0;border-radius:3px;height:4px;overflow:hidden;margin:6px 0}
-.validity-fill{height:4px;border-radius:3px}
-.validity-dates{display:flex;justify-content:space-between;font-size:9px;color:#AAB8C8}
+.validity-bar{background:rgba(27,79,168,0.08);border-radius:6px;height:4px;overflow:hidden;margin:6px 0}
+.validity-fill{height:4px;border-radius:6px;transition:width .6s cubic-bezier(.16,1,.3,1)}
+.validity-dates{display:flex;justify-content:space-between;font-size:9px;color:var(--faint)}
 
-.oc-footer{padding:10px 20px;border-top:1px solid rgba(27,79,168,0.06);display:flex;gap:8px}
+.oc-footer{padding:10px 20px;border-top:1px solid rgba(27,79,168,0.06);display:flex;gap:8px;background:rgba(255,255,255,0.3)}
 
-/* Edit Panel */
-.edit-panel{display:none;padding:16px 20px;background:rgba(27,79,168,0.02);border-top:1px solid rgba(27,79,168,0.06)}
-.edit-panel.show{display:block}
+.edit-panel{display:none;padding:16px 20px;background:rgba(255,255,255,0.35);border-top:1px solid rgba(27,79,168,0.06)}
+.edit-panel.show{display:block;animation:panelIn .3s ease both}
+@keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
 .form-field{display:flex;flex-direction:column;gap:4px}
-.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A}
-.form-control{width:100%;padding:8px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1A2A4A;background:#fff;outline:none;box-sizing:border-box}
-.form-control:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
+.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.form-control{width:100%;padding:8px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);background:rgba(255,255,255,0.7);outline:none;box-sizing:border-box}
+.form-control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.08)}
 
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:3px;font-weight:500}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:600}
 .badge::before{content:'';width:4px;height:4px;border-radius:50%;background:currentColor;flex-shrink:0}
-.badge-active{color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.15)}
-.badge-upcoming{color:#1B4FA8;background:rgba(27,79,168,0.07);border:1px solid rgba(27,79,168,0.15)}
-.badge-expired{color:#7A8A9A;background:rgba(122,138,154,0.08);border:1px solid rgba(122,138,154,0.15)}
-.badge-disabled{color:#DC2626;background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15)}
+.badge-active{color:var(--green-dk);background:rgba(5,150,105,0.10);border:1px solid rgba(5,150,105,0.2)}
+.badge-upcoming{color:var(--blue);background:rgba(27,79,168,0.08);border:1px solid rgba(27,79,168,0.18)}
+.badge-expired{color:var(--muted);background:rgba(122,138,154,0.10);border:1px solid rgba(122,138,154,0.2)}
+.badge-disabled{color:var(--red);background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.18)}
 
-.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
-.btn-edit{color:#1B4FA8;border-color:rgba(27,79,168,0.25)}
-.btn-edit:hover{background:rgba(27,79,168,0.07)}
-.btn-disable{color:#DC2626;border-color:rgba(220,38,38,0.2)}
-.btn-disable:hover{background:rgba(220,38,38,0.06)}
-.btn-enable{color:#059669;border-color:rgba(5,150,105,0.2)}
-.btn-enable:hover{background:rgba(5,150,105,0.06)}
-.btn-save{padding:8px 18px;background:#1B4FA8;border:none;border-radius:3px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer}
+.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:8px;border:1px solid;background:rgba(255,255,255,0.5);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;transition:all 0.2s}
+.btn-edit{color:var(--blue);border-color:rgba(27,79,168,0.22)}
+.btn-edit:hover{background:rgba(27,79,168,0.08)}
+.btn-disable{color:var(--red);border-color:rgba(220,38,38,0.22)}
+.btn-disable:hover{background:rgba(220,38,38,0.07)}
+.btn-enable{color:var(--green-dk);border-color:rgba(5,150,105,0.25)}
+.btn-enable:hover{background:rgba(5,150,105,0.08)}
+.btn-save{padding:9px 20px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 16px rgba(27,79,168,0.25);transition:transform 0.2s,box-shadow 0.2s}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(27,79,168,0.32)}
 
-/* Create Panel */
-.create-panel{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;position:relative;top:0}
-.create-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)}
-.cp-header{padding:14px 18px;border-bottom:1px solid rgba(27,79,168,0.07)}
-.cp-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#1B4FA8}
+.create-panel{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;overflow:hidden;position:relative;top:0;box-shadow:var(--glass-sh)}
+.create-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.cp-header{padding:14px 18px;border-bottom:1px solid rgba(27,79,168,0.08)}
+.cp-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--text)}
 .cp-body{padding:18px}
-.sec-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#F5911E;margin-bottom:10px;display:block}
-.info-box{background:rgba(245,145,30,0.04);border:1px solid rgba(245,145,30,0.15);border-radius:4px;padding:10px 14px;font-size:11px;color:#C47010;margin-bottom:14px;line-height:1.5}
+.sec-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:block;font-weight:600}
+.info-box{background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.25);border-radius:12px;padding:10px 14px;font-size:11px;color:var(--orange-dk);margin-bottom:14px;line-height:1.5}
 
-/* Course checkboxes */
 .course-checks{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;padding:4px 0}
-.course-check-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid rgba(27,79,168,0.08);border-radius:4px;cursor:pointer;transition:all 0.2s}
-.course-check-item:hover{background:rgba(27,79,168,0.03);border-color:rgba(27,79,168,0.15)}
-.course-check-item input{accent-color:#1B4FA8;flex-shrink:0}
-.course-check-label{font-size:12px;color:#1A2A4A}
+.course-check-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid rgba(27,79,168,0.10);border-radius:10px;cursor:pointer;transition:all 0.2s;background:rgba(255,255,255,0.5)}
+.course-check-item:hover{background:rgba(27,79,168,0.05);border-color:rgba(27,79,168,0.2)}
+.course-check-item input{accent-color:var(--blue);flex-shrink:0}
+.course-check-label{font-size:12px;color:var(--text)}
 
-.discount-preview{background:rgba(245,145,30,0.06);border:1px solid rgba(245,145,30,0.15);border-radius:4px;padding:10px 14px;font-size:12px;color:#C47010;margin-top:8px;display:none}
+.discount-preview{background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.25);border-radius:12px;padding:10px 14px;font-size:12px;color:var(--orange-dk);margin-top:8px;display:none}
 
-.btn-submit{width:100%;padding:10px;background:transparent;border:1.5px solid #1B4FA8;border-radius:4px;color:#1B4FA8;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s;margin-top:10px}
-.btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#1B4FA8,#2D6FDB);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
-.btn-submit:hover::before{transform:scaleX(1)}
-.btn-submit:hover{color:#fff}
+.btn-submit{width:100%;padding:11px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;margin-top:10px;box-shadow:0 10px 24px rgba(27,79,168,0.28)}
+.btn-submit::before{display:none}
+.btn-submit:hover::before{transform:none}
+.btn-submit:hover{color:#fff;transform:translateY(-2px);box-shadow:0 14px 30px rgba(27,79,168,0.36)}
+
+.flash{padding:12px 16px;border-radius:12px;margin-bottom:20px;font-size:13px;border:1px solid;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.flash-success{background:rgba(5,150,105,0.08);border-color:rgba(5,150,105,0.2);color:var(--green-dk)}
+.flash-error{background:rgba(220,38,38,0.06);border-color:rgba(220,38,38,0.2);color:var(--red)}
+.empty-offers{text-align:center;padding:48px;color:var(--faint);background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;box-shadow:var(--glass-sh)}
 
 @media(max-width:1024px){.two-col{grid-template-columns:1fr}.off-page{padding:18px 14px}.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
 
 <div class="off-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div>
@@ -120,23 +127,21 @@
     </div>
 
     @if(session('success'))
-    <div style="background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:#059669;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">{{ session('success') }}</div>
+    <div class="flash flash-success">{{ session('success') }}</div>
     @endif
     @if(session('error'))
-    <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);color:#DC2626;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">{{ session('error') }}</div>
+    <div class="flash flash-error">{{ session('error') }}</div>
     @endif
 
-    {{-- KPIs --}}
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:#1B4FA8"><div class="kpi-label">Total Offers</div><div class="kpi-val">{{ $stats['total'] }}</div></div>
-        <div class="kpi-card" style="--kc:#059669"><div class="kpi-label">Active Now</div><div class="kpi-val">{{ $stats['active'] }}</div></div>
-        <div class="kpi-card" style="--kc:#1B6FA8"><div class="kpi-label">Upcoming</div><div class="kpi-val">{{ $stats['upcoming'] }}</div></div>
-        <div class="kpi-card" style="--kc:#7A8A9A"><div class="kpi-label">Expired</div><div class="kpi-val">{{ $stats['expired'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--blue)"><div class="kpi-label">Total Offers</div><div class="kpi-val">{{ $stats['total'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--green-dk)"><div class="kpi-label">Active Now</div><div class="kpi-val">{{ $stats['active'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--blue-2)"><div class="kpi-label">Upcoming</div><div class="kpi-val">{{ $stats['upcoming'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--muted)"><div class="kpi-label">Expired</div><div class="kpi-val">{{ $stats['expired'] }}</div></div>
     </div>
 
     <div class="two-col">
 
-        {{-- LEFT — Offers List --}}
         <div>
             <span class="sec-label">All Offers</span>
             <div class="offers-list">
@@ -148,13 +153,12 @@
                     $isUpcoming= $offer->start_date && $offer->start_date > $today;
                     $cardClass = !$offer->is_active ? 'inactive' : ($isActive ? 'active-now' : ($isUpcoming ? 'upcoming' : 'expired'));
 
-                    // Validity progress
                     $start     = \Carbon\Carbon::parse($offer->start_date);
                     $end       = \Carbon\Carbon::parse($offer->end_date);
                     $totalDays = max(1, $start->diffInDays($end));
                     $elapsed   = max(0, min($totalDays, $start->diffInDays(now())));
                     $pct       = round($elapsed / $totalDays * 100);
-                    $fillColor = $isActive ? '#059669' : ($isExpired ? '#7A8A9A' : '#1B4FA8');
+                    $fillColor = $isActive ? '#15803D' : ($isExpired ? '#93A3BC' : '#1B4FA8');
                 @endphp
                 <div class="offer-card {{ $cardClass }}">
                     <div class="oc-header">
@@ -170,7 +174,7 @@
                                 @else
                                     <span class="badge badge-expired">Expired</span>
                                 @endif
-                                <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#AAB8C8;padding:3px 0">
+                                <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--faint);padding:3px 0">
                                     {{ $offer->discount_type }}
                                 </span>
                             </div>
@@ -201,7 +205,6 @@
                             </div>
                         </div>
 
-                        {{-- Course Tags --}}
                         @if($offer->courseTemplates->isNotEmpty())
                         <div class="course-tags">
                             @foreach($offer->courseTemplates as $ct)
@@ -210,7 +213,6 @@
                         </div>
                         @endif
 
-                        {{-- Validity Progress --}}
                         <div class="validity-wrap">
                             <div class="validity-bar">
                                 <div class="validity-fill" style="width:{{ $pct }}%;background:{{ $fillColor }}"></div>
@@ -238,7 +240,6 @@
                         </form>
                     </div>
 
-                    {{-- Edit Panel --}}
                     <div class="edit-panel" id="edit_{{ $offer->offer_id }}">
                         <form method="POST" action="{{ route('admin.offers.update', $offer->offer_id) }}">
                             @csrf @method('PUT')
@@ -272,15 +273,14 @@
                     </div>
                 </div>
                 @empty
-                <div style="text-align:center;padding:48px;color:#AAB8C8;background:#fff;border:1px solid rgba(27,79,168,0.08);border-radius:8px">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:6px">No Offers Yet</div>
+                <div class="empty-offers">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:6px;color:var(--muted)">No Offers Yet</div>
                     <div style="font-size:12px">Create your first seasonal offer</div>
                 </div>
                 @endforelse
             </div>
         </div>
 
-        {{-- RIGHT — Create New Offer --}}
         <div class="create-panel">
             <div class="cp-header">
                 <div class="cp-title">New Offer</div>
@@ -332,7 +332,7 @@
                                 <input type="checkbox" name="course_ids[]" value="{{ $course->course_template_id }}">
                                 <span class="course-check-label">{{ $course->name }}</span>
                                 @if($course->price)
-                                <span style="margin-left:auto;font-size:10px;color:#1B4FA8;font-family:monospace">{{ number_format($course->price) }} LE</span>
+                                <span style="margin-left:auto;font-size:10px;color:var(--blue);font-family:monospace">{{ number_format($course->price) }} LE</span>
                                 @endif
                             </label>
                             @endforeach
