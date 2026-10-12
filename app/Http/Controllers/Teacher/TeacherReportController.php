@@ -144,6 +144,7 @@ class TeacherReportController extends Controller
                 'total_score'    => $totalScore,
                 'status'         => $request->action === 'submit' ? 'Submitted' : 'Draft',
                 'submitted_at'   => $request->action === 'submit' ? now() : null,
+                'comments'       => $request->comments,
                 'pdf_generated'  => false,
             ]);
 
@@ -230,11 +231,8 @@ class TeacherReportController extends Controller
                 'total_score'  => $totalScore,
                 'status'       => $request->action === 'submit' ? 'Submitted' : 'Draft',
                 'submitted_at' => $request->action === 'submit' ? now() : $report->submitted_at,
-                'rejection_note' => $request->filled('comments')
-                    ? '__COMMENTS__' . $request->comments
-                    : ($report->rejection_note && str_starts_with($report->rejection_note, '__COMMENTS__')
-                        ? $report->rejection_note
-                        : null),
+                'comments'       => $request->comments,
+                'rejection_note' => $request->action === 'submit' ? null : $report->rejection_note,
             ]);
 
             $report->reportScores()->delete();

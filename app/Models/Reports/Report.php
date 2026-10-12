@@ -64,6 +64,7 @@ class Report extends Model
 		'approved_at',
 		'approved_by_admin_id',
 		'rejection_note',
+        'comments',
 		'pdf_generated'
 	];
 
