@@ -171,6 +171,9 @@
         <button class="ci-tab active" data-tab="active" onclick="switchTab('active')">
             Active <span class="tab-count">{{ $active->count() }}</span>
         </button>
+        <button class="ci-tab" data-tab="upcoming" onclick="switchTab('upcoming')">
+            Upcoming <span class="tab-count">{{ $upcoming->count() }}</span>
+        </button>
         <button class="ci-tab" data-tab="next" onclick="switchTab('next')">
             Next Patch <span class="tab-count">{{ $nextPatch->count() }}</span>
         </button>
@@ -224,6 +227,20 @@
         </div>
     </div>
 
+    <div class="tab-panel" id="panel-upcoming">
+        <div class="ci-cards">
+            @forelse($upcoming as $instance)
+                @include('student-care.course-instances.partials.instance-card', ['instance'=>$instance,'context'=>'next'])
+            @empty
+                <div class="empty-state">
+                    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <div class="empty-title">No Upcoming Courses</div>
+                    <div class="empty-sub">No courses waiting to start in the current patch</div>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
     <div class="tab-panel" id="panel-next">
         <div class="ci-cards">
             @forelse($nextPatch as $instance)
@@ -231,7 +248,7 @@
             @empty
                 <div class="empty-state">
                     <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <div class="empty-title">No Upcoming Courses</div>
+                    <div class="empty-title">No Next Patch Courses</div>
                     <div class="empty-sub">No courses scheduled for the next patch yet</div>
                 </div>
             @endforelse

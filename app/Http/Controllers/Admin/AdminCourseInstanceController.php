@@ -18,11 +18,6 @@ class AdminCourseInstanceController extends Controller
 
     public function index(Request $request)
     {
-        // Auto-promote: a course moves Upcoming -> Active when its start date
-        // arrives, and Active -> Completed once its end date has passed (as
-        // long as no non-cancelled session is still to run, so postponed
-        // courses keep running). Mirrors the Student Care board + the daily
-        // patches:update-statuses command.
         CourseInstance::where('status', 'Upcoming')
             ->whereDate('start_date', '<=', today())
             ->update(['status' => 'Active']);
@@ -42,17 +37,18 @@ class AdminCourseInstanceController extends Controller
             'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
         ];
 
-        // Three tabs: Active / Next Patch (upcoming) / Completed.
         $active    = CourseInstance::with($with)->where('status', 'Active')
                         ->orderBy('start_date')->get();
-        $nextPatch = CourseInstance::with($with)->where('status', 'Upcoming')
+        $pending   = CourseInstance::with($with)->where('status', 'Upcoming')
                         ->orderBy('start_date')->get();
+        [$upcoming, $nextPatch] = $pending->partition(
+            fn($i) => $i->patch && \Carbon\Carbon::parse($i->patch->start_date)->lte(today())
+        )->map->values()->all();
         $completed = CourseInstance::with($with)->where('status', 'Completed')
                         ->latest('end_date')->limit(40)->get();
 
-        return view('admin.course-instances.index', compact('active', 'nextPatch', 'completed'));
+        return view('admin.course-instances.index', compact('active', 'upcoming', 'nextPatch', 'completed'));
     }
-
 
     public function show($id)
     {
@@ -120,7 +116,6 @@ class AdminCourseInstanceController extends Controller
         ));
     }
 
-
     public function cancel(Request $request, $id)
     {
         $instance = CourseInstance::with('sessions')->findOrFail($id);
@@ -156,7 +151,6 @@ class AdminCourseInstanceController extends Controller
         return back()->with('success', 'Course instance cancelled.');
     }
 
-
     private function revenueByInstance(array $instanceIds): array
     {
         if (empty($instanceIds)) return [];
@@ -191,7 +185,6 @@ class AdminCourseInstanceController extends Controller
 
         return $result;
     }
-
 
     private function revenueByCategory(array $enrollIds): array
     {

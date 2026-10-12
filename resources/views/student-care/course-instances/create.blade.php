@@ -1257,11 +1257,24 @@ function onModeChange() {
     [...roomSel.options].forEach(opt => {
         if (!opt.value) return;
         const roomType = opt.dataset.type?.toLowerCase() || '';
-        const match    = mode === 'Online' ? roomType === 'online' : roomType !== 'online';
+        const match    = roomType !== 'online';
         opt.hidden = !match; opt.disabled = !match;
     });
-    const selected = roomSel.options[roomSel.selectedIndex];
-    if (selected?.value && selected?.disabled) { roomSel.value = ''; onRoomChange(); }
+    const roomField = roomSel.closest('.field');
+    if (mode === 'Online') {
+        if (roomField) roomField.style.display = 'none';
+        if (roomSel.value) {
+            roomSel.value = '';
+            document.getElementById('ci_capacity').readOnly = false;
+            document.getElementById('capacityHint').style.display = 'none';
+        }
+        const alertEl = document.getElementById('roomAlert');
+        if (alertEl) alertEl.style.display = 'none';
+    } else {
+        if (roomField) roomField.style.display = '';
+        const selected = roomSel.options[roomSel.selectedIndex];
+        if (selected?.value && selected?.disabled) { roomSel.value = ''; onRoomChange(); }
+    }
     updateSummary();
 }
 
