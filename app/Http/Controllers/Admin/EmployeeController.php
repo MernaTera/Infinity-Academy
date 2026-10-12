@@ -34,7 +34,9 @@ class EmployeeController extends Controller
                 $q->where('status', $statusFilter))
             ->when($roleFilter, fn($q) =>
                 $q->whereHas('user.role', fn($q2) =>
-                    $q2->where('role_name', $roleFilter)))
+                    $roleFilter === 'Customer Service'
+                        ? $q2->whereIn('role_name', ['Customer Service', 'CS Leader'])
+                        : $q2->where('role_name', $roleFilter)))
             ->latest()
             ->paginate(20);
 

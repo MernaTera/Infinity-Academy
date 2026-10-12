@@ -254,6 +254,8 @@ class AdminDashboardController extends Controller
             ->where('status', 'Active')->count();
         $totalSC = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Student Care'))
             ->where('status', 'Active')->count();
+        $totalAdmin = Employee::whereHas('user.role', fn($q) => $q->where('role_name', 'Admin'))
+            ->where('status', 'Active')->count();
 
         return view('admin.dashboard', compact(
             'currentPatch', 'upcomingPatch', 'period',
@@ -272,7 +274,7 @@ class AdminDashboardController extends Controller
             'enrollDays','enrollValues',
             'csEmployees','totalTarget','totalAchieved','targetPct',
             'totalLeads','convertedLeads','conversionRate','recentEnrollments',
-            'totalEmployees','totalTeachers','totalCS','totalSC'
+            'totalEmployees','totalTeachers','totalCS','totalSC','totalAdmin',
         ));
     }
 

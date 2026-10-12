@@ -30,7 +30,7 @@
     border:1px solid var(--glass-bd);border-radius:20px;padding:20px 26px;margin-bottom:22px;
     display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
     box-shadow:var(--glass-sh);position:relative;overflow:hidden;}
-.cmd-strip::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent);}
+/* .cmd-strip::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent);} */
 .cmd-strip::after{display:none;}
 .cmd-left{position:relative;z-index:1;}
 .cmd-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600;
@@ -897,6 +897,10 @@ canvas{max-width:100%;display:block;}
                 <td>{{ $totalEmployees }}</td>
             </tr>
             <tr>
+                <td>Admins</td>
+                <td>{{ $totalAdmin }}</td>
+            </tr>
+            <tr>
                 <td>Teachers</td>
                 <td>{{ $totalTeachers }}</td>
             </tr>
@@ -907,7 +911,7 @@ canvas{max-width:100%;display:block;}
             <tr>
                 <td>Student Care Team</td>
                 <td>{{ $totalSC }}</td>
-            </tr>
+            </tr> 
             <tr>
                 <td>Total Refunds This Period</td>
                 <td>{{ number_format($totalRefunded) }} LE</td>
