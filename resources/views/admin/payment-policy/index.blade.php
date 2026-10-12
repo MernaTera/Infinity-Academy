@@ -7,76 +7,85 @@
 @endonce
 
 <style>
-.pp-page{background:#F8F6F2;min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:#1A2A4A}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:#F5911E;margin-bottom:4px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:#1B4FA8;margin:0}
+:root{--blue:#1B4FA8;--blue-2:#2D6FDB;--orange:#F5911E;--orange-dk:#C47010;--green:#059669;--green-dk:#15803D;--red:#DC2626;--text:#16233F;--muted:#5A6A85;--faint:#93A3BC;--card:rgba(255,255,255,0.5);--glass-bd:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);--bg:#F8F6F2;}
+.pp-page{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text)}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.1;z-index:0;pointer-events:none}
+.orb-2{width:300px;height:300px;background:radial-gradient(circle,#1B4FA8,transparent 70%);top:30px;right:1%}
+.orb-3{width:380px;height:380px;background:radial-gradient(circle,#7C3AED,transparent 70%);bottom:-140px;left:35%}
+.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--text);margin:0}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px}
 
 .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
-.kpi-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:6px;padding:16px 20px;position:relative;overflow:hidden}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,#1B4FA8)}
-.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A;margin-bottom:5px}
-.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--kc,#1B4FA8);line-height:1}
+.kpi-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:16px;padding:16px 20px;position:relative;overflow:hidden;box-shadow:var(--glass-sh)}
+.kpi-card::before{display:none}
+.kpi-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600}
+.kpi-val{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;color:var(--kc,var(--blue));line-height:1}
 
 .two-col{display:grid;grid-template-columns:1fr 380px;gap:20px;align-items:start}
 
-/* Plan Cards */
 .plan-list{display:flex;flex-direction:column;gap:12px}
-.plan-card{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;position:relative;transition:box-shadow 0.2s}
-.plan-card:hover{box-shadow:0 4px 20px rgba(27,79,168,0.08)}
+.plan-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;overflow:hidden;position:relative;transition:transform 0.2s,box-shadow 0.2s;box-shadow:var(--glass-sh)}
+.plan-card:hover{transform:translateY(-2px);box-shadow:0 16px 38px rgba(23,45,90,0.13)}
 .plan-card.inactive{opacity:0.6}
-.plan-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#1B4FA8,transparent)}
+.plan-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent)}
 .pc-header{padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(27,79,168,0.06)}
-.pc-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#1B4FA8}
+.pc-name{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--text)}
 .pc-body{padding:14px 20px;display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.pc-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:#AAB8C8;margin-bottom:4px}
-.pc-meta-val{font-family:'Bebas Neue',sans-serif;font-size:20px;color:#1A2A4A;letter-spacing:1px;line-height:1}
-.pc-meta-unit{font-size:9px;color:#AAB8C8;letter-spacing:1px}
-.pc-footer{padding:10px 20px;border-top:1px solid rgba(27,79,168,0.06);display:flex;gap:8px;align-items:center}
+.pc-meta-label{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);margin-bottom:4px;font-weight:600}
+.pc-meta-val{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--blue);letter-spacing:1px;line-height:1}
+.pc-meta-unit{font-size:9px;color:var(--faint);letter-spacing:1px}
+.pc-footer{padding:10px 20px;border-top:1px solid rgba(27,79,168,0.06);display:flex;gap:8px;align-items:center;background:rgba(255,255,255,0.3)}
 
-/* Edit inline form */
-.edit-panel{display:none;padding:14px 20px;background:rgba(27,79,168,0.02);border-top:1px solid rgba(27,79,168,0.06)}
-.edit-panel.show{display:block}
+.edit-panel{display:none;padding:14px 20px;background:rgba(255,255,255,0.35);border-top:1px solid rgba(27,79,168,0.06)}
+.edit-panel.show{display:block;animation:panelIn .3s ease both}
+@keyframes panelIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 .edit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
 .form-field{display:flex;flex-direction:column;gap:4px}
-.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#7A8A9A}
-.form-control{width:100%;padding:8px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:12px;color:#1A2A4A;background:#fff;outline:none;box-sizing:border-box}
-.form-control:focus{border-color:#1B4FA8;box-shadow:0 0 0 3px rgba(27,79,168,0.07)}
+.form-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+.form-control{width:100%;padding:8px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:12px;color:var(--text);background:rgba(255,255,255,0.7);outline:none;box-sizing:border-box}
+.form-control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.08)}
 
-.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:3px}
-.badge-active{color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.15)}
-.badge-inactive{color:#7A8A9A;background:rgba(122,138,154,0.08);border:1px solid rgba(122,138,154,0.15)}
-.badge-approval{color:#C47010;background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2)}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:600}
+.badge-active{color:var(--green-dk);background:rgba(5,150,105,0.10);border:1px solid rgba(5,150,105,0.2)}
+.badge-inactive{color:var(--muted);background:rgba(122,138,154,0.10);border:1px solid rgba(122,138,154,0.2)}
+.badge-approval{color:var(--orange-dk);background:rgba(245,145,30,0.10);border:1px solid rgba(245,145,30,0.25)}
 
-.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid;background:transparent;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s}
-.btn-edit{color:#1B4FA8;border-color:rgba(27,79,168,0.25)}
-.btn-edit:hover{background:rgba(27,79,168,0.07)}
-.btn-toggle-on{color:#059669;border-color:rgba(5,150,105,0.2)}
-.btn-toggle-on:hover{background:rgba(5,150,105,0.06)}
-.btn-toggle-off{color:#DC2626;border-color:rgba(220,38,38,0.2)}
-.btn-toggle-off:hover{background:rgba(220,38,38,0.06)}
-.btn-save{padding:8px 18px;background:#1B4FA8;border:none;border-radius:3px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer}
+.btn-sm{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:8px;border:1px solid;background:rgba(255,255,255,0.5);cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;transition:all 0.2s}
+.btn-edit{color:var(--blue);border-color:rgba(27,79,168,0.22)}
+.btn-edit:hover{background:rgba(27,79,168,0.08)}
+.btn-toggle-on{color:var(--green-dk);border-color:rgba(5,150,105,0.25)}
+.btn-toggle-on:hover{background:rgba(5,150,105,0.08)}
+.btn-toggle-off{color:var(--red);border-color:rgba(220,38,38,0.22)}
+.btn-toggle-off:hover{background:rgba(220,38,38,0.07)}
+.btn-save{padding:9px 20px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:10px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 16px rgba(27,79,168,0.25);transition:transform 0.2s,box-shadow 0.2s}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 10px 22px rgba(27,79,168,0.32)}
 
-/* Create Panel */
-.create-panel{background:#fff;border:1px solid rgba(27,79,168,0.1);border-radius:8px;overflow:hidden;position:relative}
-.create-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#F5911E,#1B4FA8,transparent)}
-.create-header{padding:14px 18px;border-bottom:1px solid rgba(27,79,168,0.07)}
-.create-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#1B4FA8}
+.create-panel{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;overflow:hidden;position:relative;box-shadow:var(--glass-sh)}
+.create-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent)}
+.create-header{padding:14px 18px;border-bottom:1px solid rgba(27,79,168,0.08)}
+.create-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--text)}
 .create-body{padding:16px 18px}
-.sec-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#F5911E;margin-bottom:10px;display:block}
-.info-box{background:rgba(245,145,30,0.04);border:1px solid rgba(245,145,30,0.15);border-radius:4px;padding:10px 14px;font-size:11px;color:#C47010;margin-bottom:14px;line-height:1.5}
-.btn-submit{width:100%;padding:10px;background:transparent;border:1.5px solid #1B4FA8;border-radius:4px;color:#1B4FA8;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s;margin-top:8px}
-.btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#1B4FA8,#2D6FDB);transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
-.btn-submit:hover::before{transform:scaleX(1)}
-.btn-submit:hover{color:#fff}
+.sec-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;display:block;font-weight:600}
+.info-box{background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.25);border-radius:12px;padding:10px 14px;font-size:11px;color:var(--orange-dk);margin-bottom:14px;line-height:1.5}
+.btn-submit{width:100%;padding:11px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:transform 0.2s,box-shadow 0.2s;margin-top:8px;box-shadow:0 10px 24px rgba(27,79,168,0.28)}
+.btn-submit::before{display:none}
+.btn-submit:hover::before{transform:none}
+.btn-submit:hover{color:#fff;transform:translateY(-2px);box-shadow:0 14px 30px rgba(27,79,168,0.36)}
 
 .toggle-wrap{display:flex;align-items:center;gap:10px;margin-top:8px}
-.toggle-label{font-size:11px;color:#4A5A7A}
+.toggle-wrap input[type=checkbox]{accent-color:var(--blue);width:14px;height:14px}
+.toggle-label{font-size:11px;color:var(--muted)}
+
+.flash-success{background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:var(--green-dk);padding:12px 16px;border-radius:12px;margin-bottom:20px;font-size:13px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.empty-plans{text-align:center;padding:40px;color:var(--faint);background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:18px;box-shadow:var(--glass-sh)}
 
 @media(max-width:1024px){.two-col{grid-template-columns:1fr}.pp-page{padding:18px 14px}.kpi-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
 
 <div class="pp-page">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div>
@@ -86,19 +95,17 @@
     </div>
 
     @if(session('success'))
-    <div style="background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:#059669;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">{{ session('success') }}</div>
+    <div class="flash-success">{{ session('success') }}</div>
     @endif
 
-    {{-- KPIs --}}
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:#1B4FA8"><div class="kpi-label">Total Plans</div><div class="kpi-val">{{ $stats['total'] }}</div></div>
-        <div class="kpi-card" style="--kc:#059669"><div class="kpi-label">Active</div><div class="kpi-val">{{ $stats['active'] }}</div></div>
-        <div class="kpi-card" style="--kc:#C47010"><div class="kpi-label">Needs Approval</div><div class="kpi-val">{{ $stats['approval'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--blue)"><div class="kpi-label">Total Plans</div><div class="kpi-val">{{ $stats['total'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--green-dk)"><div class="kpi-label">Active</div><div class="kpi-val">{{ $stats['active'] }}</div></div>
+        <div class="kpi-card" style="--kc:var(--orange-dk)"><div class="kpi-label">Needs Approval</div><div class="kpi-val">{{ $stats['approval'] }}</div></div>
     </div>
 
     <div class="two-col">
 
-        {{-- LEFT — Plans --}}
         <div>
             <span class="sec-label">Payment Plans</span>
             <div class="plan-list">
@@ -118,7 +125,7 @@
                                 @endif
                             </div>
                         </div>
-                        <div style="font-size:10px;color:#AAB8C8">
+                        <div style="font-size:10px;color:var(--faint)">
                             by {{ $plan->createdBy?->full_name ?? '—' }}
                         </div>
                     </div>
@@ -163,7 +170,6 @@
                         </form>
                     </div>
 
-                    {{-- Inline Edit --}}
                     <div class="edit-panel" id="edit_{{ $plan->payment_plan_id }}">
                         <form method="POST" action="{{ route('admin.payment-plans.update', $plan->payment_plan_id) }}">
                             @csrf @method('PUT')
@@ -192,15 +198,14 @@
                     </div>
                 </div>
                 @empty
-                <div style="text-align:center;padding:40px;color:#AAB8C8;background:#fff;border:1px solid rgba(27,79,168,0.08);border-radius:8px">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:6px">No Plans Yet</div>
+                <div class="empty-plans">
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:6px;color:var(--muted)">No Plans Yet</div>
                     <div style="font-size:12px">Create your first payment plan</div>
                 </div>
                 @endforelse
             </div>
         </div>
 
-        {{-- RIGHT — Create New Plan --}}
         <div class="create-panel">
             <div class="create-header">
                 <div class="create-title">New Payment Plan</div>
