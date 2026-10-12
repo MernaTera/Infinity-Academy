@@ -167,7 +167,7 @@
     <div class="orb orb-1"></div>
     <div class="orb orb-2"></div>
     <div class="orb orb-3"></div>
-    <div class="page-eyebrow">Admin Panel</div>
+    <div class="page-eyebrow">Sales Monitoring Panel</div>
     <h1 class="page-title">Sales Revenue</h1>
 
     <div class="filter-bar">

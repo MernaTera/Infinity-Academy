@@ -2,13 +2,13 @@
 :root {
     --sb-w: 180px;
     --sb-w-col: 56px;
-    --sb-bg: #fff;
+    --sb-bg: rgba(255,255,255,0.5);
     --sb-border: rgba(27,79,168,0.08);
     --sb-blue: #1B4FA8;
     --sb-text: #5A6A7A;
-    --sb-active-bg: rgba(27,79,168,0.07);
-    --sb-hover-bg: rgba(27,79,168,0.03);
-    --sb-label: #C4CDD8;
+    --sb-active-bg: rgba(27,79,168,0.10);
+    --sb-hover-bg: rgba(27,79,168,0.06);
+    --sb-label: #AAB8C8;
     --sb-ease: 0.22s cubic-bezier(0.16,1,0.3,1);
 }
 
@@ -16,7 +16,9 @@
     width: var(--sb-w);
     flex-shrink: 0;
     background: var(--sb-bg);
-    border-right: 1px solid var(--sb-border);
+    backdrop-filter: blur(20px) saturate(160%);
+    -webkit-backdrop-filter: blur(20px) saturate(160%);
+    border-right: 1px solid rgba(255,255,255,0.5);
     position: sticky;
     top: 64px;
     height: calc(100vh - 62px);
@@ -25,12 +27,10 @@
     overflow: hidden;
     transition: width var(--sb-ease);
     z-index: 40;
-    box-shadow: 2px 0 10px rgba(27,79,168,0.04);
     font-family: 'DM Sans', sans-serif;
 }
 #adminSidebar.collapsed { width: var(--sb-w-col); }
 
-/* ── NAV AREA ── */
 .sb-nav {
     flex: 1;
     display: flex;
@@ -39,13 +39,12 @@
     padding: 1px 0 1px;
 }
 
-/* ── GROUP ── */
 .sb-group { margin-bottom: 1px; }
 .sb-group-label {
     font-size: 7.8px;
     letter-spacing: 2.5px;
     text-transform: uppercase;
-    color: var(--sb-label);
+    color: var(--sb-blue);
     font-weight: 700;
     padding: 4px 14px 1px;
     white-space: nowrap;
@@ -55,7 +54,6 @@
 }
 #adminSidebar.collapsed .sb-group-label { opacity: 0; height: 0; padding: 0; }
 
-/* ── LINK ── */
 .sl {
     display: flex;
     align-items: center;
@@ -93,26 +91,23 @@
     transition: opacity var(--sb-ease);
 }
 
-/* ── DIVIDER ── */
 .sb-div { height:1px; background:var(--sb-border); margin:4px 12px; }
 
-/* ── TOGGLE BTN ── */
 .sb-foot {
     border-top: 1px solid var(--sb-border);
-    /* padding: 8px 10px; */
+
     display: flex;
     justify-content: flex-end;
     flex-shrink: 0;
 }
 .sb-tog {
-    width:26px; height:26px; border:1px solid var(--sb-border);
-    border-radius:5px; background:transparent; cursor:pointer;
+    width:26px; height:26px; border:1px solid rgba(27,79,168,0.14);
+    border-radius:8px; background:rgba(255,255,255,0.4); cursor:pointer;
     display:flex; align-items:center; justify-content:center;
     color:var(--sb-label); transition:all 0.18s;
 }
 .sb-tog:hover { background:var(--sb-hover-bg); color:var(--sb-blue); border-color:rgba(27,79,168,0.2); }
 
-/* ── COLLAPSED ── */
 #adminSidebar.collapsed .sl-txt,
 #adminSidebar.collapsed .sl-bdg { opacity:0; width:0; pointer-events:none; }
 #adminSidebar.collapsed .sl {
@@ -123,7 +118,6 @@
 #adminSidebar.collapsed .sl.active { background: var(--sb-active-bg); }
 #adminSidebar.collapsed .sb-tog svg { transform: rotate(180deg); }
 
-/* Tooltip */
 #adminSidebar.collapsed .sl::after {
     content: attr(data-tip);
     position: absolute;
@@ -138,7 +132,6 @@
 }
 #adminSidebar.collapsed .sl:hover::after { opacity: 1; }
 
-/* ── MOBILE ── */
 .sb-overlay {
     display:none; position:fixed; inset:0;
     background:rgba(10,20,40,0.4); backdrop-filter:blur(2px); z-index:39;
@@ -151,7 +144,7 @@
         z-index:50; transform:translateX(-100%);
         transition:transform var(--sb-ease), width var(--sb-ease);
         width:var(--sb-w) !important;
-        box-shadow:4px 0 24px rgba(27,79,168,0.15);
+        background:rgba(255,255,255,0.92);
     }
     #adminSidebar.mobile-open { transform:translateX(0); }
     .sb-foot { display:none; }
@@ -163,7 +156,6 @@
 <aside id="adminSidebar">
 <nav class="sb-nav">
 
-    {{-- OVERVIEW --}}
     <div class="sb-group">
         <span class="sb-group-label">Overview</span>
         <a href="{{ route('admin.dashboard') }}" data-tip="Dashboard"
@@ -175,7 +167,6 @@
 
     <div class="sb-div"></div>
 
-    {{-- HR --}}
     <div class="sb-group">
         <span class="sb-group-label">Human Resources</span>
         <a href="{{ route('admin.employees.index') }}" data-tip="Employees"
@@ -192,7 +183,6 @@
 
     <div class="sb-div"></div>
 
-    {{-- ACADEMIC --}}
     <div class="sb-group">
         <span class="sb-group-label">Academic</span>
         <a href="{{ route('admin.patches.index') }}" data-tip="Patches"
@@ -239,7 +229,6 @@
 
     <div class="sb-div"></div>
 
-    {{-- FINANCIAL --}}
     <div class="sb-group">
         <span class="sb-group-label">Financial</span>
         <a href="{{ route('admin.payment-policy.index') }}" data-tip="Payment Plans"
@@ -305,7 +294,6 @@
 
     <div class="sb-div"></div>
 
-    {{-- MONITORING --}}
     <div class="sb-group">
         <span class="sb-group-label">Monitoring</span>
         <a href="{{ route('admin.reports.index') }}" data-tip="Reports"
