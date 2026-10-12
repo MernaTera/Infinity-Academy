@@ -8,115 +8,92 @@
 
 <style>
 :root{
-    --blue:#1B4FA8;--blue-l:rgba(27,79,168,0.07);
-    --orange:#F5911E;--orange-l:rgba(245,145,30,0.08);
-    --green:#059669;--green-l:rgba(5,150,105,0.07);
-    --red:#DC2626;--red-l:rgba(220,38,38,0.06);
-    --border:rgba(27,79,168,0.09);
-    --bg:#F8F6F2;--card:#fff;
-    --text:#1A2A4A;--muted:#7A8A9A;--faint:#AAB8C8;
+    --blue:#1B4FA8;--blue-2:#2D6FDB;--blue-l:rgba(27,79,168,0.10);
+    --orange:#F5911E;--orange-dk:#C47010;--orange-l:rgba(245,145,30,0.12);
+    --green:#059669;--green-dk:#15803D;--green-l:rgba(5,150,105,0.10);
+    --red:#DC2626;--red-l:rgba(220,38,38,0.08);
+    --border:rgba(27,79,168,0.08);
+    --bg:#F8F6F2;--card:rgba(255,255,255,0.5);
+    --glass-bd:rgba(255,255,255,0.6);--glass-sh:0 8px 30px rgba(23,45,90,0.07);
+    --text:#16233F;--muted:#5A6A85;--faint:#93A3BC;
 }
 *{box-sizing:border-box;}
 .emp-show{background:var(--bg);min-height:100vh;padding:40px 32px;font-family:'DM Sans',sans-serif;color:var(--text);}
+.orb{position:absolute;border-radius:50%;filter:blur(70px);opacity:0.1;z-index:0;pointer-events:none;}
+.orb-2{width:300px;height:300px;background:radial-gradient(circle,#1B4FA8,transparent 70%);top:30px;right:1%;}
+.orb-3{width:380px;height:380px;background:radial-gradient(circle,#7C3AED,transparent 70%);bottom:-140px;left:35%;}
 .page-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:12px;}
-.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:4px;}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--blue);margin:0;}
-.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:transparent;border:1px solid var(--border);border-radius:4px;color:var(--muted);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s;}
+.page-eyebrow{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;font-weight:600;}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:4px;color:var(--text);margin:0;}
+.btn-back{display:inline-flex;align-items:center;gap:8px;padding:9px 18px;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid var(--glass-bd);border-radius:11px;color:var(--muted);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;text-decoration:none;transition:all 0.3s;}
 .btn-back:hover{border-color:var(--blue);color:var(--blue);text-decoration:none;}
 
-.pcard{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px;position:relative;box-shadow:0 2px 12px rgba(27,79,168,0.04);}
-.pcard::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--orange),var(--blue),transparent);}
+.pcard{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);border-radius:20px;overflow:hidden;margin-bottom:20px;position:relative;box-shadow:var(--glass-sh);}
+/* .pcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--blue),transparent);} */
 .pcard-body{padding:22px 28px;}
-.pcard-header{padding:20px 28px;border-bottom:1px solid var(--border);background:rgba(27,79,168,0.01);}
+.pcard-header{padding:20px 28px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.35);}
 .pcard-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:3px;color:var(--text);}
 
-.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--orange);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(245,145,30,0.15);margin-top:20px;}
+.sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;padding-bottom:9px;border-bottom:1px solid rgba(27,79,168,0.1);margin-top:20px;font-weight:600;}
 .sec-label:first-child{margin-top:0;}
 
 .stat-grid{display:grid;gap:12px;margin-bottom:0;}
 .stat-grid-4{grid-template-columns:repeat(4,1fr);}
 .stat-grid-3{grid-template-columns:repeat(3,1fr);}
 .stat-grid-5{grid-template-columns:repeat(5,1fr);}
-.stat-mini{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:14px 16px;}
-.slabel{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;}
+.stat-mini{background:rgba(255,255,255,0.55);border:1px solid var(--glass-bd);border-radius:14px;padding:14px 16px;box-shadow:0 4px 14px rgba(23,45,90,0.04);}
+.slabel{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;font-weight:600;}
 .sval{font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--blue);letter-spacing:1px;line-height:1;}
 
-.role-badge{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;}
-.role-cs{background:var(--blue-l);color:var(--blue);border:1px solid rgba(27,79,168,0.15);}
-.role-teacher{background:var(--green-l);color:var(--green);border:1px solid rgba(5,150,105,0.15);}
-.role-sc{background:rgba(127,119,221,0.07);color:#534AB7;border:1px solid rgba(127,119,221,0.15);}
-.role-admin{background:var(--orange-l);color:#C47010;border:1px solid rgba(245,145,30,0.2);}
-.leader-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;background:rgba(245,145,30,0.1);color:#C47010;border:1px solid rgba(245,145,30,0.25);font-weight:600;}
-.status-active{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--green);}
+.role-badge{display:inline-block;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;font-weight:600;}
+.role-cs{background:var(--blue-l);color:var(--blue);border:1px solid rgba(27,79,168,0.18);}
+.role-teacher{background:var(--green-l);color:var(--green-dk);border:1px solid rgba(5,150,105,0.18);}
+.role-sc{background:rgba(124,58,237,0.10);color:#7C3AED;border:1px solid rgba(124,58,237,0.18);}
+.role-admin{background:var(--orange-l);color:var(--orange-dk);border:1px solid rgba(245,145,30,0.22);}
+.leader-tag{display:inline-flex;align-items:center;gap:4px;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:var(--orange-l);color:var(--orange-dk);border:1px solid rgba(245,145,30,0.25);font-weight:600;}
+.status-active{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--green-dk);}
 .status-inactive{display:inline-flex;align-items:center;gap:5px;font-size:10px;color:var(--red);}
 .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
-.prog{background:#F0F0F0;border-radius:3px;height:4px;margin-top:8px;overflow:hidden;}
+.prog{background:rgba(27,79,168,0.10);border-radius:3px;height:4px;margin-top:8px;overflow:hidden;}
 .prog-fill{height:4px;border-radius:3px;}
 
-/* info pill */
-.info-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--green-l);border:1px solid rgba(5,150,105,0.15);border-radius:6px;}
+.info-pill{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;background:var(--green-l);border:1px solid rgba(5,150,105,0.18);border-radius:12px;}
 .info-pill-label{font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
-.info-pill-val{font-size:11px;font-weight:600;color:var(--green);}
+.info-pill-val{font-size:11px;font-weight:600;color:var(--green-dk);}
 
-/* course rows */
-.course-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid rgba(27,79,168,0.04);transition:background 0.15s;}
+.course-row{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid rgba(27,79,168,0.06);transition:background 0.15s;}
 .course-row:last-child{border-bottom:none;}
-.course-row:hover{background:rgba(27,79,168,0.02);}
-.status-pill{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:3px;border:1px solid;white-space:nowrap;}
+.course-row:hover{background:rgba(27,79,168,0.04);}
+.status-pill{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 9px;border-radius:20px;border:1px solid;white-space:nowrap;font-weight:600;}
 
-/* form */
-.form-control{width:100%;padding:10px 12px;border:1.5px solid rgba(27,79,168,0.12);border-radius:5px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:#fff;outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
-.form-control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.07);}
-.field-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;}
+.form-control{width:100%;padding:10px 12px;border:1.5px solid rgba(27,79,168,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:rgba(255,255,255,0.65);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);outline:none;transition:border-color 0.2s,box-shadow 0.2s;}
+.form-control:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.08);}
+.field-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:6px;font-weight:600;}
 .field-group{display:flex;flex-direction:column;gap:5px;}
 .edit-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;}
 
-/* availability */
 .avail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-.avail-card{border:1.5px solid var(--border);border-radius:8px;padding:14px;transition:all 0.2s;}
+.avail-card{border:1.5px solid var(--border);border-radius:14px;padding:14px;transition:all 0.2s;background:rgba(255,255,255,0.45);}
 .avail-card.has-slot{border-color:rgba(5,150,105,0.3);background:var(--green-l);}
 .avail-card-title{font-size:11px;font-weight:600;color:var(--text);margin-bottom:10px;}
-.avail-card.has-slot .avail-card-title{color:var(--green);}
-.slot-select{width:100%;padding:8px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:4px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text);background:#fff;outline:none;margin-top:6px;}
+.avail-card.has-slot .avail-card-title{color:var(--green-dk);}
+.slot-select{width:100%;padding:8px 10px;border:1px solid rgba(27,79,168,0.12);border-radius:8px;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--text);background:rgba(255,255,255,0.7);outline:none;margin-top:6px;}
 .slot-select:focus{border-color:var(--blue);}
-.slot-card {
-    background: rgba(27,79,168,0.02);
-    border: 1px solid rgba(27,79,168,0.1);
-    border-radius: 6px;
-    padding: 14px 16px;
-}
-.day-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 14px;
-    border: 1px solid rgba(27,79,168,0.12);
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    color: #4A5A7A;
-    background: #fff;
-    transition: all 0.2s;
-    user-select: none;
-}
-.day-label:hover { border-color: #1B4FA8; }
-.day-label input { accent-color: #1B4FA8; }
-.day-label:has(input:checked) {
-    border-color: #1B4FA8;
-    background: rgba(27,79,168,0.05);
-    color: #1B4FA8;
-}
+.slot-card{background:rgba(255,255,255,0.45);border:1px solid rgba(27,79,168,0.1);border-radius:14px;padding:14px 16px;}
+.day-label{display:inline-flex;align-items:center;gap:7px;padding:7px 14px;border:1px solid rgba(27,79,168,0.12);border-radius:10px;cursor:pointer;font-size:12px;color:var(--muted);background:rgba(255,255,255,0.65);transition:all 0.2s;user-select:none;}
+.day-label:hover{border-color:var(--blue);}
+.day-label input{accent-color:#1B4FA8;}
+.day-label:has(input:checked){border-color:var(--blue);background:rgba(27,79,168,0.08);color:var(--blue);}
 
-/* buttons */
-.btn-primary{padding:11px 28px;background:var(--blue);border:none;border-radius:5px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;transition:background 0.2s;}
-.btn-primary:hover{background:#2D6FDB;}
-.btn-danger-outline{padding:9px 18px;background:transparent;border:1px solid rgba(220,38,38,0.3);border-radius:5px;color:var(--red);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.btn-primary{padding:11px 28px;background:linear-gradient(120deg,var(--blue),var(--blue-2));border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;box-shadow:0 10px 24px rgba(27,79,168,0.28);}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 14px 30px rgba(27,79,168,0.36);}
+.btn-danger-outline{padding:9px 18px;background:rgba(255,255,255,0.5);border:1px solid rgba(220,38,38,0.3);border-radius:11px;color:var(--red);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;font-weight:600;}
 .btn-danger-outline:hover{background:var(--red-l);}
-.btn-green-outline{padding:9px 18px;background:transparent;border:1px solid rgba(5,150,105,0.3);border-radius:5px;color:var(--green);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.btn-green-outline{padding:9px 18px;background:rgba(255,255,255,0.5);border:1px solid rgba(5,150,105,0.3);border-radius:11px;color:var(--green-dk);font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;font-weight:600;}
 .btn-green-outline:hover{background:var(--green-l);}
 
-.alert-success{background:var(--green-l);border:1px solid rgba(5,150,105,0.2);color:var(--green);padding:12px 16px;border-radius:6px;margin-bottom:20px;font-size:13px;}
-.alert-error{background:var(--red-l);border:1px solid rgba(220,38,38,0.2);color:var(--red);padding:12px 16px;border-radius:6px;margin-bottom:20px;font-size:13px;}
+.alert-success{background:var(--green-l);border:1px solid rgba(5,150,105,0.2);color:var(--green-dk);padding:12px 16px;border-radius:12px;margin-bottom:20px;font-size:13px;}
+.alert-error{background:var(--red-l);border:1px solid rgba(220,38,38,0.2);color:var(--red);padding:12px 16px;border-radius:12px;margin-bottom:20px;font-size:13px;}
 .divider{height:1px;background:var(--border);margin:20px 0;}
 
 @media(max-width:900px){
@@ -127,6 +104,8 @@
 </style>
 
 <div class="emp-show">
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
 
     <div class="page-header">
         <div>
@@ -177,11 +156,6 @@
         $allPairs  = ['sat_tue','sun_wed','mon_thu'];
     @endphp
 
-    {{-- ══════════════════════════════════════════════════════════ --}}
-    {{-- ── SECTION 1: PROFILE VIEW ── --}}
-    {{-- ══════════════════════════════════════════════════════════ --}}
-
-    {{-- Profile Hero --}}
     <div class="pcard">
         <div style="padding:24px 28px;display:flex;align-items:center;gap:20px;border-bottom:1px solid var(--border);">
             <div style="width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Bebas Neue',sans-serif;font-size:24px;flex-shrink:0;background:{{ $avatarBg }};color:{{ $avatarClr }};">
@@ -191,7 +165,7 @@
                 <div style="font-size:18px;font-weight:600;">{{ $employee->full_name }}</div>
                 <div style="font-size:12px;color:var(--muted);margin-top:2px;">{{ $employee->user?->email ?? '—' }}</div>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap;">
-                    {{-- A CS Leader shows as CS + a Leader tag --}}
+
                     <span class="role-badge {{ $roleCls }}">{{ $roleName === 'CS Leader' ? 'Customer Service' : $roleName }}</span>
                     @if($roleName === 'CS Leader')
                         <span class="leader-tag">★ Leader</span>
@@ -233,7 +207,6 @@
         </div>
     </div>
 
-    {{-- CS Performance (Customer Service AND CS Leader) --}}
     @if($isCsFamily && $csData)
     <div class="pcard">
         <div class="pcard-header"><div class="pcard-title">CS Performance — {{ now()->format('F Y') }}</div></div>
@@ -249,7 +222,6 @@
     </div>
     @endif
 
-    {{-- Teacher View --}}
     @if($roleName === 'Teacher' && $teacherData)
     @php
         $availPairs = $employee->teacher?->availability
@@ -262,7 +234,6 @@
         <div class="pcard-header"><div class="pcard-title">Teacher Overview</div></div>
         <div class="pcard-body">
 
-            {{-- Stats --}}
             <div class="stat-grid stat-grid-4" style="margin-bottom:24px;">
                 <div class="stat-mini"><div class="slabel">English Level</div><div class="sval" style="font-size:16px;font-family:'DM Sans',sans-serif;font-weight:600;">{{ $employee->teacher?->englishLevel?->level_name ?? '—' }}</div></div>
                 <div class="stat-mini"><div class="slabel">Active Courses</div><div class="sval" style="color:var(--green);">{{ $teacherData['active_courses'] }}</div></div>
@@ -270,7 +241,6 @@
                 <div class="stat-mini"><div class="slabel">Active Students</div><div class="sval">{{ $teacherData['total_students'] }}</div></div>
             </div>
 
-            {{-- Contract info --}}
             <div class="sec-label">Current Contract</div>
             @if($teacherData['contract'])
             <div class="stat-grid stat-grid-3" style="margin-bottom:24px;">
@@ -292,7 +262,6 @@
             <div style="padding:14px;background:var(--orange-l);border:1px solid rgba(245,145,30,0.2);border-radius:6px;font-size:12px;color:#C47010;margin-bottom:24px;">⚠ No contract assigned for the current patch.</div>
             @endif
 
-            {{-- Availability --}}
             <div class="sec-label">Availability</div>
             @php
                 $availByPair = $employee->teacher?->availability?->groupBy('day_of_week') ?? collect();
@@ -318,7 +287,6 @@
                 @endforeach
             </div>
 
-            {{-- Assigned Courses --}}
             <div class="sec-label">Assigned Courses</div>
             @if($teacherData['assigned_courses']->isNotEmpty())
             <div style="border:1px solid var(--border);border-radius:8px;overflow:hidden;">
@@ -346,10 +314,6 @@
     </div>
     @endif
 
-    {{-- ══════════════════════════════════════════════════════════ --}}
-    {{-- ── SECTION 2: EDIT FORM (all in one) ── --}}
-    {{-- ══════════════════════════════════════════════════════════ --}}
-
     <div class="pcard">
         <div class="pcard-header">
             <div class="pcard-title">Edit Employee</div>
@@ -360,7 +324,6 @@
                 <input type="hidden" name="target_month" value="{{ now()->format('Y-m') }}">
                 <input type="hidden" name="role_name"   value="{{ $roleName }}">
 
-                {{-- Basic Info --}}
                 <div class="sec-label">Basic Information</div>
                 <div class="edit-grid">
                     <div class="field-group">
@@ -387,7 +350,6 @@
                     </div>
                 </div>
 
-                {{-- Teacher Fields --}}
                 @if($roleName === 'Teacher')
                 <div class="sec-label">Teacher Settings</div>
                 <div class="edit-grid" style="margin-bottom:20px;">
@@ -438,8 +400,8 @@
                     @foreach($timeSlots as $slot)
                     <div class="slot-card">
                         <div style="margin-bottom:10px">
-                            <span style="font-weight:600;color:#1A2A4A;font-size:13px">{{ $slot->name }}</span>
-                            <span style="font-size:11px;color:#7A8A9A;margin-left:8px">
+                            <span style="font-weight:600;color:#16233F;font-size:13px">{{ $slot->name }}</span>
+                            <span style="font-size:11px;color:#5A6A85;margin-left:8px">
                                 {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
                             </span>
                         </div>
@@ -460,7 +422,6 @@
                 </div>
                 @endif
 
-                {{-- CS Target --}}
                 @if($isCsFamily)
                 <div class="sec-label">Monthly Target</div>
                 <div class="edit-grid" style="margin-bottom:20px;">
@@ -474,13 +435,13 @@
                 <div class="divider"></div>
                     @if($isCsFamily)
                     <div style="margin-top:16px;padding:14px 16px;border:1px solid rgba(27,79,168,0.15);border-radius:8px;background:rgba(27,79,168,0.03)">
-                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:#1A2A4A">
+                        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:13px;color:#16233F">
                             <input type="checkbox" name="is_cs_leader" value="1"
                                 {{ $roleName === 'CS Leader' ? 'checked' : '' }}
                                 style="width:16px;height:16px;accent-color:#1B4FA8">
                             <span>
                                 <strong>CS Leader</strong>
-                                <span style="display:block;font-size:11px;color:#7A8A9A;margin-top:2px">
+                                <span style="display:block;font-size:11px;color:#5A6A85;margin-top:2px">
                                     Team oversight over the branch's CS (team sales + all leads). Uncheck to make them a regular CS.
                                 </span>
                             </span>
