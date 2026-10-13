@@ -20,8 +20,6 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Route by role (not a hard-coded id) so CS Leader — who shares the CS
-        // dashboard — is handled instead of falling through to a 403.
         return match(true) {
             $user->isAdmin()                   => redirect('/admin/dashboard'),
             $user->isSC()                      => redirect('/student-care/dashboard'),
@@ -51,8 +49,6 @@ class DashboardController extends Controller
 
         $currentMonth = now()->format('Y-m');
 
-        // Standing (permanent) target — set once, applies every month until the
-        // admin changes it. Not per-month.
         $targetAmount = CsTarget::amountFor($employee?->employee_id);
 
         $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)

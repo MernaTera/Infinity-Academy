@@ -9,8 +9,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('contract_type', function (Blueprint $table) {
-            $table->id('contract_type_id');           // ✅ PK جديد
-            $table->string('name');                    // ✅ اسم حر
+            $table->id('contract_type_id');         
+            $table->string('name');                  
             $table->integer('max_sessions_allowed');
             $table->boolean('is_active')->default(true);
             $table->unsignedBigInteger('created_by_admin_id');

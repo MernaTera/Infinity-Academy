@@ -31,9 +31,6 @@ class LevelPackage extends Model
         'created_by_admin_id',
     ];
 
-    // ─────────────────────────────────────────
-    // Relations
-    // ─────────────────────────────────────────
 
     public function courseTemplate()
     {
@@ -45,31 +42,18 @@ class LevelPackage extends Model
         return $this->belongsTo(Employee::class, 'created_by_admin_id');
     }
 
-    // ─────────────────────────────────────────
-    // Helpers
-    // ─────────────────────────────────────────
-
-    /**
-     * Price per level within this package
-     */
     public function pricePerLevel(): float
     {
         if ($this->levels_count <= 0) return 0;
         return round($this->package_price / $this->levels_count, 2);
     }
 
-    /**
-     * Savings compared to buying levels individually
-     */
     public function savingsVsIndividual(float $individualLevelPrice): float
     {
         $fullPrice = $individualLevelPrice * $this->levels_count;
         return max(0, $fullPrice - $this->package_price);
     }
 
-    // ─────────────────────────────────────────
-    // Scopes
-    // ─────────────────────────────────────────
 
     public function scopeActive($query)
     {

@@ -30,10 +30,6 @@ class StudentCareController extends Controller
 
     public function waitingList()
     {
-        // WaitingList has no branch_id; it belongs to a branch through its
-        // enrollment. whereHas('enrollment') runs against the branch-scoped
-        // Enrollment model, so an SC in one branch only sees their branch's
-        // waiting list — never entries from a branch they aren't in.
         $waiting = WaitingList::whereHas('enrollment')->with([
             'enrollment.student.phones',
             'enrollment.courseTemplate',
@@ -68,7 +64,6 @@ class StudentCareController extends Controller
 
         $waiting = WaitingList::with('enrollment')->findOrFail($request->waiting_id);
 
-        // enrollment is null when it belongs to another branch (scoped out).
         if ($waiting->enrollment === null) {
             return back()->with('error', 'This entry is not available for your branch.');
         }
@@ -79,8 +74,6 @@ class StudentCareController extends Controller
             ])
             ->findOrFail($request->course_instance_id);
 
-        // Business rule: enrollment type must match the course instance type.
-        // A Private student cannot be placed into a Group course and vice-versa.
         $studentType = $waiting->enrollment->enrollment_type;   // 'Group' | 'Private'
         $courseType  = $instance->type;                          // 'Group' | 'Private'
 
@@ -91,7 +84,6 @@ class StudentCareController extends Controller
             );
         }
 
-        // Business rule: A student cannot join a group course that has completed more than 3 sessions
         if ($instance->completed_sessions_count > 2) {
             return back()->with('error',
                 'This course has completed ' . $instance->completed_sessions_count .
@@ -128,9 +120,6 @@ class StudentCareController extends Controller
             'status' => 'Assigned'
         ]);
 
-        // Optional note SC writes while assigning — stored against the
-        // enrollment so it shows in the course view and on the teacher page,
-        // and follows the student on a resume.
         if (filled($request->note)) {
             \App\Models\Enrollment\EnrollmentNote::create([
                 'enrollment_id'          => $waiting->enrollment->enrollment_id,
@@ -142,12 +131,7 @@ class StudentCareController extends Controller
         return back()->with('success', 'Student assigned successfully');
     }
 
-    /**
-     * Cancel a waiting-list entry.
-     * Marks the waiting record as Cancelled so it drops out of the active queue.
-     * The enrollment itself is left intact (still awaiting a course) unless you
-     * choose to cancel it too — here we only cancel the waiting-list placement.
-     */
+
     public function cancelWaiting(Request $request, $id)
     {
         $waiting = WaitingList::with('enrollment')->findOrFail($id);
@@ -228,10 +212,7 @@ class StudentCareController extends Controller
         return view('student-care.outstanding', compact('enrollments', 'withBalance', 'finishedEnrollments', 'stats'));
     }
 
-    /**
-     * Student Care view — monitor + expire only (no resume; re-registration
-     * is a Customer Service action).
-     */
+
     public function postponed()
     {
         return view('student-care.postponed', array_merge($this->postponedData(), [
@@ -240,10 +221,7 @@ class StudentCareController extends Controller
         ]));
     }
 
-    /**
-     * Customer Service view — same board, but with the Resume (re-register)
-     * action enabled. CS is the only role that registers enrollments.
-     */
+
     public function csPostponed()
     {
         return view('student-care.postponed', array_merge($this->postponedData(), [
@@ -252,16 +230,7 @@ class StudentCareController extends Controller
         ]));
     }
 
-    /**
-     * Shared data for the postponed board (SC / CS / Admin all render the same
-     * view). Lists are branch-scoped through the enrollment relation, and the
-     * KPI stats are scoped the same way so the numbers match the cards.
-     *
-     * Note: the course name is read from the enrollment's OWN course_template
-     * (courseInstance is detached to null on postpone), and hours/sessions are
-     * derived from the enrollment + bundle rather than the (now missing)
-     * instance — see the view.
-     */
+
     private function postponedData(): array
     {
         $with = [
@@ -290,9 +259,6 @@ class StudentCareController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        // whereHas('enrollment') forces the enrollment subquery — and its branch
-        // global scope — to apply, so these counts cover the same branch as the
-        // lists above (Postponement itself has no branch column).
         $stats = [
             'active'        => Postponement::where('status', 'Active')
                                     ->whereHas('enrollment', fn($q) => $q)->count(),
@@ -309,14 +275,7 @@ class StudentCareController extends Controller
         return compact('groupPostponed', 'privatePostponed', 'stats');
     }
 
-    /**
-     * Resume a postponed student (Customer Service). This does NOT flip the
-     * enrollment back in place — resuming means re-registering the student into
-     * a new course. We hand off to the registration form in "resume" mode; the
-     * real state changes (new enrollment created free/with carried hours, old
-     * enrollment marked Completed, postponement marked Returned) happen when CS
-     * submits that form.
-     */
+
     public function resumePostponement(Request $request, $id)
     {
         $postponement = Postponement::with('enrollment')->findOrFail($id);
@@ -340,10 +299,7 @@ class StudentCareController extends Controller
         ]);
     }
 
-    /**
-     * Expire a postponement (SC / CS / Admin). The student never returned, so
-     * both the postponement and the enrollment are forfeited — no refund.
-     */
+ 
     public function expirePostponement($id)
     {
         $postponement = Postponement::with('enrollment')->findOrFail($id);
@@ -361,18 +317,11 @@ class StudentCareController extends Controller
         return back()->with('success', 'Postponement marked as expired. The enrollment is forfeited with no refund.');
     }
 
-    /* ──────────────────────────────────────────────────────────────
-     |  Enrollment notes
-     |  A free-text note SC writes against a student's enrollment. It
-     |  shows in the course view (SC) and read-only on the teacher's
-     |  course page, and it follows the student across a postpone →
-     |  resume (copied to the new enrollment by RegistrationService).
-     * ────────────────────────────────────────────────────────────── */
+
     public function addEnrollmentNote(Request $request, $enrollmentId)
     {
         $request->validate(['note' => 'required|string|max:2000']);
 
-        // Enrollment is branch-scoped — findOrFail 404s a cross-branch id.
         $enrollment = Enrollment::findOrFail($enrollmentId);
 
         \App\Models\Enrollment\EnrollmentNote::create([
@@ -390,7 +339,6 @@ class StudentCareController extends Controller
 
         $note = \App\Models\Enrollment\EnrollmentNote::with('enrollment')->findOrFail($noteId);
 
-        // enrollment is null when it belongs to another branch (scoped out).
         if ($note->enrollment === null) {
             return back()->with('error', 'This note is not available for your branch.');
         }
@@ -415,7 +363,6 @@ class StudentCareController extends Controller
 
     public function dashboard()
     {
-        // Current logged-in Student Care employee (for the work-hours banner).
         $me = \App\Models\HR\Employee::where('user_id', auth()->id())->first();
 
         $currentPatch = \App\Models\Academic\Patch::where('status', 'Active')
@@ -563,15 +510,12 @@ class StudentCareController extends Controller
             return back()->with('error', 'This enrollment has no remaining package units.');
         }
 
-        // Work out the next unit (sublevel within/after the current level, or
-        // the next level for courses without sublevels).
         $next = $this->resolveNextPackageUnit($current);
 
         if (!$next) {
             return back()->with('error', 'No further levels/sublevels available in this course for the package.');
         }
 
-        // Create the next enrolment — FREE (already paid via the package).
         $newEnrollment = Enrollment::create([
             'student_id'              => $current->student_id,
             'course_template_id'      => $current->course_template_id,
@@ -594,7 +538,6 @@ class StudentCareController extends Controller
             'created_by_cs_id'        => auth()->user()->employee?->employee_id ?? null,
         ]);
 
-        // The current enrolment has handed off its package continuation.
         $current->package_units_remaining = 0;
         $current->save();
 
@@ -602,22 +545,16 @@ class StudentCareController extends Controller
             'Next package level created (free). The student can now be assigned to a class for it.');
     }
 
-    /**
-     * Given the current enrolment, return the next package unit as
-     * ['level_id' => .., 'sublevel_id' => ..|null], or null if none remain.
-     */
+
     private function resolveNextPackageUnit(Enrollment $current): ?array
     {
         $courseId = $current->course_template_id;
 
-        // Does the current level have sublevels? If so, the package is billed
-        // by sublevel; otherwise by level.
         $currentLevelHasSublevels = $current->level_id
             ? Sublevel::where('level_id', $current->level_id)->exists()
             : false;
 
         if ($currentLevelHasSublevels && $current->sublevel_id) {
-            // 1) Try the next sublevel within the SAME level.
             $currentSub = Sublevel::find($current->sublevel_id);
             if ($currentSub) {
                 $nextSub = Sublevel::where('level_id', $current->level_id)
@@ -628,7 +565,6 @@ class StudentCareController extends Controller
                     return ['level_id' => $current->level_id, 'sublevel_id' => $nextSub->sublevel_id];
                 }
             }
-            // 2) Exhausted this level's sublevels → first sublevel of the NEXT level.
             $nextLevel = $this->nextLevel($courseId, $current->level_id);
             if ($nextLevel) {
                 $firstSub = Sublevel::where('level_id', $nextLevel->level_id)
@@ -636,13 +572,12 @@ class StudentCareController extends Controller
                     ->first();
                 return [
                     'level_id'    => $nextLevel->level_id,
-                    'sublevel_id' => $firstSub?->sublevel_id, // may be null if next level has none
+                    'sublevel_id' => $firstSub?->sublevel_id, 
                 ];
             }
             return null;
         }
 
-        // Course without sublevels → simply the next level.
         $nextLevel = $this->nextLevel($courseId, $current->level_id);
         if ($nextLevel) {
             return ['level_id' => $nextLevel->level_id, 'sublevel_id' => null];
@@ -650,9 +585,7 @@ class StudentCareController extends Controller
         return null;
     }
 
-    /**
-     * Next level in a course by level_order, after the given level.
-     */
+
     private function nextLevel($courseId, $currentLevelId): ?Level
     {
         $currentLevel = Level::find($currentLevelId);

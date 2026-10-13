@@ -61,15 +61,7 @@ class CsTarget extends Model
 		return $query->where('month', $month);
 	}
 
-	/**
-	 * The standing (permanent) target amount for a CS employee.
-	 *
-	 * The target is set once when the CS is created and applies to EVERY month
-	 * until an admin changes it — it is not per-month. It's stored on the row
-	 * with month = NULL. For backward compatibility with older data that saved
-	 * a month-specific row, we fall back to the most recent month row when no
-	 * standing (NULL) row exists yet.
-	 */
+
 	public static function amountFor($employeeId): float
 	{
 		if (!$employeeId) return 0.0;
@@ -80,7 +72,6 @@ class CsTarget extends Model
 
 		if ($standing !== null) return (float) $standing;
 
-		// Legacy fallback: newest month-specific target, if any.
 		$legacy = static::where('employee_id', $employeeId)
 			->whereNotNull('month')
 			->orderByDesc('month')
@@ -89,7 +80,6 @@ class CsTarget extends Model
 		return (float) ($legacy ?? 0);
 	}
 
-	/** Set/update the standing (permanent) target for a CS employee. */
 	public static function setStanding($employeeId, $amount, $adminId = null): void
 	{
 		static::updateOrCreate(

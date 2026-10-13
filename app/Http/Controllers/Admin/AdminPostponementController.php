@@ -121,8 +121,6 @@ class AdminPostponementController extends Controller
 
         $postponement = Postponement::with('enrollment')->findOrFail($id);
 
-        // Note: the postponement table has no admin_note column — record the
-        // reason in the existing `reason` field instead of a phantom column.
         $existingReason = $postponement->reason ? $postponement->reason . ' | ' : '';
         $postponement->update([
             'status' => 'Expired',

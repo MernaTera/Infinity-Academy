@@ -31,7 +31,7 @@ class PackagesController extends Controller
 
         $latestPerPackage = $enrollments
             ->groupBy(fn($e) => $e->student_id . '-' . $e->package_id)
-            ->map(fn($group) => $group->first()) // already ordered desc by id
+            ->map(fn($group) => $group->first()) 
             ->values();
 
         $studentIds = $latestPerPackage->pluck('student_id')->unique()->filter()->all();

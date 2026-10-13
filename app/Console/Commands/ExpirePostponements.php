@@ -16,10 +16,6 @@ class ExpirePostponements extends Command
     {
         $today = Carbon::today();
 
-        // Only Active postponements can expire. A postponement is overdue once
-        // its expected_return_date is strictly in the past — the student never
-        // came back to resume, so both the postponement and its enrollment are
-        // marked Expired. Money already paid is forfeited (business rule).
         $overdue = Postponement::with('enrollment')
             ->where('status', 'Active')
             ->whereDate('expected_return_date', '<', $today)

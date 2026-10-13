@@ -37,8 +37,6 @@ class UpdatePatchStatuses extends Command
             $this->info("Activated: {$patch->name}");
         }
 
-        // Course instances follow the same rule: once a course's start date
-        // has arrived it becomes Active on its own (across all branches).
         $startedInstances = CourseInstance::withoutGlobalScope('branch')
             ->where('status', 'Upcoming')
             ->whereDate('start_date', '<=', $today)
@@ -50,9 +48,6 @@ class UpdatePatchStatuses extends Command
         }
         $this->info('Activated ' . $startedInstances->count() . ' course instance(s).');
 
-        // Courses whose end date has passed — and that have no non-cancelled
-        // session still to run (postponed courses keep running) — auto-complete
-        // and leave the Active tab (across all branches).
         $endedInstances = CourseInstance::withoutGlobalScope('branch')
             ->where('status', 'Active')
             ->whereDate('end_date', '<', $today)

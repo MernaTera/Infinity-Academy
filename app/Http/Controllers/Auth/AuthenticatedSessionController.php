@@ -11,22 +11,16 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
+
     public function create(): View
     {
         return view('auth.login');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(LoginRequest $request): RedirectResponse
     {
         $credentials = $request->only('email', 'password');
 
-        // 1. Check user exists
         $user = \App\Models\Auth\User::where('email', $credentials['email'])->first();
 
         if (!$user) {
@@ -35,14 +29,12 @@ class AuthenticatedSessionController extends Controller
                 ->withInput($request->only('email'));
         }
 
-        // 2. Check account is active
         if (!$user->is_active) {
             return back()
                 ->withErrors(['email' => 'Your account has been deactivated. Please contact your administrator.'])
                 ->withInput($request->only('email'));
         }
 
-        // 3. Check if account is locked
         if ($user->isLocked()) {
             $remaining = now()->diffInMinutes($user->locked_until, false);
             return back()
@@ -50,7 +42,6 @@ class AuthenticatedSessionController extends Controller
                 ->withInput($request->only('email'));
         }
 
-        // 4. Attempt login
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         if (!Auth::attempt($credentials, $request->boolean('remember'))) {
@@ -69,7 +60,6 @@ class AuthenticatedSessionController extends Controller
                 ->withInput($request->only('email'));
         }
 
-        // 5. Login success — reset failed attempts
         $request->session()->regenerate();
 
         $user->update([
@@ -77,9 +67,6 @@ class AuthenticatedSessionController extends Controller
             'locked_until'    => null,
             'last_login_at'   => now(),
         ]);
-
-        // 6. Redirect based on role (by role, not a hard-coded id, so new roles
-        //    like CS Leader — who lands on the CS dashboard — work correctly).
         return match(true) {
             $user->isAdmin()                     => redirect('/admin/dashboard'),
             $user->isCS(), $user->isCsLeader()   => redirect('/dashboard'),
@@ -89,9 +76,6 @@ class AuthenticatedSessionController extends Controller
         };
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         Auth::guard('web')->logout();

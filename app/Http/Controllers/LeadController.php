@@ -30,9 +30,6 @@ class LeadController extends Controller
         $this->middleware('permission:leads.delete')->only(['destroy']);
     }
 
-    // ─────────────────────────────────────────
-    // Helper
-    // ─────────────────────────────────────────
     private function currentEmployeeId(): int
     {
         $employee = auth()->user()->employee;
@@ -40,11 +37,6 @@ class LeadController extends Controller
         return $employee->employee_id;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | My Leads (Follow-up list)
-    |--------------------------------------------------------------------------
-    */
     public function index()
     {
         $employeeId = $this->currentEmployeeId();
@@ -62,9 +54,6 @@ class LeadController extends Controller
 
         $leads = $this->leadRepository->myLeads($employeeId);
 
-        // Pre-compute which of these leads are awaiting admin installment
-        // approval (one query for the whole page, no N+1). A lead is pending
-        // when its linked student has an enrolment in 'Pending_Approval'.
         $studentIdsOnPage = $leads->pluck('student_id')->filter()->unique()->all();
         $pendingApprovalStudentIds = empty($studentIdsOnPage) ? [] :
             \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
@@ -94,11 +83,6 @@ class LeadController extends Controller
             foreach ($registeredLeads as $lead) {
                 $studentEnrollments = $enrollments->get($lead->student_id, collect());
                 if ($studentEnrollments->isEmpty()) {
-                    // Registered but no active enrolment row yet — only show it if
-                    // the lead is still linked to a student (a genuine in-progress
-                    // registration). A rejected registration has its student_id
-                    // unlinked and every enrolment Cancelled, so it must NOT
-                    // appear here as a phantom row.
                     if ($lead->student_id) {
                         $registeredRows->push(['lead' => $lead, 'enrollment' => null]);
                     }
@@ -113,46 +97,26 @@ class LeadController extends Controller
         return view('leads.index', compact('leads', 'stats', 'registeredRows', 'pendingApprovalStudentIds'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Public Leads
-    |--------------------------------------------------------------------------
-    */
     public function publicLeads()
     {
         $leads = $this->leadRepository->publicLeads();
         return view('leads.public', compact('leads'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Archived Leads
-    |--------------------------------------------------------------------------
-    */
     public function archived()
     {
         $leads = $this->leadRepository->archivedLeads();
         return view('leads.archived', compact('leads'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Create Lead Form
-    |--------------------------------------------------------------------------
-    */
     public function create()
     {
         $courses = CourseTemplate::where('is_active', true)->get();
 
-        // levels & sublevels start empty — JS fetches them dynamically on course/level change
         return view('leads.create', compact('courses'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Store Lead
-    |--------------------------------------------------------------------------
-    */
+ 
     public function store(StoreLeadRequest $request)
     {
         $data = $request->validated();
@@ -165,16 +129,11 @@ class LeadController extends Controller
             ->with('success', 'Lead added successfully.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Edit Lead
-    |--------------------------------------------------------------------------
-    */
+
     public function edit($id)
     {
         $lead    = $this->leadRepository->find($id);
 
-        // A lead awaiting admin installment approval is locked from editing.
         if ($lead->is_pending_approval) {
             return redirect()->route('leads.index')
                 ->with('error', 'This lead is awaiting admin approval and cannot be edited until it is approved or rejected.');
@@ -182,7 +141,6 @@ class LeadController extends Controller
 
         $courses = CourseTemplate::where('is_active', true)->get();
 
-        // Pre-load existing levels/sublevels for edit mode
         $levels    = $lead->interested_course_template_id
             ? Level::where('course_template_id', $lead->interested_course_template_id)->get()
             : collect();
@@ -194,16 +152,10 @@ class LeadController extends Controller
         return view('leads.edit', compact('lead', 'courses', 'levels', 'sublevels'));
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Update Lead
-    |--------------------------------------------------------------------------
-    */
     public function update(Request $request, $id)
     {
         $lead = $this->leadRepository->find($id);
 
-        // Locked while awaiting admin installment approval.
         if ($lead->is_pending_approval) {
             if ($request->expectsJson()) {
                 return response()->json([
@@ -247,10 +199,6 @@ class LeadController extends Controller
         $oldStatus = $lead->status;
         $validated = app(\App\Http\Requests\StoreLeadRequest::class)->validated();
 
-        // "Active Lead" toggle — not a validated field, so apply it here.
-        // Turning it OFF archives the lead (mirrors the auto-archive rule:
-        // Archived + inactive + released); turning it back ON reactivates it
-        // (Archived → Waiting, and re-owned by the current CS if it was freed).
         if ($request->boolean('is_active')) {
             $validated['is_active'] = true;
             if ($lead->status === 'Archived') {
@@ -294,11 +242,7 @@ class LeadController extends Controller
             ->with('success', 'Lead updated successfully.');
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Assign (from public list)
-    |--------------------------------------------------------------------------
-    */
+
     public function assign($id)
     {
         $employeeId = $this->currentEmployeeId();
@@ -329,16 +273,7 @@ class LeadController extends Controller
         return response()->json(['success' => true]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Update Status (inline dropdown)
-    |--------------------------------------------------------------------------
-    */
-    /**
-     * Team Leads (CS Leader / Admin): every lead in the branch, showing the
-     * owning CS, filterable by CS, status and day / week / month / patch.
-     * Branch isolation is automatic (Lead is branch-scoped).
-     */
+ 
     public function teamLeads(Request $request)
     {
         $filterType   = $request->query('filter', 'month');
@@ -401,8 +336,6 @@ class LeadController extends Controller
 
         $lead      = $this->leadRepository->find($request->lead_id);
 
-        // Block status changes while the lead is awaiting admin installment
-        // approval — it's locked until the admin approves or rejects.
         if ($lead->is_pending_approval) {
             return response()->json([
                 'success' => false,
@@ -420,11 +353,7 @@ class LeadController extends Controller
         return response()->json(['success' => true]);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Lead History (AJAX)
-    |--------------------------------------------------------------------------
-    */
+
     public function history($id)
     {
         $history = LeadHistory::where('lead_id', $id)
@@ -509,11 +438,7 @@ class LeadController extends Controller
         return $enriched;
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Delete Lead
-    |--------------------------------------------------------------------------
-    */
+
     public function destroy($id)
     {
         $this->leadRepository->delete($id);

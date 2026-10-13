@@ -62,11 +62,6 @@ class PrivateHoursController extends Controller
                 ? min(100, round(($used / $totalPool) * 100))
                 : 0;
 
-            // State classification:
-            //   depleted → Restricted / no hours left (needs a new bundle)
-            //   leftover → course finished (Completed) but hours remain
-            //   low      → still active but running low (<= 4h)
-            //   active   → healthy
             if ($e->status === 'Postponed') {
                 $state = 'postponed';
             } elseif ($e->status === 'Restricted' || $remaining <= 0) {

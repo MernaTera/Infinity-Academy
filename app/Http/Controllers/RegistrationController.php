@@ -27,11 +27,6 @@ class RegistrationController extends Controller
         $this->registrationService = $registrationService;
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Show Registration Form (from lead)
-    |------------------------------------------------------------------
-    */
     public function createFromLead($lead_id)
     {
         $lead = Lead::findOrFail($lead_id);
@@ -63,10 +58,6 @@ class RegistrationController extends Controller
             $lead->interested_sublevel_id = null;
         }
 
-        // ── Leftover private hours ─────────────────────────────────────
-        // If this lead's student finished previous private courses with hours
-        // still on them, sum those up so the form can carry them into the new
-        // enrolment. The new bundle then becomes optional.
         $leftoverHours = 0;
         if ($lead->student_id) {
             $leftoverHours = (float) \App\Models\Enrollment\Enrollment::where('student_id', $lead->student_id)
@@ -76,11 +67,6 @@ class RegistrationController extends Controller
                 ->sum('hours_remaining');
         }
 
-        // ── Active level package ───────────────────────────────────────
-        // If this lead's student is on a level package with prepaid levels
-        // still remaining, surface it so the form can show that the next
-        // group enrolment is already paid for (free) — mirroring how leftover
-        // private hours are surfaced above.
         $packageInfo = null;
         if ($lead->student_id) {
             $pkgEnrollment = \App\Models\Enrollment\Enrollment::with('levelPackage')
@@ -99,11 +85,6 @@ class RegistrationController extends Controller
             }
         }
 
-        // ── Resume mode ────────────────────────────────────────────────
-        // Arriving with ?resume={postponement_id} (from the CS Postponed board)
-        // pre-fills the form with the postponed enrollment's course/level and
-        // flags the registration as a free resume. The actual state changes
-        // happen server-side in RegistrationService when CS submits.
         $resumeContext = null;
         if ($resumeId = request()->query('resume')) {
             $postponement = \App\Models\Enrollment\Postponement::with([
@@ -134,9 +115,6 @@ class RegistrationController extends Controller
                     'is_group_free'      => strtolower($oldEnr->enrollment_type ?? '') === 'group',
                 ];
 
-                // Default the course/level/sublevel selectors to what was
-                // postponed by overriding the lead's interests in memory (not
-                // saved) — this reuses the form's existing pre-fill + JS.
                 $lead->interested_course_template_id = $oldEnr->course_template_id;
                 $lead->interested_level_id           = $oldEnr->level_id;
                 $lead->interested_sublevel_id        = $oldEnr->sublevel_id;
@@ -165,11 +143,6 @@ class RegistrationController extends Controller
         ));
     }
 
-    /*
-    |------------------------------------------------------------------
-    | Store Registration
-    |------------------------------------------------------------------
-    */
     public function store(Request $request)
     {
         $validator = \Validator::make($request->all(), [
@@ -206,10 +179,6 @@ class RegistrationController extends Controller
                     'final_price.required'             => 'Course price could not be determined. Please re-select the course.',
                 ]);
 
-        // Return validation errors as JSON for ajax (the registration form
-        // submits via fetch expecting JSON); fall back to a redirect otherwise.
-        // Previously a failed validation always redirected (302 → HTML), which
-        // the fetch caller saw as "Response is not JSON".
         $failValidation = function ($errors) use ($request) {
             if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
@@ -225,11 +194,6 @@ class RegistrationController extends Controller
             return $failValidation($validator->errors()->toArray());
         }
 
-        // ── Resume (re-registration of a postponed student) ────────────────
-        // A resume is free — the student already paid before postponing. Force
-        // the price to zero up-front so the deposit/discount checks below are
-        // skipped, and guard against using a free resume to claim a broader or
-        // higher-level placement than was originally paid for.
         if (!empty($request->resume_postponement_id)) {
             $resumePp = \App\Models\Enrollment\Postponement::with('enrollment')
                 ->where('status', 'Active')
@@ -250,7 +214,6 @@ class RegistrationController extends Controller
                 return $failValidation(['level_id' => 'A free resume can only re-register the same (or a narrower) unit than was postponed — pick the level/sublevel the student paid for.']);
             }
 
-            // Cannot advance to a higher level than the postponed one.
             if ($oldEnr->level_id && $request->level_id) {
                 $oldOrder = Level::whereKey($oldEnr->level_id)->value('level_order');
                 $newOrder = Level::whereKey($request->level_id)->value('level_order');
@@ -259,7 +222,6 @@ class RegistrationController extends Controller
                 }
             }
 
-            // Cannot advance to a higher sublevel within the same level.
             if ($oldEnr->sublevel_id && $request->sublevel_id
                 && (int) $oldEnr->level_id === (int) $request->level_id) {
                 $oldS = Sublevel::whereKey($oldEnr->sublevel_id)->value('sublevel_order');
@@ -273,10 +235,6 @@ class RegistrationController extends Controller
         $discountValue = (float) ($request->discount_value ?? 0);
         $finalPriceVal = (float) $request->final_price;
 
-        // ── Level package validation ───────────────────────────────────
-        // A package is billed per unit: by sublevel when the chosen level has
-        // sublevels, otherwise by level. So a package registration must pin
-        // down the exact starting unit (level, and sublevel where applicable).
         if (!empty($request->package_id)) {
             if (strtolower($request->type) !== 'group') {
                 return $failValidation([
@@ -288,7 +246,6 @@ class RegistrationController extends Controller
                     'level_id' => 'Please select the starting level for this package.'
                 ]);
             }
-            // If the selected level has sublevels, a starting sublevel is required.
             $levelHasSublevels = \App\Models\Academic\Sublevel::where('level_id', $request->level_id)->exists();
             if ($levelHasSublevels && empty($request->sublevel_id)) {
                 return $failValidation([
@@ -311,9 +268,6 @@ class RegistrationController extends Controller
         $finalPrice    = (float) $request->final_price;
         $testFee       = (float) $request->test_fee;
 
-        // Material total = sum of the selected materials' real prices (from DB),
-        // supporting multiple materials per course. Falls back to the posted
-        // material_price only if no ids were sent.
         $selectedMaterialIds = collect($request->input('material_ids', []))
             ->map(fn($id) => (int) $id)->filter()->unique();
         if ($selectedMaterialIds->isNotEmpty()) {
@@ -454,12 +408,6 @@ class RegistrationController extends Controller
             }
     }
 
-    /*
-    |------------------------------------------------------------------
-    | AJAX Helpers
-    |------------------------------------------------------------------
-    */
-
     public function getPatchOptions(Request $request)
     {
         $validated = $request->validate([
@@ -502,9 +450,6 @@ class RegistrationController extends Controller
         $levelId    = $request->level_id    ?: null;
         $courseId   = $request->course_template_id ?: null;
 
-        // Return ALL materials assigned at the most specific matching level.
-        // Priority: sublevel → level → course. Within the first level that
-        // has any assignments, return every material (mandatory + optional).
         $materials = collect();
 
         if ($sublevelId) {
@@ -537,7 +482,6 @@ class RegistrationController extends Controller
                 ->get();
         }
 
-        // Normalise types (is_mandatory as bool, price as float)
         $materials = $materials->map(fn($m) => [
             'material_id'  => (int) $m->material_id,
             'name'         => $m->name,
@@ -601,7 +545,6 @@ class RegistrationController extends Controller
         ]);
     }
 
-    //--------------------------------------------------
     public function showInvoice($id)
     {
         $enrollment = \App\Models\Enrollment\Enrollment::with([
@@ -627,8 +570,6 @@ class RegistrationController extends Controller
         return view('registration.invoice-page', compact('enrollment'));
     }
 
-    //--------------------------------------------------
-    // 80mm thermal receipt (cashier printer) — same data as the A4 invoice.
     public function showReceipt($id)
     {
         $enrollment = \App\Models\Enrollment\Enrollment::with([
