@@ -97,7 +97,13 @@
     <div style="background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:#059669;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">{{ session('success') }}</div>
     @endif
     @if(session('error'))
-    <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);color:#DC2626;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">{{ session('error') }}</div>
+    @if($errors->any())
+    <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);color:#DC2626;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">
+        @foreach($errors->all() as $err)
+            <div>{{ $err }}</div>
+        @endforeach
+    </div>
+    @endif
     @endif
 
     <div class="kpi-grid">
@@ -126,7 +132,7 @@
                     $start      = \Carbon\Carbon::parse($patch->start_date);
                     $end        = \Carbon\Carbon::parse($patch->end_date);
                     $today      = now();
-                    $totalDays  = $start->diffInDays($end) ?: 1;
+                    $totalDays  = (int) $start->diffInDays($end) + 1;
                     $elapsed    = max(0, min($totalDays, $start->diffInDays($today)));
                     $pct        = round($elapsed / $totalDays * 100);
                 @endphp

@@ -9,6 +9,7 @@ use App\Models\Academic\TimeSlot;
 use App\Models\Academic\BreakSlot;
 use App\Models\HR\Employee;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class PatchAdminController extends Controller
 {
@@ -48,7 +49,7 @@ class PatchAdminController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'       => 'required|string|max:100|unique:patch,name',
+            'name'       => ['required', 'string', 'max:100', Rule::unique('patch', 'name')->where('branch_id', $request->branch_id)],
             'branch_id'  => 'required|exists:branch,branch_id',
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after:start_date',
@@ -96,7 +97,7 @@ class PatchAdminController extends Controller
         }
 
         $request->validate([
-            'name'       => 'required|string|max:100|unique:patch,name,' . $id . ',patch_id',
+            'name'       => ['required', 'string', 'max:100', Rule::unique('patch', 'name')->where('branch_id', $request->branch_id)->ignore($id, 'patch_id')],
             'branch_id'  => 'required|exists:branch,branch_id',
             'start_date' => 'required|date',
             'end_date'   => 'required|date|after:start_date',
