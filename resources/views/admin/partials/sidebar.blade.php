@@ -225,12 +225,6 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
             <span class="sl-txt">Contract Types</span>
         </a>
-    </div>
-
-    <div class="sb-div"></div>
-
-    <div class="sb-group">
-        <span class="sb-group-label">Financial</span>
         <a href="{{ route('admin.payment-policy.index') }}" data-tip="Payment Plans"
            class="sl {{ request()->routeIs('admin.payment-policy.*') ? 'active' : '' }}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
@@ -251,6 +245,12 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
             <span class="sl-txt">Bundles</span>
         </a>
+    </div>
+
+    <div class="sb-div"></div>
+
+    <div class="sb-group">
+        <span class="sb-group-label">Financial</span>
         <a href="{{ route('admin.outstanding.index') }}" data-tip="Outstanding"
            class="sl {{ request()->routeIs('admin.outstanding.*') ? 'active' : '' }}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>

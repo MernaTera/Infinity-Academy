@@ -368,6 +368,8 @@ class CourseInstanceController extends Controller
                         : Branch::first();
 
         $completedCount = $instance->sessions->where('status', 'Completed')->count();
+        $lastCompletedRaw  = $instance->sessions->where('status', 'Completed')->max('session_date');
+        $lastCompletedDate = $lastCompletedRaw ? \Carbon\Carbon::parse($lastCompletedRaw)->toDateString() : null;
 
         $currentPairs      = $instance->instanceSchedules->pluck('day_of_week')->unique()->values();
         $currentStartTimes = [];
@@ -382,7 +384,7 @@ class CourseInstanceController extends Controller
 
         return view('student-care.course-instances.create', compact(
             'instance', 'templates', 'patches', 'branches', 'rooms', 'breakSlots', 'userBranch',
-            'completedCount', 'currentPairs', 'currentStartTimes', 'currentSingleDays', 'scheduleType'
+            'completedCount', 'lastCompletedDate', 'currentPairs', 'currentStartTimes', 'currentSingleDays', 'scheduleType'
         ));
     }
 
@@ -741,6 +743,7 @@ class CourseInstanceController extends Controller
             'enrollments' => fn($q) => $q->where('status', '!=', 'Cancelled'),
             'enrollments.student.phones',
             'enrollments.installmentSchedules',
+            'enrollments.financialTransactions',
             'sessions',
             'instanceSchedules.timeSlot',
             'enrollments.activePostponement',
@@ -752,7 +755,17 @@ class CourseInstanceController extends Controller
                 ->with('error', 'That course is no longer available — it may have been closed after its last student left.');
         }
 
-        return view('student-care.course-instances.show', compact('instance'));
+        $calculator = app(\App\Services\BalanceCalculator::class);
+        $balanceDue = $instance->enrollments->mapWithKeys(function ($e) use ($calculator) {
+            $open = $e->installmentSchedules->whereIn('status', ['Pending', 'Overdue'])->isNotEmpty();
+            $remaining = $calculator->getRemaining($e);
+            return [$e->enrollment_id => [
+                'blocked'   => $open || $remaining > 0,
+                'remaining' => $remaining,
+            ]];
+        });
+
+        return view('student-care.course-instances.show', compact('instance', 'balanceDue'));
     }
 
     public function getTeachersByCourse($courseId)
@@ -1219,6 +1232,16 @@ class CourseInstanceController extends Controller
 
         if (!in_array($enrollment->status, ['Active', 'Restricted'], true)) {
             return back()->with('error', 'Only an active enrollment can be postponed.');
+        }
+
+        $enrollment->loadMissing(['financialTransactions', 'installmentSchedules']);
+        $hasOpenInstallments = $enrollment->installmentSchedules
+            ->whereIn('status', ['Pending', 'Overdue'])
+            ->isNotEmpty();
+        $remainingBalance = app(\App\Services\BalanceCalculator::class)->getRemaining($enrollment);
+
+        if ($hasOpenInstallments || $remainingBalance > 0) {
+            return back()->with('error', 'Postponement is allowed only after full payment. Remaining balance: ' . number_format($remainingBalance, 2) . ' AED.');
         }
 
         $instanceId   = $enrollment->course_instance_id;

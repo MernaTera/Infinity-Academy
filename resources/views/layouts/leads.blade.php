@@ -20,5 +20,6 @@
         </div>
     </div>
     @include('partials.realtime-notifications')
+    @include('partials.form-lock')
 </body>
 </html>

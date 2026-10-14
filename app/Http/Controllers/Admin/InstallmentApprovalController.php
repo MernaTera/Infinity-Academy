@@ -237,18 +237,28 @@ class InstallmentApprovalController extends Controller
 
             $rejectedStudentId = $enrollment->student_id;
 
+            $hasOtherEnrollments = $rejectedStudentId
+                && Enrollment::withoutGlobalScope('branch')
+                    ->where('student_id', $rejectedStudentId)
+                    ->where('enrollment_id', '!=', $enrollmentId)
+                    ->exists();
+
             $studentName = $enrollment->student?->full_name ?? 'student';
             $lead = Lead::where('student_id', $enrollment->student_id)->first();
             if ($lead) {
                 $studentName = $lead->full_name;
-                $lead->update([
-                    'student_id' => null,
-                    'status'     => 'Call_Again',
+                if (!$hasOtherEnrollments) {
+                    $lead->update([
+                        'student_id' => null,
+                        'status'     => 'Call_Again',
+                    ]);
+                }
+            }
+            if (!$hasOtherEnrollments) {
+                $enrollment->student?->update([
+                    'is_active' => false,
                 ]);
             }
-            $enrollment->student?->update([
-                'is_active' => false,
-            ]);
 
             $log->update([
                 'status'               => 'Rejected',
@@ -279,24 +289,7 @@ class InstallmentApprovalController extends Controller
                     $enrollmentId
                 );
             }
-            $leadEnrollment = \App\Models\Enrollment\Enrollment::with('student')->find($enrollmentId);
-            $lead = $leadEnrollment?->lead_id 
-                ? \App\Models\Leads\Lead::find($leadEnrollment->lead_id)
-                : \App\Models\Leads\Lead::where('student_id', $leadEnrollment?->student_id)->first();
-
-            if ($lead) {
-                $courseName = $leadEnrollment?->courseTemplate?->name 
-                    ?? \App\Models\Academic\CourseTemplate::find($leadEnrollment?->course_template_id)?->name 
-                    ?? 'course';
-
-                \App\Services\LeadActivityLogger::for($lead)
-                    ->action('Note_Added')
-                    ->reason("Admin declined installment plan for \"{$courseName}\" (Enrollment #{$enrollmentId})")
-                    ->notes("Rejection reason: {$request->reason}")
-                    ->record();
-            }
-
-            if ($rejectedStudentId) {
+            if ($rejectedStudentId && !$hasOtherEnrollments) {
                 \App\Models\Student\Student::withoutGlobalScope('branch')
                     ->where('student_id', $rejectedStudentId)
                     ->delete();

@@ -18,6 +18,6 @@
     <div class="main">
         @yield('content')
     </div>
-
+    @include('partials.form-lock')
 </body>
 </html>

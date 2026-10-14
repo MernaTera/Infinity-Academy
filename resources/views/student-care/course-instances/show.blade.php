@@ -102,6 +102,13 @@
 
 <div class="ci-show">
 
+    @if(session('error'))
+    <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.15);color:#DC2626;padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:13px">{{ session('error') }}</div>
+    @endif
+    @if(session('success'))
+    <div style="background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);color:#059669;padding:12px 16px;border-radius:10px;margin-bottom:18px;font-size:13px">{{ session('success') }}</div>
+    @endif
+
     <div class="page-header">
         <div>
             <div class="page-eyebrow">Course Instance</div>
@@ -296,7 +303,14 @@
 
                         <td>
                             <div style="display:flex;gap:6px;flex-wrap:wrap">
-                                @if($enrollment->status === 'Active')
+                                @php $due = $balanceDue[$enrollment->enrollment_id] ?? ['blocked' => false, 'remaining' => 0]; @endphp
+                                @if(in_array($enrollment->status, ['Active', 'Restricted']) && $due['blocked'])
+                                <span title="Postponement requires full payment. Remaining: {{ number_format($due['remaining'], 2) }} AED"
+                                    style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px dashed rgba(122,138,154,0.35);background:transparent;color:#AAB8C8;cursor:not-allowed;font-family:'DM Sans',sans-serif">
+                                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    Postpone
+                                </span>
+                                @elseif($enrollment->status === 'Active')
                                 <button onclick="openPostponeModal({{ $enrollment->enrollment_id }}, '{{ addslashes($enrollment->student?->full_name) }}')"
                                     style="display:inline-flex;align-items:center;gap:4px;padding:5px 11px;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;border-radius:3px;border:1px solid rgba(245,145,30,0.25);background:transparent;color:#C47010;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s"
                                     onmouseover="this.style.background='rgba(245,145,30,0.07)'"

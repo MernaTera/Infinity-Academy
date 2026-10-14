@@ -428,6 +428,18 @@ input[name="schedule_type"]:checked + .stype-card > div:first-child{color:var(--
 </div>
 
 <script>
+var EDIT_PROGRESS = {!! json_encode(isset($instance) ? ['completed' => (int) ($completedCount ?? 0), 'last_completed' => $lastCompletedDate ?? null] : null) !!};
+
+function editDoneCount() {
+    return (EDIT_PROGRESS && EDIT_PROGRESS.completed) ? EDIT_PROGRESS.completed : 0;
+}
+function editGenStart(startDate) {
+    if (!startDate || !EDIT_PROGRESS || !EDIT_PROGRESS.last_completed) return startDate;
+    const d = new Date(EDIT_PROGRESS.last_completed + 'T00:00:00');
+    d.setDate(d.getDate() + 1);
+    const after = toLocalDateStr(d);
+    return after > startDate ? after : startDate;
+}
 let _breakSlots   = @json($breakSlots ?? []);
 let _previewTimer = null;
 let _contractInfo = null;
@@ -1016,10 +1028,19 @@ function recalculate() {
         document.getElementById('sum-hours').textContent       = totalHours + ' hrs';
         evaluateContractAlert();
 
+        const done = editDoneCount();
+        if (done > 0) {
+            const left = Math.max(0, sessions - done);
+            document.getElementById('sum-sessions').textContent = `${sessions} sessions (${Math.min(done, sessions)} done · ${left} to schedule)`;
+        }
+
         const pairs     = getCheckedPairs();
         const startDate = document.getElementById('ci_start_date').value;
         if (pairs.length && startDate) {
-            const endDate = calcEndDate(startDate, pairs, sessions);
+            const left    = Math.max(0, sessions - done);
+            const endDate = (done > 0)
+                ? (left > 0 ? calcEndDate(editGenStart(startDate), pairs, left) : EDIT_PROGRESS.last_completed)
+                : calcEndDate(startDate, pairs, sessions);
             document.getElementById('ci_end_date').value   = endDate;
             document.getElementById('sum-end').textContent = formatDate(endDate);
             const pe = document.getElementById('prev-end');
@@ -1085,16 +1106,26 @@ async function fetchPreview() {
         return;
     }
 
-    const sessions = Math.ceil(totalHours / sessionDur);
-    const endDate  = calcEndDate(startDate, pairs, sessions);
+    const sessions  = Math.ceil(totalHours / sessionDur);
+    const done      = editDoneCount();
+    const left      = Math.max(0, sessions - done);
+    const genStart  = done > 0 ? editGenStart(startDate) : startDate;
+    const endDate   = done > 0
+        ? (left > 0 ? calcEndDate(genStart, pairs, left) : EDIT_PROGRESS.last_completed)
+        : calcEndDate(startDate, pairs, sessions);
+    const firstDate = done > 0
+        ? (left > 0 ? calcEndDate(genStart, pairs, 1) : '')
+        : startDate;
     const [h,m]    = startTime.split(':').map(Number);
     const endMins  = h*60 + m + sessionDur*60;
     const endTime  = `${String(Math.floor(endMins/60)).padStart(2,'0')}:${String(endMins%60).padStart(2,'0')}`;
 
-    document.getElementById('prev-sessions').textContent = sessions + ' sessions';
+    document.getElementById('prev-sessions').textContent = done > 0
+        ? `${left} to schedule (${Math.min(done, sessions)} done)`
+        : sessions + ' sessions';
     document.getElementById('prev-time').textContent     = `${startTime} → ${endTime}`;
-    document.getElementById('prev-first').textContent    = formatDate(startDate);
-    document.getElementById('prev-last').textContent     = formatDate(endDate);
+    document.getElementById('prev-first').textContent    = formatDate(firstDate);
+    document.getElementById('prev-last').textContent     = formatDate(left > 0 || done === 0 ? endDate : '');
     document.getElementById('prev-end').textContent      = formatDate(endDate);
     document.getElementById('previewSection').style.display = 'block';
 
@@ -1114,7 +1145,7 @@ async function fetchPreview() {
                 method: 'POST',
                 headers: { 'Content-Type':'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
                 body: JSON.stringify({
-                    teacher_id:teacherId, start_date:startDate, end_date:endDate,
+                    teacher_id:teacherId, start_date:genStart, end_date:endDate,
                     day_of_week:pairs, start_time:startTime, session_duration:sessionDur,
                     schedule_type: stype, single_days: singleDaysPayload,
                     exclude_instance_id: (typeof EDIT_INSTANCE_ID !== 'undefined' ? EDIT_INSTANCE_ID : null)

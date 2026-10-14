@@ -338,14 +338,10 @@
         </div>
 
         <div class="amgroup" data-group>
-            <button class="amgroup-head" onclick="toggleAmGroup(this)">Sales Control
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Monitoring
                 <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
             </button>
             <div class="amgroup-body">
-                <a href="{{ route('sales.index') }}" class="amobile-nav-link {{ request()->routeIs('sales.*') ? 'active' : '' }}" data-label="Sales Table">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-                    <span class="amobile-nav-link-text">Sales Table</span>
-                </a>
                 <a href="{{ route('outstanding.index') }}" class="amobile-nav-link {{ request()->routeIs('outstanding.*') ? 'active' : '' }}" data-label="Outstanding">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     <span class="amobile-nav-link-text">Outstanding</span>
@@ -386,7 +382,17 @@
             </div>
         </div>
         @endcando
-
+        <div class="amgroup" data-group>
+            <button class="amgroup-head" onclick="toggleAmGroup(this)">Sales Control
+                <svg class="amgroup-chevron" width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+            </button>
+            <div class="amgroup-body">
+                <a href="{{ route('sales.index') }}" class="amobile-nav-link {{ request()->routeIs('sales.*') ? 'active' : '' }}" data-label="Sales Table">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                    <span class="amobile-nav-link-text">Sales Table</span>
+                </a>
+            </div>
+        </div>
         @if(auth()->user()?->isCsLeader())
         <div class="amgroup" data-group>
             <button class="amgroup-head" onclick="toggleAmGroup(this)">Team

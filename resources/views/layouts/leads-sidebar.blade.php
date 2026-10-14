@@ -239,14 +239,10 @@
 
         <div class="sb-section">
             <div class="sb-section-header" onclick="toggleSection(this)">
-                <span class="sb-section-label">Sales</span>
+                <span class="sb-section-label">Monitoring</span>
                 <svg class="sb-section-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
             </div>
             <div class="sb-section-body">
-                <a href="{{ route('sales.index') }}" class="sl-link {{ request()->routeIs('sales.*') ? 'active' : '' }}" data-label="Sales Table">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
-                    <span class="sl-link-text">Sales Table</span>
-                </a>
                 <a href="{{ route('outstanding.index') }}" class="sl-link {{ request()->routeIs('outstanding.*') ? 'active' : '' }}" data-label="Outstanding">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                     <span class="sl-link-text">Outstanding</span>
@@ -299,7 +295,19 @@
             </div>
         </div>
         @endcando
-
+        
+        <div class="sb-section">
+            <div class="sb-section-header" onclick="toggleSection(this)">
+                <span class="sb-section-label">Sales</span>
+                <svg class="sb-section-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+            </div>
+            <div class="sb-section-body">
+                <a href="{{ route('sales.index') }}" class="sl-link {{ request()->routeIs('sales.*') ? 'active' : '' }}" data-label="Sales Table">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+                    <span class="sl-link-text">Sales Table</span>
+                </a>
+            </div>
+        </div>
         @if(auth()->user()?->isCsLeader())
         <div class="sb-section">
             <div class="sb-section-header" onclick="toggleSection(this)">
