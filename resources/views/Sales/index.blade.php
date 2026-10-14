@@ -282,9 +282,13 @@
                             </td>
                             <td class="num money">{{ number_format($row['material']) }} LE</td>
                                                         <td>
-                                <span class="badge {{ $row['material'] > 0 ? 'badge-shared' : 'badge-direct' }}">
-                                    {{ $row['material'] > 0 ? 'Shared' : 'Direct' }}
+                                @if(!empty($row['material_type']))
+                                <span class="badge {{ $row['material_type'] === 'Individual' ? 'badge-direct' : 'badge-shared' }}">
+                                    {{ $row['material_type'] }}
                                 </span>
+                                @else
+                                <span style="color:var(--faint);">—</span>
+                                @endif
                             </td>
                             <td class="num total">{{ number_format($row['total']) }} LE</td>
                             <td style="color:var(--faint);font-size:11px;white-space:nowrap;">{{ $row['date'] }}</td>

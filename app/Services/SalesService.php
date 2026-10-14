@@ -162,8 +162,12 @@ class SalesService
                                 ->filter(fn($r) => $r->financialTransaction?->transaction_category === 'Test')
                                 ->sum('amount_allocated');
 
-                $material = $splits->filter(fn($r) => $r->financialTransaction?->transaction_category === 'Material')
-                                ->sum('amount_allocated');
+                $materialSplits = $splits->filter(fn($r) => $r->financialTransaction?->transaction_category === 'Material');
+                $material       = $materialSplits->sum('amount_allocated');
+                $materialTypes  = $materialSplits->pluck('allocation_type')->unique();
+                $materialType   = $materialSplits->isEmpty()
+                    ? null
+                    : ($materialTypes->count() > 1 ? 'Mixed' : ($materialTypes->first() === 'Shared' ? 'Shared' : 'Individual'));
 
                 return [
                     'student_name' => $enrollment?->student?->full_name ?? '—',
@@ -171,6 +175,7 @@ class SalesService
                     'deposit'      => $deposit,
                     'test_fee'     => $testFee,   
                     'material'     => $material,
+                    'material_type' => $materialType,
                     'total'        => $splits->sum('amount_allocated'),
                     'date'         => $first->created_at?->format('d M Y'),
                 ];

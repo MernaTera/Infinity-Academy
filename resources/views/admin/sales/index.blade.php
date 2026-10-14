@@ -498,9 +498,13 @@
                             </td>
                             <td class="num money">{{ number_format($rev['material']) }} LE</td>
                             <td>
-                                <span class="rev-badge {{ $rev['material'] > 0 ? 'rev-badge-shared' : 'rev-badge-direct' }}">
-                                    {{ $rev['material'] > 0 ? 'Shared' : 'Direct' }}
+                                @if(!empty($rev['material_type']))
+                                <span class="rev-badge {{ $rev['material_type'] === 'Individual' ? 'rev-badge-direct' : 'rev-badge-shared' }}">
+                                    {{ $rev['material_type'] }}
                                 </span>
+                                @else
+                                <span style="color:var(--faint);">&mdash;</span>
+                                @endif
                             </td>
                             <td class="num total">{{ number_format($rev['total']) }} LE</td>
                             <td style="color:var(--faint);font-size:11px;white-space:nowrap;">{{ $rev['date'] }}</td>
@@ -544,8 +548,10 @@ function revRenderRows(rows){
     if(!rows||!rows.length){return '<tr><td colspan="8"><div class="rev-empty">No revenue recorded for this period.</div></td></tr>';}
     return rows.map(function(r){
         var testCell = (Number(r.test_fee)>0) ? (revFmt(r.test_fee)+' LE') : '<span style="color:var(--faint);">&mdash;</span>';
-        var shared = Number(r.material)>0;
-        var badge = '<span class="rev-badge '+(shared?'rev-badge-shared':'rev-badge-direct')+'">'+(shared?'Shared':'Direct')+'</span>';
+        var mType = r.material_type || '';
+        var badge = mType
+            ? '<span class="rev-badge '+(mType==='Individual'?'rev-badge-direct':'rev-badge-shared')+'">'+revEsc(mType)+'</span>'
+            : '<span style="color:var(--faint);">&mdash;</span>';
         var initial = revEsc(String(r.student_name||'-').charAt(0).toUpperCase());
         return '<tr>'+
             '<td><div class="rev-std"><div class="rev-std-avatar">'+initial+'</div><span class="rev-std-name">'+revEsc(r.student_name)+'</span></div></td>'+
