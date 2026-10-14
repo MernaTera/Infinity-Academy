@@ -124,10 +124,29 @@ class RegistrationService
                 $data['_resume_package_units'] = $oldEnr->package_units_remaining;
             }
 
-            $pricing        = app(\App\Services\PricingService::class)->calculate($data);
+            $pricing       = app(\App\Services\PricingService::class)->calculate($data);
+            $expectedPrice = (float) $pricing['final_price'];
+            if (!empty($data['package_id'])) {
+                $package = \App\Models\Finance\LevelPackage::where('is_active', true)->find($data['package_id']);
+                if (!$package) {
+                    throw new BusinessValidationException('The selected package is no longer available. Please refresh the page and try again.');
+                }
+                $expectedPrice = (float) $package->package_price;
+            }
+
             $formFinalPrice = (float) ($data['final_price'] ?? 0);
-            if ($formFinalPrice > 0) {
-                $pricing['final_price'] = $formFinalPrice;
+            if ($formFinalPrice > 0 && abs($formFinalPrice - $expectedPrice) > 0.01) {
+                throw new BusinessValidationException('The course price has changed. Please refresh the page and try again.');
+            }
+            $pricing['final_price'] = $expectedPrice;
+
+            $formTestFee = floatval($data['test_fee'] ?? 0);
+            if ($formTestFee > 0) {
+                $testFeeSetting = \App\Models\Finance\TestFeeSetting::where('is_active', true)
+                    ->find($data['test_fee_setting_id'] ?? null);
+                if (!$testFeeSetting || abs((float) $testFeeSetting->fee - $formTestFee) > 0.01) {
+                    throw new BusinessValidationException('The placement test fee is invalid. Please refresh the page and try again.');
+                }
             }
             if (!empty($data['_pkg_continue_from'])) {
                 $pricing['final_price'] = 0;
