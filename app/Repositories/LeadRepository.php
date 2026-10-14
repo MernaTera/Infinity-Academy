@@ -18,7 +18,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
         return $this->model
             ->with(['courseTemplate','level','sublevel','owner'])
             ->latest()
-            ->paginate(20);
+            ->paginate(25);
     }
 
     public function find($id)
@@ -54,7 +54,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             ->orWhere('phone','LIKE',"%$term%")
             ->orWhere('location','LIKE',"%$term%")
             ->latest()
-            ->paginate(20);
+            ->paginate(25);
     }
 
     public function myLeads(int $employeeId)
@@ -65,7 +65,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             ->ownedBy($employeeId)
             ->active()
             ->latest()
-            ->paginate(20);
+            ->paginate(25);
     }
 
     public function publicLeads()
@@ -75,7 +75,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             ->whereNull('owner_cs_id')
             ->where('is_active', true)
             ->latest()
-            ->paginate(20);
+            ->paginate(25);
     }
 
     public function archivedLeads()
@@ -85,7 +85,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             ->where('status', 'Archived')
             ->where('is_active', false)
             ->latest()
-            ->paginate(20);
+            ->paginate(25);
     }
 
     public function dueCalls()
@@ -94,7 +94,7 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             ->dueCalls()
             ->active()
             ->latest()
-            ->paginate(20);
+            ->paginate(25);
     }
 
     public function releaseExpiredLeads()

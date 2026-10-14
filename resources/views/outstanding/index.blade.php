@@ -190,11 +190,10 @@
         </div>
     </div>
 
-    @php $activeRows = $rows->where('is_finished', false); @endphp
 <div id="mainTableSection">
     <div class="sec-lbl">
         <span>Outstanding Balances</span>
-        <span class="sec-lbl-count">{{ $activeRows->count() }}</span>
+        <span class="sec-lbl-count">{{ $activeRows->total() }}</span>
     </div>
 
     <div class="tbl-card">
@@ -214,7 +213,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                @forelse($rows->where('is_finished', false) as $row)
+                @forelse($activeRows as $row)
                 @php
                     $pct      = $row['total'] > 0 ? min(100, round(($row['paid']/$row['total'])*100)) : 0;
                     $barColor = $pct >= 80 ? '#059669' : ($pct >= 40 ? '#1B4FA8' : '#F5911E');
@@ -395,10 +394,10 @@
             </table>
         </div>
     </div>
+    {{ $activeRows->links() }}
 </div>
 
-    @php $finishedRows = $rows->where('is_finished', true); @endphp
-    @if($finishedRows->count())
+    @if($finishedRows->total())
     <div class="fin-section" id="finishedSection" style="display:none">
 
         <div class="fin-banner glass">
@@ -406,14 +405,14 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <div class="fin-banner-text">
-                <strong>{{ $finishedRows->count() }} enrollment{{ $finishedRows->count() > 1 ? 's' : '' }}</strong>
+                <strong>{{ $finishedRows->total() }} enrollment{{ $finishedRows->total() > 1 ? 's' : '' }}</strong>
                 fully settled — all payments received and reconciled.
             </div>
         </div>
 
         <div class="sec-lbl">
             <span>Fully Paid</span>
-            <span class="sec-lbl-count">{{ $finishedRows->count() }}</span>
+            <span class="sec-lbl-count">{{ $finishedRows->total() }}</span>
         </div>
 
         <div class="tbl-card">
@@ -479,6 +478,7 @@
                 </table>
             </div>
         </div>
+        {{ $finishedRows->links() }}
 
     </div>
     @endif
@@ -526,6 +526,13 @@
 let currentFilter = '';
 const searchInput = document.getElementById('searchInput');
 searchInput.addEventListener('input', applyFilters);
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (new URLSearchParams(window.location.search).has('finished_page')) {
+        const finBtn = document.querySelector('.pill[onclick*="finished"]');
+        if (finBtn) setFilter('finished', finBtn);
+    }
+});
 
 function setFilter(status, btn) {
     currentFilter = status;

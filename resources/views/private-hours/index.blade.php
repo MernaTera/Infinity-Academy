@@ -175,7 +175,7 @@
         </div>
 
         
-        <span class="sec-label">{{ $rows->count() }} {{ Str::plural('Student', $rows->count()) }}</span>
+        <span class="sec-label">{{ $rows->total() }} {{ Str::plural('Student', $rows->total()) }}</span>
         <div class="tbl-card">
             <div class="tbl-scroll">
                 <table class="tbl">
@@ -274,6 +274,7 @@
                 </table>
             </div>
         </div>
+        {{ $rows->links() }}
 
     </div>
 </div>

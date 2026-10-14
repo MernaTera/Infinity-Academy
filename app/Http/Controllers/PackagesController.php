@@ -92,6 +92,7 @@ class PackagesController extends Controller
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
 
+        $rows   = \App\Support\PaginateCollection::make($rows, 25);
         $canAct = auth()->user()?->worksCs() ?? false;
 
         return view('packages-tracking.index', compact('rows', 'stats', 'stateFilter', 'canAct'));

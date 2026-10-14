@@ -104,6 +104,7 @@ class PrivateHoursController extends Controller
         if (in_array($stateFilter, ['active', 'low', 'depleted', 'leftover', 'postponed'])) {
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
+        $rows   = \App\Support\PaginateCollection::make($rows, 25);
         $canAct = auth()->user()?->worksCs() ?? false;
 
         $bundles = PrivateBundle::active()->orderBy('hours')->get();

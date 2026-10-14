@@ -32,6 +32,7 @@ use App\Models\Enrollment\RestrictionLog;
 use App\Models\Auth\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\View;
+use Illuminate\Pagination\Paginator;
 
 use App\Http\Controllers\Admin\PaymentPolicyController;
 use App\Http\Controllers\Admin\InstallmentApprovalController;
@@ -49,6 +50,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        Paginator::defaultView('partials.pagination');
+
         \Illuminate\Support\Facades\Blade::if('cando', function (string $permission) {
             return auth()->check() && auth()->user()->canDo($permission);
         });

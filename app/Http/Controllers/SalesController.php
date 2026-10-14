@@ -29,6 +29,16 @@ class SalesController extends Controller
 
         $data = $this->salesService->getSalesData($employee, null, $filterType, $month, $day);
 
+        $allRows = collect($data['revenueRows'] ?? []);
+        $data['revenueTotals'] = [
+            'count'    => $allRows->count(),
+            'deposit'  => $allRows->sum('deposit'),
+            'test_fee' => $allRows->sum('test_fee'),
+            'material' => $allRows->sum('material'),
+            'total'    => $allRows->sum('total'),
+        ];
+        $data['revenueRows'] = \App\Support\PaginateCollection::make($allRows, 25);
+
         return view('sales.index', array_merge($data, [
             'employee'   => $employee,
             'filterType' => $filterType,

@@ -25,6 +25,10 @@ class OutstandingController extends Controller
 
         $data = $this->outstandingService->getOutstandingData($employee);
 
+        $allRows = collect($data['rows'] ?? []);
+        $data['activeRows']   = \App\Support\PaginateCollection::make($allRows->where('is_finished', false), 25, 'page', ['finished_page']);
+        $data['finishedRows'] = \App\Support\PaginateCollection::make($allRows->where('is_finished', true), 25, 'finished_page', ['page']);
+
         return view('outstanding.index', array_merge($data, [
             'employee' => $employee,
         ]));

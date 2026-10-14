@@ -305,15 +305,15 @@
                         </tr>
                         @endforelse
                     </tbody>
-                    @if($revenueRows->count() > 0)
+                    @if($revenueTotals['count'] > 0)
                     <tfoot>
                         <tr>
-                            <td colspan="2" class="tfoot-label">Total ({{ $revenueRows->count() }} {{ Str::plural('student', $revenueRows->count()) }})</td>
-                            <td class="num tfoot-num">{{ number_format($revenueRows->sum('deposit')) }} LE</td>
-                            <td class="num tfoot-num">{{ number_format($revenueRows->sum('test_fee')) }} LE</td>
-                            <td class="num tfoot-num">{{ number_format($revenueRows->sum('material')) }} LE</td>
+                            <td colspan="2" class="tfoot-label">Total ({{ $revenueTotals['count'] }} {{ Str::plural('student', $revenueTotals['count']) }})</td>
+                            <td class="num tfoot-num">{{ number_format($revenueTotals['deposit']) }} LE</td>
+                            <td class="num tfoot-num">{{ number_format($revenueTotals['test_fee']) }} LE</td>
+                            <td class="num tfoot-num">{{ number_format($revenueTotals['material']) }} LE</td>
                             <td class="num tfoot-num"></td>
-                            <td class="num tfoot-total">{{ number_format($revenueRows->sum('total')) }} LE</td>
+                            <td class="num tfoot-total">{{ number_format($revenueTotals['total']) }} LE</td>
                             <td colspan="2"></td>
                         </tr>
                     </tfoot>
@@ -321,6 +321,7 @@
                 </table>
             </div>
         </div>
+        {{ $revenueRows->links() }}
 
         <span class="sec-label">
             @if($filterType === 'day')
