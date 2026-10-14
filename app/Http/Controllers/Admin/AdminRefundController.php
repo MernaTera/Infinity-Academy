@@ -24,6 +24,7 @@ class AdminRefundController extends Controller
             'requestedBy',
             'approvedBy',
         ])
+        ->whereHas('enrollment')
         ->latest()
         ->get();
 
@@ -44,7 +45,7 @@ class AdminRefundController extends Controller
             'enrollment.installmentSchedules',
             'enrollment.student',
             'enrollment',
-        ])->findOrFail($id);
+        ])->whereHas('enrollment')->findOrFail($id);
 
         if ($refund->status !== 'Pending') {
             return back()->with('error', 'Request is not pending.');
@@ -125,7 +126,7 @@ class AdminRefundController extends Controller
     {
         $request->validate(['reason' => 'required|string|min:5']);
 
-        $refund = RefundRequest::findOrFail($id);
+        $refund = RefundRequest::whereHas('enrollment')->findOrFail($id);
 
         if ($refund->status !== 'Pending') {
             return back()->with('error', 'Request is not pending.');
