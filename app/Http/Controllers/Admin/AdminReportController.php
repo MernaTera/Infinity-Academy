@@ -82,14 +82,14 @@ class AdminReportController extends Controller
             'teacher.employee',
             'reportScores',
             'approvedBy',
-        ])->findOrFail($id);
+        ])->whereHas('enrollment')->findOrFail($id);
 
         return view('admin.reports.show', compact('report'));
     }
 
     public function approve(Request $request, $id)
     {
-        $report = Report::with(['teacher.employee', 'enrollment.student'])->findOrFail($id);
+        $report = Report::with(['teacher.employee', 'enrollment.student'])->whereHas('enrollment')->findOrFail($id);
 
         if ($report->status !== 'Submitted') {
             return back()->with('error', 'Report is not in submitted state.');
@@ -119,7 +119,7 @@ class AdminReportController extends Controller
     {
         $request->validate(['reason' => 'required|string|min:3']);
 
-        $report = Report::with(['teacher.employee', 'enrollment.student'])->findOrFail($id);
+        $report = Report::with(['teacher.employee', 'enrollment.student'])->whereHas('enrollment')->findOrFail($id);
 
         if ($report->status !== 'Submitted') {
             return back()->with('error', 'Report is not in submitted state.');

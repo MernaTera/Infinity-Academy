@@ -12,6 +12,7 @@ class AuditController extends Controller
     public function index(Request $request)
     {
         $query = AuditLog::with('employee.user')
+            ->where(fn($q) => $q->whereHas('employee')->orWhereNull('changed_by'))
             ->orderByDesc('created_at');
 
         if ($request->filled('table')) {
@@ -46,15 +47,17 @@ class AuditController extends Controller
 
         $logs = $query->paginate(50)->withQueryString();
 
+        $scoped = fn() => AuditLog::where(fn($q) => $q->whereHas('employee')->orWhereNull('changed_by'));
+
         $stats = [
-            'total'   => AuditLog::count(),
-            'today'   => AuditLog::whereDate('created_at', today())->count(),
-            'creates' => AuditLog::where('action_type', 'Create')->count(),
-            'updates' => AuditLog::where('action_type', 'Update')->count(),
-            'deletes' => AuditLog::where('action_type', 'Delete')->count(),
+            'total'   => $scoped()->count(),
+            'today'   => $scoped()->whereDate('created_at', today())->count(),
+            'creates' => $scoped()->where('action_type', 'Create')->count(),
+            'updates' => $scoped()->where('action_type', 'Update')->count(),
+            'deletes' => $scoped()->where('action_type', 'Delete')->count(),
         ];
 
-        $tables    = AuditLog::distinct()->pluck('table_name')->sort()->values();
+        $tables    = $scoped()->distinct()->pluck('table_name')->sort()->values();
         $employees = Employee::with('user')->orderBy('full_name')->get();
 
         return view('admin.audit.index', compact('logs', 'stats', 'tables', 'employees'));

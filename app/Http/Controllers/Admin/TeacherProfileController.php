@@ -20,7 +20,7 @@ class TeacherProfileController extends Controller
             'employee.user',
             'employee.branch',
             'englishLevel',
-        ])->findOrFail($id);
+        ])->whereHas('employee')->findOrFail($id);
 
         $employee = $teacher->employee;
 

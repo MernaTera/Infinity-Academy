@@ -79,6 +79,7 @@ class AdminDashboardController extends Controller
         });
 
         $totalRefunded = RefundRequest::where('status', 'Approved')
+            ->whereHas('enrollment')
             ->when($from, fn($q) => $q->whereBetween('approved_at', [$from, $to]))
             ->sum('amount');
 
