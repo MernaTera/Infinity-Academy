@@ -65,7 +65,10 @@ class InstallmentApprovalController extends Controller
             $enrollment    = $log->enrollment;
             $plan          = $log->paymentPlan;
 
-            $enrollment->update(['status' => 'Active']);
+            $waitingMeta = $log->waiting_list_meta ? json_decode($log->waiting_list_meta, true) : null;
+            $isCurrentPatch = !$waitingMeta || ($waitingMeta['preferred_type'] ?? null) === 'Current_Patch';
+
+            $enrollment->update(['status' => $isCurrentPatch ? 'Active' : 'Waiting']);
 
             $remaining      = $enrollment->final_price * (1 - $plan->deposit_percentage / 100);
             $installmentAmt = $plan->installment_count > 0
@@ -134,7 +137,6 @@ class InstallmentApprovalController extends Controller
                 'approved_at'          => now(),
             ]);
 
-            $waitingMeta = $log->waiting_list_meta ? json_decode($log->waiting_list_meta, true) : null;
             if ($waitingMeta) {
                 $waiting = \App\Models\Enrollment\WaitingList::create([
                     'enrollment_id'           => $enrollment->enrollment_id,
@@ -143,7 +145,7 @@ class InstallmentApprovalController extends Controller
                     'preferred_delivery_type' => $waitingMeta['preferred_delivery_type'] ?? null,
                     'preferred_delivery_mood' => $waitingMeta['preferred_delivery_mood'] ?? null,
                     'preferred_start_date'    => $waitingMeta['preferred_start_date']    ?? null,
-                    'status'                  => 'Active',
+                    'status'                  => ($isCurrentPatch && !empty($enrollment->course_instance_id)) ? 'Assigned' : 'Active',
                     'notes'                   => $waitingMeta['notes']                   ?? null,
                     'created_by_cs_id'        => $log->request_by_cs_id,
                 ]);
