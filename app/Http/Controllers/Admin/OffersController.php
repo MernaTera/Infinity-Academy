@@ -48,21 +48,9 @@ class OffersController extends Controller
             'course_ids.*'      => 'exists:course_template,course_template_id',
         ]);
 
-        foreach ($request->course_ids as $courseId) {
-            $overlap = DB::table('offer')
-                ->join('offer_course_template', 'offer.offer_id', '=', 'offer_course_template.offer_id')
-                ->where('offer_course_template.course_template_id', $courseId)
-                ->when(BranchContext::currentBranchId() !== null, fn($q) => $q->where('offer.branch_id', BranchContext::currentBranchId()))
-                ->where('offer.is_active', true)
-                ->where('offer.start_date', '<=', $request->end_date)
-                ->where('offer.end_date', '>=', $request->start_date)
-                ->exists();
-
-            if ($overlap) {
-                $course = CourseTemplate::find($courseId);
-                return back()->with('error',
-                    "Course '{$course->name}' already has an active offer in this period.");
-            }
+        $conflict = $this->overlappingCourse($request->course_ids, $request->start_date, $request->end_date);
+        if ($conflict) {
+            return back()->withInput()->with('error', "Course '{$conflict}' already has an active offer in this period.");
         }
 
         $adminId = Employee::where('user_id', auth()->id())->first()?->employee_id;
@@ -95,6 +83,17 @@ class OffersController extends Controller
             'end_date'       => 'required|date|after_or_equal:start_date',
         ]);
 
+        if ($offer->is_active) {
+            $courseIds = $request->has('course_ids')
+                ? (array) $request->course_ids
+                : $offer->courseTemplates()->pluck('course_template.course_template_id')->all();
+
+            $conflict = $this->overlappingCourse($courseIds, $request->start_date, $request->end_date, $offer->offer_id);
+            if ($conflict) {
+                return back()->withInput()->with('error', "Course '{$conflict}' already has an active offer in this period.");
+            }
+        }
+
         $offer->update($request->only([
             'offer_name', 'discount_type', 'discount_value', 'start_date', 'end_date'
         ]));
@@ -109,8 +108,43 @@ class OffersController extends Controller
     public function toggle($id)
     {
         $offer = Offer::findOrFail($id);
+
+        if (!$offer->is_active) {
+            $courseIds = $offer->courseTemplates()->pluck('course_template.course_template_id')->all();
+            $conflict  = $this->overlappingCourse(
+                $courseIds,
+                \Carbon\Carbon::parse($offer->start_date)->toDateString(),
+                \Carbon\Carbon::parse($offer->end_date)->toDateString(),
+                $offer->offer_id
+            );
+            if ($conflict) {
+                return back()->with('error', "Cannot enable this offer — course '{$conflict}' already has an active offer in this period.");
+            }
+        }
+
         AuditService::updated('offer', $id, 'is_active', $offer->is_active, !$offer->is_active);
         $offer->update(['is_active' => !$offer->is_active]);
         return back()->with('success', 'Offer ' . ($offer->is_active ? 'enabled' : 'disabled') . '.');
+    }
+
+    private function overlappingCourse(array $courseIds, $startDate, $endDate, ?int $excludeOfferId = null): ?string
+    {
+        foreach ($courseIds as $courseId) {
+            $overlap = DB::table('offer')
+                ->join('offer_course_template', 'offer.offer_id', '=', 'offer_course_template.offer_id')
+                ->where('offer_course_template.course_template_id', $courseId)
+                ->when(BranchContext::currentBranchId() !== null, fn($q) => $q->where('offer.branch_id', BranchContext::currentBranchId()))
+                ->when($excludeOfferId, fn($q) => $q->where('offer.offer_id', '!=', $excludeOfferId))
+                ->where('offer.is_active', true)
+                ->where('offer.start_date', '<=', $endDate)
+                ->where('offer.end_date', '>=', $startDate)
+                ->exists();
+
+            if ($overlap) {
+                return CourseTemplate::find($courseId)?->name ?? 'Selected course';
+            }
+        }
+
+        return null;
     }
 }

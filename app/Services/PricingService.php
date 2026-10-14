@@ -73,6 +73,7 @@ class PricingService
             ->join('offer_course_template', 'offer.offer_id', '=', 'offer_course_template.offer_id')
             ->where('offer_course_template.course_template_id', $courseId)
             ->where('offer.is_active', 1)
+            ->when(\App\Support\BranchContext::currentBranchId() !== null, fn($q) => $q->where('offer.branch_id', \App\Support\BranchContext::currentBranchId()))
             ->where(function ($q) {
                 $q->whereNull('offer.start_date')
                   ->orWhereDate('offer.start_date', '<=', now());
@@ -82,6 +83,7 @@ class PricingService
                   ->orWhereDate('offer.end_date', '>=', now());
             })
             ->select('offer.discount_type', 'offer.discount_value')
+            ->orderByDesc('offer.offer_id')
             ->first();
 
         if (!$offer) return 0.0;
