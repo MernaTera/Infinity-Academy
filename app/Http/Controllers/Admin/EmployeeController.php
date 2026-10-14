@@ -276,6 +276,13 @@ public function store(Request $request)
     {
         $employee = Employee::with('user')->findOrFail($id);
 
+        if ($request->status === 'Inactive' && $employee->status === 'Active') {
+            $blocked = $this->activeCoursesBlockMessage($employee);
+            if ($blocked) {
+                return back()->withErrors(['status' => $blocked])->with('error', $blocked);
+            }
+        }
+
         if($request->salary != $employee->salary){
             AuditService::updated('employee', $employee->employee_id, 'salary', $employee->salary, $request->salary);
         }
@@ -312,6 +319,13 @@ public function store(Request $request)
     {
         $employee  = Employee::with('user')->findOrFail($id);
         $newStatus = $employee->status === 'Active' ? 'Inactive' : 'Active';
+
+        if ($newStatus === 'Inactive') {
+            $blocked = $this->activeCoursesBlockMessage($employee);
+            if ($blocked) {
+                return back()->withErrors(['status' => $blocked])->with('error', $blocked);
+            }
+        }
         $user      = $employee->user;
 
         AuditService::updated('employee', $employee->employee_id, 'status', $employee->status, $newStatus);
@@ -461,5 +475,25 @@ public function store(Request $request)
                 $employee->user->update(['role_id' => $targetRole->role_id]);
             }
         }
+    }
+
+    private function activeCoursesBlockMessage(Employee $employee): ?string
+    {
+        $teacher = Teacher::where('employee_id', $employee->employee_id)->first();
+        if (!$teacher) {
+            return null;
+        }
+
+        $count = \App\Models\Academic\CourseInstance::withoutGlobalScope('branch')
+            ->where('teacher_id', $teacher->teacher_id)
+            ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+            ->count();
+
+        if ($count === 0) {
+            return null;
+        }
+
+        return "This teacher has {$count} active/upcoming course" . ($count > 1 ? 's' : '')
+            . '. Please reassign ' . ($count > 1 ? 'them' : 'it') . ' to another teacher and try again.';
     }
 }

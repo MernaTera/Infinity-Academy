@@ -89,6 +89,11 @@
         {{ session('success') }}
     </div>
     @endif
+    @if(session('error'))
+    <div style="background:rgba(220,38,38,0.06);border:1px solid rgba(220,38,38,0.2);color:#DC2626;padding:12px 16px;border-radius:4px;margin-bottom:20px;font-size:13px">
+        {{ session('error') }}
+    </div>
+    @endif
 
     <div class="kpi-grid">
         <a href="{{ route('admin.employees.index') }}" class="kpi-card {{ !request('role') && !request('status') ? 'active-filter' : '' }}" style="--kc:#1B4FA8">
