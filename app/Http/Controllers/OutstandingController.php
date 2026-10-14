@@ -113,14 +113,23 @@ class OutstandingController extends Controller
                 ->exists();
 
             if (!$hasOverdue) {
-                $enrollment->update([
-                    'status'           => 'Active',
-                    'restriction_flag' => false,
-                ]);
                 RestrictionLog::where('enrollment_id', $enrollment->enrollment_id)
                     ->whereNull('released_at')
                     ->where('reason', '!=', 'admin_manual')
                     ->update(['released_at' => now(), 'released_by' => $employee->employee_id]);
+
+                $currentStatus = $enrollment->fresh()?->status;
+                $hasManualRestriction = RestrictionLog::where('enrollment_id', $enrollment->enrollment_id)
+                    ->whereNull('released_at')
+                    ->where('reason', 'admin_manual')
+                    ->exists();
+
+                if ($currentStatus === 'Restricted' && !$hasManualRestriction) {
+                    $enrollment->update([
+                        'status'           => 'Active',
+                        'restriction_flag' => false,
+                    ]);
+                }
             }
         });
 
