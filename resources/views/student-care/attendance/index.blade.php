@@ -237,8 +237,7 @@
             @endif
         </div>
 
-        <form method="POST" action="{{ route('student-care.attendance.store', $session->course_session_id) }}" id="attForm">
-            @csrf
+        <div id="attForm">
 
             @forelse($enrollments as $i => $enrollment)
             @php
@@ -266,23 +265,12 @@
                 @if($isRestricted)
                     <span class="att-badge badge-restricted">🔒 Restricted</span>
 
-                @elseif($isOpen)
-                    <input type="hidden"
-                           name="attendance[{{ $enrollment->enrollment_id }}]"
-                           id="att_{{ $enrollment->enrollment_id }}"
-                           value="{{ $existing ?? 'Absent' }}">
-
-                @else
-                    @if($existing === 'Present')
+                @elseif($existing === 'Present')
                     <span class="att-badge badge-present">✓ Present</span>
-                    @elseif($existing === 'Absent')
+                @elseif($existing === 'Absent')
                     <span class="att-badge badge-absent">✕ Absent</span>
-                    @else
+                @else
                     <span class="att-badge badge-none">— Not Marked</span>
-                    @endif
-                    <input type="hidden"
-                           name="attendance[{{ $enrollment->enrollment_id }}]"
-                           value="{{ $existing ?? 'Absent' }}">
                 @endif
 
             </div>
@@ -292,7 +280,7 @@
             </div>
             @endforelse
 
-        </form>
+        </div>
     </div>
 
 </div>

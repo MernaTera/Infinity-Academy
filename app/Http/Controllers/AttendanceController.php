@@ -2,11 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\Academic\CourseSession;
-use App\Models\Enrollment\Enrollment;
-use App\Models\Attendance\Attendance;
-use App\Models\HR\Employee;
 use Carbon\Carbon;
 
 class AttendanceController extends Controller
@@ -50,76 +46,5 @@ class AttendanceController extends Controller
         return view('student-care.attendance.index', compact(
             'session', 'isOpen', 'isCompleted', 'isPast', 'isFuture', 'existingAttendance'
         ));
-    }
-
-
-    public function store(Request $request, $sessionId)
-    {
-        $session = CourseSession::findOrFail($sessionId);
-
-        $nowTime   = now()->format('H:i');
-        $startTime = Carbon::parse($session->start_time)->format('H:i');
-        $endTime   = Carbon::parse($session->end_time)->format('H:i');
-        $isToday   = Carbon::parse($session->session_date)->isToday();
-
-        $isOpen = $isToday
-               && $nowTime >= $startTime
-               && $nowTime <= $endTime
-               && $session->status !== 'Cancelled';
-
-        if (!$isOpen) {
-            return back()->with('error', 'Attendance can only be taken during session time.');
-        }
-
-        $employeeId = Employee::where('user_id', auth()->id())->value('employee_id');
-
-        foreach ($request->attendance ?? [] as $enrollmentId => $status) {
-            $enrollment = Enrollment::find($enrollmentId);
-            if (!$enrollment) continue;
-            if ($enrollment->status === 'Cancelled') continue;
-            if ($enrollment->status === 'Restricted') $status = 'Absent';
-            if (!in_array($status, ['Present', 'Absent'])) continue;
-
-            Attendance::updateOrCreate(
-                [
-                    'enrollment_id'     => $enrollmentId,
-                    'course_session_id' => $session->course_session_id,
-                ],
-                [
-                    'status'      => $status,
-                    'recorded_by' => $employeeId,
-                    'recorded_at' => now(),
-                ]
-            );
-        }
-
-        $session->update(['status' => 'Completed']);
-
-        $instance = $session->courseInstance;
-        if ($instance) {
-            $remainingSessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
-                ->whereNotIn('status', ['Completed', 'Cancelled'])
-                ->count();
-
-            if ($remainingSessions === 0) {
-                Enrollment::where('course_instance_id', $instance->course_instance_id)
-                    ->where('status', 'Active')
-                    ->where(function ($q) {
-                        $q->where(function ($p) {
-                            $p->where('enrollment_type', 'Private')
-                              ->where('hours_remaining', '>', 0);
-                        })->orWhere(function ($p) {
-                            $p->whereNotNull('package_id')
-                              ->where('package_units_remaining', '>', 0);
-                        })->orWhere(function ($p) {
-                            $p->whereNull('package_id')
-                              ->where('enrollment_type', '!=', 'Private');
-                        });
-                    })
-                    ->update(['status' => 'Completed']);
-            }
-        }
-
-        return back()->with('success', 'Attendance saved successfully.');
     }
 }

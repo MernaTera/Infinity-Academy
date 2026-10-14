@@ -224,7 +224,7 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::get('/course-instances/{id}/edit',    [CourseInstanceController::class, 'edit'])->name('instances.edit');
         Route::put('/course-instances/{id}',         [CourseInstanceController::class, 'updateInstance'])->name('instance.update');
         Route::post('/enrollments/{id}/postpone',     [CourseInstanceController::class, 'postponeEnrollment'])->name('instance.postpone');
-        Route::post('/attendance/{sessionId}', [AttendanceController::class, 'store'])->name('attendance.store');          Route::post('/instance/{id}/preview',         [CourseInstanceController::class, 'previewSchedule'])->name('instance.preview');
+        Route::post('/instance/{id}/preview',         [CourseInstanceController::class, 'previewSchedule'])->name('instance.preview');
         Route::post('/instance/{id}/schedule',        [CourseInstanceController::class, 'storeSchedule'])->name('instance.schedule');
         Route::post('/check-conflicts', [CourseInstanceController::class, 'checkConflicts'])->name('check-conflicts');
         Route::get('/teacher-contract-info', [CourseInstanceController::class, 'getTeacherContractInfo'])->name('teacher.contract-info');
