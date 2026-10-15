@@ -32,7 +32,6 @@ class RefundController extends Controller
             'installmentSchedules',
             'refundRequests',
         ])
-        ->where('created_by_cs_id', $employeeId)
         ->whereIn('status', ['Active', 'Pending_Approval', 'Waiting'])
         ->get()
         ->filter(function ($enrollment) {
@@ -84,10 +83,6 @@ class RefundController extends Controller
                                                     ->whereIn('transaction_category', ['Course', 'Material']),
             'installmentSchedules',
         ])->findOrFail($request->enrollment_id);
-
-        if ($enrollment->created_by_cs_id !== $employeeId) {
-            return back()->with('error', 'You can only request refunds for your own enrollments.');
-        }
 
         $allDeposits = $enrollment->financialTransactions;
         $courseDeposits   = $allDeposits->where('transaction_category', 'Course');
