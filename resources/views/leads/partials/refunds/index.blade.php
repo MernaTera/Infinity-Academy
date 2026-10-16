@@ -22,7 +22,7 @@
 
     .rf-page {
         min-height:100vh; padding:40px 34px 52px; color:var(--text); font-family:'DM Sans',sans-serif;
-        background:#F8F6F2;
+        background:#F8F6F2;position:relative;overflow:hidden;
     }
     .orb { position:absolute; border-radius:50%; filter:blur(70px); opacity:0.1; z-index:0; pointer-events:none; }
     .orb-2 { width:300px; height:300px; background:radial-gradient(circle,#1B4FA8,transparent 70%); top:30px; right:1%; }
