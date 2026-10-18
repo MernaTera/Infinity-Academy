@@ -151,7 +151,7 @@ a.tl-kpi.active{box-shadow:0 0 0 2px var(--kc,#1B4FA8),var(--glass-sh);border-co
             <label>Status</label>
             <select name="status">
                 <option value="">All Statuses</option>
-                @foreach(['Waiting','Call_Again','Scheduled_Call','Registered','Not_Interested','Archived'] as $st)
+                @foreach(['Waiting','Call_Again','Registered','Archived'] as $st)
                 <option value="{{ $st }}" {{ $statusFilter===$st?'selected':'' }}>{{ str_replace('_',' ',$st) }}</option>
                 @endforeach
             </select>

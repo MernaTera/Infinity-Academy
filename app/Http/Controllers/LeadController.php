@@ -297,7 +297,6 @@ class LeadController extends Controller
 
         $base = Lead::query()
             ->when($csId, fn($q) => $q->where('owner_cs_id', $csId))
-            ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
             ->when($start, fn($q) => $q->whereBetween('created_at', [$start, $end]));
 
         $stats = [
@@ -308,6 +307,7 @@ class LeadController extends Controller
         ];
 
         $leads = (clone $base)
+            ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
             ->with(['owner', 'student'])
             ->orderByDesc('created_at')
             ->paginate(30)
