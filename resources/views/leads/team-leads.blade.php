@@ -101,7 +101,7 @@ a.tl-kpi.active{box-shadow:0 0 0 2px var(--kc,#1B4FA8),var(--glass-sh);border-co
 
     
     @php
-        $baseParams = ['filter'=>$filterType, 'month'=>$month, 'day'=>$day, 'patch'=>$patchId, 'cs'=>$csId];
+        $baseParams = ['filter'=>$filterType, 'month'=>$month, 'day'=>$day, 'patch'=>$patchId, 'cs'=>$csId, 'q'=>$search];
     @endphp
     <div class="tl-kpis">
         <a href="{{ route('team.leads', array_merge($baseParams, ['status'=>null])) }}" class="tl-kpi {{ !$statusFilter ? 'active' : '' }}" style="--kc:#1B4FA8"><div class="tl-kpi-label">Total Leads</div><div class="tl-kpi-val">{{ $stats['total'] }}</div></a>
@@ -112,6 +112,10 @@ a.tl-kpi.active{box-shadow:0 0 0 2px var(--kc,#1B4FA8),var(--glass-sh);border-co
 
     
     <form method="GET" action="{{ route('team.leads') }}" class="tl-filters" id="tlFilterForm">
+        <div class="tl-field" style="flex:1;min-width:220px">
+            <label>Search</label>
+            <input type="text" name="q" value="{{ $search }}" placeholder="Name or phone number">
+        </div>
         <div class="tl-field">
             <label>Period</label>
             <select name="filter" id="tlFilter" onchange="tlToggle()">

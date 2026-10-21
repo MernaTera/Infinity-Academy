@@ -282,6 +282,7 @@ class LeadController extends Controller
         $patchId      = $request->query('patch');
         $csId         = $request->query('cs');
         $statusFilter = $request->query('status');
+        $search       = trim((string) $request->query('q', ''));
 
         [$start, $end] = match ($filterType) {
             'day'   => [\Carbon\Carbon::parse($day)->startOfDay(),  \Carbon\Carbon::parse($day)->endOfDay()],
@@ -306,7 +307,13 @@ class LeadController extends Controller
             'waiting'    => (clone $base)->where('status', 'Waiting')->count(),
         ];
 
-        $leads = (clone $base)
+        $leads = Lead::query()
+            ->when($csId, fn($q) => $q->where('owner_cs_id', $csId))
+            ->when($search === '' && $start, fn($q) => $q->whereBetween('created_at', [$start, $end]))
+            ->when($search !== '', fn($q) => $q->where(function ($w) use ($search) {
+                $w->where('full_name', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            }))
             ->when($statusFilter, fn($q) => $q->where('status', $statusFilter))
             ->with(['owner', 'student'])
             ->orderByDesc('created_at')
@@ -323,7 +330,7 @@ class LeadController extends Controller
 
         return view('leads.team-leads', compact(
             'leads', 'csEmployees', 'patches', 'stats',
-            'filterType', 'month', 'day', 'patchId', 'csId', 'statusFilter'
+            'filterType', 'month', 'day', 'patchId', 'csId', 'statusFilter', 'search'
         ));
     }
 
