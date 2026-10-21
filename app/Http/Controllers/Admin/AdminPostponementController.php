@@ -9,11 +9,7 @@ use Carbon\Carbon;
 
 class AdminPostponementController extends Controller
 {
-    /**
-     * Admin postponed board. Admin renders the SAME shared view as Student Care
-     * — monitor + expire, no resume (re-registration is a CS action). Lists and
-     * stats are scoped through the enrollment relation so they stay consistent.
-     */
+
     public function index(Request $request)
     {
         $with = [
@@ -66,7 +62,7 @@ class AdminPostponementController extends Controller
 
     public function resume($id)
     {
-        $postponement = Postponement::with('enrollment')->findOrFail($id);
+        $postponement = Postponement::with('enrollment')->whereHas('enrollment')->findOrFail($id);
 
         if ($postponement->status !== 'Active') {
             return back()->with('error', 'Only active postponements can be resumed.');
@@ -83,7 +79,7 @@ class AdminPostponementController extends Controller
 
     public function expire($id)
     {
-        $postponement = Postponement::with('enrollment')->findOrFail($id);
+        $postponement = Postponement::with('enrollment')->whereHas('enrollment')->findOrFail($id);
 
         $postponement->update(['status' => 'Expired']);
         $postponement->enrollment->update(['status' => 'Expired']);
@@ -97,7 +93,7 @@ class AdminPostponementController extends Controller
             'new_return_date' => 'required|date|after:today',
         ]);
 
-        $postponement = Postponement::findOrFail($id);
+        $postponement = Postponement::whereHas('enrollment')->findOrFail($id);
 
         if ($postponement->status !== 'Active') {
             return back()->with('error', 'Only active postponements can be extended.');
@@ -119,7 +115,7 @@ class AdminPostponementController extends Controller
     {
         $request->validate(['reason' => 'required|string|min:3']);
 
-        $postponement = Postponement::with('enrollment')->findOrFail($id);
+        $postponement = Postponement::with('enrollment')->whereHas('enrollment')->findOrFail($id);
 
         $existingReason = $postponement->reason ? $postponement->reason . ' | ' : '';
         $postponement->update([

@@ -278,7 +278,7 @@ class StudentCareController extends Controller
 
     public function resumePostponement(Request $request, $id)
     {
-        $postponement = Postponement::with('enrollment')->findOrFail($id);
+        $postponement = Postponement::with('enrollment')->whereHas('enrollment')->findOrFail($id);
 
         if ($postponement->status !== 'Active') {
             return back()->with('error', 'Only an active postponement can be resumed.');
@@ -302,7 +302,7 @@ class StudentCareController extends Controller
  
     public function expirePostponement($id)
     {
-        $postponement = Postponement::with('enrollment')->findOrFail($id);
+        $postponement = Postponement::with('enrollment')->whereHas('enrollment')->findOrFail($id);
 
         if ($postponement->status !== 'Active') {
             return back()->with('error', 'Only an active postponement can be expired.');
@@ -375,7 +375,7 @@ class StudentCareController extends Controller
         $upcomingCourses = \App\Models\Academic\CourseInstance::where('status', 'Upcoming')->count();
         $totalStudents   = \App\Models\Enrollment\Enrollment::whereIn('status', ['Active', 'Restricted'])->count();
         $restrictedStudents = \App\Models\Enrollment\Enrollment::where('status', 'Restricted')->count();
-        $postponedStudents  = \App\Models\Enrollment\Postponement::where('status', 'Active')->count();
+        $postponedStudents  = \App\Models\Enrollment\Postponement::where('status', 'Active')->whereHas('enrollment')->count();
         $waitingList        = \App\Models\Enrollment\WaitingList::whereHas('enrollment')->where('status', 'Active')->count();
 
         $endingSoon = \App\Models\Academic\CourseInstance::where('status', 'Active')
@@ -391,11 +391,13 @@ class StudentCareController extends Controller
             ->filter(fn($i) => $i->enrollments_count >= $i->capacity);
 
         $expiredPostponements = \App\Models\Enrollment\Postponement::where('status', 'Active')
+            ->whereHas('enrollment')
             ->where('expected_return_date', '<', now())
             ->with(['enrollment.student', 'enrollment.courseInstance.courseTemplate'])
             ->get();
 
         $expiringSoon = \App\Models\Enrollment\Postponement::where('status', 'Active')
+            ->whereHas('enrollment')
             ->where('expected_return_date', '>=', now())
             ->where('expected_return_date', '<=', now()->addDays(7))
             ->with(['enrollment.student'])
