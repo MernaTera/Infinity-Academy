@@ -80,9 +80,12 @@ function confirmCall() {
     const modal  = document.getElementById('callModal');
     const leadId = modal?._leadId;
     const input  = document.getElementById('callDate').value;
+    const btn    = modal?.querySelector('.btn-save');
 
     if (!leadId) { infAlert({ type:'error', title:'Lead Not Found', message:'This lead could not be found. Please refresh and try again.' }); return; }
     if (!input)  { infAlert({ type:'warning', title:'Date Required', message:'Please select a date & time.' }); return; }
+
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
 
     fetch(`/leads/${leadId}`, {
         method: 'POST',
@@ -98,9 +101,18 @@ function confirmCall() {
             next_call_at: input
         })
     })
-    .then(r => r.json())
-    .then(d => {
-        if (d.success) { modal.style.display='none'; location.reload(); }
+    .then(async r => {
+        const d = await r.json().catch(() => ({}));
+        if (r.ok && d.success) {
+            modal.style.display = 'none';
+            location.reload();
+            return;
+        }
+        throw new Error(d.message || ('Server error (' + r.status + ')'));
+    })
+    .catch(err => {
+        if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+        infAlert({ type:'error', title:'Could Not Save', message: err.message });
     });
 }
 

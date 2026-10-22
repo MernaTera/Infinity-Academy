@@ -252,6 +252,7 @@ class LeadController extends Controller
 
         $lead->update([
             'owner_cs_id' => $employeeId,
+            'assigned_at' => now(),
             'status'      => 'Waiting',
             'is_active'   => true,
         ]);

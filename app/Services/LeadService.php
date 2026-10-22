@@ -30,6 +30,8 @@ class LeadService
     {
         $data['owner_cs_id'] = $this->currentEmployeeId();
 
+        $data['assigned_at'] = now();
+
         $lead = $this->leadRepository->create($data);
 
         $this->logHistory($lead, null, $lead->status, 'Lead Created');

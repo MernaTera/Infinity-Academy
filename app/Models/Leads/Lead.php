@@ -63,6 +63,7 @@ class Lead extends Model
 		'next_call_at' => 'datetime',
 		'owner_cs_id' => 'integer',
 		'is_active' => 'boolean',
+        'assigned_at' => 'datetime',
 		'created_at' => 'datetime',
 		'updated_at' => 'datetime'
 	];
@@ -85,7 +86,8 @@ class Lead extends Model
 		'owner_cs_id',
 		'branch_id',
 		'is_active',
-		'notes'
+		'notes',
+        'assigned_at'
 	];
 
 	public function courseTemplate()
@@ -171,7 +173,8 @@ class Lead extends Model
     {
         $this->update([
             'owner_cs_id' => $employeeId,
-            'updated_at' => now()
+            'assigned_at' => now(),
+            'updated_at'  => now(),
         ]);
     }
 

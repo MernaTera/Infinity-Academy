@@ -64,7 +64,8 @@ class LeadRepository extends BaseRepository implements LeadRepositoryInterface
             ->whereNotNull('owner_cs_id')
             ->ownedBy($employeeId)
             ->active()
-            ->latest()
+            ->orderByDesc('assigned_at')
+            ->orderByDesc('created_at')
             ->paginate(25);
     }
 
