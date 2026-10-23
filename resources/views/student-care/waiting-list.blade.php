@@ -547,8 +547,29 @@ function searchWaiting(q) {
     applyFilters();
 }
 
+function resetAllFilters() {
+    activeStatus = '';
+    activeDtype  = '';
+    activeMode   = '';
+    activePtype  = '';
+
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('dtypeFilter').value  = '';
+    document.getElementById('modeFilter').value   = '';
+    document.getElementById('ptypeFilter').value  = '';
+
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
+    document.querySelector('.stat-card[data-filter="all"]')?.classList.add('active-filter');
+
+    applyFilters();
+}
+
 function filterByStatus(status) {
-    activeStatus = status === 'all' ? '' : status;
+    if (status === 'all') {
+        resetAllFilters();
+        return;
+    }
+    activeStatus = status;
     document.getElementById('statusFilter').value = activeStatus;
     document.querySelectorAll('.stat-card[data-filter]').forEach(c => {
         c.classList.toggle('active-filter', c.dataset.filter === status);
