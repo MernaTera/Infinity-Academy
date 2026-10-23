@@ -6,8 +6,9 @@
                : ($__isAdmin ? 'admin.layouts.app' : 'layouts.leads');
     $__eyebrow = $__isSC ? 'Student Care'
                : ($__isAdmin ? 'Administration' : 'Customer Service');
-    $canRegister = $canRegister ?? false;
-    $expireBase  = $expireBase ?? url('student-care/postponed');
+    $canResume  = $canResume ?? false;
+    $canExpire  = $canExpire ?? true;
+    $actionBase = $actionBase ?? ($expireBase ?? url('student-care/postponed'));
 @endphp
 
 @extends($__layout)
@@ -313,18 +314,21 @@
 
                 </div>
 
-                @if($pp->status === 'Active')
+                @if($pp->status === 'Active' && ($canResume || $canExpire))
                 <div class="pc-footer">
-                    @if($canRegister)
-                    <a class="btn-sm btn-resume" href="{{ route('cs.postponed.resume', $pp->postponement_id) }}">
+                    @if($canResume)
+                    <button type="button" class="btn-sm btn-resume"
+                        onclick="openResume({{ $pp->postponement_id }}, '{{ addslashes($enrollment?->student?->full_name) }}')">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        Resume &amp; Register
-                    </a>
+                        Resume
+                    </button>
                     @endif
-                    <button class="btn-sm btn-expire"
+                    @if($canExpire)
+                    <button type="button" class="btn-sm btn-expire"
                         onclick="openExpire({{ $pp->postponement_id }}, '{{ addslashes($enrollment?->student?->full_name) }}')">
                         Mark Expired
                     </button>
+                    @endif
                 </div>
                 @elseif($pp->status === 'Expired')
                 <div class="pc-footer">
@@ -446,18 +450,21 @@
                     </div>
                 </div>
 
-                @if($pp->status === 'Active')
+                @if($pp->status === 'Active' && ($canResume || $canExpire))
                 <div class="pc-footer">
-                    @if($canRegister)
-                    <a class="btn-sm btn-resume" href="{{ route('cs.postponed.resume', $pp->postponement_id) }}">
+                    @if($canResume)
+                    <button type="button" class="btn-sm btn-resume"
+                        onclick="openResume({{ $pp->postponement_id }}, '{{ addslashes($enrollment?->student?->full_name) }}')">
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-                        Resume &amp; Register
-                    </a>
+                        Resume
+                    </button>
                     @endif
-                    <button class="btn-sm btn-expire"
+                    @if($canExpire)
+                    <button type="button" class="btn-sm btn-expire"
                         onclick="openExpire({{ $pp->postponement_id }}, '{{ addslashes($enrollment?->student?->full_name) }}')">
                         Mark Expired
                     </button>
+                    @endif
                 </div>
                 @elseif($pp->status === 'Expired')
                 <div class="pc-footer">
@@ -478,7 +485,7 @@
 <div id="confirmModal">
     <div class="modal-box">
         <div class="modal-header">
-            <div class="modal-title">Mark as Expired</div>
+            <div class="modal-title" id="modalTitle">Mark as Expired</div>
         </div>
         <div class="modal-body" id="modalBody">Are you sure?</div>
         <div class="modal-footer">
@@ -488,7 +495,7 @@
             </button>
             <form id="confirmForm" method="POST" style="display:inline">
                 @csrf @method('PATCH')
-                <button type="submit"
+                <button type="submit" id="confirmBtn"
                     style="padding:10px 22px;background:#DC2626;border:none;border-radius:4px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer">
                     Expire
                 </button>
@@ -498,7 +505,7 @@
 </div>
 
 <script>
-const ppExpireBase = @json($expireBase);
+const ppActionBase = @json($actionBase);
 
 function showTab(tabId, btn) {
     document.getElementById('groupTab').style.display   = 'none';
@@ -509,9 +516,24 @@ function showTab(tabId, btn) {
 }
 
 function openExpire(id, studentName) {
+    document.getElementById('modalTitle').textContent = 'Mark as Expired';
     document.getElementById('modalBody').textContent =
         `Mark ${studentName || 'this student'}'s postponement as Expired? Their enrollment will be forfeited with no refund.`;
-    document.getElementById('confirmForm').action = `${ppExpireBase}/${id}/expire`;
+    const btn = document.getElementById('confirmBtn');
+    btn.textContent = 'Expire';
+    btn.style.background = '#DC2626';
+    document.getElementById('confirmForm').action = `${ppActionBase}/${id}/expire`;
+    document.getElementById('confirmModal').classList.add('show');
+}
+
+function openResume(id, studentName) {
+    document.getElementById('modalTitle').textContent = 'Resume Student';
+    document.getElementById('modalBody').textContent =
+        `Resume ${studentName || 'this student'}? They go straight back to the waiting list (Current Patch) with the same course, level, remaining hours/units and notes.`;
+    const btn = document.getElementById('confirmBtn');
+    btn.textContent = 'Resume';
+    btn.style.background = 'linear-gradient(120deg,#1B4FA8,#2D6FDB)';
+    document.getElementById('confirmForm').action = `${ppActionBase}/${id}/resume`;
     document.getElementById('confirmModal').classList.add('show');
 }
 

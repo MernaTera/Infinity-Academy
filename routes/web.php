@@ -115,12 +115,7 @@ Route::middleware(['auth', 'permission:enrollment.create'])
         Route::get('/registration/pending/{enrollmentId}', [RegistrationController::class, 'pending'])->name('registration.pending');
         Route::get('/near-completion', [StudentCareController::class, 'nearCompletion'])->name('near-completion');
 
-        // Postponed board (Customer Service): monitor + resume + expire. These
-        // sit under enrollment.create — the same permission CS uses to register
-        // — so resuming (which re-registers) and expiring never 403 for CS.
         Route::get('/cs/postponed',               [StudentCareController::class, 'csPostponed'])->name('cs.postponed');
-        Route::get('/cs/postponed/{id}/resume',   [StudentCareController::class, 'resumePostponement'])->name('cs.postponed.resume');
-        Route::patch('/cs/postponed/{id}/expire', [StudentCareController::class, 'expirePostponement'])->name('cs.postponed.expire');
         Route::get('/enrollments/{id}/invoice', [RegistrationController::class, 'showInvoice'])->name('cs.enrollment.invoice');
         Route::get('/enrollments/{id}/receipt', [RegistrationController::class, 'showReceipt'])->name('cs.enrollment.receipt');
         Route::get('/leads/{leadId}/invoice', [\App\Http\Controllers\LeadController::class, 'showInvoice'])->name('leads.invoice');
@@ -236,8 +231,7 @@ Route::middleware(['auth', 'permission:enrollment.edit'])
     ->prefix('student-care')
     ->name('student-care.')
     ->group(function () {
-        // Student Care monitors + can expire. Resume (re-registration) is a
-        // Customer Service action, so there is no SC resume route.
+        Route::patch('/postponed/{id}/resume', [StudentCareController::class, 'resumePostponement'])->name('postponed.resume');
         Route::patch('/postponed/{id}/expire', [StudentCareController::class, 'expirePostponement'])->name('postponed.expire');
 
         // Enrollment notes (per student, written by Student Care).

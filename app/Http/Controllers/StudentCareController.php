@@ -216,8 +216,9 @@ class StudentCareController extends Controller
     public function postponed()
     {
         return view('student-care.postponed', array_merge($this->postponedData(), [
-            'canRegister' => false,
-            'expireBase'  => url('student-care/postponed'),
+            'canResume'  => true,
+            'canExpire'  => true,
+            'actionBase' => url('student-care/postponed'),
         ]));
     }
 
@@ -225,8 +226,9 @@ class StudentCareController extends Controller
     public function csPostponed()
     {
         return view('student-care.postponed', array_merge($this->postponedData(), [
-            'canRegister' => true,
-            'expireBase'  => url('cs/postponed'),
+            'canResume'  => false,
+            'canExpire'  => false,
+            'actionBase' => url('student-care/postponed'),
         ]));
     }
 
@@ -276,7 +278,7 @@ class StudentCareController extends Controller
     }
 
 
-    public function resumePostponement(Request $request, $id)
+    public function resumePostponement($id)
     {
         $postponement = Postponement::with('enrollment')->whereHas('enrollment')->findOrFail($id);
 
@@ -284,19 +286,69 @@ class StudentCareController extends Controller
             return back()->with('error', 'Only an active postponement can be resumed.');
         }
 
-        $studentId = $postponement->enrollment?->student_id;
-        $lead = $studentId
-            ? Lead::where('student_id', $studentId)->orderByDesc('lead_id')->first()
-            : null;
-
-        if (!$lead) {
-            return back()->with('error', 'No lead is linked to this student, so they cannot be re-registered automatically. Create a lead for them first, then resume.');
+        $enrollment = $postponement->enrollment;
+        if (!$enrollment || $enrollment->status !== 'Postponed') {
+            return back()->with('error', 'This enrollment is no longer postponed.');
         }
 
-        return redirect()->route('registration.from.lead', [
-            'lead_id' => $lead->lead_id,
-            'resume'  => $postponement->postponement_id,
-        ]);
+        $employeeId = \App\Models\HR\Employee::where('user_id', auth()->id())->value('employee_id');
+        $waiting    = null;
+
+        $resumed = \Illuminate\Support\Facades\DB::transaction(function () use ($postponement, $enrollment, $employeeId, &$waiting) {
+            $locked = Postponement::whereKey($postponement->postponement_id)->lockForUpdate()->first();
+            if (!$locked || $locked->status !== 'Active') {
+                return false;
+            }
+
+            $currentPatch = Patch::where('status', 'Active')->orderByDesc('start_date')->first();
+
+            $locked->update([
+                'status'             => 'Returned',
+                'actual_return_date' => now()->toDateString(),
+            ]);
+
+            $oldStatus = $enrollment->status;
+            $enrollment->update([
+                'status'             => 'Waiting',
+                'course_instance_id' => null,
+            ]);
+
+            $existing  = WaitingList::where('enrollment_id', $enrollment->enrollment_id)->first();
+            $resumeTag = 'Resumed from postponement on ' . now()->format('d M Y');
+            $notes     = trim(($existing?->notes ? $existing->notes . ' | ' : '') . $resumeTag);
+
+            $waiting = WaitingList::updateOrCreate(
+                ['enrollment_id' => $enrollment->enrollment_id],
+                [
+                    'requested_patch_id'      => $currentPatch?->patch_id,
+                    'preferred_type'          => 'Current_Patch',
+                    'preferred_delivery_type' => $enrollment->enrollment_type ?? 'Group',
+                    'preferred_delivery_mood' => $enrollment->delivery_mood ?? 'Offline',
+                    'preferred_start_date'    => null,
+                    'preferred_days'          => $existing?->preferred_days,
+                    'status'                  => 'Active',
+                    'notes'                   => $notes,
+                    'created_by_cs_id'        => $existing?->created_by_cs_id ?? $employeeId,
+                ]
+            );
+
+            \App\Services\AuditService::updated('postponement', $locked->postponement_id, 'status', 'Active', 'Returned');
+            \App\Services\AuditService::updated('enrollment', $enrollment->enrollment_id, 'status', $oldStatus, 'Waiting');
+
+            return true;
+        });
+
+        if (!$resumed) {
+            return back()->with('error', 'This postponement was already processed.');
+        }
+
+        if ($waiting) {
+            event(new \App\Events\WaitingListUpdated($waiting));
+        }
+
+        $name = $enrollment->student?->full_name ?? 'The student';
+
+        return back()->with('success', "{$name} is back on the waiting list (Current Patch) with the same course, details and notes.");
     }
 
  
