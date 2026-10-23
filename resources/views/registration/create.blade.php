@@ -974,4 +974,12 @@
     })();
 </script>
 
+<script>
+window.addEventListener('pageshow', function (e) {
+    if (e.persisted) {
+        window.location.reload();
+    }
+});
+</script>
+
 @endsection

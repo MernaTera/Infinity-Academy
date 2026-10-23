@@ -299,8 +299,29 @@ class RegistrationController extends Controller
             }
         }
 
+        $registrationLock = \Illuminate\Support\Facades\Cache::lock('registration-lead-' . $request->lead_id, 120);
+        if (!$registrationLock->get()) {
+            return $failValidation('This registration is already being processed. Please wait a moment and check the lead before trying again.');
+        }
+
         try {
             $lead = Lead::find($request->lead_id);
+
+            if ($lead?->student_id && empty($request->resume_postponement_id)) {
+                $recentDuplicate = \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
+                    ->where('student_id', $lead->student_id)
+                    ->where('course_template_id', $request->course_template_id)
+                    ->where(fn($q) => $request->level_id ? $q->where('level_id', $request->level_id) : $q->whereNull('level_id'))
+                    ->where(fn($q) => $request->sublevel_id ? $q->where('sublevel_id', $request->sublevel_id) : $q->whereNull('sublevel_id'))
+                    ->whereNotIn('status', ['Cancelled', 'Expired'])
+                    ->where('created_at', '>=', now()->subMinutes(30))
+                    ->orderByDesc('enrollment_id')
+                    ->first();
+
+                if ($recentDuplicate) {
+                    return $failValidation("This student was already registered in this course a few minutes ago (Enrollment #{$recentDuplicate->enrollment_id}). Check the lead before registering again.");
+                }
+            }
 
             $oldStatus     = $lead->status;
             $oldInterests  = [
@@ -405,6 +426,8 @@ class RegistrationController extends Controller
                 return back()
                     ->withInput()
                     ->with('error', 'Something went wrong while processing the registration. Please try again, or contact support if the problem persists.');
+            } finally {
+                $registrationLock->release();
             }
     }
 
