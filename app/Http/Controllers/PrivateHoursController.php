@@ -151,7 +151,7 @@ class PrivateHoursController extends Controller
                 'transaction_category'   => 'Course',
                 'amount'                 => (float) $bundle->price,
                 'payment_method'         => $methodMap[$data['payment_method']] ?? 'Cash',
-                'notes'                  => 'Bundle top-up: ' . rtrim(rtrim(number_format($bundle->hours, 2), '0'), '.') . ' hours',
+                'notes'                  => 'Bundle top-up: ' . ($bundle->name ? $bundle->name . ' — ' : '') . rtrim(rtrim(number_format($bundle->hours, 2), '0'), '.') . ' hours',
                 'created_by_employee_id' => $csEmployeeId,
             ]);
 

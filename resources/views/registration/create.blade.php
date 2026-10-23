@@ -647,7 +647,7 @@
                                     <option value="">@if(!empty($leftoverHours) && $leftoverHours > 0)— No extra bundle (use existing hours) —@else— Select Bundle —@endif</option>
                                     @foreach($bundles as $b)
                                         <option value="{{ $b->bundle_id }}" data-price="{{ $b->price }}" data-hours="{{ $b->hours }}">
-                                            {{ $b->hours }} hrs — {{ $b->price }} LE
+                                            {{ $b->name ? $b->name . ' — ' : '' }}{{ $b->hours }} hrs — {{ $b->price }} LE
                                         </option>
                                     @endforeach
                                 </select>

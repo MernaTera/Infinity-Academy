@@ -42,6 +42,7 @@ class PrivateBundle extends Model
 
 	protected $fillable = [
         'branch_id',
+		'name',
 		'hours',
 		'price',
 		'is_active',

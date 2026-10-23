@@ -29,6 +29,7 @@ class PrivateBundleController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'name'  => 'required|string|max:100',
             'hours' => 'required|numeric|min:0.5',
             'price' => 'required|numeric|min:0',
         ]);
@@ -36,6 +37,7 @@ class PrivateBundleController extends Controller
         $adminId = Employee::where('user_id', auth()->id())->value('employee_id');
 
         PrivateBundle::create([
+            'name'                => trim($request->name),
             'hours'               => $request->hours,
             'price'               => $request->price,
             'is_active'           => true,
@@ -48,11 +50,13 @@ class PrivateBundleController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
+            'name'  => 'required|string|max:100',
             'hours' => 'required|numeric|min:0.5',
             'price' => 'required|numeric|min:0',
         ]);
 
         PrivateBundle::findOrFail($id)->update([
+            'name'  => trim($request->name),
             'hours' => $request->hours,
             'price' => $request->price,
         ]);

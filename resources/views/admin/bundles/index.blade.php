@@ -36,6 +36,7 @@
 
 .bnd-card-header{padding:22px 24px 16px;text-align:center;position:relative;}
 .bnd-hours{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:3px;color:var(--blue);line-height:1;}
+.bnd-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;letter-spacing:0.3px;}
 .bnd-hours-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--faint);margin-top:2px;font-weight:600;}
 
 .bnd-price-tag{display:inline-flex;align-items:baseline;gap:4px;margin-top:12px;padding:8px 20px;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(27,79,168,0.14);border-radius:30px;box-shadow:0 4px 14px rgba(23,45,90,0.06);}
@@ -139,6 +140,7 @@
                 @if(!$bundle->is_active)
                 <div style="position:absolute;top:12px;right:14px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--red);background:var(--red-l);border:1px solid rgba(220,38,38,0.18);padding:3px 9px;border-radius:20px;font-weight:600;">Inactive</div>
                 @endif
+                <div class="bnd-name">{{ $bundle->name ?: rtrim(rtrim(number_format($bundle->hours, 2), '0'), '.') . ' Hours Bundle' }}</div>
                 <div class="bnd-hours">{{ number_format($bundle->hours, 0) }}</div>
                 <div class="bnd-hours-label">Hours</div>
                 <div style="display:flex;justify-content:center;">
@@ -170,7 +172,7 @@
                 </div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
                     <button class="btn-sm btn-edit"
-                            onclick="openEdit({{ $bundle->bundle_id }}, {{ $bundle->hours }}, {{ $bundle->price }})">
+                            onclick='openEdit({{ $bundle->bundle_id }}, @json($bundle->name ?? ""), {{ $bundle->hours }}, {{ $bundle->price }})'>
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         Edit
                     </button>
@@ -182,7 +184,7 @@
                     </form>
                     @if($bundle->enrollments_count === 0)
                     <form method="POST" action="{{ route('admin.bundles.destroy', $bundle->bundle_id) }}" style="display:inline;"
-                          data-name="{{ number_format($bundle->hours, 0) }} Hours" onsubmit="return askDeleteBundle(this)">
+                          data-name="{{ $bundle->name ?: number_format($bundle->hours, 0) . ' Hours' }}" onsubmit="return askDeleteBundle(this)">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn-sm btn-danger">
                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
@@ -213,6 +215,10 @@
             @csrf
             <div class="modal-body">
                 <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div class="form-field">
+                        <label class="form-label">Bundle Name <span style="color:var(--orange);">*</span></label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g. Starter Bundle" maxlength="100" required>
+                    </div>
                     <div class="form-field">
                         <label class="form-label">Hours <span style="color:var(--orange);">*</span></label>
                         <input type="number" name="hours" class="form-control" placeholder="e.g. 20" step="0.5" min="0.5" required
@@ -256,6 +262,10 @@
             @csrf @method('PUT')
             <div class="modal-body">
                 <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div class="form-field">
+                        <label class="form-label">Bundle Name <span style="color:var(--orange);">*</span></label>
+                        <input type="text" id="edit_name" name="name" class="form-control" maxlength="100" required>
+                    </div>
                     <div class="form-field">
                         <label class="form-label">Hours <span style="color:var(--orange);">*</span></label>
                         <input type="number" id="edit_hours" name="hours" class="form-control" step="0.5" min="0.5" required
@@ -334,8 +344,9 @@ document.getElementById('deleteBundleModal').addEventListener('click', function 
     if (e.target === this) closeDeleteBundle();
 });
 
-function openEdit(id, hours, price) {
+function openEdit(id, name, hours, price) {
     document.getElementById('editForm').action = `/admin/bundles/${id}`;
+    document.getElementById('edit_name').value = name || '';
     document.getElementById('edit_hours').value = hours;
     document.getElementById('edit_price').value = price;
     calcPPH('edit');

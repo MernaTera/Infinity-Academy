@@ -301,12 +301,12 @@
                 <option value="">— Choose a bundle —</option>
                 @foreach($bundles as $b)
                 <option value="{{ $b->bundle_id }}" data-hours="{{ $b->hours }}" data-price="{{ $b->price }}">
-                    {{ rtrim(rtrim(number_format($b->hours, 2), '0'), '.') }} hours — {{ number_format($b->price) }} LE
+                    {{ $b->name ? $b->name . ' — ' : '' }}{{ rtrim(rtrim(number_format($b->hours, 2), '0'), '.') }} hours — {{ number_format($b->price) }} LE
                 </option>
                 @endforeach
             </select>
 
-            <label style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7A8A9A;font-weight:600;margin-bottom:7px;">Payment Method</label>
+            <label style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7A8A9A;font-weight:600;margin-bottom:7px;margin-top:10px;">Payment Method</label>
             <select id="bm_method" name="payment_method" required style="width:100%;padding:11px 13px;border:1px solid rgba(27,79,168,0.15);border-radius:8px;font-size:13px;color:#1A2A4A;margin-bottom:18px;background:#fff;">
                 <option value="Cash">Cash</option>
                 <option value="Card">Card</option>
@@ -315,7 +315,7 @@
             </select>
 
             
-            <div id="bm_summary" style="display:none;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.2);border-radius:8px;padding:13px 15px;margin-bottom:18px;">
+            <div id="bm_summary" style="display:none;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.2);border-radius:8px;padding:13px 15px;margin-bottom:18px;margin-top:20px;">
                 <div style="display:flex;justify-content:space-between;font-size:12px;color:#1A2A4A;margin-bottom:6px;">
                     <span>Hours added</span><strong id="bm_sum_hours" style="color:#15803D;"></strong>
                 </div>
@@ -327,9 +327,9 @@
                 </div>
             </div>
 
-            <div style="display:flex;gap:10px;">
+            <div style="display:flex;gap:10px;margin-top:20px;">
                 <button type="button" onclick="closeBundleModal()" style="flex:1;padding:12px;border:1px solid rgba(27,79,168,0.15);background:#fff;color:#7A8A9A;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
-                <button type="submit" style="flex:2;padding:12px;border:none;background:#F5911E;color:#fff;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 14px rgba(245,145,30,0.3);">Charge &amp; Activate</button>
+                <button type="submit" style="flex:2;padding:12px;border:none;background:#1B4FA8;color:#fff;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 14px rgba(73, 103, 235, 0.3);">Charge &amp; Activate</button>
             </div>
         </form>
     </div>
