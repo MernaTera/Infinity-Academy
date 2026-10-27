@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\HR\Employee;
 use App\Models\Enrollment\Enrollment;
 use App\Models\Concerns\BelongsToBranch;
+use App\Models\Academic\CourseTemplate;
 
 /**
  * Class PrivateBundle
@@ -36,6 +37,7 @@ class PrivateBundle extends Model
 		'hours' => 'decimal:2',
 		'price' => 'decimal:2',
 		'is_active' => 'boolean',
+		'course_template_id' => 'integer',
 		'created_by_admin_id' => 'integer',
 		'created_at' => 'datetime'
 	];
@@ -43,6 +45,7 @@ class PrivateBundle extends Model
 	protected $fillable = [
         'branch_id',
 		'name',
+		'course_template_id',
 		'hours',
 		'price',
 		'is_active',
@@ -81,5 +84,24 @@ class PrivateBundle extends Model
     public function scopeActive($query)
     {
         return $query->where('is_active', true);
+    }
+
+    public function courseTemplate()
+    {
+        return $this->belongsTo(CourseTemplate::class, 'course_template_id');
+    }
+
+    public function scopeForCourse($query, $courseTemplateId)
+    {
+        return $query->where(function ($q) use ($courseTemplateId) {
+            $q->whereNull('course_template_id')
+              ->orWhere('course_template_id', $courseTemplateId);
+        });
+    }
+
+    public function availableForCourse($courseTemplateId): bool
+    {
+        return $this->course_template_id === null
+            || (int) $this->course_template_id === (int) $courseTemplateId;
     }
 }

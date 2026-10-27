@@ -37,6 +37,8 @@
 .bnd-card-header{padding:22px 24px 16px;text-align:center;position:relative;}
 .bnd-hours{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:3px;color:var(--blue);line-height:1;}
 .bnd-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px;letter-spacing:0.3px;}
+.bnd-course{display:inline-block;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;color:var(--blue);background:var(--blue-l);border:1px solid rgba(27,79,168,0.16);padding:3px 10px;border-radius:20px;margin-bottom:8px;}
+.bnd-course.none{color:var(--orange-dk);background:var(--orange-l);border-color:rgba(245,145,30,0.25);}
 .bnd-hours-label{font-size:10px;letter-spacing:4px;text-transform:uppercase;color:var(--faint);margin-top:2px;font-weight:600;}
 
 .bnd-price-tag{display:inline-flex;align-items:baseline;gap:4px;margin-top:12px;padding:8px 20px;background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(27,79,168,0.14);border-radius:30px;box-shadow:0 4px 14px rgba(23,45,90,0.06);}
@@ -133,7 +135,7 @@
     </div>
     @else
     <div class="bundles-grid">
-        @foreach($bundles->sortBy('hours') as $bundle)
+        @foreach($bundles->sortBy(fn($b) => [$b->courseTemplate?->name ?? 'zzz', (float) $b->hours]) as $bundle)
         <div class="bnd-card {{ !$bundle->is_active ? 'inactive' : '' }}">
 
             <div class="bnd-card-header">
@@ -141,6 +143,11 @@
                 <div style="position:absolute;top:12px;right:14px;font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--red);background:var(--red-l);border:1px solid rgba(220,38,38,0.18);padding:3px 9px;border-radius:20px;font-weight:600;">Inactive</div>
                 @endif
                 <div class="bnd-name">{{ $bundle->name ?: rtrim(rtrim(number_format($bundle->hours, 2), '0'), '.') . ' Hours Bundle' }}</div>
+                @if($bundle->courseTemplate)
+                <div class="bnd-course">{{ $bundle->courseTemplate->name }}</div>
+                @else
+                <div class="bnd-course none" title="Edit this bundle to link it to a course">All Courses</div>
+                @endif
                 <div class="bnd-hours">{{ number_format($bundle->hours, 0) }}</div>
                 <div class="bnd-hours-label">Hours</div>
                 <div style="display:flex;justify-content:center;">
@@ -172,7 +179,7 @@
                 </div>
                 <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
                     <button class="btn-sm btn-edit"
-                            onclick='openEdit({{ $bundle->bundle_id }}, @json($bundle->name ?? ""), {{ $bundle->hours }}, {{ $bundle->price }})'>
+                            onclick='openEdit({{ $bundle->bundle_id }}, @json($bundle->name ?? ""), {{ $bundle->course_template_id ?? "null" }}, {{ $bundle->hours }}, {{ $bundle->price }})'>
                         <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         Edit
                     </button>
@@ -220,6 +227,16 @@
                         <input type="text" name="name" class="form-control" placeholder="e.g. Starter Bundle" maxlength="100" required>
                     </div>
                     <div class="form-field">
+                        <label class="form-label">Course <span style="color:var(--orange);">*</span></label>
+                        <select name="course_template_id" class="form-control" required>
+                            <option value="">— Select Course —</option>
+                            @foreach($courses as $c)
+                            <option value="{{ $c->course_template_id }}">{{ $c->name }}</option>
+                            @endforeach
+                        </select>
+                        <span style="font-size:10px;color:var(--faint);">Only students registering in this course will see this bundle</span>
+                    </div>
+                    <div class="form-field">
                         <label class="form-label">Hours <span style="color:var(--orange);">*</span></label>
                         <input type="number" name="hours" class="form-control" placeholder="e.g. 20" step="0.5" min="0.5" required
                                oninput="calcPPH('create')">
@@ -265,6 +282,15 @@
                     <div class="form-field">
                         <label class="form-label">Bundle Name <span style="color:var(--orange);">*</span></label>
                         <input type="text" id="edit_name" name="name" class="form-control" maxlength="100" required>
+                    </div>
+                    <div class="form-field">
+                        <label class="form-label">Course <span style="color:var(--orange);">*</span></label>
+                        <select id="edit_course" name="course_template_id" class="form-control" required>
+                            <option value="">— Select Course —</option>
+                            @foreach($courses as $c)
+                            <option value="{{ $c->course_template_id }}">{{ $c->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="form-field">
                         <label class="form-label">Hours <span style="color:var(--orange);">*</span></label>
@@ -344,9 +370,10 @@ document.getElementById('deleteBundleModal').addEventListener('click', function 
     if (e.target === this) closeDeleteBundle();
 });
 
-function openEdit(id, name, hours, price) {
+function openEdit(id, name, courseId, hours, price) {
     document.getElementById('editForm').action = `/admin/bundles/${id}`;
     document.getElementById('edit_name').value = name || '';
+    document.getElementById('edit_course').value = courseId ? String(courseId) : '';
     document.getElementById('edit_hours').value = hours;
     document.getElementById('edit_price').value = price;
     calcPPH('edit');

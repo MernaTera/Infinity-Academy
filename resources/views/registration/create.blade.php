@@ -646,7 +646,7 @@
                                 <select id="bundle_select" name="bundle_id" class="form-control-inf" data-leftover="{{ $leftoverHours ?? 0 }}">
                                     <option value="">@if(!empty($leftoverHours) && $leftoverHours > 0)— No extra bundle (use existing hours) —@else— Select Bundle —@endif</option>
                                     @foreach($bundles as $b)
-                                        <option value="{{ $b->bundle_id }}" data-price="{{ $b->price }}" data-hours="{{ $b->hours }}">
+                                        <option value="{{ $b->bundle_id }}" data-price="{{ $b->price }}" data-hours="{{ $b->hours }}" data-course="{{ $b->course_template_id ?? '' }}">
                                             {{ $b->name ? $b->name . ' — ' : '' }}{{ $b->hours }} hrs — {{ $b->price }} LE
                                         </option>
                                     @endforeach
@@ -965,11 +965,36 @@
             }
         }
 
+        function filterBundlesByCourse() {
+            const courseId = courseSel.value;
+            let visible = 0;
+            Array.from(bundleSel.options).forEach(opt => {
+                if (!opt.value) return;
+                const bc = opt.dataset.course || '';
+                const ok = !bc || (courseId && String(bc) === String(courseId));
+                opt.hidden = !ok;
+                opt.disabled = !ok;
+                if (ok) visible++;
+            });
+            const current = bundleSel.options[bundleSel.selectedIndex];
+            if (current && current.value && current.disabled) {
+                bundleSel.value = '';
+                bundleSel.dispatchEvent(new Event('change'));
+            }
+            if (!visible && !parseFloat(bundleSel.dataset.leftover || 0)) {
+                bundleSel.options[0].textContent = courseId ? '— No bundles for this course —' : '— Select a course first —';
+            } else if (!parseFloat(bundleSel.dataset.leftover || 0)) {
+                bundleSel.options[0].textContent = '— Select Bundle —';
+            }
+        }
+
+        courseSel.addEventListener('change', filterBundlesByCourse);
         courseSel.addEventListener('change', checkBundleHours);
         levelSel?.addEventListener('change', checkBundleHours);
         sublevelSel?.addEventListener('change', checkBundleHours);
         bundleSel.addEventListener('change', checkBundleHours);
 
+        filterBundlesByCourse();
         checkBundleHours();
     })();
 </script>

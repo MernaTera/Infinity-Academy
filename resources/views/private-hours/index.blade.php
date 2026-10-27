@@ -236,7 +236,7 @@
                                 @if($e->v_state === 'depleted')
                                     
                                     <button type="button" class="btn-enroll"
-                                        onclick="openBundleModal({{ $e->enrollment_id }}, '{{ addslashes($e->student?->full_name ?? 'Student') }}', {{ $e->v_remaining }})">
+                                        onclick="openBundleModal({{ $e->enrollment_id }}, '{{ addslashes($e->student?->full_name ?? 'Student') }}', {{ $e->v_remaining }}, {{ $e->course_template_id ?? $e->courseInstance?->course_template_id ?? 'null' }})">
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                                         Add Bundle
                                     </button>
@@ -300,13 +300,13 @@
             <select id="bm_bundle" name="bundle_id" required style="width:100%;padding:11px 13px;border:1px solid rgba(27,79,168,0.15);border-radius:8px;font-size:13px;color:#1A2A4A;margin-bottom:18px;background:#fff;">
                 <option value="">— Choose a bundle —</option>
                 @foreach($bundles as $b)
-                <option value="{{ $b->bundle_id }}" data-hours="{{ $b->hours }}" data-price="{{ $b->price }}">
+                <option value="{{ $b->bundle_id }}" data-hours="{{ $b->hours }}" data-price="{{ $b->price }}" data-course="{{ $b->course_template_id ?? '' }}">
                     {{ $b->name ? $b->name . ' — ' : '' }}{{ rtrim(rtrim(number_format($b->hours, 2), '0'), '.') }} hours — {{ number_format($b->price) }} LE
                 </option>
                 @endforeach
             </select>
 
-            <label style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7A8A9A;font-weight:600;margin-bottom:7px;margin-top:10px;">Payment Method</label>
+            <label style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7A8A9A;font-weight:600;margin-bottom:7px;">Payment Method</label>
             <select id="bm_method" name="payment_method" required style="width:100%;padding:11px 13px;border:1px solid rgba(27,79,168,0.15);border-radius:8px;font-size:13px;color:#1A2A4A;margin-bottom:18px;background:#fff;">
                 <option value="Cash">Cash</option>
                 <option value="Card">Card</option>
@@ -315,7 +315,7 @@
             </select>
 
             
-            <div id="bm_summary" style="display:none;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.2);border-radius:8px;padding:13px 15px;margin-bottom:18px;margin-top:20px;">
+            <div id="bm_summary" style="display:none;background:rgba(5,150,105,0.06);border:1px solid rgba(5,150,105,0.2);border-radius:8px;padding:13px 15px;margin-bottom:18px;">
                 <div style="display:flex;justify-content:space-between;font-size:12px;color:#1A2A4A;margin-bottom:6px;">
                     <span>Hours added</span><strong id="bm_sum_hours" style="color:#15803D;"></strong>
                 </div>
@@ -327,9 +327,9 @@
                 </div>
             </div>
 
-            <div style="display:flex;gap:10px;margin-top:20px;">
+            <div style="display:flex;gap:10px;">
                 <button type="button" onclick="closeBundleModal()" style="flex:1;padding:12px;border:1px solid rgba(27,79,168,0.15);background:#fff;color:#7A8A9A;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
-                <button type="submit" style="flex:2;padding:12px;border:none;background:#1B4FA8;color:#fff;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 14px rgba(73, 103, 235, 0.3);">Charge &amp; Activate</button>
+                <button type="submit" style="flex:2;padding:12px;border:none;background:#F5911E;color:#fff;border-radius:8px;font-size:12px;font-weight:700;letter-spacing:0.5px;cursor:pointer;box-shadow:0 4px 14px rgba(245,145,30,0.3);">Charge &amp; Activate</button>
             </div>
         </form>
     </div>
@@ -338,13 +338,24 @@
 <script>
     let bmCurrentBalance = 0;
 
-    function openBundleModal(enrollmentId, studentName, remaining) {
+    function openBundleModal(enrollmentId, studentName, remaining, courseId) {
         const form = document.getElementById('bundleForm');
         form.action = '{{ url('private-hours') }}/' + enrollmentId + '/charge-bundle';
         document.getElementById('bm_student').textContent = studentName;
         bmCurrentBalance = parseFloat(remaining) || 0;
         document.getElementById('bm_balance').textContent = bmCurrentBalance + ' hours';
-        document.getElementById('bm_bundle').value = '';
+        const sel = document.getElementById('bm_bundle');
+        let visible = 0;
+        Array.from(sel.options).forEach(opt => {
+            if (!opt.value) return;
+            const bc = opt.dataset.course || '';
+            const ok = !bc || !courseId || String(bc) === String(courseId);
+            opt.hidden = !ok;
+            opt.disabled = !ok;
+            if (ok) visible++;
+        });
+        sel.options[0].textContent = visible ? '— Choose a bundle —' : '— No bundles for this course —';
+        sel.value = '';
         document.getElementById('bm_summary').style.display = 'none';
         document.getElementById('bundleModalOverlay').style.display = 'flex';
     }

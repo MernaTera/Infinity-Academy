@@ -194,6 +194,16 @@ class RegistrationController extends Controller
             return $failValidation($validator->errors()->toArray());
         }
 
+        if ($request->type === 'private' && $request->filled('bundle_id')) {
+            $selectedBundle = PrivateBundle::active()->find($request->bundle_id);
+            if (!$selectedBundle) {
+                return $failValidation(['bundle_id' => 'The selected bundle is no longer available. Please refresh and pick another bundle.']);
+            }
+            if (!$selectedBundle->availableForCourse($request->course_template_id)) {
+                return $failValidation(['bundle_id' => 'The selected bundle belongs to a different course. Please pick a bundle for this course.']);
+            }
+        }
+
         if (!empty($request->resume_postponement_id)) {
             $resumePp = \App\Models\Enrollment\Postponement::with('enrollment')
                 ->where('status', 'Active')

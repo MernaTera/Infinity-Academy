@@ -122,6 +122,11 @@ class PrivateHoursController extends Controller
         $enrollment = Enrollment::where('enrollment_type', 'Private')->findOrFail($enrollmentId);
         $bundle     = PrivateBundle::active()->findOrFail($data['bundle_id']);
 
+        $courseId = $enrollment->course_template_id ?? $enrollment->courseInstance?->course_template_id;
+        if ($courseId && !$bundle->availableForCourse($courseId)) {
+            return back()->with('error', 'This bundle belongs to a different course. Please pick a bundle for the student\'s course.');
+        }
+
         $methodMap = [
             'Cash'          => 'Cash',
             'Card'          => 'Card',
