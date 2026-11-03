@@ -35,6 +35,8 @@ use App\Http\Controllers\Admin\AdminSalesController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\AdminRefundController;
 use App\Http\Controllers\Admin\TestFeeAdminController;
+use App\Http\Controllers\Admin\CertificateAdminController;
+use App\Http\Controllers\ServiceSaleController;
 use App\Http\Controllers\Admin\ContractTypeAdminController;
 use App\Http\Controllers\Admin\BranchAdminController;
 
@@ -96,6 +98,9 @@ Route::middleware(['auth', 'permission:leads.edit'])
         Route::get('/leads/{lead}/edit', [LeadController::class, 'edit'])->name('leads.edit');
         Route::put('/leads/{lead}',   [LeadController::class, 'update'])->name('leads.update');
         Route::patch('/leads/{lead}', [LeadController::class, 'update']);
+
+        Route::post('/leads/{lead}/service-sales',   [ServiceSaleController::class, 'store'])->name('leads.service-sales.store');
+        Route::get('/service-sales/{id}/receipt',    [ServiceSaleController::class, 'receipt'])->name('service-sales.receipt');
     });
 
 Route::middleware(['auth', 'permission:leads.delete'])
@@ -326,6 +331,11 @@ Route::middleware(['auth', 'permission:hr.view'])
         Route::post('/test-fees',          [TestFeeAdminController::class, 'store'])->name('test-fees.store');
         Route::patch('/test-fees/{id}',    [TestFeeAdminController::class, 'update'])->name('test-fees.update');
         Route::delete('/test-fees/{id}',   [TestFeeAdminController::class, 'destroy'])->name('test-fees.destroy');
+
+        Route::get('/certificates',           [CertificateAdminController::class, 'index'])->name('certificates.index');
+        Route::post('/certificates',          [CertificateAdminController::class, 'store'])->name('certificates.store');
+        Route::patch('/certificates/{id}',    [CertificateAdminController::class, 'update'])->name('certificates.update');
+        Route::delete('/certificates/{id}',   [CertificateAdminController::class, 'destroy'])->name('certificates.destroy');
         
         // Patches
         Route::get('/patches',                      [PatchAdminController::class, 'index'])->name('patches.index');

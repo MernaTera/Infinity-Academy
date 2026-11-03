@@ -19,7 +19,8 @@ use App\Models\Concerns\BelongsToBranch;
  * Class FinancialTransaction
  * 
  * @property int $transaction_id
- * @property int $enrollment_id
+ * @property int|null $enrollment_id
+ * @property int|null $service_sale_id
  * @property int $patch_id
  * @property int $branch_id
  * @property string $transaction_type
@@ -51,6 +52,7 @@ class FinancialTransaction extends Model
 
 	protected $casts = [
 		'enrollment_id' => 'integer',
+		'service_sale_id' => 'integer',
 		'patch_id' => 'integer',
 		'branch_id' => 'integer',
 		'amount' => 'decimal:2',
@@ -61,6 +63,7 @@ class FinancialTransaction extends Model
 
 	protected $fillable = [
 		'enrollment_id',
+		'service_sale_id',
 		'patch_id',
 		'branch_id',
 		'transaction_type',
@@ -85,6 +88,11 @@ class FinancialTransaction extends Model
 	public function enrollment()
 	{
 		return $this->belongsTo(Enrollment::class, 'enrollment_id');
+	}
+
+	public function serviceSale()
+	{
+		return $this->belongsTo(ServiceSale::class, 'service_sale_id');
 	}
 
 	public function patch()
@@ -136,6 +144,16 @@ class FinancialTransaction extends Model
 	public function isTest()
 	{
 		return $this->transaction_category === 'Test';
+	}
+
+	public function isCertificate()
+	{
+		return $this->transaction_category === 'Certificate';
+	}
+
+	public function isServiceSale()
+	{
+		return $this->service_sale_id !== null;
 	}
 
 	public function isCash()

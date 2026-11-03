@@ -31,6 +31,7 @@ class ManualTransactionController extends Controller
 
         $transactions = FinancialTransaction::with([
                 'enrollment.student',
+                'serviceSale',
                 'branch',
                 'createdBy',
             ])

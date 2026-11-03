@@ -18,6 +18,8 @@ use App\Models\Finance\RefundRequest;
 use App\Models\Finance\Offer;
 use App\Models\Finance\PaymentPlan;
 use App\Models\Finance\PrivateBundle;
+use App\Models\Finance\ServiceSale;
+use App\Models\Finance\CertificateSetting;
 use App\Models\Academic\CourseTemplate;
 use App\Models\Academic\Level;
 use App\Models\Academic\Sublevel;
@@ -67,6 +69,8 @@ class AppServiceProvider extends ServiceProvider
         Offer::observe(AuditObserver::class);
         PaymentPlan::observe(AuditObserver::class);
         PrivateBundle::observe(AuditObserver::class);
+        ServiceSale::observe(AuditObserver::class);
+        CertificateSetting::observe(AuditObserver::class);
         CourseTemplate::observe(AuditObserver::class);
         Level::observe(AuditObserver::class);
         Sublevel::observe(AuditObserver::class);

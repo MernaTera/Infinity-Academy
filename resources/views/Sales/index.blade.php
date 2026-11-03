@@ -91,6 +91,10 @@
     .std-cell { display:flex; align-items:center; gap:11px; }
     .std-avatar { width:34px; height:34px; border-radius:11px; background:rgba(27,79,168,0.1); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:14px; color:var(--blue); flex-shrink:0; }
     .std-name { font-weight:600; color:var(--text); }
+    .std-sub { font-size:10px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+    .badge-lead { display:inline-flex; padding:1px 7px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; background:var(--orange-l); color:var(--orange-dk); }
+    .receipt-link { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; margin-left:6px; border-radius:7px; color:var(--blue); border:1px solid rgba(27,79,168,0.2); vertical-align:middle; transition:background 0.2s; }
+    .receipt-link:hover { background:var(--blue-l); color:var(--blue); }
 
     .badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:10px; font-weight:600; letter-spacing:0.3px; white-space:nowrap; }
     .badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
@@ -256,6 +260,7 @@
                             <th>Course</th>
                             <th class="num">Deposit</th>
                             <th class="num">Test</th>
+                            <th class="num">Certificate</th>
                             <th class="num">Material</th>
                             <th>Material Type</th>
                             <th class="num">Total Revenue</th>
@@ -264,15 +269,36 @@
                     </thead>
                     <tbody>
                         @forelse($revenueRows as $row)
+                        @php $isService = ($row['row_type'] ?? 'enrollment') === 'service'; @endphp
                         <tr>
                             <td>
                                 <div class="std-cell">
                                     <div class="std-avatar">{{ strtoupper(substr($row['student_name'], 0, 1)) }}</div>
-                                    <span class="std-name">{{ $row['student_name'] }}</span>
+                                    <div>
+                                        <span class="std-name">{{ $row['student_name'] }}</span>
+                                        @if($isService)
+                                            <div class="std-sub">
+                                                @unless($row['is_student'] ?? false)<span class="badge-lead">Lead</span>@endunless
+                                                {{ $row['service_item'] ?? '' }}
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
-                            <td class="money" style="color:var(--text);">{{ $row['course'] }}</td>
-                            <td class="num money">{{ number_format($row['deposit']) }} LE</td>
+                            <td class="money" style="color:var(--text);">
+                                @if($isService)
+                                    <span style="color:var(--faint);">—</span>
+                                @else
+                                    {{ $row['course'] }}
+                                @endif
+                            </td>
+                            <td class="num money">
+                                @if($isService)
+                                    <span style="color:var(--faint);">—</span>
+                                @else
+                                    {{ number_format($row['deposit']) }} LE
+                                @endif
+                            </td>
                             <td class="num money">
                                 @if(($row['test_fee'] ?? 0) > 0)
                                     {{ number_format($row['test_fee']) }} LE
@@ -280,7 +306,20 @@
                                     <span style="color:var(--faint);">—</span>
                                 @endif
                             </td>
-                            <td class="num money">{{ number_format($row['material']) }} LE</td>
+                            <td class="num money">
+                                @if(($row['certificate'] ?? 0) > 0)
+                                    {{ number_format($row['certificate']) }} LE
+                                @else
+                                    <span style="color:var(--faint);">—</span>
+                                @endif
+                            </td>
+                            <td class="num money">
+                                @if($isService)
+                                    <span style="color:var(--faint);">—</span>
+                                @else
+                                    {{ number_format($row['material']) }} LE
+                                @endif
+                            </td>
                                                         <td>
                                 @if(!empty($row['material_type']))
                                 <span class="badge {{ $row['material_type'] === 'Individual' ? 'badge-direct' : 'badge-shared' }}">
@@ -291,11 +330,18 @@
                                 @endif
                             </td>
                             <td class="num total">{{ number_format($row['total']) }} LE</td>
-                            <td style="color:var(--faint);font-size:11px;white-space:nowrap;">{{ $row['date'] }}</td>
+                            <td style="color:var(--faint);font-size:11px;white-space:nowrap;">
+                                {{ $row['date'] }}
+                                @if(!empty($row['receipt_url']))
+                                    <a href="{{ $row['receipt_url'] }}" target="_blank" class="receipt-link" title="Print receipt">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                                    </a>
+                                @endif
+                            </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8">
+                            <td colspan="9">
                                 <div class="tbl-empty">
                                     <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
                                     <div class="tbl-empty-title">No Revenue This Period</div>
@@ -311,6 +357,7 @@
                             <td colspan="2" class="tfoot-label">Total ({{ $revenueTotals['count'] }} {{ Str::plural('student', $revenueTotals['count']) }})</td>
                             <td class="num tfoot-num">{{ number_format($revenueTotals['deposit']) }} LE</td>
                             <td class="num tfoot-num">{{ number_format($revenueTotals['test_fee']) }} LE</td>
+                            <td class="num tfoot-num">{{ number_format($revenueTotals['certificate'] ?? 0) }} LE</td>
                             <td class="num tfoot-num">{{ number_format($revenueTotals['material']) }} LE</td>
                             <td class="num tfoot-num"></td>
                             <td class="num tfoot-total">{{ number_format($revenueTotals['total']) }} LE</td>

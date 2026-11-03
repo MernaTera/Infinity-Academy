@@ -354,6 +354,7 @@
                             $catClass = match($tx->transaction_category) {
                                 'Course'   => 'p-course',
                                 'Test'     => 'p-test',
+                                'Certificate' => 'p-test',
                                 'Material' => 'p-material',
                                 default    => 'p-course',
                             };
@@ -369,10 +370,10 @@
                     @endphp
                     <div class="row">
                         <div class="row-av" style="background:rgba(5,150,105,0.10);color:var(--green);">
-                            {{ strtoupper(substr($tx->enrollment?->student?->full_name ?? '?', 0, 1)) }}
+                            {{ strtoupper(substr($tx->enrollment?->student?->full_name ?? $tx->serviceSale?->client_name ?? '?', 0, 1)) }}
                         </div>
                         <div style="flex:1;min-width:0;">
-                            <div class="row-name">{{ $tx->enrollment?->student?->full_name ?? '—' }}</div>
+                            <div class="row-name">{{ $tx->enrollment?->student?->full_name ?? $tx->serviceSale?->client_name ?? '—' }}</div>
                             <div class="row-sub"><span class="pill {{ $catClass }}">{{ $catLabel }}</span> · {{ $tx->created_at->diffForHumans() }}</div>
                         </div>
                         <div style="text-align:right;flex-shrink:0;">

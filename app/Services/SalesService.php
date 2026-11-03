@@ -144,15 +144,48 @@ class SalesService
         return RevenueSplit::with([
                 'financialTransaction.enrollment.student',
                 'financialTransaction.enrollment.courseTemplate',
+                'financialTransaction.serviceSale',
             ])
             ->where('employee_id', $employee->employee_id)
             ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
             ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
+            ->orderByDesc('created_at')
             ->get()
-            ->groupBy(fn($r) => $r->financialTransaction?->enrollment_id)
+            ->groupBy(function ($r) {
+                $tx = $r->financialTransaction;
+                if ($tx?->service_sale_id) {
+                    return 'svc-' . $tx->service_sale_id;
+                }
+                return 'enr-' . ($tx?->enrollment_id ?? 0);
+            })
             ->map(function ($splits) {
-                $first      = $splits->first();
-                $enrollment = $first->financialTransaction?->enrollment;
+                $first = $splits->first();
+                $tx    = $first->financialTransaction;
+
+                if ($tx?->service_sale_id) {
+                    $sale   = $tx->serviceSale;
+                    $amount = (float) $splits->sum('amount_allocated');
+                    $isTest = $tx->transaction_category === 'Test';
+
+                    return [
+                        'row_type'      => 'service',
+                        'student_name'  => $sale?->client_name ?? '—',
+                        'client_phone'  => $sale?->client_phone,
+                        'is_student'    => (bool) $sale?->student_id,
+                        'course'        => '—',
+                        'service_item'  => $sale?->item_name,
+                        'deposit'       => 0,
+                        'test_fee'      => $isTest ? $amount : 0,
+                        'certificate'   => $isTest ? 0 : $amount,
+                        'material'      => 0,
+                        'material_type' => null,
+                        'total'         => $amount,
+                        'date'          => $first->created_at?->format('d M Y'),
+                        'receipt_url'   => $sale ? route('service-sales.receipt', $sale->service_sale_id) : null,
+                    ];
+                }
+
+                $enrollment = $tx?->enrollment;
 
                 $deposit  = $splits->where('allocation_type', 'Direct')
                                 ->filter(fn($r) => $r->financialTransaction?->transaction_category === 'Course')
@@ -170,14 +203,20 @@ class SalesService
                     : ($materialTypes->count() > 1 ? 'Mixed' : ($materialTypes->first() === 'Shared' ? 'Shared' : 'Individual'));
 
                 return [
-                    'student_name' => $enrollment?->student?->full_name ?? '—',
-                    'course'       => $enrollment?->courseTemplate?->name ?? '—',
-                    'deposit'      => $deposit,
-                    'test_fee'     => $testFee,   
-                    'material'     => $material,
+                    'row_type'      => 'enrollment',
+                    'student_name'  => $enrollment?->student?->full_name ?? '—',
+                    'client_phone'  => null,
+                    'is_student'    => true,
+                    'course'        => $enrollment?->courseTemplate?->name ?? '—',
+                    'service_item'  => null,
+                    'deposit'       => $deposit,
+                    'test_fee'      => $testFee,
+                    'certificate'   => 0,
+                    'material'      => $material,
                     'material_type' => $materialType,
-                    'total'        => $splits->sum('amount_allocated'),
-                    'date'         => $first->created_at?->format('d M Y'),
+                    'total'         => $splits->sum('amount_allocated'),
+                    'date'          => $first->created_at?->format('d M Y'),
+                    'receipt_url'   => null,
                 ];
             })->values();
     }

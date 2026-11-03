@@ -125,6 +125,11 @@ class Lead extends Model
 		return $this->belongsTo(\App\Models\Student\Student::class, 'student_id', 'student_id');
 	}
 
+	public function serviceSales()
+	{
+		return $this->hasMany(\App\Models\Finance\ServiceSale::class, 'lead_id', 'lead_id');
+	}
+
 	public function getIsPendingApprovalAttribute(): bool
 	{
 		if (!$this->student_id) return false;

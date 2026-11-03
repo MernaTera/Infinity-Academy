@@ -34,6 +34,7 @@ class SalesController extends Controller
             'count'    => $allRows->count(),
             'deposit'  => $allRows->sum('deposit'),
             'test_fee' => $allRows->sum('test_fee'),
+            'certificate' => $allRows->sum('certificate'),
             'material' => $allRows->sum('material'),
             'total'    => $allRows->sum('total'),
         ];

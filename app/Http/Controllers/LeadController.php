@@ -94,7 +94,28 @@ class LeadController extends Controller
             }
         }
 
-        return view('leads.index', compact('leads', 'stats', 'registeredRows', 'pendingApprovalStudentIds'));
+        $serviceLeadIds = $leads->pluck('lead_id')
+            ->merge($registeredLeads->pluck('lead_id'))
+            ->unique()
+            ->values()
+            ->all();
+
+        $serviceCounts = empty($serviceLeadIds) ? [] :
+            \App\Models\Finance\ServiceSale::whereIn('lead_id', $serviceLeadIds)
+                ->selectRaw('lead_id, service_type, COUNT(*) as total')
+                ->groupBy('lead_id', 'service_type')
+                ->get()
+                ->groupBy('lead_id')
+                ->map(fn($rows) => $rows->pluck('total', 'service_type')->map(fn($n) => (int) $n)->all())
+                ->all();
+
+        $testFees     = \App\Models\Finance\TestFeeSetting::active()->orderBy('fee')->get(['id', 'name', 'fee']);
+        $certificates = \App\Models\Finance\CertificateSetting::active()->orderBy('fee')->get(['id', 'name', 'fee']);
+
+        return view('leads.index', compact(
+            'leads', 'stats', 'registeredRows', 'pendingApprovalStudentIds',
+            'serviceCounts', 'testFees', 'certificates'
+        ));
     }
 
     public function publicLeads()
@@ -449,6 +470,12 @@ class LeadController extends Controller
 
     public function destroy($id)
     {
+        if (\App\Models\Finance\ServiceSale::where('lead_id', $id)->exists()) {
+            return redirect()
+                ->route('leads.index')
+                ->with('error', 'This lead has paid tests or certificates and cannot be deleted.');
+        }
+
         $this->leadRepository->delete($id);
 
         return redirect()

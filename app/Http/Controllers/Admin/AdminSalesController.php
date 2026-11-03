@@ -122,6 +122,7 @@ class AdminSalesController extends Controller
                 'count'    => $rows->count(),
                 'deposit'  => $rows->sum('deposit'),
                 'test_fee' => $rows->sum('test_fee'),
+                'certificate' => $rows->sum('certificate'),
                 'material' => $rows->sum('material'),
                 'total'    => $rows->sum('total'),
             ],

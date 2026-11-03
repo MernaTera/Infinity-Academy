@@ -174,19 +174,49 @@
     .notes-cell { font-size:11px; color:#4A5A7A; max-width:150px; display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .dash-muted { color:var(--faint); }
 
-    .action-group { display:flex; gap:7px; flex-wrap:wrap; }
+    .action-group { display:flex; gap:5px; flex-wrap:nowrap; align-items:center; }
     .btn-action {
-        display:inline-flex; align-items:center; gap:5px; padding:7px 13px;
-        border-radius:9px; font-size:10px; letter-spacing:0.4px; font-weight:600;
-        text-decoration:none; cursor:pointer; transition:all 0.2s;
+        display:inline-flex; align-items:center; gap:4px; padding:5px 9px;
+        border-radius:8px; font-size:9.5px; letter-spacing:0.3px; font-weight:600;
+        white-space:nowrap; text-decoration:none; cursor:pointer; transition:all 0.2s;
         background:rgba(255,255,255,0.4); border:1px solid var(--glass-bd);
     }
+    
     .btn-edit { color:var(--blue); border-color:rgba(27,79,168,0.25); }
     .btn-edit:hover { background:rgba(27,79,168,0.08); border-color:var(--blue); text-decoration:none; color:var(--blue); }
     .btn-log { color:var(--muted); border-color:rgba(122,138,154,0.25); }
     .btn-log:hover { background:rgba(122,138,154,0.1); border-color:#4e5e6e; }
     .btn-invoice { color:var(--green); border-color:rgba(5,150,105,0.25); }
     .btn-invoice:hover { background:rgba(5,150,105,0.08); border-color:var(--green); text-decoration:none; color:var(--green); }
+    .btn-svc-test { color:#7C3AED; border-color:rgba(124,58,237,0.25); }
+    .btn-svc-test:hover { background:rgba(124,58,237,0.08); border-color:#7C3AED; }
+    .btn-svc-cert { color:var(--orange-dk); border-color:rgba(245,145,30,0.3); }
+    .btn-svc-cert:hover { background:var(--orange-l); border-color:var(--orange); }
+
+    .svc-pills { display:flex; gap:5px; flex-wrap:wrap; margin-top:5px; }
+    .svc-pill { display:inline-flex; align-items:center; padding:2px 8px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; white-space:nowrap; }
+    .svc-pill-test { background:rgba(124,58,237,0.09); color:#7C3AED; }
+    .svc-pill-cert { background:var(--orange-l); color:var(--orange-dk); }
+
+    .svc-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
+    .svc-eyebrow { font-size:9px; letter-spacing:2.5px; text-transform:uppercase; font-weight:600; margin-bottom:3px; }
+    .svc-client { background:var(--blue-l); border:1px solid var(--border); border-radius:12px; padding:11px 14px; margin-bottom:14px; }
+    .svc-client-name { font-weight:600; font-size:14px; color:var(--text); }
+    .svc-client-phone { font-size:11px; color:var(--muted); margin-top:2px; }
+    .svc-field { margin-bottom:12px; }
+    .svc-label { display:block; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-bottom:5px; }
+    .svc-input { width:100%; padding:10px 13px; border:1px solid rgba(27,79,168,0.15); border-radius:11px; background:rgba(255,255,255,0.7); font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); outline:none; }
+    .svc-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.1); }
+    .svc-input[readonly] { background:rgba(27,79,168,0.04); font-weight:600; color:var(--blue); }
+    textarea.svc-input { resize:vertical; min-height:64px; }
+    .svc-auto-note { font-size:11px; color:var(--muted); background:rgba(122,138,154,0.08); border:1px dashed rgba(122,138,154,0.3); border-radius:9px; padding:8px 11px; margin-bottom:6px; }
+    .svc-error { display:none; background:var(--red-l); border:1px solid rgba(220,38,38,0.2); color:var(--red); border-radius:10px; padding:9px 12px; font-size:12px; margin-bottom:12px; }
+    .svc-empty { font-size:12px; color:var(--orange-dk); background:var(--orange-l); border-radius:10px; padding:10px 12px; }
+    .svc-done { display:none; text-align:center; padding:8px 0 4px; }
+    .svc-done-icon { width:54px; height:54px; border-radius:50%; background:rgba(27,79,168,0.1); display:flex; align-items:center; justify-content:center; margin:0 auto 12px; }
+    .svc-done-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:2px; color:var(--text); }
+    .svc-done-sub { font-size:12px; color:var(--muted); margin-top:4px; }
+    .btn-save:disabled { opacity:0.55; cursor:progress; transform:none; box-shadow:none; }
 
     .empty-state { text-align:center; padding:60px 20px; }
     .empty-state svg { opacity:0.35; margin-bottom:14px; }
@@ -333,6 +363,7 @@
                                 <td>
                                     <div class="lead-name">{{ $lead->full_name }}</div>
                                     <div class="lead-phone">{{ $lead->phone }}</div>
+                                    @include('leads.partials.service-badges', ['lead' => $lead])
                                 </td>
 
                                 <td>
@@ -406,6 +437,7 @@
                                                 Invoice
                                             </a>
                                         @endif
+                                        @include('leads.partials.service-buttons', ['lead' => $lead])
                                         <button class="btn-action btn-log" onclick="openHistoryModal({{ $lead->lead_id }})">
                                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                             Log
@@ -445,6 +477,74 @@
             <div class="modal-actions">
                 <button onclick="closeModal()" class="btn-cancel">Cancel</button>
                 <button onclick="confirmCall()" class="btn-save">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="serviceModal" class="call-modal">
+        <div class="call-modal-box" style="max-width:460px;">
+            <div id="svcFormWrap">
+                <div class="svc-head">
+                    <div>
+                        <div class="svc-eyebrow" id="svcEyebrow">Add Test</div>
+                        <div class="call-modal-title" style="margin-bottom:0;" id="svcTitle">Placement Test</div>
+                    </div>
+                    <button type="button" onclick="closeServiceModal()" style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:20px;line-height:1;">&times;</button>
+                </div>
+
+                <div class="svc-client">
+                    <div class="svc-client-name" id="svcClientName"></div>
+                    <div class="svc-client-phone" id="svcClientPhone"></div>
+                </div>
+
+                <div class="svc-error" id="svcError"></div>
+
+                <div id="svcEmpty" class="svc-empty" style="display:none;"></div>
+
+                <div id="svcFields">
+                    <div class="svc-field">
+                        <label class="svc-label" id="svcItemLabel">Test</label>
+                        <select id="svcItem" class="svc-input" data-no-enhance onchange="svcSyncPrice()"></select>
+                    </div>
+                    <div class="svc-field">
+                        <label class="svc-label">Price (LE)</label>
+                        <input type="text" id="svcPrice" class="svc-input" readonly>
+                    </div>
+                    <div class="svc-field">
+                        <label class="svc-label">Payment Method</label>
+                        <select id="svcMethod" class="svc-input" data-no-enhance onchange="svcSyncMethod()">
+                            <option value="Cash">Cash</option>
+                            <option value="Instapay">Instapay</option>
+                            <option value="Vodafone_Cash">Vodafone Cash</option>
+                        </select>
+                    </div>
+                    <div class="svc-field" id="svcRefWrap" style="display:none;">
+                        <label class="svc-label">Reference Number <span style="text-transform:none;letter-spacing:0;font-weight:400;">(optional)</span></label>
+                        <input type="text" id="svcRef" class="svc-input" maxlength="255">
+                    </div>
+                    <div class="svc-field">
+                        <label class="svc-label">Notes</label>
+                        <div class="svc-auto-note" id="svcAutoNote"></div>
+                        <textarea id="svcNotes" class="svc-input" maxlength="1000" placeholder="Add more notes (optional)"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" onclick="closeServiceModal()" class="btn-cancel">Cancel</button>
+                    <button type="button" id="svcSubmit" onclick="submitServiceSale()" class="btn-save">Add</button>
+                </div>
+            </div>
+
+            <div id="svcDoneWrap" class="svc-done">
+                <div class="svc-done-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+                </div>
+                <div class="svc-done-title" id="svcDoneTitle">Done</div>
+                <div class="svc-done-sub" id="svcDoneSub"></div>
+                <div class="modal-actions" style="justify-content:center;margin-top:16px;">
+                    <button type="button" onclick="finishServiceModal()" class="btn-cancel">Done</button>
+                    <button type="button" onclick="printServiceReceipt()" class="btn-save">Print Receipt</button>
+                </div>
             </div>
         </div>
     </div>
@@ -540,6 +640,158 @@ function applyLeadFilter(filter, btn) {
         searchBox.value = '';
     }
 }
+
+const SVC_ITEMS = {!! json_encode([
+    'Test'        => $testFees->map(fn($f) => ['id' => $f->id, 'name' => $f->name, 'fee' => (float) $f->fee])->values(),
+    'Certificate' => $certificates->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'fee' => (float) $c->fee])->values(),
+], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
+const SVC_STORE_URL = "{{ url('leads') }}";
+let svcState = { type: null, leadId: null, receiptUrl: null, busy: false };
+
+function svcEl(id) { return document.getElementById(id); }
+
+function svcMoney(n) {
+    return Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function openServiceModal(type, btn) {
+    const isTest = type === 'Test';
+    svcState = { type: type, leadId: btn.dataset.leadId, receiptUrl: null, busy: false };
+
+    svcEl('svcEyebrow').textContent = isTest ? 'Add Test' : 'Add Certificate';
+    svcEl('svcEyebrow').style.color = isTest ? '#7C3AED' : 'var(--orange-dk)';
+    svcEl('svcTitle').textContent   = isTest ? 'Placement Test' : 'Certificate';
+    svcEl('svcItemLabel').textContent = isTest ? 'Test' : 'Certificate Type';
+    svcEl('svcClientName').textContent  = btn.dataset.leadName || '';
+    svcEl('svcClientPhone').textContent = btn.dataset.leadPhone || '';
+
+    const items  = SVC_ITEMS[type] || [];
+    const select = svcEl('svcItem');
+    select.innerHTML = '';
+    items.forEach(function (it) {
+        const opt = document.createElement('option');
+        opt.value = it.id;
+        opt.dataset.fee  = it.fee;
+        opt.dataset.name = it.name;
+        opt.textContent  = it.name + ' — ' + svcMoney(it.fee) + ' LE';
+        select.appendChild(opt);
+    });
+
+    const hasItems = items.length > 0;
+    svcEl('svcFields').style.display = hasItems ? '' : 'none';
+    svcEl('svcEmpty').style.display  = hasItems ? 'none' : 'block';
+    svcEl('svcEmpty').textContent    = isTest
+        ? 'No active tests are set up yet. Please ask the admin to add one.'
+        : 'No active certificates are set up yet. Please ask the admin to add one.';
+    svcEl('svcSubmit').disabled = !hasItems;
+    svcEl('svcSubmit').textContent = 'Add';
+
+    svcEl('svcMethod').value = 'Cash';
+    svcEl('svcRef').value    = '';
+    svcEl('svcNotes').value  = '';
+    svcEl('svcError').style.display = 'none';
+    svcEl('svcFormWrap').style.display = '';
+    svcEl('svcDoneWrap').style.display = 'none';
+
+    svcSyncPrice();
+    svcSyncMethod();
+    svcEl('serviceModal').style.display = 'flex';
+}
+
+function svcSyncPrice() {
+    const opt = svcEl('svcItem').selectedOptions[0];
+    svcEl('svcPrice').value = opt ? svcMoney(opt.dataset.fee) : '';
+    svcEl('svcAutoNote').textContent = opt
+        ? 'Added ' + svcState.type + ': ' + opt.dataset.name + ' (' + svcMoney(opt.dataset.fee) + ' LE)'
+        : '';
+}
+
+function svcSyncMethod() {
+    const isCash = svcEl('svcMethod').value === 'Cash';
+    svcEl('svcRefWrap').style.display = isCash ? 'none' : '';
+    if (isCash) svcEl('svcRef').value = '';
+}
+
+function closeServiceModal() {
+    if (svcState.busy) return;
+    svcEl('serviceModal').style.display = 'none';
+}
+
+function finishServiceModal() {
+    svcEl('serviceModal').style.display = 'none';
+    window.location.reload();
+}
+
+function printServiceReceipt() {
+    if (svcState.receiptUrl) window.open(svcState.receiptUrl, '_blank');
+}
+
+async function submitServiceSale() {
+    if (svcState.busy) return;
+    const item = svcEl('svcItem').value;
+    if (!item) return;
+
+    svcState.busy = true;
+    const btn = svcEl('svcSubmit');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    svcEl('svcError').style.display = 'none';
+
+    try {
+        const res = await fetch(SVC_STORE_URL + '/' + encodeURIComponent(svcState.leadId) + '/service-sales', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+            },
+            body: JSON.stringify({
+                service_type: svcState.type,
+                item_id: item,
+                payment_method: svcEl('svcMethod').value,
+                reference_number: svcEl('svcRef').value,
+                notes: svcEl('svcNotes').value,
+            }),
+        });
+
+        let data = {};
+        try { data = await res.json(); } catch (e) {}
+
+        if (!res.ok) {
+            let msg = data.message || 'Something went wrong. Please try again.';
+            if (data.errors) {
+                const first = Object.values(data.errors)[0];
+                if (first && first[0]) msg = first[0];
+            }
+            svcEl('svcError').textContent = msg;
+            svcEl('svcError').style.display = 'block';
+            btn.disabled = false;
+            btn.textContent = 'Add';
+            svcState.busy = false;
+            return;
+        }
+
+        svcState.receiptUrl = data.receipt_url || null;
+        svcState.busy = false;
+        svcEl('svcDoneTitle').textContent = data.message || 'Done';
+        svcEl('svcDoneSub').textContent   = data.receipt_no ? ('Receipt ' + data.receipt_no) : '';
+        svcEl('svcFormWrap').style.display = 'none';
+        svcEl('svcDoneWrap').style.display = 'block';
+    } catch (e) {
+        svcEl('svcError').textContent = 'Connection error. Please check your internet and try again.';
+        svcEl('svcError').style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = 'Add';
+        svcState.busy = false;
+    }
+}
+
+document.getElementById('serviceModal').addEventListener('click', function (e) {
+    if (e.target === this && svcEl('svcDoneWrap').style.display === 'block') { finishServiceModal(); return; }
+    if (e.target === this) closeServiceModal();
+});
 
 function filterByStatus(status) {
     applyLeadFilter(status, null);

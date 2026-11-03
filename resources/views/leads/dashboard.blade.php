@@ -46,7 +46,7 @@
     .calls-sub { font-size:11px; color:var(--muted); margin-top:2px; }
     .calls-count { font-family:'Bebas Neue',sans-serif; font-size:36px; color:var(--orange-dk); letter-spacing:1px; }
 
-    .kpi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
+    .kpi-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
     @media (max-width:900px){ .kpi-grid { grid-template-columns:repeat(2,1fr); } }
     @media (max-width:520px){ .kpi-grid { grid-template-columns:1fr; } }
 
@@ -225,7 +225,7 @@
             <div class="kpi-val">{{ $stats['registered'] }}</div>
             <div class="kpi-sub">converted</div>
         </a>
-        <a href="{{ route('leads.index') }}" class="kpi glass" style="--kc:#5A6A85;--kcl:rgba(90,106,133,0.12)">
+        <!-- <a href="{{ route('leads.index') }}" class="kpi glass" style="--kc:#5A6A85;--kcl:rgba(90,106,133,0.12)">
             <div class="kpi-top">
                 <div class="kpi-chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div>
                 <svg class="kpi-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -233,7 +233,7 @@
             <div class="kpi-label">Not Interested</div>
             <div class="kpi-val">{{ $stats['not_interested'] }}</div>
             <div class="kpi-sub">closed / lost</div>
-        </a>
+        </a> -->
     </div>
 
     <div class="sec">Follow-ups &amp; Status</div>
@@ -256,7 +256,7 @@
             <div class="kpi-val">{{ $stats['archived'] }}</div>
             <div class="kpi-sub">leads that are archived</div>
         </a>
-        <a href="{{ route('leads.index') }}" class="kpi glass" style="--kc:#2D6FDB;--kcl:rgba(45,111,219,0.12)">
+        <!-- <a href="{{ route('leads.index') }}" class="kpi glass" style="--kc:#2D6FDB;--kcl:rgba(45,111,219,0.12)">
             <div class="kpi-top">
                 <div class="kpi-chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
                 <svg class="kpi-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
@@ -264,7 +264,7 @@
             <div class="kpi-label">Scheduled Calls</div>
             <div class="kpi-val">{{ $stats['scheduled'] }}</div>
             <div class="kpi-sub">booked follow-ups</div>
-        </a>
+        </a> -->
         <a href="{{ route('leads.public') }}" class="kpi glass" style="--kc:#1B4FA8;--kcl:rgba(27,79,168,0.12)">
             <div class="kpi-top">
                 <div class="kpi-chip"><svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>

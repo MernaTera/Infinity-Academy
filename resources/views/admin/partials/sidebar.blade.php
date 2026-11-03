@@ -59,7 +59,7 @@
     align-items: center;
     gap: 9px;
     padding: 7px 14px;
-    font-size: 10.5px;
+    font-size: 10px;
     letter-spacing: 0.5px;
     color: var(--sb-text);
     text-decoration: none;
@@ -214,6 +214,11 @@
            class="sl {{ request()->routeIs('admin.test-fees.*') ? 'active' : '' }}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><circle cx="12" cy="12" r="10"/></svg>
             <span class="sl-txt">Test Fees</span>
+        </a>
+        <a href="{{ route('admin.certificates.index') }}" data-tip="Certificates"
+           class="sl {{ request()->routeIs('admin.certificates.*') ? 'active' : '' }}">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+            <span class="sl-txt">Certificates</span>
         </a>
         <a href="{{ route('admin.english-levels.index') }}" data-tip="English Levels"
            class="sl {{ request()->routeIs('admin.english-levels.*') ? 'active' : '' }}">

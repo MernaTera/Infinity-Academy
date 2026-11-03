@@ -210,6 +210,7 @@
                                     'Course'   => 'tag-course',
                                     'Material' => 'tag-material',
                                     'Test'     => 'tag-test',
+                                    'Certificate' => 'tag-test',
                                     default    => 'tag-other',
                                 };
                                 $methodLabel = match($tx->payment_method) {
@@ -222,8 +223,13 @@
                             <tr>
                                 <td style="color:var(--faint);font-variant-numeric:tabular-nums;">{{ $tx->transaction_id }}</td>
                                 <td>
-                                    <div style="font-weight:600;">{{ $tx->enrollment?->student?->full_name ?? 'Student #'.($tx->enrollment?->student_id ?? '?') }}</div>
-                                    <div style="font-size:10px;color:var(--muted);margin-top:1px;">Enrollment #{{ $tx->enrollment_id }}</div>
+                                    @if($tx->service_sale_id)
+                                        <div style="font-weight:600;">{{ $tx->serviceSale?->client_name ?? '—' }}</div>
+                                        <div style="font-size:10px;color:var(--muted);margin-top:1px;">{{ $tx->serviceSale?->receipt_number ?? 'Service Sale' }}</div>
+                                    @else
+                                        <div style="font-weight:600;">{{ $tx->enrollment?->student?->full_name ?? 'Student #'.($tx->enrollment?->student_id ?? '?') }}</div>
+                                        <div style="font-size:10px;color:var(--muted);margin-top:1px;">Enrollment #{{ $tx->enrollment_id }}</div>
+                                    @endif
                                 </td>
                                 <td><span class="tag {{ $catClass }}">{{ $tx->transaction_category }}</span></td>
                                 <td><span class="method-chip">{{ $methodLabel }}</span></td>

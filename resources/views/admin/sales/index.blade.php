@@ -144,6 +144,8 @@
 .rev-std { display:flex; align-items:center; gap:10px; }
 .rev-std-avatar { width:32px; height:32px; border-radius:10px; background:rgba(27,79,168,0.1); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:13px; color:var(--blue); flex-shrink:0; }
 .rev-std-name { font-weight:600; color:var(--text); }
+.rev-std-sub { font-size:10px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+.rev-badge-lead { display:inline-flex; padding:1px 7px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; background:rgba(245,145,30,0.08); color:#C47010; }
 .rev-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
 .rev-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
 .rev-badge-direct { background:rgba(27,79,168,0.08); color:var(--blue); }
@@ -472,6 +474,7 @@
                             <th>Course</th>
                             <th class="num">Deposit</th>
                             <th class="num">Test</th>
+                            <th class="num">Certificate</th>
                             <th class="num">Material</th>
                             <th>Material Type</th>
                             <th class="num">Total Revenue</th>
@@ -480,15 +483,36 @@
                     </thead>
                     <tbody class="rev-tbody">
                         @forelse($row['revenue_rows'] as $rev)
+                        @php $revIsService = ($rev['row_type'] ?? 'enrollment') === 'service'; @endphp
                         <tr>
                             <td>
                                 <div class="rev-std">
                                     <div class="rev-std-avatar">{{ strtoupper(substr($rev['student_name'],0,1)) }}</div>
-                                    <span class="rev-std-name">{{ $rev['student_name'] }}</span>
+                                    <div>
+                                        <span class="rev-std-name">{{ $rev['student_name'] }}</span>
+                                        @if($revIsService)
+                                            <div class="rev-std-sub">
+                                                @unless($rev['is_student'] ?? false)<span class="rev-badge-lead">Lead</span>@endunless
+                                                {{ $rev['service_item'] ?? '' }}
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
                             </td>
-                            <td class="money" style="color:var(--text);">{{ $rev['course'] }}</td>
-                            <td class="num money">{{ number_format($rev['deposit']) }} LE</td>
+                            <td class="money" style="color:var(--text);">
+                                @if($revIsService)
+                                    <span style="color:var(--faint);">&mdash;</span>
+                                @else
+                                    {{ $rev['course'] }}
+                                @endif
+                            </td>
+                            <td class="num money">
+                                @if($revIsService)
+                                    <span style="color:var(--faint);">&mdash;</span>
+                                @else
+                                    {{ number_format($rev['deposit']) }} LE
+                                @endif
+                            </td>
                             <td class="num money">
                                 @if(($rev['test_fee'] ?? 0) > 0)
                                     {{ number_format($rev['test_fee']) }} LE
@@ -496,7 +520,20 @@
                                     <span style="color:var(--faint);">&mdash;</span>
                                 @endif
                             </td>
-                            <td class="num money">{{ number_format($rev['material']) }} LE</td>
+                            <td class="num money">
+                                @if(($rev['certificate'] ?? 0) > 0)
+                                    {{ number_format($rev['certificate']) }} LE
+                                @else
+                                    <span style="color:var(--faint);">&mdash;</span>
+                                @endif
+                            </td>
+                            <td class="num money">
+                                @if($revIsService)
+                                    <span style="color:var(--faint);">&mdash;</span>
+                                @else
+                                    {{ number_format($rev['material']) }} LE
+                                @endif
+                            </td>
                             <td>
                                 @if(!empty($rev['material_type']))
                                 <span class="rev-badge {{ $rev['material_type'] === 'Individual' ? 'rev-badge-direct' : 'rev-badge-shared' }}">
@@ -511,7 +548,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8"><div class="rev-empty">No revenue recorded for this period.</div></td>
+                            <td colspan="9"><div class="rev-empty">No revenue recorded for this period.</div></td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -521,6 +558,7 @@
                             <td colspan="2" class="rev-tfoot-label">Total ({{ $row['revenue_rows']->count() }} {{ \Illuminate\Support\Str::plural('student', $row['revenue_rows']->count()) }})</td>
                             <td class="num rev-tfoot-num">{{ number_format($row['revenue_rows']->sum('deposit')) }} LE</td>
                             <td class="num rev-tfoot-num">{{ number_format($row['revenue_rows']->sum('test_fee')) }} LE</td>
+                            <td class="num rev-tfoot-num">{{ number_format($row['revenue_rows']->sum('certificate')) }} LE</td>
                             <td class="num rev-tfoot-num">{{ number_format($row['revenue_rows']->sum('material')) }} LE</td>
                             <td></td>
                             <td class="num rev-tfoot-total">{{ number_format($row['revenue_rows']->sum('total')) }} LE</td>
@@ -545,20 +583,27 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.qu
 function revEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function revFmt(n){return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});}
 function revRenderRows(rows){
-    if(!rows||!rows.length){return '<tr><td colspan="8"><div class="rev-empty">No revenue recorded for this period.</div></td></tr>';}
+    if(!rows||!rows.length){return '<tr><td colspan="9"><div class="rev-empty">No revenue recorded for this period.</div></td></tr>';}
+    var dash = '<span style="color:var(--faint);">&mdash;</span>';
     return rows.map(function(r){
-        var testCell = (Number(r.test_fee)>0) ? (revFmt(r.test_fee)+' LE') : '<span style="color:var(--faint);">&mdash;</span>';
+        var isService = r.row_type === 'service';
+        var testCell = (Number(r.test_fee)>0) ? (revFmt(r.test_fee)+' LE') : dash;
+        var certCell = (Number(r.certificate)>0) ? (revFmt(r.certificate)+' LE') : dash;
+        var sub = isService
+            ? '<div class="rev-std-sub">'+(r.is_student ? '' : '<span class="rev-badge-lead">Lead</span>')+revEsc(r.service_item||'')+'</div>'
+            : '';
         var mType = r.material_type || '';
         var badge = mType
             ? '<span class="rev-badge '+(mType==='Individual'?'rev-badge-direct':'rev-badge-shared')+'">'+revEsc(mType)+'</span>'
             : '<span style="color:var(--faint);">&mdash;</span>';
         var initial = revEsc(String(r.student_name||'-').charAt(0).toUpperCase());
         return '<tr>'+
-            '<td><div class="rev-std"><div class="rev-std-avatar">'+initial+'</div><span class="rev-std-name">'+revEsc(r.student_name)+'</span></div></td>'+
-            '<td class="money" style="color:var(--text);">'+revEsc(r.course)+'</td>'+
-            '<td class="num money">'+revFmt(r.deposit)+' LE</td>'+
+            '<td><div class="rev-std"><div class="rev-std-avatar">'+initial+'</div><div><span class="rev-std-name">'+revEsc(r.student_name)+'</span>'+sub+'</div></div></td>'+
+            '<td class="money" style="color:var(--text);">'+(isService ? dash : revEsc(r.course))+'</td>'+
+            '<td class="num money">'+(isService ? dash : revFmt(r.deposit)+' LE')+'</td>'+
             '<td class="num money">'+testCell+'</td>'+
-            '<td class="num money">'+revFmt(r.material)+' LE</td>'+
+            '<td class="num money">'+certCell+'</td>'+
+            '<td class="num money">'+(isService ? dash : revFmt(r.material)+' LE')+'</td>'+
             '<td>'+badge+'</td>'+
             '<td class="num total">'+revFmt(r.total)+' LE</td>'+
             '<td style="color:var(--faint);font-size:11px;white-space:nowrap;">'+revEsc(r.date)+'</td>'+
@@ -572,6 +617,7 @@ function revRenderFoot(t){
         '<td colspan="2" class="rev-tfoot-label">Total ('+t.count+' '+plural+')</td>'+
         '<td class="num rev-tfoot-num">'+revFmt(t.deposit)+' LE</td>'+
         '<td class="num rev-tfoot-num">'+revFmt(t.test_fee)+' LE</td>'+
+        '<td class="num rev-tfoot-num">'+revFmt(t.certificate)+' LE</td>'+
         '<td class="num rev-tfoot-num">'+revFmt(t.material)+' LE</td>'+
         '<td></td>'+
         '<td class="num rev-tfoot-total">'+revFmt(t.total)+' LE</td>'+
@@ -592,13 +638,13 @@ function revApply(box){
     else if(f==='patch'){
         var pv = box.querySelector('.rev-p-patch').value;
         if(!pv){
-            tbody.innerHTML = '<tr><td colspan="8"><div class="rev-empty">Select a patch to view its revenue.</div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9"><div class="rev-empty">Select a patch to view its revenue.</div></td></tr>';
             tfoot.innerHTML = '';
             return;
         }
         params += '&patch='+encodeURIComponent(pv);
     }
-    tbody.innerHTML = '<tr><td colspan="8"><div class="rev-empty">Loading&hellip;</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9"><div class="rev-empty">Loading&hellip;</div></td></tr>';
     tfoot.innerHTML = '';
     fetch(REV_URL+'?'+params, {headers:{'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin'})
         .then(function(r){return r.json();})
@@ -607,7 +653,7 @@ function revApply(box){
             tfoot.innerHTML = revRenderFoot(d.totals);
         })
         .catch(function(){
-            tbody.innerHTML = '<tr><td colspan="8"><div class="rev-empty">Could not load revenue. Please try again.</div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9"><div class="rev-empty">Could not load revenue. Please try again.</div></td></tr>';
             tfoot.innerHTML = '';
         });
 }

@@ -98,7 +98,7 @@ class DashboardController extends Controller
             ->get();
 
         $recentPayments = \App\Models\Finance\FinancialTransaction::where('created_by_employee_id', $employee?->employee_id)
-            ->with(['enrollment.student', 'enrollment.courseTemplate'])
+            ->with(['enrollment.student', 'enrollment.courseTemplate', 'serviceSale'])
             ->latest()
             ->limit(5)
             ->get();
