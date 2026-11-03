@@ -356,7 +356,7 @@
                 </a>
                 <a href="{{ route('packages-tracking.index') }}" class="amobile-nav-link {{ request()->routeIs('packages-tracking.*') ? 'active' : '' }}" data-label="Level Packages">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-                    <span class="amobile-nav-link-text">Level Packages</span>
+                    <span class="amobile-nav-link-text">Group Packages</span>
                 </a>
                 <a href="{{ route('near-completion') }}"
                 class="amobile-nav-link {{ request()->routeIs('near-completion') ? 'active' : '' }}"

@@ -111,8 +111,8 @@
         <div class="pk-header">
             <div class="pk-header-inner">
                 <div>
-                    <div class="pk-eyebrow">Level Program</div>
-                    <h1 class="pk-title">Level Packages</h1>
+                    <div class="pk-eyebrow">Group Levels Program</div>
+                    <h1 class="pk-title">Group Packages</h1>
                     <div class="pk-sub">Package progress & remaining prepaid levels for group students</div>
                 </div>
                 @if($canAct)

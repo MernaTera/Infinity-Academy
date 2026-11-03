@@ -293,7 +293,7 @@
         <a href="{{ route('packages-tracking.index') }}" data-tip="Level Packages"
         class="sl {{ request()->routeIs('packages-tracking.*') ? 'active' : '' }}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            <span class="sl-txt">Level Packages</span>
+            <span class="sl-txt">Group Packages</span>
         </a>
     </div>
 
