@@ -15,13 +15,13 @@ use Illuminate\Support\Facades\DB;
 class SalesService
 {
 
-    public function getSalesData(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = ''): array
+    public function getSalesData(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = '', bool $withOutstanding = true): array
     {
         return [
-            'kpis'          => $this->getKPIs($employee, $patch, $filterType, $month, $day),
+            'kpis'          => $this->getKPIs($employee, $patch, $filterType, $month, $day, $withOutstanding),
             'followupStats' => $this->getFollowupStats($employee, $patch, $filterType, $month, $day),
-            'revenueRows'   => $this->getRevenueTable($employee, $patch, $filterType, $month, $day),
-            'dailyRevenue'  => $this->getDailyRevenue($employee, $patch, $filterType, $month, $day),
+            'revenueRows'   => $this->getRevenueTable($employee, $patch, $filterType, $month, $day, $withOutstanding),
+            'dailyRevenue'  => $this->getDailyRevenue($employee, $patch, $filterType, $month, $day, $withOutstanding),
         ];
     }
 
@@ -51,7 +51,7 @@ class SalesService
         ];
     }
 
-    public function getKPIs(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = ''): array
+    public function getKPIs(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = '', bool $withOutstanding = true): array
     {
         $range = $this->getDateRange($filterType, $patch, $month, $day);
 
@@ -66,9 +66,14 @@ class SalesService
 
         $targetAmount = CsTarget::amountFor($employee->employee_id);
 
-        $achieved = RevenueSplit::where('employee_id', $employee->employee_id)
+        $splitBase = RevenueSplit::where('employee_id', $employee->employee_id)
             ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
-            ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
+            ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]));
+
+        $outstandingAmount = (float) (clone $splitBase)->outstanding()->sum('amount_allocated');
+
+        $achieved = (float) (clone $splitBase)
+            ->when(!$withOutstanding, fn($q) => $q->withoutOutstanding())
             ->sum('amount_allocated');
 
         $registrations = Enrollment::where('created_by_cs_id', $employee->employee_id)
@@ -95,6 +100,8 @@ class SalesService
             'calls_made'    => $callsMade,
             'filter_type'   => $filterType,
             'target_month'  => $targetMonth,
+            'outstanding'   => $outstandingAmount,
+            'with_outstanding' => $withOutstanding,
         ];
     }
 
@@ -137,7 +144,7 @@ class SalesService
         ];
     }
 
-    public function getRevenueTable(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = ''): \Illuminate\Support\Collection
+    public function getRevenueTable(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = '', bool $withOutstanding = true): \Illuminate\Support\Collection
     {
         $range = $this->getDateRange($filterType, $patch, $month, $day);
 
@@ -149,10 +156,14 @@ class SalesService
             ->where('employee_id', $employee->employee_id)
             ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
             ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
+            ->when(!$withOutstanding, fn($q) => $q->withoutOutstanding())
             ->orderByDesc('created_at')
             ->get()
             ->groupBy(function ($r) {
                 $tx = $r->financialTransaction;
+                if ($r->source === 'Outstanding') {
+                    return 'out-' . $r->transaction_id;
+                }
                 if ($tx?->service_sale_id) {
                     return 'svc-' . $tx->service_sale_id;
                 }
@@ -161,6 +172,29 @@ class SalesService
             ->map(function ($splits) {
                 $first = $splits->first();
                 $tx    = $first->financialTransaction;
+
+                if ($first->source === 'Outstanding') {
+                    $enrollment = $tx?->enrollment;
+                    $amount     = (float) $splits->sum('amount_allocated');
+
+                    return [
+                        'row_type'      => 'outstanding',
+                        'student_name'  => $enrollment?->student?->full_name ?? '—',
+                        'client_phone'  => null,
+                        'is_student'    => true,
+                        'course'        => $enrollment?->courseTemplate?->name ?? '—',
+                        'service_item'  => null,
+                        'deposit'       => 0,
+                        'test_fee'      => 0,
+                        'certificate'   => 0,
+                        'material'      => 0,
+                        'material_type' => null,
+                        'outstanding'   => $amount,
+                        'total'         => $amount,
+                        'date'          => $first->created_at?->format('d M Y'),
+                        'receipt_url'   => null,
+                    ];
+                }
 
                 if ($tx?->service_sale_id) {
                     $sale   = $tx->serviceSale;
@@ -179,6 +213,7 @@ class SalesService
                         'certificate'   => $isTest ? 0 : $amount,
                         'material'      => 0,
                         'material_type' => null,
+                        'outstanding'   => 0,
                         'total'         => $amount,
                         'date'          => $first->created_at?->format('d M Y'),
                         'receipt_url'   => $sale ? route('service-sales.receipt', $sale->service_sale_id) : null,
@@ -214,6 +249,7 @@ class SalesService
                     'certificate'   => 0,
                     'material'      => $material,
                     'material_type' => $materialType,
+                    'outstanding'   => 0,
                     'total'         => $splits->sum('amount_allocated'),
                     'date'          => $first->created_at?->format('d M Y'),
                     'receipt_url'   => null,
@@ -221,11 +257,12 @@ class SalesService
             })->values();
     }
 
-    public function getDailyRevenue(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = ''): array
+    public function getDailyRevenue(Employee $employee, ?Patch $patch, string $filterType = 'patch', string $month = '', string $day = '', bool $withOutstanding = true): array
     {
         $range = $this->getDateRange($filterType, $patch, $month, $day);
 
         $rows = RevenueSplit::where('employee_id', $employee->employee_id)
+            ->when(!$withOutstanding, fn($q) => $q->withoutOutstanding())
             ->when($filterType === 'patch', fn($q) => $q->where('patch_id', $patch?->patch_id))
             ->when($range['start'], fn($q) => $q->whereBetween('created_at', [$range['start'], $range['end']]))
             ->selectRaw('DATE(created_at) as day, SUM(amount_allocated) as total')

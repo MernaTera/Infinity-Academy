@@ -26,6 +26,7 @@ class AdminSalesController extends Controller
         $filterType = $request->query('filter', 'month');
         $month      = $request->query('month', now()->format('Y-m'));
         $day        = $request->query('day', now()->format('Y-m-d'));
+        $withOutstanding = $request->query('outstanding', '1') !== '0';
 
         $range = $this->getDateRange($filterType, $month, $day);
         $targetMonth = $this->getTargetMonth($filterType, $month, $day);
@@ -35,11 +36,16 @@ class AdminSalesController extends Controller
             ->where('status', 'Active')
             ->get();
 
-        $rows = $csEmployees->map(function ($emp) use ($range, $targetMonth, $filterType, $month, $day) {
+        $rows = $csEmployees->map(function ($emp) use ($range, $targetMonth, $filterType, $month, $day, $withOutstanding) {
             $targetAmount = CsTarget::amountFor($emp->employee_id);
 
-            $achieved = RevenueSplit::where('employee_id', $emp->employee_id)
-                ->whereBetween('created_at', [$range['start'], $range['end']])
+            $splitBase = RevenueSplit::where('employee_id', $emp->employee_id)
+                ->whereBetween('created_at', [$range['start'], $range['end']]);
+
+            $outstanding = (float) (clone $splitBase)->outstanding()->sum('amount_allocated');
+
+            $achieved = (float) (clone $splitBase)
+                ->when(!$withOutstanding, fn($q) => $q->withoutOutstanding())
                 ->sum('amount_allocated');
 
             $registrations = Enrollment::where('created_by_cs_id', $emp->employee_id)
@@ -64,19 +70,21 @@ class AdminSalesController extends Controller
                 'employee'      => $emp,
                 'target'        => $targetAmount,
                 'achieved'      => $achieved,
+                'outstanding'   => $outstanding,
                 'remaining'     => $remaining,
                 'percentage'    => $pct,
                 'registrations' => $registrations,
                 'total_leads'   => $totalLeads,
                 'active_leads'  => $activeLeads,
                 'calls_made'    => $callsMade,
-                'revenue_rows'  => $this->salesService->getRevenueTable($emp, null, $filterType, $month, $day),
+                'revenue_rows'  => $this->salesService->getRevenueTable($emp, null, $filterType, $month, $day, $withOutstanding),
             ];
         })->sortByDesc('achieved')->values();
 
         $overallKpis = [
             'total_target'        => $rows->sum('target'),
             'total_achieved'      => $rows->sum('achieved'),
+            'total_outstanding'   => $rows->sum('outstanding'),
             'total_registrations' => $rows->sum('registrations'),
             'top_cs'              => $rows->first(),
             'avg_achievement'     => $rows->where('target', '>', 0)->avg('percentage') ?? 0,
@@ -84,6 +92,7 @@ class AdminSalesController extends Controller
 
         $dailyData = RevenueSplit::whereIn('employee_id', $csEmployees->pluck('employee_id'))
             ->whereBetween('created_at', [$range['start'], $range['end']])
+            ->when(!$withOutstanding, fn($q) => $q->withoutOutstanding())
             ->selectRaw('DATE(created_at) as day, SUM(amount_allocated) as total')
             ->groupBy('day')->orderBy('day')->get();
 
@@ -91,7 +100,7 @@ class AdminSalesController extends Controller
 
         return view('admin.sales.index', compact(
             'rows', 'overallKpis', 'dailyData',
-            'filterType', 'month', 'day', 'targetMonth', 'patches'
+            'filterType', 'month', 'day', 'targetMonth', 'patches', 'withOutstanding'
         ));
     }
 
@@ -102,6 +111,7 @@ class AdminSalesController extends Controller
         $month      = $request->query('month', now()->format('Y-m'));
         $day        = $request->query('day', now()->format('Y-m-d'));
         $patchId    = $request->query('patch');
+        $withOutstanding = $request->query('outstanding', '1') !== '0';
 
         $employee = Employee::find($employeeId);
 
@@ -113,7 +123,7 @@ class AdminSalesController extends Controller
             ? \App\Models\Academic\Patch::find($patchId)
             : null;
 
-        $rows = $this->salesService->getRevenueTable($employee, $patch, $filterType, $month, $day);
+        $rows = $this->salesService->getRevenueTable($employee, $patch, $filterType, $month, $day, $withOutstanding);
 
         return response()->json([
             'employee' => $employee->full_name,
@@ -123,6 +133,7 @@ class AdminSalesController extends Controller
                 'deposit'  => $rows->sum('deposit'),
                 'test_fee' => $rows->sum('test_fee'),
                 'certificate' => $rows->sum('certificate'),
+                'outstanding' => $rows->sum('outstanding'),
                 'material' => $rows->sum('material'),
                 'total'    => $rows->sum('total'),
             ],

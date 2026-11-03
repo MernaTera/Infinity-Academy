@@ -125,6 +125,7 @@ class ServiceSaleController extends Controller
                     'patch_id'         => $patch->patch_id,
                     'amount_allocated' => $price,
                     'allocation_type'  => 'Direct',
+                    'source'           => 'Service',
                 ]);
 
                 $line = '[' . now()->format('d M Y') . '] Added ' . $data['service_type'] . ': '

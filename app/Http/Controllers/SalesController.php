@@ -26,8 +26,9 @@ class SalesController extends Controller
         $filterType = $request->query('filter', 'month'); 
         $month      = $request->query('month', now()->format('Y-m'));
         $day        = $request->query('day', now()->format('Y-m-d'));
+        $withOutstanding = $request->query('outstanding', '1') !== '0';
 
-        $data = $this->salesService->getSalesData($employee, null, $filterType, $month, $day);
+        $data = $this->salesService->getSalesData($employee, null, $filterType, $month, $day, $withOutstanding);
 
         $allRows = collect($data['revenueRows'] ?? []);
         $data['revenueTotals'] = [
@@ -35,6 +36,7 @@ class SalesController extends Controller
             'deposit'  => $allRows->sum('deposit'),
             'test_fee' => $allRows->sum('test_fee'),
             'certificate' => $allRows->sum('certificate'),
+            'outstanding' => $allRows->sum('outstanding'),
             'material' => $allRows->sum('material'),
             'total'    => $allRows->sum('total'),
         ];
@@ -45,6 +47,7 @@ class SalesController extends Controller
             'filterType' => $filterType,
             'month'      => $month,
             'day'        => $day,
+            'withOutstanding' => $withOutstanding,
         ]));
     }
 
@@ -62,7 +65,7 @@ class SalesController extends Controller
             ? Patch::findOrFail($patchId)
             : Patch::active()->latest('start_date')->first();
 
-        $daily = $this->salesService->getDailyRevenue($employee, $patch);
+        $daily = $this->salesService->getDailyRevenue($employee, $patch, 'patch', '', '', $request->query('outstanding', '1') !== '0');
 
         return response()->json($daily);
     }

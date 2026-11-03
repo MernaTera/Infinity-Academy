@@ -73,6 +73,19 @@ class OutstandingController extends Controller
                 'created_by_employee_id' => $employee->employee_id,
             ]);
 
+            $ownerCsId = $enrollment->created_by_cs_id;
+            if ($ownerCsId && $patchId) {
+                \App\Models\Finance\RevenueSplit::create([
+                    'transaction_id'   => $tx->transaction_id,
+                    'employee_id'      => $ownerCsId,
+                    'branch_id'        => $tx->branch_id,
+                    'patch_id'         => $patchId,
+                    'amount_allocated' => round((float) $request->amount, 2),
+                    'allocation_type'  => 'Direct',
+                    'source'           => 'Outstanding',
+                ]);
+            }
+
 
     
             $amountLeft = (float) $request->amount;

@@ -59,7 +59,8 @@ class RevenueSplit extends Model
 		'branch_id',
 		'patch_id',
 		'amount_allocated',
-		'allocation_type'
+		'allocation_type',
+		'source'
 	];
 
 	public function revenueSplit()
@@ -131,6 +132,16 @@ class RevenueSplit extends Model
     public function scopeShared($query)
     {
         return $query->where('allocation_type', 'Shared');
+    }
+
+    public function scopeWithoutOutstanding($query)
+    {
+        return $query->where('source', '!=', 'Outstanding');
+    }
+
+    public function scopeOutstanding($query)
+    {
+        return $query->where('source', 'Outstanding');
     }
 
     public function scopeBonus($query)

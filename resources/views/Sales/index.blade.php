@@ -2,6 +2,7 @@
 @section('title', 'Sales Table')
 
 @section('content')
+@php $outQ = ($withOutstanding ?? true) ? 1 : 0; @endphp
 
 @once
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -84,7 +85,7 @@
     .tbl tbody td { padding:14px 16px; border-bottom:1px solid rgba(27,79,168,0.06); font-size:12px; color:var(--text); vertical-align:middle; }
     .tbl tbody tr:last-child td { border-bottom:none; }
     .tbl tbody tr:hover { background:rgba(27,79,168,0.04); }
-    .tbl .num { text-align:right; font-variant-numeric:tabular-nums; }
+    .tbl .num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
     .money { color:var(--muted); font-variant-numeric:tabular-nums; }
     .total { font-weight:700; color:var(--blue); font-variant-numeric:tabular-nums; }
 
@@ -92,6 +93,15 @@
     .std-avatar { width:34px; height:34px; border-radius:11px; background:rgba(27,79,168,0.1); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:14px; color:var(--blue); flex-shrink:0; }
     .std-name { font-weight:600; color:var(--text); }
     .std-sub { font-size:10px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+    .badge-out { display:inline-flex; padding:1px 7px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; background:rgba(124,58,237,0.08); color:#7C3AED; }
+    .kpi-out { font-size:10px; color:var(--muted); margin-top:3px; }
+    .out-switch { display:inline-flex; align-items:center; gap:10px; background:rgba(255,255,255,0.5); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid var(--border); border-radius:14px; padding:12px 16px; box-shadow:var(--glass-sh); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; color:var(--muted); text-decoration:none; transition:color 0.2s; }
+    .out-switch:hover { color:var(--blue); text-decoration:none; }
+    .out-switch.on { color:var(--blue); }
+    .out-track { position:relative; width:32px; height:18px; border-radius:20px; background:rgba(122,138,154,0.3); transition:background 0.2s; flex-shrink:0; }
+    .out-knob { position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(15,31,61,0.25); transition:left 0.2s; }
+    .out-switch.on .out-track { background:linear-gradient(120deg,var(--blue),var(--blue-2)); }
+    .out-switch.on .out-knob { left:16px; }
     .badge-lead { display:inline-flex; padding:1px 7px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; background:var(--orange-l); color:var(--orange-dk); }
     .receipt-link { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; margin-left:6px; border-radius:7px; color:var(--blue); border:1px solid rgba(27,79,168,0.2); vertical-align:middle; transition:background 0.2s; }
     .receipt-link:hover { background:var(--blue-l); color:var(--blue); }
@@ -143,11 +153,11 @@
         <span class="sec-label">Filter Period</span>
         <div class="filter-row">
             <div class="filter-tabs">
-                <a href="{{ route('sales.index', ['filter' => 'month', 'month' => $month]) }}"
+                <a href="{{ route('sales.index', ['filter' => 'month', 'month' => $month, 'outstanding' => $outQ]) }}"
                    class="filter-tab {{ $filterType === 'month' ? 'active' : '' }}">By Month</a>
-                <a href="{{ route('sales.index', ['filter' => 'week', 'day' => $day]) }}"
+                <a href="{{ route('sales.index', ['filter' => 'week', 'day' => $day, 'outstanding' => $outQ]) }}"
                    class="filter-tab {{ $filterType === 'week' ? 'active' : '' }}">By Week</a>
-                <a href="{{ route('sales.index', ['filter' => 'day', 'day' => $day]) }}"
+                <a href="{{ route('sales.index', ['filter' => 'day', 'day' => $day, 'outstanding' => $outQ]) }}"
                    class="filter-tab {{ $filterType === 'day' ? 'active' : '' }}">By Day</a>
             </div>
 
@@ -159,21 +169,27 @@
                         var y=this.value.split('-W')[0];
                         var w=this.value.split('-W')[1];
                         var d=new Date(y,0,(w-1)*7+1);
-                        window.location.href='{{ route('sales.index') }}?filter=week&day='+d.toISOString().slice(0,10);">
+                        window.location.href='{{ route('sales.index') }}?filter=week&outstanding={{ $outQ }}&day='+d.toISOString().slice(0,10);">
             </div>
             @elseif($filterType === 'day')
             <div class="filter-picker">
                 <label>Date</label>
                 <input type="date" value="{{ $day }}" class="filter-sel"
-                       onchange="window.location.href='{{ route('sales.index') }}?filter=day&day='+this.value">
+                       onchange="window.location.href='{{ route('sales.index') }}?filter=day&outstanding={{ $outQ }}&day='+this.value">
             </div>
             @else
             <div class="filter-picker">
                 <label>Month</label>
                 <input type="month" value="{{ $month }}" class="filter-sel"
-                       onchange="window.location.href='{{ route('sales.index') }}?filter=month&month='+this.value">
+                       onchange="window.location.href='{{ route('sales.index') }}?filter=month&outstanding={{ $outQ }}&month='+this.value">
             </div>
             @endif
+
+            <a href="{{ request()->fullUrlWithQuery(['outstanding' => $outQ ? 0 : 1, 'page' => null]) }}"
+               class="out-switch {{ $outQ ? 'on' : '' }}" title="Show revenue with or without outstanding payments">
+                <span class="out-track"><span class="out-knob"></span></span>
+                Include Outstanding
+            </a>
         </div>
 
         <span class="sec-label">Target & Revenue</span>
@@ -198,6 +214,9 @@
                     @else this month
                     @endif
                 </div>
+                @if(($kpis['outstanding'] ?? 0) > 0)
+                <div class="kpi-out">{{ $outQ ? 'incl.' : 'excl.' }} {{ number_format($kpis['outstanding']) }} outstanding</div>
+                @endif
                 @if($kpis['percentage'] !== null)
                 <div class="prog"><div class="prog-fill" style="width:{{ min($kpis['percentage'],100) }}%"></div></div>
                 @endif
@@ -263,13 +282,17 @@
                             <th class="num">Certificate</th>
                             <th class="num">Material</th>
                             <th>Material Type</th>
+                            @if($outQ)<th class="num">Outstanding</th>@endif
                             <th class="num">Total Revenue</th>
                             <th>Date</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($revenueRows as $row)
-                        @php $isService = ($row['row_type'] ?? 'enrollment') === 'service'; @endphp
+                        @php
+                            $isService = ($row['row_type'] ?? 'enrollment') === 'service';
+                            $isOut     = ($row['row_type'] ?? 'enrollment') === 'outstanding';
+                        @endphp
                         <tr>
                             <td>
                                 <div class="std-cell">
@@ -281,6 +304,8 @@
                                                 @unless($row['is_student'] ?? false)<span class="badge-lead">Lead</span>@endunless
                                                 {{ $row['service_item'] ?? '' }}
                                             </div>
+                                        @elseif($isOut)
+                                            <div class="std-sub"><span class="badge-out">Outstanding payment</span></div>
                                         @endif
                                     </div>
                                 </div>
@@ -293,7 +318,7 @@
                                 @endif
                             </td>
                             <td class="num money">
-                                @if($isService)
+                                @if($isService || $isOut)
                                     <span style="color:var(--faint);">—</span>
                                 @else
                                     {{ number_format($row['deposit']) }} LE
@@ -314,7 +339,7 @@
                                 @endif
                             </td>
                             <td class="num money">
-                                @if($isService)
+                                @if($isService || $isOut)
                                     <span style="color:var(--faint);">—</span>
                                 @else
                                     {{ number_format($row['material']) }} LE
@@ -329,6 +354,15 @@
                                 <span style="color:var(--faint);">—</span>
                                 @endif
                             </td>
+                            @if($outQ)
+                            <td class="num money">
+                                @if(($row['outstanding'] ?? 0) > 0)
+                                    {{ number_format($row['outstanding']) }} LE
+                                @else
+                                    <span style="color:var(--faint);">—</span>
+                                @endif
+                            </td>
+                            @endif
                             <td class="num total">{{ number_format($row['total']) }} LE</td>
                             <td style="color:var(--faint);font-size:11px;white-space:nowrap;">
                                 {{ $row['date'] }}
@@ -341,7 +375,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9">
+                            <td colspan="{{ $outQ ? 10 : 9 }}">
                                 <div class="tbl-empty">
                                     <svg width="46" height="46" viewBox="0 0 24 24" fill="none" stroke="#1B4FA8" stroke-width="1"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
                                     <div class="tbl-empty-title">No Revenue This Period</div>
@@ -360,6 +394,7 @@
                             <td class="num tfoot-num">{{ number_format($revenueTotals['certificate'] ?? 0) }} LE</td>
                             <td class="num tfoot-num">{{ number_format($revenueTotals['material']) }} LE</td>
                             <td class="num tfoot-num"></td>
+                            @if($outQ)<td class="num tfoot-num">{{ number_format($revenueTotals['outstanding'] ?? 0) }} LE</td>@endif
                             <td class="num tfoot-total">{{ number_format($revenueTotals['total']) }} LE</td>
                             <td colspan="2"></td>
                         </tr>

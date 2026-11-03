@@ -9,6 +9,8 @@
 @php
     $salesRoute = auth()->user()?->isCsLeader() ? 'team.sales' : 'admin.sales.index';
     $csRevRoute = auth()->user()?->isCsLeader() ? 'team.sales.cs-revenue' : 'admin.sales.cs-revenue';
+    $outQ = ($withOutstanding ?? true) ? 1 : 0;
+    $revCols = $outQ ? 10 : 9;
 @endphp
 
 <style>
@@ -47,6 +49,15 @@
 .filter-input { font-family:'DM Sans',sans-serif; font-size:12px; padding:9px 13px; border:1px solid var(--glass-bd); border-radius:12px; background:rgba(255,255,255,0.55); color:var(--text); outline:none; transition:border-color 0.2s, box-shadow 0.2s; }
 .filter-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.1); }
 .filter-sep { width:1px; height:24px; background:var(--border); }
+.out-switch { display:inline-flex; align-items:center; gap:10px; margin-left:auto; padding:9px 16px; border-radius:12px; border:1px solid var(--glass-bd); background:rgba(255,255,255,0.5); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); font-family:'DM Sans',sans-serif; font-size:10px; letter-spacing:2px; text-transform:uppercase; font-weight:600; color:var(--muted); text-decoration:none; white-space:nowrap; transition:color 0.2s; }
+.out-switch:hover { color:var(--blue); text-decoration:none; }
+.out-switch.on { color:var(--blue); }
+.out-track { position:relative; width:32px; height:18px; border-radius:20px; background:rgba(122,138,154,0.3); transition:background 0.2s; flex-shrink:0; }
+.out-knob { position:absolute; top:2px; left:2px; width:14px; height:14px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(15,31,61,0.25); transition:left 0.2s; }
+.out-switch.on .out-track { background:linear-gradient(120deg,var(--blue),var(--blue-2)); }
+.out-switch.on .out-knob { left:16px; }
+.kpi-out { font-size:10px; color:var(--muted); margin-top:3px; }
+.rev-badge-out { white-space:nowrap; display:inline-flex; padding:1px 7px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; background:rgba(124,58,237,0.08); color:#7C3AED; }
 
 .kpi-strip { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; margin-bottom:30px; }
 @media(max-width:1000px) { .kpi-strip { grid-template-columns:repeat(3,1fr); } }
@@ -123,7 +134,7 @@
 
 .rev-modal { display:none; position:fixed; inset:0; z-index:1200; background:rgba(15,31,61,0.55); -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto; }
 .rev-modal.show { display:flex; }
-.rev-modal-box { background:rgba(255,255,255,0.9); -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%); border:1px solid var(--glass-bd); border-radius:22px; width:100%; max-width:920px; box-shadow:0 30px 80px -20px rgba(15,31,61,0.5); overflow:hidden; margin:auto; }
+.rev-modal-box { background:rgba(255,255,255,0.9); -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%); border:1px solid var(--glass-bd); border-radius:22px; width:100%; max-width:1100px; box-shadow:0 30px 80px -20px rgba(15,31,61,0.5); overflow:hidden; margin:auto; }
 .rev-modal-head { display:flex; align-items:center; gap:14px; padding:20px 24px; border-bottom:1px solid var(--border); background:rgba(255,255,255,0.5); }
 .rev-modal-emp-avatar { width:42px; height:42px; border-radius:13px; background:var(--blue-light); color:var(--blue); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:19px; flex-shrink:0; }
 .rev-modal-emp { flex:1; }
@@ -131,21 +142,21 @@
 .rev-modal-title { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); margin-top:3px; }
 .rev-modal-close { background:rgba(27,79,168,0.06); border:1px solid var(--border); color:var(--muted); width:34px; height:34px; border-radius:50%; cursor:pointer; font-size:20px; line-height:1; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all .2s; }
 .rev-modal-close:hover { background:var(--blue); color:#fff; border-color:transparent; }
-.rev-modal-body { max-height:64vh; overflow-y:auto; }
+.rev-modal-body { max-height:64vh; overflow:auto; }
 .rev-tbl { width:100%; border-collapse:collapse; min-width:720px; }
 .rev-tbl thead th { font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); padding:13px 16px; text-align:left; border-bottom:1px solid var(--border); font-weight:700; background:rgba(255,255,255,0.6); white-space:nowrap; }
 .rev-tbl thead th.num { text-align:right; }
 .rev-tbl tbody td { padding:13px 16px; border-bottom:1px solid rgba(27,79,168,0.06); font-size:12px; color:var(--text); vertical-align:middle; }
 .rev-tbl tbody tr:last-child td { border-bottom:none; }
 .rev-tbl tbody tr:hover { background:rgba(27,79,168,0.04); }
-.rev-tbl .num { text-align:right; font-variant-numeric:tabular-nums; }
+.rev-tbl .num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
 .rev-tbl .money { color:var(--muted); }
 .rev-tbl .total { font-weight:700; color:var(--blue); }
 .rev-std { display:flex; align-items:center; gap:10px; }
 .rev-std-avatar { width:32px; height:32px; border-radius:10px; background:rgba(27,79,168,0.1); display:flex; align-items:center; justify-content:center; font-family:'Bebas Neue',sans-serif; font-size:13px; color:var(--blue); flex-shrink:0; }
 .rev-std-name { font-weight:600; color:var(--text); }
 .rev-std-sub { font-size:10px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
-.rev-badge-lead { display:inline-flex; padding:1px 7px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; background:rgba(245,145,30,0.08); color:#C47010; }
+.rev-badge-lead { white-space:nowrap; display:inline-flex; padding:1px 7px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; background:rgba(245,145,30,0.08); color:#C47010; }
 .rev-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:10px; font-weight:600; white-space:nowrap; }
 .rev-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
 .rev-badge-direct { background:rgba(27,79,168,0.08); color:var(--blue); }
@@ -173,27 +184,27 @@
     <h1 class="page-title">Sales Revenue</h1>
 
     <div class="filter-bar">
-        <a href="{{ route($salesRoute, ['filter'=>'month','month'=>$month]) }}"
+        <a href="{{ route($salesRoute, ['filter'=>'month','month'=>$month,'outstanding'=>$outQ]) }}"
            class="filter-tab {{ $filterType==='month'?'active':'' }}">By Month</a>
-        <a href="{{ route($salesRoute, ['filter'=>'week','day'=>$day]) }}"
+        <a href="{{ route($salesRoute, ['filter'=>'week','day'=>$day,'outstanding'=>$outQ]) }}"
            class="filter-tab {{ $filterType==='week'?'active':'' }}">By Week</a>
-        <a href="{{ route($salesRoute, ['filter'=>'day','day'=>$day]) }}"
+        <a href="{{ route($salesRoute, ['filter'=>'day','day'=>$day,'outstanding'=>$outQ]) }}"
            class="filter-tab {{ $filterType==='day'?'active':'' }}">By Day</a>
 
         <div class="filter-sep"></div>
 
         @if($filterType === 'month')
         <input type="month" value="{{ $month }}" class="filter-input"
-               onchange="window.location.href='{{ route($salesRoute) }}?filter=month&month='+this.value">
+               onchange="window.location.href='{{ route($salesRoute) }}?filter=month&outstanding={{ $outQ }}&month='+this.value">
         @elseif($filterType === 'week')
         <input type="week" value="{{ \Carbon\Carbon::parse($day)->format('Y-\WW') }}" class="filter-input"
                onchange="
                    const[y,w]=this.value.split('-W');
                    const d=new Date(y,0,1+(w-1)*7);
-                   window.location.href='{{ route($salesRoute) }}?filter=week&day='+d.toISOString().split('T')[0]">
+                   window.location.href='{{ route($salesRoute) }}?filter=week&outstanding={{ $outQ }}&day='+d.toISOString().split('T')[0]">
         @else
         <input type="date" value="{{ $day }}" class="filter-input" style="color-scheme:light;"
-               onchange="window.location.href='{{ route($salesRoute) }}?filter=day&day='+this.value">
+               onchange="window.location.href='{{ route($salesRoute) }}?filter=day&outstanding={{ $outQ }}&day='+this.value">
         @endif
 
         <span style="font-size:11px;color:var(--faint);margin-left:4px;">
@@ -202,6 +213,12 @@
             @else {{ \Carbon\Carbon::parse($day)->format('l, d M Y') }}
             @endif
         </span>
+
+        <a href="{{ request()->fullUrlWithQuery(['outstanding' => $outQ ? 0 : 1]) }}"
+           class="out-switch {{ $outQ ? 'on' : '' }}" title="Show revenue with or without outstanding payments">
+            <span class="out-track"><span class="out-knob"></span></span>
+            Include Outstanding
+        </a>
     </div>
 
     <span class="sec-label">Overall Performance</span>
@@ -215,6 +232,9 @@
             <div class="kpi-eyebrow">Total Achieved</div>
             <div class="kpi-value">{{ number_format($overallKpis['total_achieved']) }}</div>
             <div class="kpi-sub">LE collected</div>
+            @if(($overallKpis['total_outstanding'] ?? 0) > 0)
+            <div class="kpi-out">{{ $outQ ? 'incl.' : 'excl.' }} {{ number_format($overallKpis['total_outstanding']) }} outstanding</div>
+            @endif
             @if($overallKpis['total_target'] > 0)
             <div class="prog">
                 <div class="prog-fill" style="width:{{ min(100,round($overallKpis['total_achieved']/$overallKpis['total_target']*100)) }}%"></div>
@@ -477,13 +497,17 @@
                             <th class="num">Certificate</th>
                             <th class="num">Material</th>
                             <th>Material Type</th>
+                            @if($outQ)<th class="num">Outstanding</th>@endif
                             <th class="num">Total Revenue</th>
                             <th>Date</th>
                         </tr>
                     </thead>
                     <tbody class="rev-tbody">
                         @forelse($row['revenue_rows'] as $rev)
-                        @php $revIsService = ($rev['row_type'] ?? 'enrollment') === 'service'; @endphp
+                        @php
+                            $revIsService = ($rev['row_type'] ?? 'enrollment') === 'service';
+                            $revIsOut     = ($rev['row_type'] ?? 'enrollment') === 'outstanding';
+                        @endphp
                         <tr>
                             <td>
                                 <div class="rev-std">
@@ -495,6 +519,8 @@
                                                 @unless($rev['is_student'] ?? false)<span class="rev-badge-lead">Lead</span>@endunless
                                                 {{ $rev['service_item'] ?? '' }}
                                             </div>
+                                        @elseif($revIsOut)
+                                            <div class="rev-std-sub"><span class="rev-badge-out">Outstanding payment</span></div>
                                         @endif
                                     </div>
                                 </div>
@@ -507,7 +533,7 @@
                                 @endif
                             </td>
                             <td class="num money">
-                                @if($revIsService)
+                                @if($revIsService || $revIsOut)
                                     <span style="color:var(--faint);">&mdash;</span>
                                 @else
                                     {{ number_format($rev['deposit']) }} LE
@@ -528,7 +554,7 @@
                                 @endif
                             </td>
                             <td class="num money">
-                                @if($revIsService)
+                                @if($revIsService || $revIsOut)
                                     <span style="color:var(--faint);">&mdash;</span>
                                 @else
                                     {{ number_format($rev['material']) }} LE
@@ -543,12 +569,21 @@
                                 <span style="color:var(--faint);">&mdash;</span>
                                 @endif
                             </td>
+                            @if($outQ)
+                            <td class="num money">
+                                @if(($rev['outstanding'] ?? 0) > 0)
+                                    {{ number_format($rev['outstanding']) }} LE
+                                @else
+                                    <span style="color:var(--faint);">&mdash;</span>
+                                @endif
+                            </td>
+                            @endif
                             <td class="num total">{{ number_format($rev['total']) }} LE</td>
                             <td style="color:var(--faint);font-size:11px;white-space:nowrap;">{{ $rev['date'] }}</td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="9"><div class="rev-empty">No revenue recorded for this period.</div></td>
+                            <td colspan="{{ $revCols }}"><div class="rev-empty">No revenue recorded for this period.</div></td>
                         </tr>
                         @endforelse
                     </tbody>
@@ -561,6 +596,7 @@
                             <td class="num rev-tfoot-num">{{ number_format($row['revenue_rows']->sum('certificate')) }} LE</td>
                             <td class="num rev-tfoot-num">{{ number_format($row['revenue_rows']->sum('material')) }} LE</td>
                             <td></td>
+                            @if($outQ)<td class="num rev-tfoot-num">{{ number_format($row['revenue_rows']->sum('outstanding')) }} LE</td>@endif
                             <td class="num rev-tfoot-total">{{ number_format($row['revenue_rows']->sum('total')) }} LE</td>
                             <td></td>
                         </tr>
@@ -576,6 +612,8 @@
 
 <script>
 var REV_URL = "{{ route($csRevRoute) }}";
+var REV_OUT = {{ $outQ }};
+var REV_COLS = {{ $revCols }};
 function openRev(id){var m=document.getElementById('revModal-'+id);if(m){m.classList.add('show');document.body.style.overflow='hidden';}}
 function closeRev(id){var m=document.getElementById('revModal-'+id);if(m){m.classList.remove('show');document.body.style.overflow='';}}
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.querySelectorAll('.rev-modal.show').forEach(function(m){m.classList.remove('show');});document.body.style.overflow='';}});
@@ -583,15 +621,17 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){document.qu
 function revEsc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function revFmt(n){return Number(n||0).toLocaleString('en-US',{maximumFractionDigits:0});}
 function revRenderRows(rows){
-    if(!rows||!rows.length){return '<tr><td colspan="9"><div class="rev-empty">No revenue recorded for this period.</div></td></tr>';}
+    if(!rows||!rows.length){return '<tr><td colspan="'+REV_COLS+'"><div class="rev-empty">No revenue recorded for this period.</div></td></tr>';}
     var dash = '<span style="color:var(--faint);">&mdash;</span>';
     return rows.map(function(r){
         var isService = r.row_type === 'service';
+        var isOut = r.row_type === 'outstanding';
+        var outCell = REV_OUT ? ('<td class="num money">'+((Number(r.outstanding)>0) ? (revFmt(r.outstanding)+' LE') : dash)+'</td>') : '';
         var testCell = (Number(r.test_fee)>0) ? (revFmt(r.test_fee)+' LE') : dash;
         var certCell = (Number(r.certificate)>0) ? (revFmt(r.certificate)+' LE') : dash;
         var sub = isService
             ? '<div class="rev-std-sub">'+(r.is_student ? '' : '<span class="rev-badge-lead">Lead</span>')+revEsc(r.service_item||'')+'</div>'
-            : '';
+            : (isOut ? '<div class="rev-std-sub"><span class="rev-badge-out">Outstanding payment</span></div>' : '');
         var mType = r.material_type || '';
         var badge = mType
             ? '<span class="rev-badge '+(mType==='Individual'?'rev-badge-direct':'rev-badge-shared')+'">'+revEsc(mType)+'</span>'
@@ -600,11 +640,12 @@ function revRenderRows(rows){
         return '<tr>'+
             '<td><div class="rev-std"><div class="rev-std-avatar">'+initial+'</div><div><span class="rev-std-name">'+revEsc(r.student_name)+'</span>'+sub+'</div></div></td>'+
             '<td class="money" style="color:var(--text);">'+(isService ? dash : revEsc(r.course))+'</td>'+
-            '<td class="num money">'+(isService ? dash : revFmt(r.deposit)+' LE')+'</td>'+
+            '<td class="num money">'+((isService || isOut) ? dash : revFmt(r.deposit)+' LE')+'</td>'+
             '<td class="num money">'+testCell+'</td>'+
             '<td class="num money">'+certCell+'</td>'+
-            '<td class="num money">'+(isService ? dash : revFmt(r.material)+' LE')+'</td>'+
+            '<td class="num money">'+((isService || isOut) ? dash : revFmt(r.material)+' LE')+'</td>'+
             '<td>'+badge+'</td>'+
+            outCell+
             '<td class="num total">'+revFmt(r.total)+' LE</td>'+
             '<td style="color:var(--faint);font-size:11px;white-space:nowrap;">'+revEsc(r.date)+'</td>'+
         '</tr>';
@@ -620,6 +661,7 @@ function revRenderFoot(t){
         '<td class="num rev-tfoot-num">'+revFmt(t.certificate)+' LE</td>'+
         '<td class="num rev-tfoot-num">'+revFmt(t.material)+' LE</td>'+
         '<td></td>'+
+        (REV_OUT ? '<td class="num rev-tfoot-num">'+revFmt(t.outstanding)+' LE</td>' : '')+
         '<td class="num rev-tfoot-total">'+revFmt(t.total)+' LE</td>'+
         '<td></td>'+
     '</tr>';
@@ -632,19 +674,19 @@ function revApply(box){
     var tfoot = modal.querySelector('.rev-tfoot');
     var active = box.querySelector('.rev-tab.active');
     var f = active ? active.getAttribute('data-f') : 'month';
-    var params = 'employee_id='+encodeURIComponent(emp)+'&filter='+encodeURIComponent(f);
+    var params = 'employee_id='+encodeURIComponent(emp)+'&filter='+encodeURIComponent(f)+'&outstanding='+REV_OUT;
     if(f==='month'){params += '&month='+encodeURIComponent(box.querySelector('.rev-p-month').value);}
     else if(f==='week'||f==='day'){params += '&day='+encodeURIComponent(box.querySelector('.rev-p-day').value);}
     else if(f==='patch'){
         var pv = box.querySelector('.rev-p-patch').value;
         if(!pv){
-            tbody.innerHTML = '<tr><td colspan="9"><div class="rev-empty">Select a patch to view its revenue.</div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="'+REV_COLS+'"><div class="rev-empty">Select a patch to view its revenue.</div></td></tr>';
             tfoot.innerHTML = '';
             return;
         }
         params += '&patch='+encodeURIComponent(pv);
     }
-    tbody.innerHTML = '<tr><td colspan="9"><div class="rev-empty">Loading&hellip;</div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="'+REV_COLS+'"><div class="rev-empty">Loading&hellip;</div></td></tr>';
     tfoot.innerHTML = '';
     fetch(REV_URL+'?'+params, {headers:{'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin'})
         .then(function(r){return r.json();})
@@ -653,7 +695,7 @@ function revApply(box){
             tfoot.innerHTML = revRenderFoot(d.totals);
         })
         .catch(function(){
-            tbody.innerHTML = '<tr><td colspan="9"><div class="rev-empty">Could not load revenue. Please try again.</div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="'+REV_COLS+'"><div class="rev-empty">Could not load revenue. Please try again.</div></td></tr>';
             tfoot.innerHTML = '';
         });
 }
