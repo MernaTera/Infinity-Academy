@@ -28,3 +28,5 @@ Schedule::command('reports:check-deadlines')->hourly();
 Schedule::command('postponements:expire')->dailyAt('00:05');
 
 Schedule::command('sessions:complete-past')->everyFiveMinutes();
+
+Schedule::command('packages:process')->everyFiveMinutes();

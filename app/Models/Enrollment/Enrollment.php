@@ -125,6 +125,8 @@ class Enrollment extends Model
 		'bundle_id',
 		'package_id',
 		'package_units_remaining',
+		'package_progression',
+		'previous_enrollment_id',
 		'discount_value',
 		'status',
 		'restriction_flag',
@@ -139,6 +141,27 @@ class Enrollment extends Model
 	public function levelPackage()
 	{
 		return $this->belongsTo(\App\Models\Finance\LevelPackage::class, 'package_id');
+	}
+
+	public function previousEnrollment()
+	{
+		return $this->belongsTo(Enrollment::class, 'previous_enrollment_id');
+	}
+
+	public function packagePosition(): ?array
+	{
+		if (!$this->package_id) {
+			return null;
+		}
+
+		$total     = (int) ($this->levelPackage?->levels_count ?? 0);
+		$remaining = (int) ($this->package_units_remaining ?? 0);
+		$total     = max($total, $remaining + 1);
+
+		return [
+			'current' => max(1, $total - $remaining),
+			'total'   => $total,
+		];
 	}
 
 	public function employee()

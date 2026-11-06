@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\Academic\CourseSession;
 use App\Models\Enrollment\Enrollment;
+use App\Services\PackageProgressionService;
 use Carbon\Carbon;
 
 class CompletePastSessions extends Command
@@ -40,21 +41,35 @@ class CompletePastSessions extends Command
                 ->count();
 
             if ($remaining === 0) {
-                Enrollment::where('course_instance_id', $instanceId)
+                $finishing = Enrollment::withoutGlobalScope('branch')
+                    ->where('course_instance_id', $instanceId)
                     ->where('status', 'Active')
                     ->where(function ($q) {
                         $q->where(function ($p) {
                             $p->where('enrollment_type', 'Private')
                               ->where('hours_remaining', '>', 0);
                         })->orWhere(function ($p) {
-                            $p->whereNotNull('package_id')
-                              ->where('package_units_remaining', '>', 0);
+                            $p->whereNotNull('package_id');
                         })->orWhere(function ($p) {
                             $p->whereNull('package_id')
                               ->where('enrollment_type', '!=', 'Private');
                         });
                     })
+                    ->get();
+
+                if ($finishing->isEmpty()) {
+                    continue;
+                }
+
+                Enrollment::withoutGlobalScope('branch')
+                    ->whereIn('enrollment_id', $finishing->pluck('enrollment_id'))
                     ->update(['status' => 'Completed']);
+
+                $progression = app(PackageProgressionService::class);
+
+                $finishing
+                    ->filter(fn($e) => $e->package_id && (int) $e->package_units_remaining > 0)
+                    ->each(fn($e) => $progression->advance($e));
             }
         }
     }

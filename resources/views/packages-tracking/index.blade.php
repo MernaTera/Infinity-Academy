@@ -88,6 +88,7 @@
     .state-badge::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
     .st-active { background:var(--green-l); color:var(--green-dk); }
     .st-available { background:var(--blue-l); color:var(--blue-dk); }
+    .st-waiting { background:rgba(245,145,30,0.1); color:#C47010; }
     .st-done { background:var(--blue-l); color:var(--blue); }
     .st-postponed { background:rgba(100,116,139,0.14); color:#475569; }
 
@@ -111,8 +112,8 @@
         <div class="pk-header">
             <div class="pk-header-inner">
                 <div>
-                    <div class="pk-eyebrow">Group Levels Program</div>
-                    <h1 class="pk-title">Group Packages</h1>
+                    <div class="pk-eyebrow">Level Program</div>
+                    <h1 class="pk-title">Level Packages</h1>
                     <div class="pk-sub">Package progress & remaining prepaid levels for group students</div>
                 </div>
                 @if($canAct)
@@ -135,8 +136,8 @@
                 <div class="stat-val">{{ $stats['active'] }}</div>
             </div>
             <div class="stat" style="--sc:var(--blue)">
-                <div class="stat-label">Ready to Continue</div>
-                <div class="stat-val">{{ $stats['available'] }}</div>
+                <div class="stat-label">Waiting Placement</div>
+                <div class="stat-val">{{ $stats['waiting'] }}</div>
             </div>
             <div class="stat" style="--sc:var(--blue)">
                 <div class="stat-label">Completed</div>
@@ -157,7 +158,8 @@
         <div class="filter-bar">
             <a href="{{ route('packages-tracking.index') }}" class="filter-pill {{ $stateFilter === 'all' ? 'active' : '' }}">All</a>
             <a href="{{ route('packages-tracking.index', ['state' => 'active']) }}" class="filter-pill {{ $stateFilter === 'active' ? 'active' : '' }}">Active</a>
-            <a href="{{ route('packages-tracking.index', ['state' => 'available']) }}" class="filter-pill {{ $stateFilter === 'available' ? 'active' : '' }}">Ready to Continue</a>
+            <a href="{{ route('packages-tracking.index', ['state' => 'waiting']) }}" class="filter-pill {{ $stateFilter === 'waiting' ? 'active' : '' }}">Waiting Placement</a>
+            <a href="{{ route('packages-tracking.index', ['state' => 'available']) }}" class="filter-pill {{ $stateFilter === 'available' ? 'active' : '' }}">Needs Action</a>
             <a href="{{ route('packages-tracking.index', ['state' => 'done']) }}" class="filter-pill {{ $stateFilter === 'done' ? 'active' : '' }}">Completed</a>
             <a href="{{ route('packages-tracking.index', ['state' => 'postponed']) }}" class="filter-pill {{ $stateFilter === 'postponed' ? 'active' : '' }}">Postponed</a>
         </div>
@@ -182,7 +184,8 @@
                         @php
                             $stateMeta = match($e->v_state) {
                                 'active'    => ['st-active','Active','var(--green)'],
-                                'available' => ['st-available','Level Done · Continue','var(--blue)'],
+                                'waiting'   => ['st-waiting', $e->package_progression === 'Repeat' ? 'Waiting Placement · Repeat' : 'Waiting Placement', 'var(--blue)'],
+                                'available' => ['st-available','Needs Action','var(--blue)'],
                                 'done'      => ['st-done','Package Complete','var(--blue)'],
                                 'postponed' => ['st-postponed','Postponed','#64748B'],
                                 default     => ['st-active','—','var(--green)'],
@@ -232,6 +235,12 @@
                                         New Course
                                     </a>
                                     @endif
+                                @elseif($e->v_state === 'done')
+                                    <a href="{{ $e->v_lead_id ? route('registration.from.lead', $e->v_lead_id).'?renew=1' : route('leads.index') }}" class="btn-enroll"
+                                       @unless($e->v_lead_id) title="No lead linked — open leads" @endunless>
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                                        Renew
+                                    </a>
                                 @else
                                 <span style="color:var(--faint);font-size:11px;">—</span>
                                 @endif

@@ -33,7 +33,10 @@ class StudentCareController extends Controller
         $waiting = WaitingList::whereHas('enrollment')->with([
             'enrollment.student.phones',
             'enrollment.courseTemplate',
-            'enrollment.level'
+            'enrollment.level',
+            'enrollment.sublevel',
+            'enrollment.levelPackage',
+            'enrollment.teacher.employee',
         ])->get()
           ->sortByDesc(fn($w) => $w->enrollment->enrollment_id)
           ->values();
@@ -557,97 +560,19 @@ class StudentCareController extends Controller
 
     public function continuePackage($enrollmentId)
     {
-        $current = Enrollment::with(['level', 'sublevel', 'courseTemplate'])
-            ->findOrFail($enrollmentId);
+        $current = Enrollment::findOrFail($enrollmentId);
 
         if (!$current->package_id || (int) $current->package_units_remaining <= 0) {
             return back()->with('error', 'This enrollment has no remaining package units.');
         }
 
-        $next = $this->resolveNextPackageUnit($current);
+        $next = app(\App\Services\PackageProgressionService::class)->advance($current);
 
         if (!$next) {
             return back()->with('error', 'No further levels/sublevels available in this course for the package.');
         }
 
-        $newEnrollment = Enrollment::create([
-            'student_id'              => $current->student_id,
-            'course_template_id'      => $current->course_template_id,
-            'course_instance_id'      => null, // assigned later by Student Care
-            'level_id'                => $next['level_id'],
-            'sublevel_id'             => $next['sublevel_id'],
-            'patch_id'                => $current->patch_id,
-            'branch_id'               => $current->branch_id,
-            'teacher_id'              => null,
-            'enrollment_type'         => 'Group',
-            'delivery_mood'           => $current->delivery_mood,
-            'final_price'             => 0,
-            'payment_plan_id'         => $current->payment_plan_id,
-            'bundle_id'               => null,
-            'package_id'              => $current->package_id,
-            'package_units_remaining' => (int) $current->package_units_remaining - 1,
-            'hours_remaining'         => null,
-            'discount_value'          => 0,
-            'status'                  => 'Waiting',
-            'created_by_cs_id'        => auth()->user()->employee?->employee_id ?? null,
-        ]);
-
-        $current->package_units_remaining = 0;
-        $current->save();
-
         return back()->with('success',
-            'Next package level created (free). The student can now be assigned to a class for it.');
-    }
-
-
-    private function resolveNextPackageUnit(Enrollment $current): ?array
-    {
-        $courseId = $current->course_template_id;
-
-        $currentLevelHasSublevels = $current->level_id
-            ? Sublevel::where('level_id', $current->level_id)->exists()
-            : false;
-
-        if ($currentLevelHasSublevels && $current->sublevel_id) {
-            $currentSub = Sublevel::find($current->sublevel_id);
-            if ($currentSub) {
-                $nextSub = Sublevel::where('level_id', $current->level_id)
-                    ->where('sublevel_order', '>', $currentSub->sublevel_order)
-                    ->orderBy('sublevel_order')
-                    ->first();
-                if ($nextSub) {
-                    return ['level_id' => $current->level_id, 'sublevel_id' => $nextSub->sublevel_id];
-                }
-            }
-            $nextLevel = $this->nextLevel($courseId, $current->level_id);
-            if ($nextLevel) {
-                $firstSub = Sublevel::where('level_id', $nextLevel->level_id)
-                    ->orderBy('sublevel_order')
-                    ->first();
-                return [
-                    'level_id'    => $nextLevel->level_id,
-                    'sublevel_id' => $firstSub?->sublevel_id, 
-                ];
-            }
-            return null;
-        }
-
-        $nextLevel = $this->nextLevel($courseId, $current->level_id);
-        if ($nextLevel) {
-            return ['level_id' => $nextLevel->level_id, 'sublevel_id' => null];
-        }
-        return null;
-    }
-
-
-    private function nextLevel($courseId, $currentLevelId): ?Level
-    {
-        $currentLevel = Level::find($currentLevelId);
-        if (!$currentLevel) return null;
-
-        return Level::where('course_template_id', $courseId)
-            ->where('level_order', '>', $currentLevel->level_order)
-            ->orderBy('level_order')
-            ->first();
+            'Next package level created (free) and added to the waiting list.');
     }
 }

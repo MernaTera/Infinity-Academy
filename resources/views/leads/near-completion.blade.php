@@ -225,15 +225,10 @@
                         </td>
                         <td>
                             @if($e->package_id && (int)$e->package_units_remaining > 0)
-                                
-                                <form method="POST" action="{{ route('student-care.package.continue', $e->enrollment_id) }}" style="display:inline;">
-                                    @csrf
-                                    <button type="submit" class="btn-renew" style="background:rgba(124,58,237,0.08);color:#7C3AED;border-color:rgba(124,58,237,0.3);"
-                                        onclick="return confirm('Create the next package level for this student (free)?')">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
-                                        Continue Package ({{ $e->package_units_remaining }} left)
-                                    </button>
-                                </form>
+                                <span class="btn-renew" style="background:rgba(124,58,237,0.06);color:#7C3AED;border-color:rgba(124,58,237,0.25);cursor:default;" title="The next level is created automatically when this course ends and sent to the Student Care waiting list.">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                                    Next level auto ({{ $e->package_units_remaining }} left)
+                                </span>
                             @elseif($e->student?->lead)
                             <a href="{{ $e->student?->lead ? route('registration.from.lead', $e->student->lead->lead_id) . '?renew=1' : '#' }}"
                                class="btn-renew">

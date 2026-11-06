@@ -117,6 +117,8 @@
         text-transform:uppercase; font-weight:600; margin-bottom:3px;
     }
     .tag-course  { background:rgba(27,79,168,0.07);  border:1px solid rgba(27,79,168,0.15);  color:var(--blue); }
+    .tag-package { background:rgba(124,58,237,0.07); border:1px solid rgba(124,58,237,0.2); color:#7C3AED; }
+    .tag-repeat  { background:rgba(220,38,38,0.06); border:1px solid rgba(220,38,38,0.2); color:#DC2626; }
     .tag-level   { background:rgba(245,145,30,0.07); border:1px solid rgba(245,145,30,0.2);  color:var(--orange-dk); }
     .tag-group   { background:rgba(27,79,168,0.05);  border:1px solid rgba(27,79,168,0.12);  color:var(--blue-2); }
     .tag-private { background:rgba(245,145,30,0.05); border:1px solid rgba(245,145,30,0.15); color:var(--orange-dk); }
@@ -281,7 +283,7 @@
                         <th>Patch Preference</th>
                         <th>Requested Patch</th>
                         <th>Preferred Date</th>
-                        <th>Preferred Days</th>
+                        <th>Preferres</th>
                         <th>Status</th>
                         <th>Notes</th>
                         <th>Actions</th>
@@ -344,6 +346,12 @@
                             @if($item->enrollment->sublevel ?? null)
                                 <br><span class="tag tag-level" style="font-size:8px;">{{ $item->enrollment->sublevel->name }}</span>
                             @endif
+                            @if($pkgPos = $item->enrollment->packagePosition())
+                                <br><span class="tag tag-package">Package · {{ $pkgPos['current'] }} of {{ $pkgPos['total'] }}</span>
+                            @endif
+                            @if(($item->enrollment->package_progression ?? null) === 'Repeat')
+                                <br><span class="tag tag-repeat">Repeat · Absence limit</span>
+                            @endif
                         </td>
 
                         <td>
@@ -386,9 +394,20 @@
                                     'mon_thu' => 'Mon · Thu',
                                     default   => null,
                                 };
+                                $prefTeacher = $item->enrollment->teacher?->employee?->full_name;
                             @endphp
-                            @if($dayLabel)
-                                <span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(245,145,30,0.08);color:#C47010;white-space:nowrap;">{{ $dayLabel }}</span>
+                            @if($dayLabel || $prefTeacher)
+                                <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-start;">
+                                    @if($dayLabel)
+                                        <span style="display:inline-block;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(245,145,30,0.08);color:#C47010;white-space:nowrap;">{{ $dayLabel }}</span>
+                                    @endif
+                                    @if($prefTeacher)
+                                        <span style="display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:6px;font-size:11px;font-weight:600;background:rgba(27,79,168,0.07);color:#1B4FA8;white-space:nowrap;">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                                            {{ $prefTeacher }}
+                                        </span>
+                                    @endif
+                                </div>
                             @else
                                 <span style="color:#AAB8C8;">—</span>
                             @endif
@@ -547,29 +566,8 @@ function searchWaiting(q) {
     applyFilters();
 }
 
-function resetAllFilters() {
-    activeStatus = '';
-    activeDtype  = '';
-    activeMode   = '';
-    activePtype  = '';
-
-    document.getElementById('statusFilter').value = '';
-    document.getElementById('dtypeFilter').value  = '';
-    document.getElementById('modeFilter').value   = '';
-    document.getElementById('ptypeFilter').value  = '';
-
-    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-filter'));
-    document.querySelector('.stat-card[data-filter="all"]')?.classList.add('active-filter');
-
-    applyFilters();
-}
-
 function filterByStatus(status) {
-    if (status === 'all') {
-        resetAllFilters();
-        return;
-    }
-    activeStatus = status;
+    activeStatus = status === 'all' ? '' : status;
     document.getElementById('statusFilter').value = activeStatus;
     document.querySelectorAll('.stat-card[data-filter]').forEach(c => {
         c.classList.toggle('active-filter', c.dataset.filter === status);

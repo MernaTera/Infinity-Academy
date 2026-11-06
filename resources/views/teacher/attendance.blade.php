@@ -52,6 +52,21 @@
 .att-toggle input[value="Absent"]:checked ~ label.absent{background:var(--red);color:#fff}
 .att-toggle .divider{width:1px;background:rgba(27,79,168,0.2)}
 
+.att-risk{display:inline-flex;align-items:center;gap:5px;margin-top:5px;padding:3px 9px;border-radius:20px;font-size:9px;letter-spacing:1px;text-transform:uppercase;font-weight:600;color:var(--orange-dk);background:rgba(245,145,30,0.1);border:1px solid rgba(245,145,30,0.25)}
+.risk-overlay{display:none;position:fixed;inset:0;z-index:1000;background:rgba(209,216,231,0.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+.risk-box{width:100%;max-width:460px;background:rgba(255,255,255,0.85);-webkit-backdrop-filter:blur(26px) saturate(170%);backdrop-filter:blur(26px) saturate(170%);border:1px solid rgba(255,255,255,0.7);border-radius:20px;overflow:hidden;position:relative;box-shadow:0 24px 60px rgba(23,45,90,0.18)}
+.risk-box::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--red),transparent)}
+.risk-head{padding:24px 24px 10px;text-align:center}
+.risk-icon{width:50px;height:50px;border-radius:15px;background:rgba(220,38,38,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px}
+.risk-eyebrow{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--red);font-weight:600;margin-bottom:3px}
+.risk-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:var(--text)}
+.risk-list{padding:6px 24px 4px;max-height:45vh;overflow-y:auto}
+.risk-item{padding:12px 14px;border-radius:12px;background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.15);margin-bottom:10px}
+.risk-name{font-weight:600;font-size:13px;color:var(--text);margin-bottom:4px}
+.risk-msg{font-size:12px;color:var(--muted);line-height:1.5}
+.risk-foot{padding:14px 24px 22px;display:flex;gap:10px;justify-content:center}
+.risk-cancel{padding:10px 20px;background:rgba(255,255,255,0.6);border:1px solid rgba(27,79,168,0.15);border-radius:11px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;cursor:pointer}
+.risk-ok{padding:10px 24px;background:linear-gradient(120deg,#DC2626,#EF4444);border:none;border-radius:12px;color:#fff;font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;box-shadow:0 10px 24px rgba(220,38,38,0.28)}
 .submit-wrap{padding:20px;border-top:1px solid rgba(27,79,168,0.08);display:flex;justify-content:flex-end;gap:10px}
 .btn-submit{padding:12px 32px;background:transparent;border:1.5px solid var(--blue);border-radius:10px;color:var(--blue);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer;position:relative;overflow:hidden;transition:color 0.4s}
 .btn-submit::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,var(--blue),var(--blue-2));transform:scaleX(0);transform-origin:left;transition:transform 0.4s cubic-bezier(0.16,1,0.3,1)}
@@ -167,7 +182,7 @@
         </div>
         @endif
 
-        <form method="POST" action="{{ route('teacher.attendance.store', $session->course_session_id) }}" id="attForm">
+        <form method="POST" action="{{ route('teacher.attendance.store', $session->course_session_id) }}" id="attForm" onsubmit="return confirmAbsenceRisk(event)">
             @csrf
 
             @forelse($session->courseInstance->enrollments as $enrollment)
@@ -187,6 +202,12 @@
                         <span style="color:#DC2626;margin-left:8px;letter-spacing:1px;text-transform:uppercase;font-size:9px">• Restricted</span>
                         @endif
                     </div>
+                    @if($isOpen && isset($absenceRisk[$enrollment->enrollment_id]))
+                    <div class="att-risk">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        Last allowed absence{{ $absenceRisk[$enrollment->enrollment_id]['package'] ? ' · Package' : '' }}
+                    </div>
+                    @endif
                 </div>
 
                 @if($isRestricted || !$isOpen)
@@ -232,7 +253,81 @@
 </div>
 
 @if($isOpen)
+<div id="riskModal" class="risk-overlay">
+    <div class="risk-box">
+        <div class="risk-head">
+            <div class="risk-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+            <div class="risk-eyebrow">Absence Limit</div>
+            <div class="risk-title">Confirm Absence</div>
+        </div>
+        <div class="risk-list" id="riskList"></div>
+        <div class="risk-foot">
+            <button type="button" class="risk-cancel" onclick="closeRiskModal()">Go Back</button>
+            <button type="button" class="risk-ok" onclick="submitWithRisk()">Save Anyway</button>
+        </div>
+    </div>
+</div>
+
 <script>
+const ABSENCE_RISK = @json($absenceRisk ?? []);
+let riskConfirmed = false;
+
+function riskMessage(r) {
+    if (r.package && r.units > 0) {
+        return 'This is their last allowed absence. They will be removed from this level and will repeat it from the start. One level will be used from their package.';
+    }
+    if (r.package) {
+        return 'This is their last allowed absence. They will be removed from this level. They have no package levels left, so Customer Service will follow up.';
+    }
+    return 'This is their last allowed absence. They will be removed from this course.';
+}
+
+function confirmAbsenceRisk(e) {
+    if (riskConfirmed) return true;
+    const flagged = Object.keys(ABSENCE_RISK).filter(function (id) {
+        const input = document.getElementById('att_' + id);
+        return input && input.value === 'Absent';
+    });
+    if (!flagged.length) return true;
+
+    e.preventDefault();
+    const list = document.getElementById('riskList');
+    list.innerHTML = '';
+    flagged.forEach(function (id) {
+        const r = ABSENCE_RISK[id];
+        const item = document.createElement('div');
+        item.className = 'risk-item';
+        const name = document.createElement('div');
+        name.className = 'risk-name';
+        name.textContent = r.name;
+        const msg = document.createElement('div');
+        msg.className = 'risk-msg';
+        msg.textContent = riskMessage(r);
+        item.appendChild(name);
+        item.appendChild(msg);
+        list.appendChild(item);
+    });
+    document.getElementById('riskModal').style.display = 'flex';
+    return false;
+}
+
+function closeRiskModal() {
+    document.getElementById('riskModal').style.display = 'none';
+}
+
+function submitWithRisk() {
+    riskConfirmed = true;
+    closeRiskModal();
+    const form = document.getElementById('attForm');
+    if (form.requestSubmit) { form.requestSubmit(); } else { form.submit(); }
+}
+
+document.getElementById('riskModal').addEventListener('click', function (e) {
+    if (e.target === this) closeRiskModal();
+});
+
 let seconds = {{ $minutesLeft }} * 60;
 const display = document.getElementById('timerDisplay');
 

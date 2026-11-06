@@ -24,7 +24,11 @@ class PackagesController extends Controller
             ])
             ->whereNotNull('package_id')
             ->where(function ($q) {
-                $q->whereIn('status', ['Active', 'Restricted', 'Waiting', 'Completed', 'Postponed']);
+                $q->whereIn('status', ['Active', 'Restricted', 'Waiting', 'Completed', 'Postponed'])
+                  ->orWhere(function ($c) {
+                      $c->where('status', 'Cancelled')
+                        ->whereDoesntHave('refundRequests', fn($r) => $r->whereIn('status', ['Approved', 'Processed']));
+                  });
             })
             ->orderByDesc('enrollment_id')
             ->get();
@@ -54,9 +58,11 @@ class PackagesController extends Controller
 
             if ($e->status === 'Postponed') {
                 $state = 'postponed';
-            } elseif ($e->status === 'Completed' && $remaining > 0) {
+            } elseif ($e->status === 'Waiting') {
+                $state = 'waiting';
+            } elseif (in_array($e->status, ['Completed', 'Cancelled']) && $remaining > 0) {
                 $state = 'available';
-            } elseif ($remaining <= 0) {
+            } elseif (in_array($e->status, ['Completed', 'Cancelled'])) {
                 $state = 'done';
             } else {
                 $state = 'active';
@@ -82,13 +88,14 @@ class PackagesController extends Controller
         $stats = [
             'total'     => $rows->count(),
             'active'    => $rows->where('v_state', 'active')->count(),
+            'waiting'   => $rows->where('v_state', 'waiting')->count(),
             'available' => $rows->where('v_state', 'available')->count(),
             'done'      => $rows->where('v_state', 'done')->count(),
             'postponed' => $rows->where('v_state', 'postponed')->count(),
             'units_left'=> (int) $rows->sum('v_remaining'),
         ];
 
-        if (in_array($stateFilter, ['active', 'available', 'done', 'postponed'])) {
+        if (in_array($stateFilter, ['active', 'waiting', 'available', 'done', 'postponed'])) {
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
 

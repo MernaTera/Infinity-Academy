@@ -57,8 +57,31 @@ class TeacherAttendanceController extends Controller
         $existingAttendance = Attendance::where('course_session_id', $sessionId)
             ->pluck('status', 'enrollment_id');
 
+        $groupEnrollments = $session->courseInstance->enrollments
+            ->where('enrollment_type', 'Group')
+            ->whereIn('status', ['Active']);
+
+        $priorAbsences = $groupEnrollments->isEmpty() ? collect() :
+            Attendance::whereIn('enrollment_id', $groupEnrollments->pluck('enrollment_id'))
+                ->where('status', 'Absent')
+                ->where('course_session_id', '!=', $sessionId)
+                ->selectRaw('enrollment_id, COUNT(*) as total')
+                ->groupBy('enrollment_id')
+                ->pluck('total', 'enrollment_id');
+
+        $absenceLimit = \App\Services\PackageProgressionService::ABSENCE_LIMIT;
+
+        $absenceRisk = $groupEnrollments
+            ->filter(fn($e) => (int) ($priorAbsences[$e->enrollment_id] ?? 0) >= $absenceLimit - 1)
+            ->mapWithKeys(fn($e) => [$e->enrollment_id => [
+                'name'      => $e->student?->full_name ?? 'Student',
+                'package'   => (bool) $e->package_id,
+                'units'     => (int) ($e->package_units_remaining ?? 0),
+            ]])
+            ->all();
+
         return view('teacher.attendance', compact(
-            'session', 'isOpen', 'isLocked', 'minutesLeft', 'existingAttendance'
+            'session', 'isOpen', 'isLocked', 'minutesLeft', 'existingAttendance', 'absenceRisk'
         ));
     }
 
