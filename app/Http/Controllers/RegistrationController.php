@@ -287,9 +287,15 @@ class RegistrationController extends Controller
             $materialPrice = (float) $request->material_price;
         }
 
-        if ($plan && $plan->deposit_percentage > 0 && $finalPrice > 0) {
-            $depositOnCourse = round($finalPrice * $plan->deposit_percentage / 100, 2);
-            $requiredDeposit = round($depositOnCourse + $materialPrice + $testFee, 2);
+        // Material and test fee are due in full at registration even when the
+        // course price is 0 (or the plan has no deposit), so the required amount
+        // is judged on the whole "due now" total, not on the course price alone.
+        $depositOnCourse = ($plan && $finalPrice > 0)
+            ? round($finalPrice * $plan->deposit_percentage / 100, 2)
+            : 0;
+        $requiredDeposit = round($depositOnCourse + $materialPrice + $testFee, 2);
+
+        if ($plan && $requiredDeposit > 0) {
             $methods   = $request->input('deposit_methods', []);
 
             $validMethods = collect($methods)->filter(fn($m) => (float)($m['amount'] ?? 0) > 0);

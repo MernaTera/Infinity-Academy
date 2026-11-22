@@ -201,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const label = document.getElementById('installments_label');
         const tbody = table?.querySelector('tbody');
         if (tbody) tbody.innerHTML = '';
-        if (installments > 0 && tbody) {
+        if (installments > 0 && remaining > 0 && tbody) {
             const amt = remaining / installments;
             for (let i = 1; i <= installments; i++) {
                 tbody.innerHTML += `<tr><td>${i}</td><td>${fmt(amt)}</td><td style="color:#AAB8C8;font-size:11px;">Upon course assignment</td></tr>`;
