@@ -187,7 +187,7 @@ class PatchService
             ->get();
 
         $contracts = $contracts
-            ->sortBy(fn($c) => optional($c->patch)->start_date)
+            ->sortByDesc(fn($c) => optional($c->patch)->start_date)
             ->unique('teacher_id');
 
         foreach ($contracts as $contract) {

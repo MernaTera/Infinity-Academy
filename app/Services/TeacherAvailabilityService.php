@@ -35,7 +35,7 @@ class TeacherAvailabilityService
             ->whereHas('contractType', fn($q) => $q->where('is_active', true))
             ->whereHas('patch', fn($q) => $q->where('start_date', '<=', $targetPatch->start_date))
             ->get()
-            ->sortBy(fn($c) => optional($c->patch)->start_date)  
+            ->sortByDesc(fn($c) => optional($c->patch)->start_date)
             ->unique('teacher_id');
 
         $available = [];

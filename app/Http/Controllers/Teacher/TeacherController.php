@@ -26,12 +26,9 @@ class TeacherController extends Controller
         $currentPatch = \App\Models\Academic\Patch::where('status', 'Active')
             ->latest('start_date')->first();
 
-        $contract = \App\Models\HR\TeacherContract::with('contractType')
-            ->where('teacher_id', $teacher->teacher_id)
-            ->where('is_active', true)
-            ->when($currentPatch, fn($q) => $q->where('patch_id', $currentPatch->patch_id))
-            ->latest('created_at')
-            ->first();
+        $contract = $currentPatch
+            ? \App\Models\HR\TeacherContract::standingFor($teacher->teacher_id, $currentPatch->patch_id)
+            : null;
 
         $allInstances = \App\Models\Academic\CourseInstance::with([
             'courseTemplate',
