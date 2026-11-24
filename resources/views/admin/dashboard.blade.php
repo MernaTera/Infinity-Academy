@@ -268,7 +268,7 @@ canvas{max-width:100%;display:block;}
                 <a href="?period=day"   class="period-tab {{ $period=='day'  ?'active':'' }}">Day</a>
                 <a href="?period=week"  class="period-tab {{ $period=='week' ?'active':'' }}">Week</a>
                 <a href="?period=month" class="period-tab {{ $period=='month'?'active':'' }}">Month</a>
-                <a href="?period=patch" class="period-tab {{ $period=='patch'?'active':'' }}">Patch</a>
+                <a href="?period=patch" class="period-tab {{ $period=='patch'?'active':'' }}">Batch</a>
             </div>
         </div>
     </div>
@@ -283,13 +283,13 @@ canvas{max-width:100%;display:block;}
     @endphp
     <div class="patch-banner">
         <div class="pb-info">
-            <div class="pb-label">Current Active Patch</div>
+            <div class="pb-label">Current Active Batch</div>
             <div class="pb-name">{{ $currentPatch->name }}</div>
             <div class="pb-dates">{{ $patchStart->format('d M') }} → {{ $patchEnd->format('d M Y') }}</div>
         </div>
         <div class="pb-prog-wrap">
             <div class="pb-prog-label">
-                <span>Patch Progress</span>
+                <span>Batch Progress</span>
                 <span>{{ $patchProgress }}%</span>
             </div>
             <div class="pb-prog-track">

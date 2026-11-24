@@ -89,7 +89,7 @@
     <div class="page-header">
         <div>
             <div class="page-eyebrow">Admin Panel</div>
-            <h1 class="page-title">Patches</h1>
+            <h1 class="page-title">Batches</h1>
         </div>
     </div>
 
@@ -117,10 +117,10 @@
 
         <div>
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-                <span style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#5A6A85;font-weight:600">Academic Patches</span>
+                <span style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:#5A6A85;font-weight:600">Academic Batches</span>
                 <button onclick="document.getElementById('newPatchModal').classList.add('show')" class="btn-primary" style="padding:8px 16px;font-size:11px">
                     <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    <span>New Patch</span>
+                    <span>New Batch</span>
                 </button>
             </div>
 
@@ -261,11 +261,11 @@
                 </div>
                 @empty
                 <div style="text-align:center;padding:48px;color:#93A3BC;background:rgba(255,255,255,0.5);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid rgba(255,255,255,0.6);border-radius:18px;box-shadow:0 8px 30px rgba(23,45,90,0.07)">
-                    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:6px">No Patches Yet</div>
-                    <div style="font-size:12px">Create your first academic patch</div>
+                    <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;margin-bottom:6px">No Batches Yet</div>
+                    <div style="font-size:12px">Create your first academic batch</div>
                 </div>
                 @endforelse
-                <div id="patchFilterEmpty" style="display:none;text-align:center;padding:40px;color:#93A3BC;font-size:12px;background:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.6);border-radius:18px;box-shadow:0 8px 30px rgba(23,45,90,0.07)">No patches in this status</div>
+                <div id="patchFilterEmpty" style="display:none;text-align:center;padding:40px;color:#93A3BC;font-size:12px;background:rgba(255,255,255,0.5);border:1px solid rgba(255,255,255,0.6);border-radius:18px;box-shadow:0 8px 30px rgba(23,45,90,0.07)">No Batches in this status</div>
             </div>
         </div>
     </div>
@@ -276,14 +276,14 @@
         <!-- <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#1B4FA8,transparent)"></div> -->
         <div style="padding:20px 24px 16px;border-bottom:1px solid rgba(27,79,168,0.08)">
             <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#1B4FA8;margin-bottom:3px;font-weight:600">Admin Panel</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#16233F">New Patch</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#16233F">New Batch</div>
         </div>
         <form method="POST" action="{{ route('admin.patches.store') }}">
             @csrf
             <div style="padding:20px 24px">
                 <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
-                    <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#5A6A85">Patch Name *</label>
-                    <input type="text" name="name" style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:#16233F;background:rgba(255,255,255,0.7);outline:none;box-sizing:border-box;width:100%" placeholder="e.g. Patch Spring 2026" required>
+                    <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#5A6A85">Batch Name *</label>
+                    <input type="text" name="name" style="padding:10px 12px;border:1px solid rgba(27,79,168,0.12);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:13px;color:#16233F;background:rgba(255,255,255,0.7);outline:none;box-sizing:border-box;width:100%" placeholder="e.g. Batch Spring 2026" required>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">
                     <label style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#5A6A85">Branch *</label>
@@ -312,7 +312,7 @@
                 </button>
                 <button type="submit"
                     style="padding:10px 24px;background:linear-gradient(120deg,#1B4FA8,#2D6FDB);border:none;border-radius:12px;color:#fff;box-shadow:0 10px 24px rgba(27,79,168,0.28);font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:3px;cursor:pointer">
-                    Create Patch
+                    Create Batch
                 </button>
             </div>
         </form>
@@ -324,7 +324,7 @@
         <!-- <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#1B4FA8,transparent)"></div> -->
         <div style="padding:20px 24px 16px;border-bottom:1px solid rgba(27,79,168,0.08)">
             <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#1B4FA8;margin-bottom:3px;font-weight:600">Admin Panel</div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#16233F">Edit Patch</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#16233F">Edit Batch</div>
         </div>
         <form id="editPatchForm" method="POST">
             @csrf @method('PUT')
@@ -395,9 +395,9 @@ document.getElementById('newPatchModal').addEventListener('click', function(e) {
             <div style="width:52px;height:52px;border-radius:16px;background:rgba(220,38,38,0.10);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DC2626" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
             </div>
-            <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#DC2626;margin-bottom:3px;font-weight:600">Delete Patch</div>
+            <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:#DC2626;margin-bottom:3px;font-weight:600">Delete Batch</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:3px;color:#16233F" id="deletePatchName"></div>
-            <div style="font-size:12px;color:#5A6A85;margin-top:8px;line-height:1.5">This patch will be permanently deleted. This action can't be undone.</div>
+            <div style="font-size:12px;color:#5A6A85;margin-top:8px;line-height:1.5">This batch will be permanently deleted. This action can't be undone.</div>
         </div>
         <div style="padding:18px 24px 22px;display:flex;gap:10px;justify-content:center">
             <button type="button" onclick="closeDeletePatch()"
@@ -442,7 +442,7 @@ document.addEventListener('keydown', function (e) {
         <div style="padding:18px 22px;border-bottom:1px solid rgba(27,79,168,0.09);
                     background:linear-gradient(135deg,#F5911E,#FFB347);color:#fff;">
             <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;">
-                Adjust Patch End Date
+                Adjust Batch End Date
             </div>
             <div id="extendPatchName" style="font-size:11px;opacity:0.9;margin-top:3px;letter-spacing:0.5px;"></div>
         </div>
@@ -453,7 +453,7 @@ document.addEventListener('keydown', function (e) {
                 <div style="background:rgba(245,145,30,0.08);border-left:3px solid #F5911E;
                             padding:10px 14px;border-radius:4px;margin-bottom:16px;font-size:11.5px;
                             color:#C47010;line-height:1.5;">
-                    <strong>Notice:</strong> You can extend or shorten the patch end date. New date must be after the last scheduled course session.
+                    <strong>Notice:</strong> You can extend or shorten the batch end date. New date must be after the last scheduled course session.
                 </div>
 
                 <label style="font-size:9px;letter-spacing:2.5px;text-transform:uppercase;
@@ -510,7 +510,7 @@ function openExtendModal(patchId, patchName, currentEnd, startDate) {
     document.getElementById('currentEndDate').textContent = formatted;
 
     document.getElementById('extendHint').innerHTML =
-        `Patch started on <strong style="color:#16233F;">${new Date(startDate).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})}</strong>. ` +
+        `Batch started on <strong style="color:#16233F;">${new Date(startDate).toLocaleDateString('en-GB', {day:'2-digit',month:'short',year:'numeric'})}</strong>. ` +
         `You can extend or shorten as long as no session is left unscheduled.`;
 
     document.getElementById('extendModal').style.display = 'flex';

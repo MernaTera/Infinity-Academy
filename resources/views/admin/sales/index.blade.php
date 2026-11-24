@@ -470,14 +470,14 @@
             </div>
             <div class="rev-filter" data-emp="{{ $row['employee']->employee_id }}">
                 <div class="rev-tabs">
-                    <button type="button" class="rev-tab {{ $filterType==='patch'?'active':'' }}" data-f="patch">Patch</button>
+                    <button type="button" class="rev-tab {{ $filterType==='patch'?'active':'' }}" data-f="patch">Batch</button>
                     <button type="button" class="rev-tab {{ $filterType==='month'?'active':'' }}" data-f="month">Month</button>
                     <button type="button" class="rev-tab {{ $filterType==='week'?'active':'' }}" data-f="week">Week</button>
                     <button type="button" class="rev-tab {{ $filterType==='day'?'active':'' }}" data-f="day">Day</button>
                 </div>
                 <div class="rev-pickers">
                     <select class="rev-sel rev-p-patch" style="{{ $filterType==='patch'?'':'display:none;' }}">
-                        <option value="">&mdash; Select Patch &mdash;</option>
+                        <option value="">&mdash; Select Batch &mdash;</option>
                         @foreach($patches as $p)
                         <option value="{{ $p->patch_id }}">{{ $p->name }}</option>
                         @endforeach
@@ -680,7 +680,7 @@ function revApply(box){
     else if(f==='patch'){
         var pv = box.querySelector('.rev-p-patch').value;
         if(!pv){
-            tbody.innerHTML = '<tr><td colspan="'+REV_COLS+'"><div class="rev-empty">Select a patch to view its revenue.</div></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="'+REV_COLS+'"><div class="rev-empty">Select a batch to view its revenue.</div></td></tr>';
             tfoot.innerHTML = '';
             return;
         }
