@@ -157,7 +157,7 @@
             <div class="patch-bar-dates">{{ $pStart->format('d M Y') }} → {{ $pEnd->format('d M Y') }} · <b>{{ $daysLeft }} days left</b></div>
         </div>
         <div class="patch-bar-prog">
-            <div class="patch-bar-prog-top"><span>Patch Progress</span><span class="patch-bar-prog-pct">{{ $pPct }}%</span></div>
+            <div class="patch-bar-prog-top"><span>Batch Progress</span><span class="patch-bar-prog-pct">{{ $pPct }}%</span></div>
             <div class="patch-bar-track"><div class="patch-bar-fill" style="width:{{ $pPct }}%"></div></div>
         </div>
     </div>

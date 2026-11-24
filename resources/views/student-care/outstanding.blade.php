@@ -161,7 +161,7 @@
                         <tr>
                             <th>Student</th>
                             <th>Course</th>
-                            <th>Patch</th>
+                            <th>Batch</th>
                             <th>Payment Plan</th>
                             <th>Total</th>
                             <th>Paid</th>
@@ -391,7 +391,7 @@
             <div class="tbl-scroll">
                 <table class="tbl">
                     <thead>
-                        <tr><th>Student</th><th>Course</th><th>Patch</th><th>Payment Plan</th><th>Total</th><th>Paid</th><th>Status</th></tr>
+                        <tr><th>Student</th><th>Course</th><th>Batch</th><th>Payment Plan</th><th>Total</th><th>Paid</th><th>Status</th></tr>
                     </thead>
                     <tbody>
                     @foreach($finishedEnrollments as $enrollment)

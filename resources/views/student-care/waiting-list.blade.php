@@ -264,9 +264,9 @@
         </select>
 
         <select class="filter-select" id="ptypeFilter" onchange="filterByPrefTypeSelect(this.value)">
-            <option value="">All Patch Prefs</option>
-            <option value="Current_Patch">Current Patch</option>
-            <option value="Next_Patch">Next Patch</option>
+            <option value="">All Batch Prefs</option>
+            <option value="Current_Patch">Current Batch</option>
+            <option value="Next_Patch">Next Batch</option>
             <option value="Specific_Date">Specific Date</option>
         </select>
     </div>
@@ -280,10 +280,10 @@
                         <th>Course & Level</th>
                         <th>Delivery Type</th>
                         <th>Mode</th>
-                        <th>Patch Preference</th>
-                        <th>Requested Patch</th>
+                        <th>Batch Preference</th>
+                        <th>Requested Batch</th>
                         <th>Preferred Date</th>
-                        <th>Preferres</th>
+                        <th>Preferred</th>
                         <th>Status</th>
                         <th>Notes</th>
                         <th>Actions</th>

@@ -219,9 +219,9 @@ input[name="schedule_type"]:checked + .stype-card > div:first-child{color:var(--
                     <span class="sec-label">Assignment</span>
                     <div class="field-grid field-grid-2" style="margin-bottom:14px;">
                         <div class="field">
-                            <label class="field-label">Patch <span class="req">*</span></label>
+                            <label class="field-label">Batch <span class="req">*</span></label>
                             <select name="patch_id" id="ci_patch" class="field-select" required onchange="onPatchChange()">
-                                <option value="">— Select Patch —</option>
+                                <option value="">— Select Batch —</option>
                                 @foreach($patches as $p)
                                 <option value="{{ $p->patch_id }}" data-start="{{ $p->start_date }}" data-end="{{ $p->end_date }}"
                                     {{ (isset($instance) && $instance->patch_id == $p->patch_id) ? 'selected' : '' }}>
@@ -314,7 +314,7 @@ input[name="schedule_type"]:checked + .stype-card > div:first-child{color:var(--
 
                     {{-- chips --}}
                     <div id="datechipsLocked" style="font-size:11px;color:var(--faint);padding:12px 0;">
-                        Select teacher and patch first
+                        Select teacher and batch first
                     </div>
                     <div id="datechipsContainer" style="display:none;"></div>
 
@@ -336,7 +336,7 @@ input[name="schedule_type"]:checked + .stype-card > div:first-child{color:var(--
                     {{-- Locked state --}}
                     <div id="scheduleLocked" class="schedule-locked">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        <div class="schedule-locked-title">Select course, teacher, patch & hours first</div>
+                        <div class="schedule-locked-title">Select course, teacher, batch & hours first</div>
                         <div class="schedule-locked-sub">Schedule will unlock automatically</div>
                     </div>
 
