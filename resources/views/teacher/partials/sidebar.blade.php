@@ -293,7 +293,7 @@
             <div class="tsb-section-body">
                 <a href="{{ route('teacher.schedule') }}" class="tsl-link {{ request()->routeIs('teacher.schedule') ? 'active' : '' }}" data-label="Patch Schedule">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-                    <span class="tsl-link-text">Patch Schedule</span>
+                    <span class="tsl-link-text">Batch Schedule</span>
                 </a>
                 <a href="{{ route('teacher.courses') }}" class="tsl-link {{ request()->routeIs('teacher.courses*') ? 'active' : '' }}" data-label="My Courses">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>

@@ -172,7 +172,7 @@
                 <div style="font-size:10px;color:#AAB8C8;margin-top:2px">→ {{ \Carbon\Carbon::parse($instance->end_date)->format('d M Y') }}</div>
             </div>
             <div>
-                <div class="ov-label">Patch</div>
+                <div class="ov-label">Batch</div>
                 <div class="ov-value">{{ $instance->patch?->name ?? '—' }}</div>
             </div>
         </div>

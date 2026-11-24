@@ -105,7 +105,7 @@
     @if($activeCourses->isEmpty())
     <div class="empty-state" style="background:#fff;border:1px solid rgba(27,79,168,0.08);border-radius:8px;margin-bottom:28px">
         <div class="empty-title">No Active Courses</div>
-        <div style="font-size:12px">No courses assigned in the current patch</div>
+        <div style="font-size:12px">No courses assigned in the current batch</div>
     </div>
     @else
     <div class="courses-grid">
@@ -201,7 +201,7 @@
                     <tr>
                         <th>Course</th>
                         <th>Type</th>
-                        <th>Patch</th>
+                        <th>Batch</th>
                         <th>Sessions</th>
                         <th>Ended</th>
                         <th></th>

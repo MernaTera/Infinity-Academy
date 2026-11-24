@@ -115,7 +115,7 @@
     <div class="page-header">
         <div>
             <div class="page-eyebrow">Instructor</div>
-            <h1 class="page-title">Patch Schedule</h1>
+            <h1 class="page-title">Batch Schedule</h1>
         </div>
     </div>
 
@@ -137,7 +137,7 @@
                     <span class="load-tag load-tag-over">+{{ $contractLoad['over'] }} over contract</span>
                 @endif
             @else
-                <span><b>{{ $contractLoad['assigned'] }}</b> sessions</span> · No contract this patch
+                <span><b>{{ $contractLoad['assigned'] }}</b> sessions</span> · No contract this batch
             @endif
             @if($contractLoad['pending'] > 0)
                 <span class="load-tag load-tag-pending">+{{ $contractLoad['pending'] }} awaiting your approval</span>
@@ -179,7 +179,7 @@
     </div>
     @else
     <div style="background:rgba(245,145,30,0.08);border:1px solid rgba(245,145,30,0.2);border-radius:6px;padding:14px 18px;font-size:13px;color:#C47010;margin-bottom:20px">
-        No active patch at the moment.
+        No active batch at the moment.
     </div>
     @endif
 
@@ -216,7 +216,7 @@
             <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
         <div class="empty-title">No Courses Found</div>
-        <div style="font-size:12px;color:#AAB8C8">No courses assigned in this patch</div>
+        <div style="font-size:12px;color:#AAB8C8">No courses assigned in this batch</div>
     </div>
     @else
     <div class="schedule-grid">

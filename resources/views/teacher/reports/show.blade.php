@@ -201,7 +201,7 @@
                 </span>
             </div>
             <div class="rp-info-item">
-                <span class="rp-info-label">Patch</span>
+                <span class="rp-info-label">Batch</span>
                 <span class="rp-info-val">{{ $report->enrollment?->courseInstance?->patch?->name ?? '—' }}</span>
             </div>
             <div class="rp-info-item">
