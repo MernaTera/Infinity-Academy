@@ -92,6 +92,15 @@
     .t-v { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; }
     .target-cta { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:22px; padding:13px; border-radius:13px; background:linear-gradient(120deg,var(--blue),var(--blue-2)); color:#fff; font-size:11px; letter-spacing:2px; text-transform:uppercase; font-weight:600; text-decoration:none; box-shadow:0 10px 24px rgba(27,79,168,0.30); transition:transform .2s, box-shadow .2s; }
     .target-cta:hover { transform:translateY(-2px); box-shadow:0 14px 30px rgba(27,79,168,0.4); color:#fff; text-decoration:none; }
+    .sec-row { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:26px 2px 12px; }
+    .t-out { display:block; font-size:10px; color:var(--muted); margin-top:2px; }
+    .out-switch { display:inline-flex; align-items:center; gap:9px; padding:7px 13px; border-radius:11px; border:1px solid rgba(27,79,168,0.12); background:rgba(255,255,255,0.5); font-size:9px; letter-spacing:1.5px; text-transform:uppercase; font-weight:600; color:var(--muted); text-decoration:none; white-space:nowrap; transition:color .2s; }
+    .out-switch:hover { color:var(--blue); text-decoration:none; }
+    .out-switch.on { color:var(--blue); }
+    .out-track { position:relative; width:30px; height:17px; border-radius:20px; background:rgba(122,138,154,0.3); transition:background .2s; flex-shrink:0; }
+    .out-knob { position:absolute; top:2px; left:2px; width:13px; height:13px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(15,31,61,0.25); transition:left .2s; }
+    .out-switch.on .out-track { background:linear-gradient(120deg,var(--blue),var(--blue-2)); }
+    .out-switch.on .out-knob { left:15px; }
 
     .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     @media (max-width:900px){ .two-col{ grid-template-columns:1fr; } }
@@ -273,7 +282,16 @@
         </a>
     </div>
 
-    <div class="sec">Monthly Target</div>
+    @php $dashOutQ = ($salesStats['with_outstanding'] ?? true) ? 1 : 0; @endphp
+    <div class="sec-row">
+        <div class="sec" style="margin:0;">Monthly Target</div>
+        <a href="{{ request()->fullUrlWithQuery(['outstanding' => $dashOutQ ? 0 : 1]) }}"
+           class="out-switch {{ $dashOutQ ? 'on' : '' }}" title="Show revenue with or without outstanding payments">
+            <span class="out-track"><span class="out-knob"></span></span>
+            Include Outstanding
+        </a>
+    </div>
+
     <div class="panel glass">
         <div class="target-body">
             @php
@@ -297,12 +315,20 @@
             </div>
             <div class="t-stats">
                 <div class="t-row"><span class="t-k">Target</span><span class="t-v" style="color:var(--text);">{{ number_format($salesStats['target']) }} LE</span></div>
-                <div class="t-row"><span class="t-k">Achieved</span><span class="t-v" style="color:var(--green-dk);">{{ number_format($salesStats['achieved']) }} LE</span></div>
+                <div class="t-row">
+                    <span class="t-k">
+                        Achieved
+                        @if(($salesStats['outstanding'] ?? 0) > 0)
+                            <span class="t-out">{{ $dashOutQ ? 'incl.' : 'excl.' }} {{ number_format($salesStats['outstanding']) }} outstanding</span>
+                        @endif
+                    </span>
+                    <span class="t-v" style="color:var(--green-dk);">{{ number_format($salesStats['achieved']) }} LE</span>
+                </div>
                 <div class="t-row"><span class="t-k">Remaining</span><span class="t-v" style="color:var(--orange-dk);">{{ number_format($salesStats['remaining']) }} LE</span></div>
                 <div class="t-row"><span class="t-k">Registrations this month</span><span class="t-v" style="color:var(--blue);">{{ $salesStats['registrations'] }}</span></div>
             </div>
         </div>
-        <a href="{{ route('sales.index') }}" class="target-cta">
+        <a href="{{ route('sales.index', ['outstanding' => $dashOutQ]) }}" class="target-cta">
             Go to Sales Table
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </a>

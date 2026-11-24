@@ -51,11 +51,18 @@ class DashboardController extends Controller
 
         $targetAmount = CsTarget::amountFor($employee?->employee_id);
 
-        $achieved = RevenueSplit::where('employee_id', $employee?->employee_id)
+        $withOutstanding = request()->query('outstanding', '1') !== '0';
+
+        $monthSplits = RevenueSplit::where('employee_id', $employee?->employee_id)
             ->whereBetween('created_at', [
                 now()->startOfMonth(),
                 now()->endOfMonth(),
-            ])
+            ]);
+
+        $outstandingCollected = (float) (clone $monthSplits)->outstanding()->sum('amount_allocated');
+
+        $achieved = (float) (clone $monthSplits)
+            ->when(!$withOutstanding, fn($q) => $q->withoutOutstanding())
             ->sum('amount_allocated');
 
         $targetAmount = $targetAmount ?? 0;
@@ -70,6 +77,8 @@ class DashboardController extends Controller
             'registrations' => Enrollment::where('created_by_cs_id', $employee?->employee_id)
                                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                                 ->count(),
+            'outstanding'      => $outstandingCollected,
+            'with_outstanding' => $withOutstanding,
         ];
 
         $outstandingSummary = $employee
