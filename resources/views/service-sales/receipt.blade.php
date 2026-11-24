@@ -14,7 +14,7 @@
 @endphp
 
 <style>
-    * { margin:0; padding:0; box-sizing:border-box; }
+    * { margin:0; padding:0; box-sizing:border-box; font-weight:bold; }
     html, body { background:#fff; }
     body {
         width:80mm;
@@ -23,6 +23,7 @@
         font-family:'Courier New', monospace;
         color:#000;
         font-size:11px;
+        font-weight:bold;
         line-height:1.45;
         -webkit-font-smoothing:none;
     }
@@ -33,7 +34,7 @@
     .big    { font-size:15px; font-weight:bold; letter-spacing:1px; }
     .sm     { font-size:10px; }
     .xs     { font-size:9px; }
-    .muted  { color:#000; opacity:0.75; }
+    .muted  { color:#000; }
 
     .logo { max-width:42mm; max-height:16mm; display:block; margin:0 auto 2mm; }
 
@@ -41,7 +42,7 @@
     .hr-solid { border:none; border-top:1px solid #000; margin:2.5mm 0; }
 
     .row { display:flex; justify-content:space-between; gap:6px; margin:0.6mm 0; }
-    .row .k { color:#000; opacity:0.8; white-space:nowrap; }
+    .row .k { color:#000; white-space:nowrap; }
     .row .v { text-align:right; font-weight:bold; word-break:break-word; }
 
     .sec-title { font-weight:bold; font-size:10px; letter-spacing:1px; margin:1mm 0 1.2mm; }
@@ -49,15 +50,15 @@
     .li { display:flex; justify-content:space-between; gap:8px; margin:0.6mm 0; }
     .li .n { flex:1; }
     .li .a { font-weight:bold; white-space:nowrap; }
-    .li .sub { font-size:9px; opacity:0.7; }
+    .li .sub { font-size:9px; color:#000; }
 
     .total-row { display:flex; justify-content:space-between; font-weight:bold; font-size:13px; margin:1mm 0; }
 
-    .note-box { font-size:10px; word-break:break-word; white-space:pre-wrap; }
+    .inst { display:flex; justify-content:space-between; gap:6px; font-size:10px; margin:0.5mm 0; }
 
     .footer { text-align:center; font-size:10px; margin-top:2mm; }
 
-    .terms { page-break-before: always; font-size:9px; line-height:1.5; }
+    .terms { margin-top:3mm; padding-top:2.5mm; border-top:1px dashed #000; font-size:9px; line-height:1.5; }
     .terms li { margin:1mm 0 1mm 4mm; }
 
     .print-toolbar {
@@ -72,6 +73,7 @@
     @media print {
         .print-toolbar { display:none !important; }
         body { width:80mm; padding:2mm 3mm; }
+        .terms { page-break-before:auto; page-break-inside:avoid; }
         @page { size:80mm auto; margin:0; }
     }
 </style>
@@ -130,18 +132,17 @@
     <span class="a">{{ $m($sale->price) }}</span>
 </div>
 
-@if($sale->notes)
+<!-- @if($sale->notes)
 <hr class="hr">
 <div class="sec-title">NOTES</div>
 <div class="note-box">{{ $sale->notes }}</div>
-@endif
+@endif -->
 
 <hr class="hr-solid">
 
 <div class="footer">
     <div class="bold">Thank you for choosing Infinity Academy</div>
     <div class="xs" style="margin-top:1mm;">Please keep this receipt</div>
-    <div class="xs" style="margin-top:2mm;">— see terms on back —</div>
 </div>
 
 <div class="terms">
