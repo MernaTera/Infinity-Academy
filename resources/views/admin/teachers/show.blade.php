@@ -215,7 +215,7 @@
     <div class="tp-alert">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         <div>
-            <strong>Session Overload</strong> — Teacher has {{ $sessionsThisPatch }} sessions in current patch, exceeding contract limit of {{ $maxAllowed }} by {{ $sessionsThisPatch - $maxAllowed }} sessions.
+            <strong>Session Overload</strong> — Teacher has {{ $sessionsThisPatch }} sessions in current batch, exceeding contract limit of {{ $maxAllowed }} by {{ $sessionsThisPatch - $maxAllowed }} sessions.
         </div>
     </div>
     @endif
@@ -225,7 +225,7 @@
         <div class="tp-kpi info">
             <div class="tp-kpi-label">Active Courses</div>
             <div class="tp-kpi-val">{{ $activeInstances->count() }}</div>
-            <div class="tp-kpi-hint">Current patch</div>
+            <div class="tp-kpi-hint">Current batch</div>
         </div>
         <div class="tp-kpi purple">
             <div class="tp-kpi-label">Upcoming</div>
@@ -235,7 +235,7 @@
         <div class="tp-kpi success">
             <div class="tp-kpi-label">Completed</div>
             <div class="tp-kpi-val">{{ $completedInstances->count() }}</div>
-            <div class="tp-kpi-hint">This patch</div>
+            <div class="tp-kpi-hint">This batch</div>
         </div>
         <div class="tp-kpi {{ $isOverload ? 'danger' : ($maxAllowed && $sessionsThisPatch / max($maxAllowed, 1) > 0.8 ? 'warn' : 'info') }}">
             <div class="tp-kpi-label">Sessions</div>
@@ -327,7 +327,7 @@
                 @if($contract && $contract->contractType)
                     <div class="tp-contract-main">
                         <div class="tp-contract-type">{{ $contract->contractType->name }}</div>
-                        <div class="tp-contract-max">Max <strong style="color:var(--ink);">{{ $contract->contractType->max_sessions_allowed }}</strong> sessions per patch</div>
+                        <div class="tp-contract-max">Max <strong style="color:var(--ink);">{{ $contract->contractType->max_sessions_allowed }}</strong> sessions per batch</div>
 
                         <div class="tp-contract-usage">
                             @php
@@ -337,7 +337,7 @@
                                 $barClass = $pct >= 100 ? 'over' : ($pct >= 80 ? 'warn' : 'ok');
                             @endphp
                             <div class="tp-usage-label">
-                                <span>Current patch usage</span>
+                                <span>Current batch usage</span>
                                 <span>{{ $sessionsThisPatch }} / {{ $contract->contractType->max_sessions_allowed }}</span>
                             </div>
                             <div class="tp-usage-bar">
@@ -352,7 +352,7 @@
                         <div class="tp-history-item">
                             <div>
                                 <div class="tp-history-name">{{ $c->contractType?->name ?? '—' }}</div>
-                                <div class="tp-history-patch">{{ $c->patch?->name ?? 'No patch' }}</div>
+                                <div class="tp-history-patch">{{ $c->patch?->name ?? 'No batch' }}</div>
                             </div>
                             @if($c->is_active)
                             <span class="tp-history-active">Active</span>
@@ -362,7 +362,7 @@
                     </div>
                 @else
                     <div class="tp-empty">
-                        No active contract for the current patch.
+                        No active contract for the current batch.
                     </div>
                 @endif
             </div>
@@ -409,12 +409,12 @@
             <div class="tp-card-head">
                 <div class="tp-card-title">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2z"/><path d="M22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z"/></svg>
-                    Active Courses ({{ $currentInstances->count() }})
+                    Active Courses ({{ $activeInstances->count() }})
                 </div>
             </div>
             <div class="tp-card-body">
-                @if($currentInstances->count() > 0)
-                    @foreach($currentInstances as $inst)
+                @if($activeInstances->count() > 0)
+                    @foreach($activeInstances as $inst)
                     @php
                         $completedSess  = $inst->sessions->where('status', 'Completed')->count();
                         $totalSess      = $inst->sessions->count();
@@ -458,7 +458,7 @@
                     @endforeach
                 @else
                     <div class="tp-empty">
-                        No courses assigned in the current patch.
+                        No courses assigned in the current batch.
                     </div>
                 @endif
             </div>
