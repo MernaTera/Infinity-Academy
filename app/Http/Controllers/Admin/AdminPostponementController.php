@@ -12,47 +12,8 @@ class AdminPostponementController extends Controller
 
     public function index(Request $request)
     {
-        $with = [
-            'enrollment.student.phones',
-            'enrollment.courseTemplate',
-            'enrollment.level',
-            'enrollment.sublevel',
-            'enrollment.privateBundle',
-            'enrollment.levelPackage',
-            'enrollment.attendances',
-            'enrollment.courseInstance.courseTemplate',
-            'createdBy',
-        ];
-
-        $groupPostponed = Postponement::with($with)
-            ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))
-            ->whereIn('status', ['Active', 'Expired'])
-            ->orderBy('status')
-            ->orderByDesc('created_at')
-            ->get();
-
-        $privatePostponed = Postponement::with($with)
-            ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))
-            ->whereIn('status', ['Active', 'Expired'])
-            ->orderBy('status')
-            ->orderByDesc('created_at')
-            ->get();
-
-        $stats = [
-            'active'        => Postponement::where('status', 'Active')
-                                    ->whereHas('enrollment', fn($q) => $q)->count(),
-            'expired'       => Postponement::where('status', 'Expired')
-                                    ->whereHas('enrollment', fn($q) => $q)->count(),
-            'returned'      => Postponement::where('status', 'Returned')
-                                    ->whereHas('enrollment', fn($q) => $q)->count(),
-            'expiring_soon' => Postponement::where('status', 'Active')
-                                    ->whereHas('enrollment', fn($q) => $q)
-                                    ->whereDate('expected_return_date', '<=', now()->addDays(7))
-                                    ->count(),
-        ];
-
         return view('student-care.postponed', array_merge(
-            compact('groupPostponed', 'privatePostponed', 'stats'),
+            \App\Support\PostponedListing::data($request),
             [
                 'canRegister' => false,
                 'expireBase'  => url('admin/postponed'),

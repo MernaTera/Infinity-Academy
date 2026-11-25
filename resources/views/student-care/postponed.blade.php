@@ -65,10 +65,22 @@
 
     .toolbar { display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center; }
     .search-wrap { position:relative; flex:1; min-width:200px; }
-    .search-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); pointer-events:none; }
+    .search-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); pointer-events:none; z-index:2; }
     .search-input { width:100%; padding:11px 14px 11px 40px; border:1px solid var(--border); border-radius:12px; font-family:'DM Sans',sans-serif; font-size:13px; color:var(--text); background:rgba(255,255,255,0.6); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); outline:none; box-sizing:border-box; box-shadow:var(--glass-sh); }
     .search-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.1); }
 
+    a.tab-btn { text-decoration:none; display:inline-flex; align-items:center; }
+    a.tab-btn:hover { text-decoration:none; }
+    .pp-search-btn { padding:11px 18px; border-radius:12px; border:none; background:linear-gradient(120deg,#1B4FA8,#2D6FDB); color:#fff; font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:'DM Sans',sans-serif; }
+    .pp-clear { font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); text-decoration:none; }
+    .pp-clear:hover { color:#DC2626; text-decoration:none; }
+    .pp-filters { display:flex; gap:22px; flex-wrap:wrap; margin-bottom:18px; }
+    .pp-filter-group { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+    .pp-filter-label { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); font-weight:600; margin-right:4px; }
+    .pp-pill { padding:8px 16px; border-radius:10px; font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; background:rgba(255,255,255,0.5); border:1px solid var(--border); color:var(--muted); text-decoration:none; box-shadow:var(--glass-sh); transition:all .2s; }
+    .pp-pill:hover { color:var(--blue); text-decoration:none; }
+    .pp-pill.active { background:linear-gradient(120deg,#1B4FA8,#2D6FDB); color:#fff; border-color:transparent; }
+    .pp-pagination { margin-top:18px; }
     .postponed-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; }
     .pp-card { background:var(--card); -webkit-backdrop-filter:blur(20px) saturate(150%); backdrop-filter:blur(20px) saturate(150%); border:1px solid var(--border); border-radius:18px; overflow:hidden; position:relative; box-shadow:var(--glass-sh); transition:transform 0.2s, box-shadow 0.2s; }
     .pp-card:hover { transform:translateY(-3px); box-shadow:0 18px 42px -14px rgba(23,45,90,0.28); }
@@ -172,28 +184,63 @@
     </div>
 
     
+    @php
+        $ppTab    = $ppTab ?? 'group';
+        $ppMode   = $ppMode ?? 'all';
+        $ppStatus = $ppStatus ?? 'active';
+        $ppSearch = $ppSearch ?? '';
+        $ppUrl    = fn(array $over) => request()->url() . '?' . http_build_query(array_filter(array_merge([
+            'tab'    => $ppTab,
+            'mode'   => $ppMode !== 'all' ? $ppMode : null,
+            'status' => $ppStatus !== 'active' ? $ppStatus : null,
+            'q'      => $ppSearch !== '' ? $ppSearch : null,
+        ], $over), fn($v) => $v !== null && $v !== ''));
+    @endphp
     <div class="tab-nav">
-        <button class="tab-btn active" onclick="showTab('groupTab', this)">
+        <a href="{{ $ppUrl(['tab' => 'group']) }}" class="tab-btn {{ $ppTab === 'group' ? 'active' : '' }}">
             Group
-            <span class="tab-count">{{ $groupPostponed->count() }}</span>
-        </button>
-        <button class="tab-btn" onclick="showTab('privateTab', this)">
+            <span class="tab-count">{{ $groupPostponed->total() }}</span>
+        </a>
+        <a href="{{ $ppUrl(['tab' => 'private']) }}" class="tab-btn {{ $ppTab === 'private' ? 'active' : '' }}">
             Private
-            <span class="tab-count">{{ $privatePostponed->count() }}</span>
-        </button>
+            <span class="tab-count">{{ $privatePostponed->total() }}</span>
+        </a>
     </div>
 
     
-    <div class="toolbar">
+    <form method="GET" action="{{ request()->url() }}" class="toolbar">
+        <input type="hidden" name="tab" value="{{ $ppTab }}">
+        @if($ppMode !== 'all')<input type="hidden" name="mode" value="{{ $ppMode }}">@endif
+        @if($ppStatus !== 'active')<input type="hidden" name="status" value="{{ $ppStatus }}">@endif
         <div class="search-wrap">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#AAB8C8" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
-            <input type="text" id="ppSearch" class="search-input" placeholder="Search by student or course...">
+            <input type="text" name="q" value="{{ $ppSearch }}" class="search-input" placeholder="Search by name, phone, course or enrollment #" autocomplete="off">
+        </div>
+        <button type="submit" class="pp-search-btn">Search</button>
+        @if($ppSearch !== '')
+            <a href="{{ $ppUrl(['q' => null]) }}" class="pp-clear">Clear</a>
+        @endif
+    </form>
+
+    <div class="pp-filters">
+        <div class="pp-filter-group">
+            <span class="pp-filter-label">Mode</span>
+            <a href="{{ $ppUrl(['mode' => null]) }}" class="pp-pill {{ $ppMode === 'all' ? 'active' : '' }}">All</a>
+            <a href="{{ $ppUrl(['mode' => 'Offline']) }}" class="pp-pill {{ $ppMode === 'Offline' ? 'active' : '' }}">Offline</a>
+            <a href="{{ $ppUrl(['mode' => 'Online']) }}" class="pp-pill {{ $ppMode === 'Online' ? 'active' : '' }}">Online</a>
+        </div>
+        <div class="pp-filter-group">
+            <span class="pp-filter-label">Status</span>
+            <a href="{{ $ppUrl(['status' => null]) }}" class="pp-pill {{ $ppStatus === 'active' ? 'active' : '' }}">Active</a>
+            <a href="{{ $ppUrl(['status' => 'expired']) }}" class="pp-pill {{ $ppStatus === 'expired' ? 'active' : '' }}">Expired</a>
+            <a href="{{ $ppUrl(['status' => 'all']) }}" class="pp-pill {{ $ppStatus === 'all' ? 'active' : '' }}">All</a>
         </div>
     </div>
 
     
+    @if($ppTab === 'group')
     <div id="groupTab">
         @if($groupPostponed->isEmpty())
         <div class="empty-state">
@@ -246,7 +293,11 @@
                     <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end">
                         @if($pp->status === 'Active')
                             @if($isExpiringSoon)
-                                <span class="badge badge-soon">⚠ {{ $daysLeft }}d left</span>
+                                @if($end->lt(now()->startOfDay()))
+                                    <span class="badge badge-expired">Deadline passed {{ $end->diffForHumans(now()->startOfDay(), ['parts' => 1, 'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE]) }} ago</span>
+                                @else
+                                    <span class="badge badge-soon">⚠ {{ $daysLeft }}d left</span>
+                                @endif
                             @else
                                 <span class="badge badge-active">Active</span>
                             @endif
@@ -341,11 +392,14 @@
             </div>
             @endforeach
         </div>
+        <div class="pp-pagination">{{ $groupPostponed->links() }}</div>
         @endif
     </div>
+    @endif
 
     
-    <div id="privateTab" style="display:none">
+    @if($ppTab === 'private')
+    <div id="privateTab">
         @if($privatePostponed->isEmpty())
         <div class="empty-state">
             <div class="empty-title">No Private Postponements</div>
@@ -390,7 +444,11 @@
                     </div>
                     @if($pp->status === 'Active')
                         @if($isExpiringSoon)
-                            <span class="badge badge-soon">⚠ {{ $daysLeft }}d left</span>
+                            @if($end->lt(now()->startOfDay()))
+                                <span class="badge badge-expired">Deadline passed {{ $end->diffForHumans(now()->startOfDay(), ['parts' => 1, 'syntax' => \Carbon\CarbonInterface::DIFF_ABSOLUTE]) }} ago</span>
+                            @else
+                                <span class="badge badge-soon">⚠ {{ $daysLeft }}d left</span>
+                            @endif
                         @else
                             <span class="badge badge-active">Active</span>
                         @endif
@@ -477,8 +535,10 @@
             </div>
             @endforeach
         </div>
+        <div class="pp-pagination">{{ $privatePostponed->links() }}</div>
         @endif
     </div>
+    @endif
 
 </div>
 
@@ -506,14 +566,6 @@
 
 <script>
 const ppActionBase = @json($actionBase);
-
-function showTab(tabId, btn) {
-    document.getElementById('groupTab').style.display   = 'none';
-    document.getElementById('privateTab').style.display = 'none';
-    document.getElementById(tabId).style.display        = 'block';
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-}
 
 function openExpire(id, studentName) {
     document.getElementById('modalTitle').textContent = 'Mark as Expired';
@@ -545,12 +597,5 @@ document.getElementById('confirmModal').addEventListener('click', function (e) {
     if (e.target === this) closeConfirm();
 });
 
-document.getElementById('ppSearch').addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('.pp-card[data-name]').forEach(card => {
-        const match = card.dataset.name.includes(q) || card.dataset.course.includes(q);
-        card.style.display = match ? '' : 'none';
-    });
-});
 </script>
 @endsection

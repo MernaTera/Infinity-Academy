@@ -216,9 +216,9 @@ class StudentCareController extends Controller
     }
 
 
-    public function postponed()
+    public function postponed(Request $request)
     {
-        return view('student-care.postponed', array_merge($this->postponedData(), [
+        return view('student-care.postponed', array_merge(\App\Support\PostponedListing::data($request), [
             'canResume'  => true,
             'canExpire'  => true,
             'actionBase' => url('student-care/postponed'),
@@ -226,58 +226,13 @@ class StudentCareController extends Controller
     }
 
 
-    public function csPostponed()
+    public function csPostponed(Request $request)
     {
-        return view('student-care.postponed', array_merge($this->postponedData(), [
+        return view('student-care.postponed', array_merge(\App\Support\PostponedListing::data($request), [
             'canResume'  => false,
             'canExpire'  => false,
             'actionBase' => url('student-care/postponed'),
         ]));
-    }
-
-
-    private function postponedData(): array
-    {
-        $with = [
-            'enrollment.student.phones',
-            'enrollment.courseTemplate',
-            'enrollment.level',
-            'enrollment.sublevel',
-            'enrollment.privateBundle',
-            'enrollment.levelPackage',
-            'enrollment.attendances',
-            'enrollment.courseInstance.courseTemplate',
-            'createdBy',
-        ];
-
-        $groupPostponed = Postponement::with($with)
-            ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Group'))
-            ->whereIn('status', ['Active', 'Expired'])
-            ->orderBy('status')
-            ->orderByDesc('created_at')
-            ->get();
-
-        $privatePostponed = Postponement::with($with)
-            ->whereHas('enrollment', fn($q) => $q->where('enrollment_type', 'Private'))
-            ->whereIn('status', ['Active', 'Expired'])
-            ->orderBy('status')
-            ->orderByDesc('created_at')
-            ->get();
-
-        $stats = [
-            'active'        => Postponement::where('status', 'Active')
-                                    ->whereHas('enrollment', fn($q) => $q)->count(),
-            'expired'       => Postponement::where('status', 'Expired')
-                                    ->whereHas('enrollment', fn($q) => $q)->count(),
-            'returned'      => Postponement::where('status', 'Returned')
-                                    ->whereHas('enrollment', fn($q) => $q)->count(),
-            'expiring_soon' => Postponement::where('status', 'Active')
-                                    ->whereHas('enrollment', fn($q) => $q)
-                                    ->whereDate('expected_return_date', '<=', now()->addDays(7))
-                                    ->count(),
-        ];
-
-        return compact('groupPostponed', 'privatePostponed', 'stats');
     }
 
 

@@ -25,7 +25,7 @@ Schedule::command('outstanding:process')->hourly();
 
 Schedule::command('reports:check-deadlines')->hourly();
 
-Schedule::command('postponements:expire')->dailyAt('00:05');
+// Schedule::command('postponements:expire')->dailyAt('00:05');   // Disabled automatic postpone expire for now, as it is not needed from the SC users
 
 Schedule::command('sessions:complete-past')->everyFiveMinutes();
 
