@@ -220,13 +220,14 @@ class TeacherAttendanceController extends Controller
                     }
 
                     if ($shouldDeduct) {
-                        $newRemaining = max(0, (float) $enrollment->hours_remaining - $sessionHours);
+                        $actualDeducted = min((float) $enrollment->hours_remaining, $sessionHours);
+                        $newRemaining   = max(0, (float) $enrollment->hours_remaining - $sessionHours);
                         $enrollment->hours_remaining = $newRemaining;
 
                         DB::table('bundle_usage_log')->insert([
                             'enrollment_id'     => $enrollment->enrollment_id,
                             'course_session_id' => $sessionId,
-                            'hours_deducted'    => $sessionHours,
+                            'hours_deducted'    => $actualDeducted,
                             'reason'            => 'ATTENDANCE',
                             'created_by_cs_id'  => $csEmployeeId,
                             'created_at'        => now(),

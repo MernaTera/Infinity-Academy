@@ -528,6 +528,11 @@ const searchInput = document.getElementById('searchInput');
 searchInput.addEventListener('input', applyFilters);
 
 document.addEventListener('DOMContentLoaded', function () {
+    const presetQ = new URLSearchParams(window.location.search).get('q');
+    if (presetQ) {
+        searchInput.value = presetQ;
+        applyFilters();
+    }
     if (new URLSearchParams(window.location.search).has('finished_page')) {
         const finBtn = document.querySelector('.pill[onclick*="finished"]');
         if (finBtn) setFilter('finished', finBtn);

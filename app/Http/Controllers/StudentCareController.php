@@ -534,7 +534,16 @@ class StudentCareController extends Controller
                 $total     = $sessions->where('status', '!=', 'Cancelled')->count();
                 $completed = $sessions->where('status', 'Completed')->count();
                 $remaining = $total - $completed;
-                return $total > 0 && $remaining <= 2;
+
+                if ($total <= 0 || $remaining > 2) {
+                    return false;
+                }
+
+                if ($e->package_id) {
+                    return (int) $e->package_units_remaining <= 0;
+                }
+
+                return app(\App\Services\PackageProgressionService::class)->nextUnit($e) === null;
             })
             ->reject(fn($e) => $this->hasRenewed($e))
             ->values();

@@ -514,6 +514,9 @@ Route::post('/students/enrollments/{enrollmentId}/buy-material', [AdminStudentCo
 Route::post('/private-hours/{enrollmentId}/charge-bundle', [\App\Http\Controllers\PrivateHoursController::class, 'chargeBundle'])
     ->middleware(['auth', 'permission:enrollment.create'])
     ->name('private-hours.charge-bundle');
+Route::post('/private-hours/{enrollmentId}/waiting-list', [\App\Http\Controllers\PrivateHoursController::class, 'sendToWaitingList'])
+    ->middleware(['auth', 'permission:enrollment.create'])
+    ->name('private-hours.waiting-list');
 Route::get('/packages-tracking', [\App\Http\Controllers\PackagesController::class, 'index'])
     ->middleware(['auth', 'permission:enrollment.view'])
     ->name('packages-tracking.index');

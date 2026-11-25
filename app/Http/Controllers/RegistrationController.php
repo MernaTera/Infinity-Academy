@@ -333,6 +333,27 @@ class RegistrationController extends Controller
                 }
             }
 
+            if ($lead?->student_id && empty($request->resume_postponement_id) && strtolower((string) $request->type) === 'private') {
+                $openPrivate = \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
+                    ->with('courseTemplate')
+                    ->where('student_id', $lead->student_id)
+                    ->where('enrollment_type', 'Private')
+                    ->where('course_template_id', $request->course_template_id)
+                    ->where(function ($q) {
+                        $q->whereIn('status', ['Active', 'Restricted', 'Waiting', 'Pending_Approval', 'Postponed'])
+                          ->orWhere(function ($c) {
+                              $c->where('status', 'Completed')->where('hours_remaining', '>', 0);
+                          });
+                    })
+                    ->orderByDesc('enrollment_id')
+                    ->first();
+
+                if ($openPrivate) {
+                    $courseName = $openPrivate->courseTemplate?->name ?? 'this course';
+                    return $failValidation("This student already has private hours in {$courseName} (Enrollment #{$openPrivate->enrollment_id}). Use \"Add Bundle\" from the Private Hours page to renew instead of a new registration.");
+                }
+            }
+
             $oldStatus     = $lead->status;
             $oldInterests  = [
                 'interested_course_template_id' => $lead->interested_course_template_id,

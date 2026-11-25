@@ -154,8 +154,8 @@
                         <td style="font-size:12px;color:#4A5A7A;">{{ $e->teacher?->full_name ?? '—' }}</td>
                         <td>
                             @if($e->student)
-                            <a href="{{ $e->student?->lead ? route('registration.from.lead', $e->student->lead->lead_id) . '?renew=1' : '#' }}"
-                               class="btn-renew">
+                            <a href="{{ route('private-hours.index', ['charge' => $e->enrollment_id]) }}"
+                               class="btn-renew" title="Add a new bundle to this student's hours">
                                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
                                 Renew
                             </a>

@@ -94,11 +94,17 @@
     .st-active { background:var(--green-l); color:var(--green-dk); }
     .st-low { background:var(--orange-l); color:var(--orange-dk); }
     .st-depleted { background:var(--red-l); color:var(--red); }
+    .st-restricted { background:rgba(220,38,38,0.06); color:#B91C1C; border:1px dashed rgba(220,38,38,0.35); }
+    .btn-enroll.btn-pay { background:rgba(220,38,38,0.06); color:#B91C1C; border-color:rgba(220,38,38,0.25); }
+    .btn-enroll.btn-pay:hover { background:#DC2626; color:#fff; }
     .st-leftover { background:var(--blue-l); color:var(--blue); }
     .st-postponed { background:rgba(100,116,139,0.14); color:#475569; }
 
     .btn-enroll { display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:9px; font-size:10px; font-weight:600; letter-spacing:0.3px; text-decoration:none; background:var(--blue); color:#ffff; border:1px solid rgba(118, 170, 230, 0.3); transition:all 0.2s; white-space:nowrap; }
     .btn-enroll:hover { background:var(--blue-2); color:#fff; text-decoration:none; }
+    button.btn-enroll { cursor:pointer; font-family:inherit; }
+    .btn-enroll.btn-wl { background:rgba(27,79,168,0.06); color:var(--blue); border-color:rgba(27,79,168,0.2); }
+    .btn-enroll.btn-wl:hover { background:var(--blue); color:#fff; }
 
     .tbl-empty { text-align:center; padding:50px 20px; color:var(--faint); }
     .tbl-empty svg { opacity:0.35; margin-bottom:12px; }
@@ -170,6 +176,7 @@
             <a href="{{ route('private-hours.index', ['state' => 'active']) }}" class="filter-pill {{ $stateFilter === 'active' ? 'active' : '' }}">Active</a>
             <a href="{{ route('private-hours.index', ['state' => 'low']) }}" class="filter-pill {{ $stateFilter === 'low' ? 'active' : '' }}">Running Low</a>
             <a href="{{ route('private-hours.index', ['state' => 'depleted']) }}" class="filter-pill {{ $stateFilter === 'depleted' ? 'active' : '' }}">Depleted</a>
+            <a href="{{ route('private-hours.index', ['state' => 'restricted']) }}" class="filter-pill {{ $stateFilter === 'restricted' ? 'active' : '' }}">Restricted · Payment</a>
             <a href="{{ route('private-hours.index', ['state' => 'leftover']) }}" class="filter-pill {{ $stateFilter === 'leftover' ? 'active' : '' }}">Leftover</a>
             <a href="{{ route('private-hours.index', ['state' => 'postponed']) }}" class="filter-pill {{ $stateFilter === 'postponed' ? 'active' : '' }}">Postponed</a>
         </div>
@@ -196,6 +203,7 @@
                                 'active'   => ['st-active','Active','var(--green)'],
                                 'low'      => ['st-low','Running Low','var(--orange)'],
                                 'depleted' => ['st-depleted','Depleted','var(--red)'],
+                                'restricted' => ['st-restricted','Restricted · Payment','var(--red)'],
                                 'leftover' => ['st-leftover','Course Done · Hours Left','var(--blue)'],
                                 'postponed'=> ['st-postponed','Postponed','#64748B'],
                                 default    => ['st-active','—','var(--green)'],
@@ -204,7 +212,10 @@
                             $fillColor = $e->v_state === 'depleted' ? 'var(--red)' : ($e->v_state === 'low' ? 'var(--orange)' : 'var(--green)');
                             $remainColor = $e->v_state === 'depleted' ? 'var(--red)' : ($e->v_state === 'low' ? 'var(--orange-dk)' : 'var(--green-dk)');
                         @endphp
-                        <tr>
+                        <tr data-charge-row="{{ $e->enrollment_id }}"
+                            data-name="{{ $e->student?->full_name ?? 'Student' }}"
+                            data-remaining="{{ $e->v_remaining }}"
+                            data-course="{{ $e->course_template_id ?? $e->courseInstance?->course_template_id ?? '' }}">
                             <td>
                                 <div class="std-cell">
                                     <div class="std-avatar">{{ strtoupper(substr($e->student?->full_name ?? '?', 0, 1)) }}</div>
@@ -230,29 +241,37 @@
                             <td class="num">
                                 <span class="absence-badge {{ $absClass }}">{{ $e->v_absences }}</span>
                             </td>
-                            <td><span class="state-badge {{ $stateMeta[0] }}">{{ $stateMeta[1] }}</span></td>
+                            <td>
+                                <span class="state-badge {{ $stateMeta[0] }}">{{ $stateMeta[1] }}</span>
+                                @if($e->status === 'Waiting')
+                                    <div style="font-size:10px;color:var(--muted);margin-top:4px;">Waiting placement (SC)</div>
+                                @endif
+                            </td>
                             @if($canAct)
                             <td>
-                                @if($e->v_state === 'depleted')
-                                    
-                                    <button type="button" class="btn-enroll"
-                                        onclick="openBundleModal({{ $e->enrollment_id }}, '{{ addslashes($e->student?->full_name ?? 'Student') }}', {{ $e->v_remaining }}, {{ $e->course_template_id ?? $e->courseInstance?->course_template_id ?? 'null' }})">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                        Add Bundle
-                                    </button>
-                                @elseif($e->v_state === 'leftover')
-                                    
-                                    @if($e->v_lead_id)
-                                    <a href="{{ route('registration.from.lead', $e->v_lead_id) }}?renew=1" class="btn-enroll">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                        New Course
+                                @if($e->v_state === 'restricted')
+                                    <a href="{{ route('outstanding.index', ['q' => $e->student?->full_name]) }}" class="btn-enroll btn-pay" title="Student has unpaid installments">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                        Outstanding
                                     </a>
-                                    @else
-                                    <a href="{{ route('leads.index') }}" class="btn-enroll" title="No lead linked — open leads">
-                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                        New Course
-                                    </a>
-                                    @endif
+                                @elseif(in_array($e->v_state, ['depleted', 'low', 'leftover']))
+                                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                                        <button type="button" class="btn-enroll"
+                                            onclick="openBundleModal({{ $e->enrollment_id }}, '{{ addslashes($e->student?->full_name ?? 'Student') }}', {{ $e->v_remaining }}, {{ $e->course_template_id ?? $e->courseInstance?->course_template_id ?? 'null' }})">
+                                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                            Add Bundle
+                                        </button>
+                                        @if($e->v_state === 'leftover')
+                                            <form method="POST" action="{{ route('private-hours.waiting-list', $e->enrollment_id) }}"
+                                                  onsubmit="return confirm('Send {{ addslashes($e->student?->full_name ?? 'this student') }} to the waiting list with {{ rtrim(rtrim(number_format($e->v_remaining, 2), '0'), '.') }} hours left?');">
+                                                @csrf
+                                                <button type="submit" class="btn-enroll btn-wl">
+                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>
+                                                    Waiting List
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 @else
                                 <span style="color:var(--faint);font-size:11px;">—</span>
                                 @endif
@@ -292,8 +311,8 @@
 
         <form method="POST" id="bundleForm" style="padding:24px;">
             @csrf
-            <div style="background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:11px 14px;margin-bottom:18px;font-size:12px;color:#DC2626;">
-                Current balance: <strong id="bm_balance"></strong> — student is restricted until recharged.
+            <div id="bm_balance_box" style="background:rgba(220,38,38,0.05);border:1px solid rgba(220,38,38,0.2);border-radius:8px;padding:11px 14px;margin-bottom:18px;font-size:12px;color:#DC2626;">
+                Current balance: <strong id="bm_balance"></strong><span id="bm_balance_note"></span>
             </div>
 
             <label style="display:block;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:#7A8A9A;font-weight:600;margin-bottom:7px;">Select Bundle</label>
@@ -344,6 +363,18 @@
         document.getElementById('bm_student').textContent = studentName;
         bmCurrentBalance = parseFloat(remaining) || 0;
         document.getElementById('bm_balance').textContent = bmCurrentBalance + ' hours';
+        const box = document.getElementById('bm_balance_box');
+        if (bmCurrentBalance <= 0) {
+            document.getElementById('bm_balance_note').textContent = ' — student is restricted until recharged.';
+            box.style.background = 'rgba(220,38,38,0.05)';
+            box.style.borderColor = 'rgba(220,38,38,0.2)';
+            box.style.color = '#DC2626';
+        } else {
+            document.getElementById('bm_balance_note').textContent = ' — the new bundle hours will be added on top.';
+            box.style.background = 'rgba(27,79,168,0.05)';
+            box.style.borderColor = 'rgba(27,79,168,0.18)';
+            box.style.color = '#1B4FA8';
+        }
         const sel = document.getElementById('bm_bundle');
         let visible = 0;
         Array.from(sel.options).forEach(opt => {
@@ -379,6 +410,21 @@
     document.getElementById('bundleModalOverlay')?.addEventListener('click', function(e) {
         if (e.target === this) closeBundleModal();
     });
+
+    (function () {
+        const params   = new URLSearchParams(window.location.search);
+        const chargeId = params.get('charge');
+        if (!chargeId) return;
+
+        params.delete('charge');
+        const cleanUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '') + window.location.hash;
+        window.history.replaceState(null, '', cleanUrl);
+
+        const row = document.querySelector('tr[data-charge-row="' + chargeId + '"]');
+        if (!row) return;
+        row.style.background = 'rgba(245,145,30,0.08)';
+        openBundleModal(chargeId, row.dataset.name, row.dataset.remaining, row.dataset.course || null);
+    })();
 </script>
 @endif
 
