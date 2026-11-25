@@ -240,13 +240,13 @@
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input type="text" id="wlSearch" class="search-input"
-                   placeholder="Search by name, ID, phone, or days..."
+                   placeholder="Search by name, ID, phone, course, level or days..."
                    oninput="searchWaiting(this.value)">
         </div>
 
         <select class="filter-select" id="statusFilter" onchange="filterByStatusSelect(this.value)">
             <option value="">All Statuses</option>
-            <option value="Active">Active</option>
+            <option value="Active" selected>Active</option>
             <option value="Assigned">Assigned</option>
 
         </select>
@@ -310,6 +310,11 @@
                         };
                         $phones      = ($item->enrollment->student->phones ?? collect())->sortByDesc(fn($p) => $p->is_primary)->values();
                         $allPhones   = $phones->pluck('phone_number')->filter()->implode(' ');
+                        $courseSearch = strtolower(trim(implode(' ', array_filter([
+                            $item->enrollment->courseTemplate->name ?? null,
+                            $item->enrollment->level->name ?? null,
+                            $item->enrollment->sublevel->name ?? null,
+                        ]))));
                     @endphp
                     <tr data-status="{{ $item->status }}"
                         data-dtype="{{ $item->preferred_delivery_type }}"
@@ -318,7 +323,8 @@
                         data-name="{{ strtolower($item->enrollment->student->full_name ?? '') }}"
                         data-sid="{{ $item->enrollment->student_id ?? '' }}"
                         data-phone="{{ $allPhones }}"
-                        data-days="{{ str_replace('_',' ',$item->preferred_days ?? '') }}">
+                        data-days="{{ str_replace('_',' ',$item->preferred_days ?? '') }}"
+                        data-course="{{ $courseSearch }}">
 
                         <td>
                             <div class="lead-name">{{ $item->enrollment->student->full_name ?? '—' }}</div>
@@ -540,7 +546,7 @@
 </div>
 
 <script>
-let activeStatus = '';
+let activeStatus = 'Active';
 let activeDtype  = '';
 let activeMode   = '';
 let activePtype  = '';
@@ -556,7 +562,8 @@ function applyFilters() {
         const sid         = row.dataset.sid   || '';
         const phone       = row.dataset.phone || '';
         const days        = row.dataset.days  || '';
-        const matchSearch = !searchQuery || name.includes(searchQuery) || sid.includes(searchQuery) || phone.includes(searchQuery) || days.includes(searchQuery);
+        const course      = row.dataset.course || '';
+        const matchSearch = !searchQuery || name.includes(searchQuery) || sid.includes(searchQuery) || phone.includes(searchQuery) || days.includes(searchQuery) || course.includes(searchQuery);
         row.style.display = (matchStatus && matchDtype && matchMode && matchPtype && matchSearch) ? '' : 'none';
     });
 }
@@ -643,6 +650,11 @@ function closeAssignModal() {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('.stat-card[data-filter]').forEach(c => {
+        c.classList.toggle('active-filter', c.dataset.filter === activeStatus);
+    });
+    applyFilters();
+
     document.querySelectorAll('.wl-cancel-form').forEach(form => {
         form.addEventListener('submit', function (e) {
             if (!confirm('Cancel this student from the waiting list? This cannot be undone.')) {

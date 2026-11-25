@@ -37,7 +37,18 @@ class StudentCareController extends Controller
             'enrollment.sublevel',
             'enrollment.levelPackage',
             'enrollment.teacher.employee',
+            'enrollment.courseInstance',
         ])->get()
+          ->reject(function ($w) {
+              if ($w->status !== 'Assigned') {
+                  return false;
+              }
+              $e = $w->enrollment;
+              $stillInCourse = in_array($e->status, ['Active', 'Restricted'], true)
+                  && $e->courseInstance
+                  && in_array($e->courseInstance->status, ['Upcoming', 'Active', 'Pending_Approval'], true);
+              return !$stillInCourse;
+          })
           ->sortByDesc(fn($w) => $w->enrollment->enrollment_id)
           ->values();
 
