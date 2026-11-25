@@ -49,6 +49,14 @@ class OutstandingController extends Controller
             'paymentPlan',
         ])->findOrFail($enrollmentId);
 
+        $nextInstallment = $enrollment->installmentSchedules->first();
+
+        if (!$nextInstallment) {
+            return back()->with('error', 'This student has no unpaid installments.');
+        }
+
+        $request->merge(['amount' => (float) $nextInstallment->amount]);
+
         $calculator = app(\App\Services\BalanceCalculator::class);
         $remaining = $calculator->getRemaining($enrollment);
 

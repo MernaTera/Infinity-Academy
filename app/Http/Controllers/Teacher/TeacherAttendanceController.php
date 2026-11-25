@@ -182,7 +182,7 @@ class TeacherAttendanceController extends Controller
                     AuditService::updated('enrollment', $enrollment->enrollment_id, 'status', 'Cancelled', 'Active');
                 }
 
-                $status = $request->attendance[$enrollment->enrollment_id] ?? 'Absent';
+                $status = $request->attendance[$enrollment->enrollment_id] ?? ($priorStatus ?? 'Absent');
                 if ($enrollment->status === 'Restricted') {
                     $status = 'Absent';
                 }
