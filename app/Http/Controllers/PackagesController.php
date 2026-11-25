@@ -14,8 +14,9 @@ class PackagesController extends Controller
     public function index(Request $request)
     {
         $stateFilter = $request->query('state', 'all');
+        $search      = trim((string) $request->query('q', ''));
         $enrollments = Enrollment::with([
-                'student',
+                'student.phones',
                 'courseTemplate',
                 'level',
                 'sublevel',
@@ -99,9 +100,10 @@ class PackagesController extends Controller
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
 
+        $rows   = \App\Support\EnrollmentSearch::filter($rows, $search);
         $rows   = \App\Support\PaginateCollection::make($rows, 25);
         $canAct = auth()->user()?->worksCs() ?? false;
 
-        return view('packages-tracking.index', compact('rows', 'stats', 'stateFilter', 'canAct'));
+        return view('packages-tracking.index', compact('rows', 'stats', 'stateFilter', 'canAct', 'search'));
     }
 }

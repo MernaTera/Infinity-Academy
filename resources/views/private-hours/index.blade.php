@@ -58,6 +58,13 @@
     .stat-val.sm { font-size:22px; }
 
     .filter-bar { display:flex; gap:8px; flex-wrap:wrap; }
+    .search-wrap { position:relative; display:flex; align-items:center; gap:8px; margin-bottom:12px; max-width:520px; }
+    .search-wrap svg.search-ic { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; z-index:2; }
+    .search-input { flex:1; padding:11px 14px 11px 38px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.6); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); font-family:inherit; font-size:12px; color:var(--text); outline:none; box-shadow:var(--glass-sh); }
+    .search-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.1); }
+    .search-btn { padding:11px 18px; border-radius:12px; border:none; background:linear-gradient(120deg,var(--blue),var(--blue-2)); color:#fff; font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:inherit; }
+    .search-clear { font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted); text-decoration:none; white-space:nowrap; }
+    .search-clear:hover { color:var(--red, #DC2626); text-decoration:none; }
     .filter-pill { padding:10px 20px; border-radius:12px; font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; background:rgba(255,255,255,0.5); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid var(--border); color:var(--muted); text-decoration:none; box-shadow:var(--glass-sh); }
     .filter-pill:hover { color:var(--blue); text-decoration:none; }
     .filter-pill.active { background:linear-gradient(120deg,var(--blue),var(--blue-2)); border-color:transparent; color:#fff; box-shadow:0 6px 16px rgba(27,79,168,0.28); }
@@ -170,15 +177,26 @@
         </div>
 
         
-        <span class="sec-label">Filter by State</span>
+        <span class="sec-label">Search & Filter</span>
+        <form method="GET" action="{{ route('private-hours.index') }}" class="search-wrap">
+            @if($stateFilter !== 'all')
+                <input type="hidden" name="state" value="{{ $stateFilter }}">
+            @endif
+            <svg class="search-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" name="q" value="{{ $search ?? '' }}" class="search-input" placeholder="Search by name, phone or enrollment #" autocomplete="off">
+            <button type="submit" class="search-btn">Search</button>
+            @if(!empty($search))
+                <a href="{{ route('private-hours.index', array_filter(['state' => $stateFilter !== 'all' ? $stateFilter : null])) }}" class="search-clear">Clear</a>
+            @endif
+        </form>
         <div class="filter-bar">
-            <a href="{{ route('private-hours.index') }}" class="filter-pill {{ $stateFilter === 'all' ? 'active' : '' }}">All</a>
-            <a href="{{ route('private-hours.index', ['state' => 'active']) }}" class="filter-pill {{ $stateFilter === 'active' ? 'active' : '' }}">Active</a>
-            <a href="{{ route('private-hours.index', ['state' => 'low']) }}" class="filter-pill {{ $stateFilter === 'low' ? 'active' : '' }}">Running Low</a>
-            <a href="{{ route('private-hours.index', ['state' => 'depleted']) }}" class="filter-pill {{ $stateFilter === 'depleted' ? 'active' : '' }}">Depleted</a>
-            <a href="{{ route('private-hours.index', ['state' => 'restricted']) }}" class="filter-pill {{ $stateFilter === 'restricted' ? 'active' : '' }}">Restricted · Payment</a>
-            <a href="{{ route('private-hours.index', ['state' => 'leftover']) }}" class="filter-pill {{ $stateFilter === 'leftover' ? 'active' : '' }}">Leftover</a>
-            <a href="{{ route('private-hours.index', ['state' => 'postponed']) }}" class="filter-pill {{ $stateFilter === 'postponed' ? 'active' : '' }}">Postponed</a>
+            <a href="{{ route('private-hours.index', array_filter(['q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'all' ? 'active' : '' }}">All</a>
+            <a href="{{ route('private-hours.index', array_filter(['state' => 'active', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'active' ? 'active' : '' }}">Active</a>
+            <a href="{{ route('private-hours.index', array_filter(['state' => 'low', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'low' ? 'active' : '' }}">Running Low</a>
+            <a href="{{ route('private-hours.index', array_filter(['state' => 'depleted', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'depleted' ? 'active' : '' }}">Depleted</a>
+            <a href="{{ route('private-hours.index', array_filter(['state' => 'restricted', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'restricted' ? 'active' : '' }}">Restricted · Payment</a>
+            <a href="{{ route('private-hours.index', array_filter(['state' => 'leftover', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'leftover' ? 'active' : '' }}">Leftover</a>
+            <a href="{{ route('private-hours.index', array_filter(['state' => 'postponed', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'postponed' ? 'active' : '' }}">Postponed</a>
         </div>
 
         

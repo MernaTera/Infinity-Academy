@@ -22,8 +22,9 @@ class PrivateHoursController extends Controller
     public function index(Request $request)
     {
         $stateFilter = $request->query('state', 'all');
+        $search      = trim((string) $request->query('q', ''));
         $enrollments = Enrollment::with([
-                'student',
+                'student.phones',
                 'courseTemplate',
                 'level',
                 'sublevel',
@@ -114,6 +115,8 @@ class PrivateHoursController extends Controller
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
 
+        $rows = \App\Support\EnrollmentSearch::filter($rows, $search);
+
         $chargeId = (int) $request->query('charge', 0);
         if ($chargeId) {
             $rows = $rows->sortBy(fn($e) => (int) $e->enrollment_id === $chargeId ? 0 : 1)->values();
@@ -123,7 +126,7 @@ class PrivateHoursController extends Controller
 
         $bundles = PrivateBundle::active()->orderBy('hours')->get();
 
-        return view('private-hours.index', compact('rows', 'stats', 'stateFilter', 'canAct', 'bundles'));
+        return view('private-hours.index', compact('rows', 'stats', 'stateFilter', 'canAct', 'bundles', 'search'));
     }
 
     public function chargeBundle(Request $request, $enrollmentId)

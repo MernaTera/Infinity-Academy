@@ -499,7 +499,7 @@ class StudentCareController extends Controller
         ));
     }
 
-    public function nearCompletion()
+    public function nearCompletion(Request $request)
     {
         $nearCompletionPrivate = Enrollment::where('status', 'Active')
             ->where('enrollment_type', 'Private')
@@ -551,9 +551,23 @@ class StudentCareController extends Controller
         $privateCount = $nearCompletionPrivate->count();
         $groupCount   = $nearCompletionGroup->count();
 
+        $tab = $request->query('tab');
+        if (!in_array($tab, ['private', 'group'], true)) {
+            $tab = ($privateCount === 0 && $groupCount > 0) ? 'group' : 'private';
+        }
+
+        $search = trim((string) $request->query('q', ''));
+
+        $nearCompletionPrivate = \App\Support\PaginateCollection::make(
+            \App\Support\EnrollmentSearch::filter($nearCompletionPrivate, $search), 25
+        );
+        $nearCompletionGroup = \App\Support\PaginateCollection::make(
+            \App\Support\EnrollmentSearch::filter($nearCompletionGroup, $search), 25
+        );
+
         return view('leads.near-completion', compact(
             'nearCompletionPrivate', 'nearCompletionGroup',
-            'privateCount', 'groupCount'
+            'privateCount', 'groupCount', 'tab', 'search'
         ));
     }
 

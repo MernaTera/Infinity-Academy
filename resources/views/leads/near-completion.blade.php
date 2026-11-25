@@ -43,6 +43,15 @@
     .sec-label { display:flex; align-items:center; gap:10px; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--text); font-weight:700; margin-bottom:14px; }
     .sec-label::before { content:''; width:20px; height:3px; border-radius:3px; background:linear-gradient(90deg, var(--blue), var(--blue)); flex-shrink:0; }
 
+    a.nc-tab { display:block; text-decoration:none; color:inherit; cursor:pointer; border:1.5px solid transparent; }
+    a.nc-tab:hover { text-decoration:none; color:inherit; }
+    a.nc-tab.active { border-color:var(--blue, #1B4FA8); box-shadow:0 10px 28px -10px rgba(27,79,168,0.35); }
+    .nc-search { position:relative; display:flex; align-items:center; gap:8px; margin:0 0 18px; max-width:520px; }
+    .nc-search-ic { position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--muted, #7A8A9A); pointer-events:none; }
+    .nc-search-input { flex:1; padding:11px 14px 11px 38px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,0.6); font-family:inherit; font-size:12px; color:var(--text); outline:none; box-shadow:var(--glass-sh); }
+    .nc-search-input:focus { border-color:var(--blue, #1B4FA8); box-shadow:0 0 0 3px rgba(27,79,168,0.1); }
+    .nc-search-btn { padding:11px 18px; border-radius:12px; border:none; background:linear-gradient(120deg,#1B4FA8,#2D6FDB); color:#fff; font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; cursor:pointer; font-family:inherit; }
+    .nc-search-clear { font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--muted, #7A8A9A); text-decoration:none; white-space:nowrap; }
     .tbl-card { background:rgba(255,255,255,0.72); border:1px solid var(--border); border-radius:20px; overflow:hidden; margin-bottom:28px; box-shadow:var(--glass-sh); }
     .tbl { width:100%; border-collapse:collapse; }
     .tbl thead th { padding:15px 16px; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); text-align:left; font-weight:700; background:rgba(255,255,255,0.55); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border-bottom:1px solid var(--border); white-space:nowrap; }
@@ -86,19 +95,30 @@
 
     
     <div class="kpi-grid">
-        <div class="kpi-card" style="--kc:#1B4FA8">
+        <a href="{{ route('near-completion', array_filter(['tab' => 'private', 'q' => $search ?? ''])) }}" class="kpi-card nc-tab {{ $tab === 'private' ? 'active' : '' }}" style="--kc:#1B4FA8">
             <div class="kpi-label">Private — Low Hours</div>
             <div class="kpi-val">{{ $privateCount }}</div>
             <div class="kpi-sub">≤ 4 hours remaining</div>
-        </div>
-        <div class="kpi-card" style="--kc:#1B4FA8">
+        </a>
+        <a href="{{ route('near-completion', array_filter(['tab' => 'group', 'q' => $search ?? ''])) }}" class="kpi-card nc-tab {{ $tab === 'group' ? 'active' : '' }}" style="--kc:#1B4FA8">
             <div class="kpi-label">Group — Last Sessions</div>
             <div class="kpi-val">{{ $groupCount }}</div>
-            <div class="kpi-sub">≤ 2 sessions remaining</div>
-        </div>
+            <div class="kpi-sub">≤ 2 sessions remaining (last level)</div>
+        </a>
     </div>
 
+    <form method="GET" action="{{ route('near-completion') }}" class="nc-search">
+        <input type="hidden" name="tab" value="{{ $tab }}">
+        <svg class="nc-search-ic" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" name="q" value="{{ $search ?? '' }}" class="nc-search-input" placeholder="Search by name, phone or enrollment #" autocomplete="off">
+        <button type="submit" class="nc-search-btn">Search</button>
+        @if(!empty($search))
+            <a href="{{ route('near-completion', ['tab' => $tab]) }}" class="nc-search-clear">Clear</a>
+        @endif
+    </form>
+
     
+    @if($tab === 'private')
     <div class="sec-label">Private Students — Low Hours</div>
     <div class="tbl-card">
         <div style="overflow-x:auto;">
@@ -169,8 +189,11 @@
             </table>
         </div>
     </div>
+    {{ $nearCompletionPrivate->links() }}
+    @endif
 
     
+    @if($tab === 'group')
     <div class="sec-label">Group Students — Last Sessions</div>
     <div class="tbl-card">
         <div style="overflow-x:auto;">
@@ -245,5 +268,7 @@
             </table>
         </div>
     </div>
+    {{ $nearCompletionGroup->links() }}
+    @endif
 </div>
 @endsection
