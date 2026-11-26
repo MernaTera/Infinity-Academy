@@ -243,18 +243,11 @@ class PatchService
 
     private function countTeacherSessionsInPatch(int $teacherId, int $patchId): int
     {
-        $courses = CourseInstance::where('teacher_id', $teacherId)
-            ->where('patch_id', $patchId)
-            ->whereIn('status', ['Active', 'Upcoming', 'Completed'])
-            ->get();
-
-        $total = 0;
-        foreach ($courses as $course) {
-            if ($course->session_duration > 0) {
-                $total += (int) ceil((float) $course->total_hours / (float) $course->session_duration);
-            }
-        }
-        return $total;
+        return \App\Support\TeacherLoad::sessionsInPatch(
+            $teacherId,
+            $patchId,
+            ['Active', 'Upcoming', 'Completed']
+        );
     }
 
     private function buildFallbackOptions(): array

@@ -27,7 +27,7 @@ class TeacherAttendanceController extends Controller
             'courseInstance.enrollments.attendances',
         ])->findOrFail($sessionId);
 
-        if ($session->courseInstance->teacher_id !== $teacher->teacher_id) {
+        if ((int) ($session->teacher_id ?? $session->courseInstance->teacher_id) !== (int) $teacher?->teacher_id) {
             abort(403);
         }
 
@@ -92,7 +92,7 @@ class TeacherAttendanceController extends Controller
 
         $session = CourseSession::with('courseInstance')->findOrFail($sessionId);
 
-        if ($session->courseInstance->teacher_id !== $teacher->teacher_id) {
+        if ((int) ($session->teacher_id ?? $session->courseInstance->teacher_id) !== (int) $teacher?->teacher_id) {
             abort(403);
         }
 

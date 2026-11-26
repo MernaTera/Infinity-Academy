@@ -49,11 +49,10 @@ class TeacherController extends Controller
         $totalStudents = $activeInstances->concat($upcomingInstances)
             ->sum(fn($i) => $i->enrollments->count());
 
-        $sessionsThisMonth = $allInstances->sum(function ($inst) {
-            return $inst->sessions->filter(
-                fn($s) => Carbon::parse($s->session_date)->isCurrentMonth()
-            )->count();
-        });
+        $sessionsThisMonth = \App\Models\Academic\CourseSession::where('teacher_id', $teacher->teacher_id)
+            ->where('status', '!=', 'Cancelled')
+            ->whereBetween('session_date', [now()->startOfMonth()->toDateString(), now()->endOfMonth()->toDateString()])
+            ->count();
 
         $daysUntilSalary = now()->daysInMonth - now()->day;
 
@@ -255,16 +254,10 @@ class TeacherController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($instance) {
 
-            $attendedIds = \App\Models\Attendance\Attendance::whereIn('course_session_id', $instance->sessions->pluck('course_session_id'))
-                ->distinct()
-                ->pluck('course_session_id')
-                ->all();
-            $completedSessions = $instance->sessions->filter(
-                fn($s) => $s->status === 'Completed' || in_array($s->course_session_id, $attendedIds)
-            );
+            $completedSessions = \App\Support\SessionHistory::kept($instance);
             $completedCount    = $completedSessions->count();
-            $totalSessions     = (int) ceil((float)$instance->total_hours / (float)$instance->session_duration);
-            $remainingToMake   = max(0, $totalSessions - $completedCount);
+            $doneHours         = \App\Support\SessionHistory::hours($completedSessions, (float) $instance->session_duration);
+            $remainingToMake   = \App\Support\SessionHistory::remainingToMake((float) $instance->total_hours, $doneHours, (float) $instance->session_duration);
 
             \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
                 ->whereNotIn('course_session_id', $completedSessions->pluck('course_session_id')->all() ?: [0])
@@ -330,8 +323,9 @@ class TeacherController extends Controller
         }
         if (today()->gt($floorDate)) $floorDate = today();
 
-        $usedDates = $instance->sessions->where('status', 'Completed')
-            ->map(fn($s) => \Carbon\Carbon::parse($s->session_date)->toDateString())
+        $usedDates = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+            ->pluck('session_date')
+            ->map(fn($d) => \Carbon\Carbon::parse($d)->toDateString())
             ->flip();
 
         $sessionNum = $startNum + 1;
@@ -427,7 +421,9 @@ class TeacherController extends Controller
             }
 
             if ($hasHistory) {
-                $instance->update(['status' => 'Upcoming']);
+                $instance->update([
+                    'status' => $instance->sessions->where('status', 'Completed')->isNotEmpty() ? 'Active' : 'Upcoming',
+                ]);
             } else {
                 $instance->instanceSchedules()->delete();
                 \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)->delete();

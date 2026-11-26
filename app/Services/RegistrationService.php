@@ -645,17 +645,11 @@ class RegistrationService
         $maxAllowed = (int) ($contract?->contractType?->max_sessions_allowed ?? 0);
         if ($maxAllowed <= 0) return; 
 
-        $existing = \App\Models\Academic\CourseInstance::where('teacher_id', $teacherId)
-            ->where('patch_id', $patchId)
-            ->whereIn('status', ['Active', 'Upcoming', 'Completed'])
-            ->get();
-
-        $used = 0;
-        foreach ($existing as $inst) {
-            if ($inst->session_duration > 0) {
-                $used += (int) ceil((float) $inst->total_hours / (float) $inst->session_duration);
-            }
-        }
+        $used = \App\Support\TeacherLoad::sessionsInPatch(
+            (int) $teacherId,
+            (int) $patchId,
+            ['Active', 'Upcoming', 'Completed']
+        );
 
         if ($used >= $maxAllowed) {
             throw new \App\Exceptions\BusinessValidationException(

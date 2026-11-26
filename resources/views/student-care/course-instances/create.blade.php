@@ -428,7 +428,12 @@ input[name="schedule_type"]:checked + .stype-card > div:first-child{color:var(--
 </div>
 
 <script>
-var EDIT_PROGRESS = {!! json_encode(isset($instance) ? ['completed' => (int) ($completedCount ?? 0), 'last_completed' => $lastCompletedDate ?? null] : null) !!};
+var EDIT_PROGRESS = {!! json_encode(isset($instance) ? ['completed' => (int) ($completedCount ?? 0), 'done_hours' => (float) ($doneHours ?? 0), 'last_completed' => $lastCompletedDate ?? null] : null) !!};
+function editLeftCount(totalHours, sessionDur) {
+    if (!EDIT_PROGRESS || !EDIT_PROGRESS.completed || !sessionDur) return null;
+    const leftHours = Math.round((totalHours - (EDIT_PROGRESS.done_hours || 0)) * 100) / 100;
+    return leftHours > 0 ? Math.ceil(leftHours / sessionDur) : 0;
+}
 
 function editDoneCount() {
     return (EDIT_PROGRESS && EDIT_PROGRESS.completed) ? EDIT_PROGRESS.completed : 0;
@@ -443,21 +448,17 @@ function editGenStart(startDate) {
 let _breakSlots   = @json($breakSlots ?? []);
 let _previewTimer = null;
 let _contractInfo = null;
-let _teacherPairs = []; // available pairs from teacher with existing course info
+let _teacherPairs = []; 
 
 const dayMap     = { sun_wed:[0,3], sat_tue:[6,2], mon_thu:[1,4] };
 const pairLabels = { sun_wed:'Sun & Wed', sat_tue:'Sat & Tue', mon_thu:'Mon & Thu' };
 const allPairs   = ['sat_tue','sun_wed','mon_thu'];
-// Each pair's two day numbers (Carbon: 0=Sun … 6=Sat) and their short labels,
-// for the single-day picker.
 const pairDayNums   = { sat_tue:[6,2], sun_wed:[0,3], mon_thu:[1,4] };
 const dayNumLabels  = { 0:'Sun', 1:'Mon', 2:'Tue', 3:'Wed', 4:'Thu', 5:'Fri', 6:'Sat' };
-// Pre-selected single days when editing (pair => day number), injected below.
 const initialSingleDays = @json($currentSingleDays ?? new stdClass());
 function scheduleType() {
     return document.querySelector('input[name="schedule_type"]:checked')?.value || 'double';
 }
-// Label for a pair honoring single-day mode: "Wed" instead of "Sun & Wed".
 function pairLabelFor(pair) {
     if (scheduleType() === 'single') {
         const sd = document.querySelector(`input[name="single_days[${pair}]"]:checked`);
@@ -466,7 +467,6 @@ function pairLabelFor(pair) {
     return pairLabels[pair] || pair;
 }
 
-// ── Helpers ──────────────────────────────────────────────────────────────
 function getCheckedPairs() {
     return [...document.querySelectorAll('input[name="day_of_week[]"]:checked')].map(el => el.value);
 }
@@ -503,7 +503,6 @@ function clearInstanceDefaults() {
     });
 }
 
-// ── Readiness check — unlock schedule section ────────────────────────────
 function checkScheduleReady() {
     const course   = document.getElementById('ci_course').value;
     const teacher  = document.getElementById('ci_teacher').value;
@@ -518,7 +517,6 @@ function checkScheduleReady() {
     return !!ready;
 }
 
-// ── Course change ────────────────────────────────────────────────────────
 async function onCourseChange() {
     const sel      = document.getElementById('ci_course');
     const courseId = sel.value;
@@ -551,7 +549,6 @@ async function onCourseChange() {
     if (engLevel) await loadTeachers(engLevel);
 }
 
-// ── Level change ─────────────────────────────────────────────────────────
 async function onLevelChange() {
     const lvl = document.getElementById('ci_level');
     const opt = lvl.options[lvl.selectedIndex];
@@ -582,7 +579,6 @@ function onSublevelChange() {
     else setInstanceDefaults(lvlOpt?.dataset.hours, lvlOpt?.dataset.session, lvlOpt?.dataset.capacity);
 }
 
-// ── Load teachers ────────────────────────────────────────────────────────
 async function loadTeachers(englishLevelId) {
     setLoading('ci_teacher');
     try {
@@ -596,7 +592,6 @@ async function loadTeachers(englishLevelId) {
     } catch { resetSelect('ci_teacher', '— Error —', true); }
 }
 
-// ── Patch change ─────────────────────────────────────────────────────────
 async function onPatchChange() {
     const sel   = document.getElementById('ci_patch');
     const opt   = sel.options[sel.selectedIndex];
@@ -617,7 +612,6 @@ async function onPatchChange() {
     await loadFreeDates();
 }
 
-// ── Teacher change ───────────────────────────────────────────────────────
 async function onTeacherChange() {
     const sel  = document.getElementById('ci_teacher');
     document.getElementById('sum-teacher').textContent = sel.options[sel.selectedIndex]?.text || '—';
@@ -631,7 +625,6 @@ async function onTeacherChange() {
     await loadFreeDates();
 }
 
-// ── Refresh pair grid with teacher data ──────────────────────────────────
 async function refreshPairGrid() {
     const teacherId = document.getElementById('ci_teacher').value;
     const patchId   = document.getElementById('ci_patch').value;
@@ -647,7 +640,6 @@ async function refreshPairGrid() {
     renderPairGrid(_teacherPairs);
 }
 
-// ── Render pair grid ─────────────────────────────────────────────────────
 function renderPairGrid(pairsData) {
     const grid         = document.getElementById('pairGrid');
     const checkedBefore = getCheckedPairs();
@@ -659,7 +651,6 @@ function renderPairGrid(pairsData) {
         const isAvailable = !!pairInfo;
         const wasChecked  = checkedBefore.includes(pair);
 
-        // Existing courses HTML
         let coursesHtml = '';
         if (pairInfo?.existing_courses?.length) {
             coursesHtml = `<div class="pair-existing">
@@ -677,7 +668,6 @@ function renderPairGrid(pairsData) {
 
         const slotInfo = pairInfo ? `${pairInfo.slot_name} · ${pairInfo.slot_start}–${pairInfo.slot_end}` : 'Not available';
 
-        // Single-day picker (only in single mode, only for available pairs)
         let singleDayHtml = '';
         if (isAvailable && scheduleType() === 'single') {
             const days = pairDayNums[pair] || [];
@@ -713,7 +703,6 @@ function renderPairGrid(pairsData) {
         grid.appendChild(div);
     });
 
-    // Auto-check if only one available pair
     if (availablePairs.length === 1) {
         const cb = document.getElementById(`pair_${availablePairs[0]}`);
         if (cb) cb.checked = true;
@@ -722,22 +711,17 @@ function renderPairGrid(pairsData) {
     onPairChange();
 }
 
-// ── Schedule type (single / double) change ─────────────────────────────────
-// Re-render the pair grid so the single-day pickers appear or disappear.
-// Checked pairs and their chosen times are preserved by renderPairGrid.
 function onScheduleTypeChange() {
     renderPairGrid(_teacherPairs);
     onPairChange();
 }
 
-// ── Pair change ───────────────────────────────────────────────────────────
 function onPairChange() {
     const pairs   = getCheckedPairs();
     const section = document.getElementById('timePickerSection');
 
     document.getElementById('sum-days').textContent = pairs.map(p => pairLabelFor(p)).join(' + ') || '—';
 
-    // Auto-adjust start date to first valid day
     adjustStartDateForPairs();
 
     section.innerHTML = '';
@@ -786,7 +770,6 @@ function onPairChange() {
     updateSummary();
     checkRoomAvailability();
 }
-// الـ _freeDates تخزني globally
 let _freeDates = [];
 
 async function loadFreeDates() {
@@ -910,7 +893,6 @@ function adjustStartDateForPairs() {
     }
 }
 
-// ── Render time slots ─────────────────────────────────────────────────────
 async function renderTimeSlots(pair) {
     const container  = document.getElementById(`timeSlotsContainer_${pair}`);
     if (!container) return;
@@ -937,8 +919,6 @@ async function renderTimeSlots(pair) {
         return;
     }
     try {
-        // In single-day mode, tell the server which one day of the pair we use,
-        // so it only treats that weekday's sessions as occupied.
         let sdParam = '';
         if (scheduleType() === 'single') {
             const sd = document.querySelector(`input[name="single_days[${pair}]"]:checked`);
@@ -950,20 +930,12 @@ async function renderTimeSlots(pair) {
 
     container.innerHTML = '<div class="time-grid">' + slots.map(slot => {
         const isBreak    = isBreakTime(slot.start);
-        // A slot is occupied if the NEW session — [slotStart, slotStart+duration)
-        // — overlaps any existing course's time range on this weekday. This blocks
-        // every start that would clash (e.g. 09:30/10:00 against a 09:00–11:00
-        // course), not just the exact matching start time.
         const toMin = (t) => { const [h,m] = t.split(':').map(Number); return h*60 + m; };
         const newStart = toMin(slot.start);
-        // If no duration is entered yet, treat the session as a zero-length point
-        // so we still block any start that sits inside an existing course range.
         const newEnd   = newStart + (sessionDur ? sessionDur*60 : 0);
         const isOccupied = (occupied || []).some(o => {
-            if (typeof o === 'string') return o === slot.start; // backward-compat
+            if (typeof o === 'string') return o === slot.start; 
             const oStart = toMin(o.start), oEnd = toMin(o.end);
-            // Standard interval overlap. For a zero-length session (no duration
-            // yet), block starts that fall within [oStart, oEnd).
             if (newEnd === newStart) return newStart >= oStart && newStart < oEnd;
             return newStart < oEnd && newEnd > oStart;
         });
@@ -1052,7 +1024,6 @@ function onTimeChange(pair) {
     checkRoomAvailability();
 }
 
-// ── Recalculate ───────────────────────────────────────────────────────────
 function recalculate() {
     const totalHours = parseFloat(document.getElementById('ci_total_hours').value) || 0;
     const sessionDur = parseFloat(document.getElementById('ci_session_duration').value) || 0;
@@ -1067,14 +1038,14 @@ function recalculate() {
 
         const done = editDoneCount();
         if (done > 0) {
-            const left = Math.max(0, sessions - done);
-            document.getElementById('sum-sessions').textContent = `${sessions} sessions (${Math.min(done, sessions)} done · ${left} to schedule)`;
+            const left = editLeftCount(totalHours, sessionDur);
+            document.getElementById('sum-sessions').textContent = `${done + left} sessions (${done} done · ${left} to schedule)`;
         }
 
         const pairs     = getCheckedPairs();
         const startDate = document.getElementById('ci_start_date').value;
         if (pairs.length && startDate) {
-            const left    = Math.max(0, sessions - done);
+            const left    = done > 0 ? editLeftCount(totalHours, sessionDur) : sessions;
             const endDate = (done > 0)
                 ? (left > 0 ? calcEndDate(editGenStart(startDate), pairs, left) : EDIT_PROGRESS.last_completed)
                 : calcEndDate(startDate, pairs, sessions);
@@ -1094,9 +1065,6 @@ function recalculate() {
 
 function calcEndDate(startDate, pairs, sessions) {
     if (!startDate || !pairs.length || !sessions) return '';
-    // Respect single-day mode: each pair contributes only its chosen day, so
-    // the date range stretches far enough to fit all sessions (a Wed-only
-    // course needs ~3 weeks for 3 sessions, not ~1½).
     const single = scheduleType() === 'single';
     const targetDays = pairs.flatMap(p => {
         const pd = dayMap[p] || [];
@@ -1124,7 +1092,6 @@ function onStartDateChange() {
     getCheckedPairs().forEach(pair => renderTimeSlots(pair));
 }
 
-// ── Preview ───────────────────────────────────────────────────────────────
 function triggerPreview() {
     clearTimeout(_previewTimer);
     _previewTimer = setTimeout(fetchPreview, 600);
@@ -1145,7 +1112,7 @@ async function fetchPreview() {
 
     const sessions  = Math.ceil(totalHours / sessionDur);
     const done      = editDoneCount();
-    const left      = Math.max(0, sessions - done);
+    const left      = done > 0 ? editLeftCount(totalHours, sessionDur) : sessions;
     const genStart  = done > 0 ? editGenStart(startDate) : startDate;
     const endDate   = done > 0
         ? (left > 0 ? calcEndDate(genStart, pairs, left) : EDIT_PROGRESS.last_completed)
@@ -1158,7 +1125,7 @@ async function fetchPreview() {
     const endTime  = `${String(Math.floor(endMins/60)).padStart(2,'0')}:${String(endMins%60).padStart(2,'0')}`;
 
     document.getElementById('prev-sessions').textContent = done > 0
-        ? `${left} to schedule (${Math.min(done, sessions)} done)`
+        ? `${left} to schedule (${done} done)`
         : sessions + ' sessions';
     document.getElementById('prev-time').textContent     = `${startTime} → ${endTime}`;
     document.getElementById('prev-first').textContent    = formatDate(firstDate);
@@ -1206,7 +1173,6 @@ async function fetchPreview() {
     }
 }
 
-// ── Summary ───────────────────────────────────────────────────────────────
 function updateSummary() {
     const course   = document.getElementById('ci_course');
     const type     = document.querySelector('[name="type"]');
@@ -1222,7 +1188,6 @@ function updateSummary() {
     if (hours) document.getElementById('sum-hours').textContent = hours + ' hrs';
 }
 
-// ── Contract check ────────────────────────────────────────────────────────
 async function checkTeacherContract() {
     const teacherId = document.getElementById('ci_teacher').value;
     const patchId   = document.getElementById('ci_patch').value;
@@ -1493,9 +1458,8 @@ async function prefillEditForm() {
     let confirmed = false;
 
     form.addEventListener('submit', function (e) {
-        if (confirmed) return;               // second pass — let it through
+        if (confirmed) return;               
         e.preventDefault();
-        // Let native HTML5 validation run first.
         if (typeof form.reportValidity === 'function' && !form.reportValidity()) return;
         openCreateConfirm();
     });

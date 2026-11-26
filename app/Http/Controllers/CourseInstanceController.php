@@ -393,8 +393,10 @@ class CourseInstanceController extends Controller
                         ? Branch::find($employee->branch_id)
                         : Branch::first();
 
-        $completedCount = $instance->sessions->where('status', 'Completed')->count();
-        $lastCompletedRaw  = $instance->sessions->where('status', 'Completed')->max('session_date');
+        $keptSessions      = \App\Support\SessionHistory::kept($instance);
+        $completedCount    = $keptSessions->count();
+        $doneHours         = \App\Support\SessionHistory::hours($keptSessions, (float) $instance->session_duration);
+        $lastCompletedRaw  = $keptSessions->max('session_date');
         $lastCompletedDate = $lastCompletedRaw ? \Carbon\Carbon::parse($lastCompletedRaw)->toDateString() : null;
 
         $currentPairs      = $instance->instanceSchedules->pluck('day_of_week')->unique()->values();
@@ -410,7 +412,7 @@ class CourseInstanceController extends Controller
 
         return view('student-care.course-instances.create', compact(
             'instance', 'templates', 'patches', 'branches', 'rooms', 'breakSlots', 'userBranch',
-            'completedCount', 'lastCompletedDate', 'currentPairs', 'currentStartTimes', 'currentSingleDays', 'scheduleType'
+            'completedCount', 'doneHours', 'lastCompletedDate', 'currentPairs', 'currentStartTimes', 'currentSingleDays', 'scheduleType'
         ));
     }
 
@@ -483,18 +485,13 @@ class CourseInstanceController extends Controller
             ]);
         }
 
-        $attendedIds = \App\Models\Attendance\Attendance::whereIn('course_session_id', $instance->sessions->pluck('course_session_id'))
-            ->distinct()
-            ->pluck('course_session_id')
-            ->all();
-        $keptSessions = $instance->sessions->filter(
-            fn($s) => $s->status === 'Completed' || in_array($s->course_session_id, $attendedIds)
-        );
+        $keptSessions      = \App\Support\SessionHistory::kept($instance);
         $keptIds           = $keptSessions->pluck('course_session_id')->all();
         $completedCount    = $keptSessions->count();
         $isStarted         = $completedCount > 0;
-        $totalSessions     = (int) ceil((float)$data['total_hours'] / (float)$data['session_duration']);
-        $remainingToMake   = max(0, $totalSessions - $completedCount);
+        $doneHours         = \App\Support\SessionHistory::hours($keptSessions, (float) $instance->session_duration);
+        $remainingToMake   = \App\Support\SessionHistory::remainingToMake((float) $data['total_hours'], $doneHours, (float) $data['session_duration']);
+        $totalSessions     = $completedCount + $remainingToMake;
 
         $lastCompletedDate = $keptSessions->max('session_date');
 
@@ -530,10 +527,10 @@ class CourseInstanceController extends Controller
             ]);
         }
 
-        if ($isStarted && $totalSessions <= $completedCount) {
-            $doneHours = rtrim(rtrim(number_format($completedCount * (float) $data['session_duration'], 2, '.', ''), '0'), '.');
+        if ($isStarted && $remainingToMake === 0) {
+            $doneLabel = rtrim(rtrim(number_format($doneHours, 2, '.', ''), '0'), '.');
             return back()->withInput()->withErrors([
-                'total_hours' => "This course already has {$completedCount} sessions done ({$doneHours}h). Total hours must be more than that."
+                'total_hours' => "This course already has {$completedCount} sessions done ({$doneLabel}h). Total hours must be more than that."
             ]);
         }
 
