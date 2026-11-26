@@ -34,9 +34,17 @@ class PackagesController extends Controller
             ->orderByDesc('enrollment_id')
             ->get();
 
-        $latestPerPackage = $enrollments
-            ->groupBy(fn($e) => $e->student_id . '-' . $e->package_id)
-            ->map(fn($group) => $group->first()) 
+        $packageGroups = $enrollments->groupBy(fn($e) => $e->student_id . '-' . $e->package_id);
+
+        $purchasedUnits = $packageGroups->map(function ($group) {
+            $nominal = (int) ($group->first()->levelPackage?->levels_count ?? 0);
+            $first   = $group->last();
+            $bought  = $group->filter(fn($e) => (float) $e->final_price > 0 || $e->enrollment_id === $first->enrollment_id)->count();
+            return $nominal * max(1, $bought);
+        });
+
+        $latestPerPackage = $packageGroups
+            ->map(fn($group) => $group->first())
             ->values();
 
         $studentIds = $latestPerPackage->pluck('student_id')->unique()->filter()->all();
@@ -47,11 +55,11 @@ class PackagesController extends Controller
                 ->orderByDesc('lead_id')
                 ->pluck('lead_id', 'student_id');
 
-        $rows = $latestPerPackage->map(function ($e) use ($leadByStudent) {
+        $rows = $latestPerPackage->map(function ($e) use ($leadByStudent, $purchasedUnits) {
             $package    = $e->levelPackage;
-            $nominal    = $package ? (int) $package->levels_count : 0;
+            $nominal    = (int) ($purchasedUnits[$e->student_id . '-' . $e->package_id] ?? ($package ? (int) $package->levels_count : 0));
             $remaining  = (int) ($e->package_units_remaining ?? 0);
-            $totalUnits = max($nominal, $remaining);
+            $totalUnits = $nominal > 0 ? max($nominal, $remaining + 1) : $remaining;
             $doneUnits  = $totalUnits > 0 ? max(0, $totalUnits - $remaining) : null;
             $donePct    = $totalUnits > 0
                 ? min(100, round(($doneUnits / $totalUnits) * 100))

@@ -60,10 +60,17 @@ class PrivateHoursController extends Controller
                 ->orderByDesc('lead_id')
                 ->pluck('lead_id', 'student_id');
 
-        $rows = $enrollments->map(function ($e) use ($absenceCounts, $leadByStudent) {
+        $usedHours = DB::table('bundle_usage_log')
+            ->whereIn('enrollment_id', $enrollments->pluck('enrollment_id'))
+            ->selectRaw('enrollment_id, SUM(hours_deducted) as used')
+            ->groupBy('enrollment_id')
+            ->pluck('used', 'enrollment_id');
+
+        $rows = $enrollments->map(function ($e) use ($absenceCounts, $leadByStudent, $usedHours) {
             $bundleHours = $e->privateBundle?->hours ? (float) $e->privateBundle->hours : null;
             $remaining   = (float) $e->hours_remaining;
-            $totalPool   = max((float) ($bundleHours ?? 0), $remaining);
+            $loggedUsed  = (float) ($usedHours[$e->enrollment_id] ?? 0);
+            $totalPool   = max((float) ($bundleHours ?? 0), $remaining + $loggedUsed);
             $used        = $totalPool > 0 ? max(0, $totalPool - $remaining) : null;
             $usedPct     = $totalPool > 0
                 ? min(100, round(($used / $totalPool) * 100))
