@@ -762,7 +762,7 @@ function onPairChange() {
             <div class="time-row">
                 <div class="field" style="flex:1;min-width:140px;">
                     <label class="field-label">Start Time <span class="req">*</span></label>
-                    <input type="time" name="start_times[${pair}]" id="ci_start_time_${pair}" class="field-input" step="1800" onchange="onTimeChange('${pair}')">
+                    <input type="time" name="start_times[${pair}]" id="ci_start_time_${pair}" class="field-input" step="1800" required onchange="onTimeChange('${pair}')">
                 </div>
                 <div style="padding-top:20px;color:var(--faint);">→</div>
                 <div class="field" style="flex:1;min-width:140px;">

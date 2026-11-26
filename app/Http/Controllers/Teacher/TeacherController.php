@@ -268,13 +268,19 @@ class TeacherController extends Controller
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($instance) {
 
-            $completedSessions = $instance->sessions->where('status', 'Completed');
+            $attendedIds = \App\Models\Attendance\Attendance::whereIn('course_session_id', $instance->sessions->pluck('course_session_id'))
+                ->distinct()
+                ->pluck('course_session_id')
+                ->all();
+            $completedSessions = $instance->sessions->filter(
+                fn($s) => $s->status === 'Completed' || in_array($s->course_session_id, $attendedIds)
+            );
             $completedCount    = $completedSessions->count();
             $totalSessions     = (int) ceil((float)$instance->total_hours / (float)$instance->session_duration);
             $remainingToMake   = max(0, $totalSessions - $completedCount);
 
             \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
-                ->where('status', '!=', 'Completed')
+                ->whereNotIn('course_session_id', $completedSessions->pluck('course_session_id')->all() ?: [0])
                 ->delete();
 
             if ($remainingToMake > 0) {
@@ -287,7 +293,7 @@ class TeacherController extends Controller
                 );
             }
 
-            $instance->update(['status' => 'Upcoming']);
+            $instance->update(['status' => $completedCount > 0 ? 'Active' : 'Upcoming']);
 
             $scEmployee = \App\Models\HR\Employee::find($instance->created_by_employee_id);
             if ($scEmployee) {
@@ -326,6 +332,7 @@ class TeacherController extends Controller
             $afterCompleted = \Carbon\Carbon::parse($lastCompletedDate)->addDay();
             if ($afterCompleted->gt($floorDate)) $floorDate = $afterCompleted;
         }
+        if (today()->gt($floorDate)) $floorDate = today();
 
         $usedDates = $instance->sessions->where('status', 'Completed')
             ->map(fn($s) => \Carbon\Carbon::parse($s->session_date)->toDateString())
@@ -336,7 +343,10 @@ class TeacherController extends Controller
 
         foreach ($schedules as $i => $schedule) {
             $need       = $perPair + ($i === 0 ? $remainder : 0);
-            $targetDays = $dayMap[$schedule->day_of_week] ?? [];
+            $pairDays   = $dayMap[$schedule->day_of_week] ?? [];
+            $targetDays = ($schedule->single_day !== null && in_array((int) $schedule->single_day, $pairDays, true))
+                ? [(int) $schedule->single_day]
+                : $pairDays;
             if (empty($targetDays) || $need <= 0) continue;
 
             $cursor = $floorDate->copy();
@@ -349,6 +359,10 @@ class TeacherController extends Controller
                     $startDateTime = \Carbon\Carbon::parse(
                         $dateStr . ' ' . \Carbon\Carbon::parse($schedule->start_time)->format('H:i:s')
                     );
+                    if ($startDateTime->lte(now())) {
+                        $cursor->addDay();
+                        continue;
+                    }
                     $endDateTime = $startDateTime->copy()->addHours((float) $instance->session_duration);
 
                     \App\Models\Academic\CourseSession::create([

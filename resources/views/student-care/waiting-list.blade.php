@@ -679,4 +679,4 @@ function closeNotes(){
 document.addEventListener('keydown', e => { if(e.key === 'Escape') closeNotes(); });
 </script>
 
-@endsection
+@endsectioncicon

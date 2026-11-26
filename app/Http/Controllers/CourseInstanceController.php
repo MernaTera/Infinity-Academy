@@ -69,7 +69,7 @@ class CourseInstanceController extends Controller
     {
         $templates  = CourseTemplate::orderBy('name')->get();
         $patches    = Patch::whereIn('status', ['Active', 'Upcoming'])->orderBy('start_date')->get();
-        $branches   = Branch::orderBy('name')->get();
+        $branches   = Branch::where('is_active', true)->orderBy('name')->get();
         $rooms      = Room::where('is_active', true)->orderBy('name')->get();
         $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
 
@@ -92,7 +92,7 @@ class CourseInstanceController extends Controller
             'sublevel_id'        => 'nullable|exists:sublevel,sublevel_id',
             'patch_id'           => 'required|exists:patch,patch_id',
             'teacher_id'         => 'required|exists:teacher,teacher_id',
-            'branch_id'          => 'required|exists:branch,branch_id',
+            'branch_id'          => 'required|exists:branch,branch_id,is_active,1',
             'room_id'            => 'nullable|exists:room,room_id',
             'capacity'           => 'required|integer|min:1',
             'delivery_mood'      => 'required|in:Online,Offline',
@@ -111,6 +111,15 @@ class CourseInstanceController extends Controller
             'time_slot_ids'      => 'nullable|array',
             'time_slot_ids.*'    => 'nullable|exists:time_slot,time_slot_id',
         ]);
+
+        $pairNames = ['sun_wed' => 'Sun & Wed', 'sat_tue' => 'Sat & Tue', 'mon_thu' => 'Mon & Thu'];
+        foreach ($data['day_of_week'] as $pair) {
+            if (empty($data['start_times'][$pair])) {
+                return back()->withInput()->withErrors([
+                    'start_times' => 'Please choose a start time for ' . ($pairNames[$pair] ?? $pair) . '.'
+                ]);
+            }
+        }
 
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
 
@@ -357,7 +366,7 @@ class CourseInstanceController extends Controller
 
         $templates  = CourseTemplate::orderBy('name')->get();
         $patches    = Patch::whereIn('status', ['Active', 'Upcoming'])->orderBy('start_date')->get();
-        $branches   = Branch::orderBy('name')->get();
+        $branches   = Branch::where(fn($q) => $q->where('is_active', true)->orWhere('branch_id', $instance->branch_id))->orderBy('name')->get();
         $rooms      = Room::where('is_active', true)->orderBy('name')->get();
         $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
 
@@ -418,6 +427,15 @@ class CourseInstanceController extends Controller
             'time_slot_ids.*'    => 'nullable|exists:time_slot,time_slot_id',
         ]);
 
+        $pairNames = ['sun_wed' => 'Sun & Wed', 'sat_tue' => 'Sat & Tue', 'mon_thu' => 'Mon & Thu'];
+        foreach ($data['day_of_week'] as $pair) {
+            if (empty($data['start_times'][$pair])) {
+                return back()->withInput()->withErrors([
+                    'start_times' => 'Please choose a start time for ' . ($pairNames[$pair] ?? $pair) . '.'
+                ]);
+            }
+        }
+
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
 
         $isSingle    = ($data['schedule_type'] ?? 'double') === 'single';
@@ -431,30 +449,92 @@ class CourseInstanceController extends Controller
             return $pairDays;
         };
 
-        $completedSessions = $instance->sessions->where('status', 'Completed');
-        $completedCount    = $completedSessions->count();
+        if ($instance->status === 'Completed') {
+            return back()->withInput()->withErrors([
+                'course' => 'This course is already completed and can\'t be edited.'
+            ]);
+        }
+
+        $attendedIds = \App\Models\Attendance\Attendance::whereIn('course_session_id', $instance->sessions->pluck('course_session_id'))
+            ->distinct()
+            ->pluck('course_session_id')
+            ->all();
+        $keptSessions = $instance->sessions->filter(
+            fn($s) => $s->status === 'Completed' || in_array($s->course_session_id, $attendedIds)
+        );
+        $keptIds           = $keptSessions->pluck('course_session_id')->all();
+        $completedCount    = $keptSessions->count();
+        $isStarted         = $completedCount > 0;
         $totalSessions     = (int) ceil((float)$data['total_hours'] / (float)$data['session_duration']);
         $remainingToMake   = max(0, $totalSessions - $completedCount);
 
-        $lastCompletedDate = $completedSessions->max('session_date');
+        $lastCompletedDate = $keptSessions->max('session_date');
+
+        $activeEnrollments = \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
+            ->where('course_instance_id', $instance->course_instance_id)
+            ->whereIn('status', ['Active', 'Restricted', 'Pending_Approval'])
+            ->count();
+
+        if ($isStarted || $activeEnrollments > 0) {
+            $locked = [];
+            if ((int) $data['course_template_id'] !== (int) $instance->course_template_id) $locked[] = 'course';
+            if ((int) ($data['level_id'] ?? 0) !== (int) ($instance->level_id ?? 0))       $locked[] = 'level';
+            if ((int) ($data['sublevel_id'] ?? 0) !== (int) ($instance->sublevel_id ?? 0)) $locked[] = 'sublevel';
+            if ($data['type'] !== $instance->type)                                          $locked[] = 'type';
+
+            if ($locked) {
+                return back()->withInput()->withErrors([
+                    'course_template_id' => 'The ' . implode(', ', $locked) . ' can\'t be changed because this course '
+                        . ($isStarted ? 'has already started.' : 'has enrolled students.')
+                ]);
+            }
+        }
+
+        if ($isStarted && (int) $data['patch_id'] !== (int) $instance->patch_id) {
+            return back()->withInput()->withErrors([
+                'patch_id' => 'The batch can\'t be changed after the course has started.'
+            ]);
+        }
+
+        if ((int) $data['capacity'] < $activeEnrollments) {
+            return back()->withInput()->withErrors([
+                'capacity' => "Capacity can't be less than the {$activeEnrollments} students already enrolled."
+            ]);
+        }
+
+        if ($isStarted && $totalSessions <= $completedCount) {
+            $doneHours = rtrim(rtrim(number_format($completedCount * (float) $data['session_duration'], 2, '.', ''), '0'), '.');
+            return back()->withInput()->withErrors([
+                'total_hours' => "This course already has {$completedCount} sessions done ({$doneHours}h). Total hours must be more than that."
+            ]);
+        }
 
         $patch = Patch::findOrFail($data['patch_id']);
-        $endDateC   = \Carbon\Carbon::parse($data['end_date'])->startOfDay();
-        $patchEndC  = \Carbon\Carbon::parse($patch->end_date)->startOfDay();
+        $endDateC    = \Carbon\Carbon::parse($data['end_date'])->startOfDay();
+        $patchEndC   = \Carbon\Carbon::parse($patch->end_date)->startOfDay();
+        $patchStartC = \Carbon\Carbon::parse($patch->start_date)->startOfDay();
         if ($endDateC->gt($patchEndC)) {
             return back()->withInput()->withErrors([
                 'end_date' => "End date ({$endDateC->format('Y-m-d')}) exceeds the patch end date ({$patchEndC->format('Y-m-d')})."
             ]);
         }
+        if (!$isStarted && \Carbon\Carbon::parse($data['start_date'])->startOfDay()->lt($patchStartC)) {
+            return back()->withInput()->withErrors([
+                'start_date' => "Start date must be within the selected patch ({$patchStartC->format('Y-m-d')} → {$patchEndC->format('Y-m-d')})."
+            ]);
+        }
 
         $allTargetDays = array_merge(...array_map(fn($p) => $resolveDays($p), $data['day_of_week']));
 
-        $genStart = \Carbon\Carbon::parse($data['start_date']);
+        $genStart = \Carbon\Carbon::parse($data['start_date'])->startOfDay();
         if ($lastCompletedDate) {
-            $afterCompleted = \Carbon\Carbon::parse($lastCompletedDate)->addDay();
+            $afterCompleted = \Carbon\Carbon::parse($lastCompletedDate)->addDay()->startOfDay();
             if ($afterCompleted->gt($genStart)) {
                 $genStart = $afterCompleted;
             }
+        }
+        if (today()->gt($genStart)) {
+            $genStart = today();
         }
 
         $patchEnd = \Carbon\Carbon::parse($patch->end_date);
@@ -508,13 +588,51 @@ class CourseInstanceController extends Controller
             }
         }
 
+        if ($remainingToMake > 0 && !empty($regenStartDate)) {
+            foreach ($data['day_of_week'] as $pair) {
+                $startTime = $data['start_times'][$pair] ?? null;
+                if (!$startTime) continue;
+
+                $dur        = (float) $data['session_duration'];
+                [$h, $m]    = explode(':', $startTime);
+                $endMins    = ((int)$h * 60 + (int)$m) + (int)($dur * 60);
+                $endTime    = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
+                $startFull  = $startTime . ':00';
+                $targetDays = $resolveDays($pair);
+
+                $clash = \App\Models\Academic\CourseSession::with('courseInstance.courseTemplate')
+                    ->whereHas('courseInstance', fn($q) =>
+                        $q->where('teacher_id', $data['teacher_id'])
+                          ->where('course_instance_id', '!=', $instance->course_instance_id)
+                          ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+                    )
+                    ->whereBetween('session_date', [$regenStartDate, $patchEndC->toDateString()])
+                    ->where('status', '!=', 'Cancelled')
+                    ->where('start_time', '<', $endTime)
+                    ->where('end_time',   '>', $startFull)
+                    ->orderBy('session_date')
+                    ->get()
+                    ->first(fn($s) => in_array(\Carbon\Carbon::parse($s->session_date)->dayOfWeek, $targetDays));
+
+                if ($clash) {
+                    $course = $clash->courseInstance?->courseTemplate?->name ?? 'another course';
+                    $when   = \Carbon\Carbon::parse($clash->session_date)->format('D d M');
+                    return back()->withInput()->withErrors([
+                        'teacher_id' => "The teacher already teaches \"{$course}\" on {$when} at " . \Carbon\Carbon::parse($clash->start_time)->format('H:i') . "."
+                    ]);
+                }
+            }
+        }
+
         $employeeId = \App\Models\HR\Employee::withoutGlobalScope('branch')->where('user_id', auth()->id())->value('employee_id');
         $teacherChanged = (int)$instance->teacher_id !== (int)$data['teacher_id'];
+        $patchChanged   = (int)$instance->patch_id !== (int)$data['patch_id'];
 
         try {
             \Illuminate\Support\Facades\DB::transaction(function () use (
                 $data, $employeeId, $instance, $completedCount, $remainingToMake,
-                $regenStartDate, $teacherChanged
+                $regenStartDate, $teacherChanged, $patchChanged, $keptIds, $keptSessions,
+                $isStarted, $patchEndC
             ) {
 
                 $contract = \App\Models\HR\TeacherContract::standingFor($data['teacher_id'], $data['patch_id']);
@@ -553,15 +671,22 @@ class CourseInstanceController extends Controller
                     'type'               => $data['type'],
                     'total_hours'        => $data['total_hours'],
                     'session_duration'   => $data['session_duration'],
-                    'start_date'         => $instance->sessions->where('status','Completed')->min('session_date')
+                    'start_date'         => $keptSessions->min('session_date')
                                             ?? ($regenStartDate ?? $data['start_date']),
                     'end_date'           => $data['end_date'],
-                    'status'             => $needsApproval ? 'Pending_Approval' : 'Upcoming',
+                    'status'             => $needsApproval ? 'Pending_Approval' : ($isStarted ? 'Active' : 'Upcoming'),
                 ]);
 
                 \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
-                    ->where('status', '!=', 'Completed')
+                    ->whereNotIn('course_session_id', $keptIds ?: [0])
                     ->delete();
+
+                if ($patchChanged && !$isStarted) {
+                    \App\Models\Enrollment\Enrollment::withoutGlobalScope('branch')
+                        ->where('course_instance_id', $instance->course_instance_id)
+                        ->whereNotIn('status', ['Cancelled', 'Completed'])
+                        ->update(['patch_id' => $data['patch_id']]);
+                }
 
                 \App\Models\Academic\InstanceSchedule::where('course_instance_id', $instance->course_instance_id)
                     ->delete();
@@ -590,7 +715,33 @@ class CourseInstanceController extends Controller
                     );
 
                     $instance->start_date = $regenStartDate;
-                    $this->generateRemainingSessions($instance, $schedules, $completedCount, $remainingToMake);
+                    $instance->end_date   = $patchEndC->toDateString();
+                    $made = $this->generateRemainingSessions($instance, $schedules, $completedCount, $remainingToMake);
+
+                    if ($made === 0) {
+                        throw new \Exception('No sessions could be generated. Please choose a start date, day pair(s) and a start time for each pair.');
+                    }
+                    if ($made < $remainingToMake) {
+                        throw new \Exception("Only {$made} of {$remainingToMake} sessions fit before the patch ends ({$patchEndC->format('d M Y')}). Choose more days or an earlier start date.");
+                    }
+
+                    $range = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+                        ->where('status', '!=', 'Cancelled')
+                        ->selectRaw('MIN(session_date) as first_date, MAX(session_date) as last_date')
+                        ->first();
+                    $firstUpcoming = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+                        ->whereNotIn('course_session_id', $keptIds ?: [0])
+                        ->min('session_date');
+
+                    $instance->start_date = $range->first_date;
+                    $instance->end_date   = $range->last_date;
+                    if (!$isStarted && !$needsApproval && $firstUpcoming && \Carbon\Carbon::parse($firstUpcoming)->lte(today())) {
+                        $instance->status = 'Active';
+                    }
+                    $instance->save();
+                } elseif ($isStarted) {
+                    $instance->end_date = $keptSessions->max('session_date');
+                    $instance->save();
                 }
 
                 $this->resyncInstallmentDueDates($instance);
@@ -646,12 +797,12 @@ class CourseInstanceController extends Controller
             ->with('success', 'Course instance updated successfully.');
     }
 
-    private function generateRemainingSessions(CourseInstance $instance, array $schedules, int $completedCount, int $remainingToMake): void
+    private function generateRemainingSessions(CourseInstance $instance, array $schedules, int $completedCount, int $remainingToMake): int
     {
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
 
         $pairCount = count($schedules);
-        if ($pairCount === 0) return;
+        if ($pairCount === 0) return 0;
 
         $perPair   = (int) floor($remainingToMake / $pairCount);
         $remainder = $remainingToMake % $pairCount;
@@ -678,6 +829,10 @@ class CourseInstanceController extends Controller
                     $startDateTime = \Carbon\Carbon::parse(
                         $cursor->toDateString() . ' ' . \Carbon\Carbon::parse($schedule->start_time)->format('H:i:s')
                     );
+                    if ($startDateTime->lte(now())) {
+                        $cursor->addDay();
+                        continue;
+                    }
                     $endDateTime = $startDateTime->copy()->addHours((float) $instance->session_duration);
 
                     \App\Models\Academic\CourseSession::create([
@@ -709,11 +864,14 @@ class CourseInstanceController extends Controller
             \DB::table('course_session')->where('course_session_id', $s->course_session_id)
                 ->update(['session_number' => $idx + 1]);
         }
+
+        return $made;
     }
 
     private function resyncInstallmentDueDates(CourseInstance $instance): void
     {
         $sessions = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+            ->where('status', '!=', 'Cancelled')
             ->orderBy('session_date')->orderBy('start_time')
             ->get()
             ->values();
@@ -726,8 +884,8 @@ class CourseInstanceController extends Controller
                 ->orderBy('installment_number')
                 ->get();
 
-            foreach ($pending as $i => $schedule) {
-                $session = $sessions[$i] ?? null;
+            foreach ($pending as $schedule) {
+                $session = $sessions[$schedule->installment_number - 1] ?? null;
                 if ($session) {
                     $schedule->update(['due_date' => $session->session_date]);
                 }
