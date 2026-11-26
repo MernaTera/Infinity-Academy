@@ -78,8 +78,8 @@ class SchedulingService
 
         if ($startTime->lt($slotStart) || $sessionEnd->gt($slotEnd)) {
             throw new \Exception(
-                "Session time ({$startTime->format('H:i')} → {$sessionEnd->format('H:i')}) " .
-                "must be within slot ({$slotStart->format('H:i')} → {$slotEnd->format('H:i')})"
+                "Session time ({$startTime->format('g:i A')} → {$sessionEnd->format('g:i A')}) " .
+                "must be within slot ({$slotStart->format('g:i A')} → {$slotEnd->format('g:i A')})"
             );
         }
 
@@ -90,7 +90,7 @@ class SchedulingService
 
             if ($startTime->lt($breakEnd) && $sessionEnd->gt($breakStart)) {
                 throw new \Exception(
-                    "Session overlaps with break time ({$breakStart->format('H:i')} → {$breakEnd->format('H:i')})"
+                    "Session overlaps with break time ({$breakStart->format('g:i A')} → {$breakEnd->format('g:i A')})"
                 );
             }
         }

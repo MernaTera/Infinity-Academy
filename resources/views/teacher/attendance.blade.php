@@ -114,8 +114,8 @@
             <div>
                 <div class="sg-label">Time</div>
                 <div class="sg-val">
-                    {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }}
-                    → {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}
+                    {{ \Carbon\Carbon::parse($session->start_time)->format('g:i A') }}
+                    → {{ \Carbon\Carbon::parse($session->end_time)->format('g:i A') }}
                 </div>
             </div>
             <div>
@@ -142,7 +142,7 @@
             <div class="timer-val" id="timerDisplay">{{ $minutesLeft }}:00</div>
         </div>
         <div style="text-align:right;color:rgba(255,255,255,0.7);font-size:11px">
-            Window closes at {{ \Carbon\Carbon::parse($session->start_time)->addMinutes(20)->format('H:i') }}
+            Window closes at {{ \Carbon\Carbon::parse($session->start_time)->addMinutes(20)->format('g:i A') }}
         </div>
     </div>
     @elseif($isLocked)

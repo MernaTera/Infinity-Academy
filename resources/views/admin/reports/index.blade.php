@@ -492,7 +492,7 @@
                                         @if($report?->submitted_at)
                                             {{ \Carbon\Carbon::parse($report->submitted_at)->format('d M Y') }}
                                             <div style="font-size:9px;color:var(--faint);margin-top:2px;">
-                                                {{ \Carbon\Carbon::parse($report->submitted_at)->format('H:i') }}
+                                                {{ \Carbon\Carbon::parse($report->submitted_at)->format('g:i A') }}
                                             </div>
                                         @else
                                             <span style="color:var(--faint);">—</span>

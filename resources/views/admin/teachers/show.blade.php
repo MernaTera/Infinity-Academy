@@ -388,9 +388,9 @@
                                 <div class="tp-slot-item">
                                     {{ $av->timeSlot?->name ?? '—' }}
                                     @if($av->timeSlot)
-                                        · {{ \Carbon\Carbon::parse($av->timeSlot->start_time)->format('H:i') }}
+                                        · {{ \Carbon\Carbon::parse($av->timeSlot->start_time)->format('g:i A') }}
                                         –
-                                        {{ \Carbon\Carbon::parse($av->timeSlot->end_time)->format('H:i') }}
+                                        {{ \Carbon\Carbon::parse($av->timeSlot->end_time)->format('g:i A') }}
                                     @endif
                                 </div>
                                 @endforeach

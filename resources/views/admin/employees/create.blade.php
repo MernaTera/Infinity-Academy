@@ -206,7 +206,7 @@
                             <div style="margin-bottom:10px">
                                 <span style="font-weight:600;color:#16233F;font-size:13px">{{ $slot->name }}</span>
                                 <span style="font-size:11px;color:#5A6A85;margin-left:8px">
-                                    {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                                    {{ \Carbon\Carbon::parse($slot->start_time)->format('g:i A') }} – {{ \Carbon\Carbon::parse($slot->end_time)->format('g:i A') }}
                                 </span>
                                 <span style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:#93A3BC;margin-left:8px">
                                     {{ $slot->slot_type }}

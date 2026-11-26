@@ -114,7 +114,7 @@
                 <div class="slot-item {{ $slot->is_active ? 'active-slot' : 'inactive-slot' }}">
                     <div>
                         <div class="slot-name">{{ $slot->name }}</div>
-                        <div class="slot-time">{{ substr($slot->start_time,0,5) }} → {{ substr($slot->end_time,0,5) }}</div>
+                        <div class="slot-time">{{ \Carbon\Carbon::parse($slot->start_time)->format('g:i A') }} → {{ \Carbon\Carbon::parse($slot->end_time)->format('g:i A') }}</div>
                         @if($slot->slot_type)
                         <span class="slot-type">{{ $slot->slot_type }}</span>
                         @endif
@@ -175,7 +175,7 @@
                 <div class="slot-item {{ $break->is_active ? 'active-slot' : 'inactive-slot' }}">
                     <div>
                         <div class="slot-name">{{ $break->name }}</div>
-                        <div class="slot-time">{{ substr($break->start_time,0,5) }} → {{ substr($break->end_time,0,5) }}</div>
+                        <div class="slot-time">{{ \Carbon\Carbon::parse($break->start_time)->format('g:i A') }} → {{ \Carbon\Carbon::parse($break->end_time)->format('g:i A') }}</div>
                     </div>
                     <div class="slot-actions">
                         <button type="button" class="edit-btn"

@@ -173,10 +173,10 @@
 
             <div class="rp-status-meta">
                 @if($report->submitted_at)
-                    Submitted {{ \Carbon\Carbon::parse($report->submitted_at)->format('d M Y, H:i') }}
+                    Submitted {{ \Carbon\Carbon::parse($report->submitted_at)->format('d M Y, g:i A') }}
                 @endif
                 @if($report->approved_at)
-                    · Approved {{ \Carbon\Carbon::parse($report->approved_at)->format('d M Y, H:i') }}
+                    · Approved {{ \Carbon\Carbon::parse($report->approved_at)->format('d M Y, g:i A') }}
                     @if($report->approvedBy)
                         by {{ $report->approvedBy->full_name ?? '' }}
                     @endif
@@ -322,7 +322,7 @@
 
         <div class="rp-footer">
             <strong>Infinity Academy</strong> · Student Evaluation Report<br>
-            Report ID: #{{ str_pad($report->report_id, 6, '0', STR_PAD_LEFT) }} · Generated {{ now()->format('d M Y, H:i') }}
+            Report ID: #{{ str_pad($report->report_id, 6, '0', STR_PAD_LEFT) }} · Generated {{ now()->format('d M Y, g:i A') }}
         </div>
 
     </div>

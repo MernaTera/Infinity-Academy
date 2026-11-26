@@ -388,8 +388,8 @@
                             <td>
                                 @if($session->start_time && $session->end_time)
                                     <span style="font-size:11px;color:#7A8A9A;font-family:monospace;">
-                                        {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }}
-                                        – {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}
+                                        {{ \Carbon\Carbon::parse($session->start_time)->format('g:i A') }}
+                                        – {{ \Carbon\Carbon::parse($session->end_time)->format('g:i A') }}
                                     </span>
                                 @else
                                     <span style="color:#AAB8C8;">—</span>
@@ -496,19 +496,19 @@
                         {{ $schedule->timeSlot?->name ?? '—' }}
                     </div>
                     <div style="font-size:10px;color:#7A8A9A;margin-top:2px">
-                        {{ $schedule->timeSlot ? \Carbon\Carbon::parse($schedule->timeSlot->start_time)->format('H:i').' – '.\Carbon\Carbon::parse($schedule->timeSlot->end_time)->format('H:i') : '' }}
+                        {{ $schedule->timeSlot ? \Carbon\Carbon::parse($schedule->timeSlot->start_time)->format('g:i A').' – '.\Carbon\Carbon::parse($schedule->timeSlot->end_time)->format('g:i A') : '' }}
                     </div>
                 </div>
                 <div>
                     <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Session Start</div>
                     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1B4FA8;letter-spacing:2px;line-height:1">
-                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}
+                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('g:i A') }}
                     </div>
                 </div>
                 <div>
                     <div style="font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:#AAB8C8;margin-bottom:5px">Session End</div>
                     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#1B4FA8;letter-spacing:2px;line-height:1">
-                        {{ \Carbon\Carbon::parse($schedule->start_time)->addHours((float)$instance->session_duration)->format('H:i') }}
+                        {{ \Carbon\Carbon::parse($schedule->start_time)->addHours((float)$instance->session_duration)->format('g:i A') }}
                     </div>
                 </div>
                 <div>
@@ -606,9 +606,9 @@
                             <td>
                                 @if($session->start_time && $session->end_time)
                                 <span style="font-size:12px;color:#1A2A4A;font-family:monospace">
-                                    {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }}
+                                    {{ \Carbon\Carbon::parse($session->start_time)->format('g:i A') }}
                                     <span style="color:#AAB8C8"> → </span>
-                                    {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}
+                                    {{ \Carbon\Carbon::parse($session->end_time)->format('g:i A') }}
                                 </span>
                                 @else
                                 <span style="color:#AAB8C8">—</span>
@@ -808,7 +808,7 @@ document.getElementById('postponeModal').addEventListener('click', function(e) {
             <div class="note-card">
                 <div class="note-body">{{ $note->note }}</div>
                 <div class="note-meta">
-                    <span class="note-by">{{ $note->createdBy?->full_name ?? 'Staff' }} · {{ \Carbon\Carbon::parse($note->created_at)->format('d M Y · H:i') }}</span>
+                    <span class="note-by">{{ $note->createdBy?->full_name ?? 'Staff' }} · {{ \Carbon\Carbon::parse($note->created_at)->format('d M Y · g:i A') }}</span>
                     <form method="POST" action="{{ route('student-care.enrollment.notes.destroy', $note->note_id) }}" onsubmit="return confirm('Delete this note?')" style="margin:0">
                         @csrf @method('DELETE')
                         <button type="submit" class="note-del">Delete</button>

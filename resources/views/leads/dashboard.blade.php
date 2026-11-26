@@ -317,7 +317,7 @@
                     $isToday  = $callDate->isToday();
                     $isPast   = $callDate->isPast() && !$isToday;
                     $whenClass = $isToday ? 'when-today' : ($isPast ? 'when-past' : 'when-soon');
-                    $whenText  = $isToday ? 'Today · '.$callDate->format('H:i') : ($isPast ? $callDate->format('d M').' · past' : $callDate->format('d M · H:i'));
+                    $whenText  = $isToday ? 'Today · '.$callDate->format('g:i A') : ($isPast ? $callDate->format('d M').' · past' : $callDate->format('d M · g:i A'));
                 @endphp
                 <div class="row">
                     <div class="row-av">{{ strtoupper(substr($lead->full_name,0,1)) }}</div>
@@ -399,7 +399,7 @@
                                 @if($lead->next_call_at)
                                     @php $nc = \Carbon\Carbon::parse($lead->next_call_at); @endphp
                                     <div style="font-size:11px; font-weight:600; color:{{ $nc->isToday() ? 'var(--orange-dk)' : ($nc->isPast() ? 'var(--red)' : 'var(--text)') }};">{{ $nc->format('d M') }}</div>
-                                    <div class="lt-sub">{{ $nc->format('H:i') }}</div>
+                                    <div class="lt-sub">{{ $nc->format('g:i A') }}</div>
                                 @else
                                     <span class="lt-muted">—</span>
                                 @endif

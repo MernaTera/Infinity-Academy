@@ -213,7 +213,7 @@ class RegistrationService
                             'remaining_amount'  => number_format($remaining, 0),
                             'installment_count' => (int) ($plan->installment_count ?? 0),
                             'enrollment_id'     => $enrollment->enrollment_id,
-                            'submitted_at'      => now()->format('H:i · d M'),
+                            'submitted_at'      => now()->format('g:i A · d M'),
                         ];
 
                         $richMessage = "CS {$csName} requested \"{$planName}\" for {$studentName} in \"{$courseName}\".\n"

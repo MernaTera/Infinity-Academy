@@ -152,7 +152,7 @@
                         <td>
                             @if($lead->start_preference_type === 'Specific Date' && $lead->start_preference_date)
                                 <div class="call-date" style="color:var(--orange);">{{ $lead->start_preference_date->format('d M Y') }}</div>
-                                <div class="call-time">{{ $lead->start_preference_date->format('H:i') }}</div>
+                                <div class="call-time">{{ $lead->start_preference_date->format('g:i A') }}</div>
                             @else
                                 <span class="dash-muted">—</span>
                             @endif
@@ -162,7 +162,7 @@
                         <td>
                             @if($lead->next_call_at)
                                 <div class="call-date">{{ $lead->next_call_at->format('d M Y') }}</div>
-                                <div class="call-time">{{ $lead->next_call_at->format('H:i') }}</div>
+                                <div class="call-time">{{ $lead->next_call_at->format('g:i A') }}</div>
                             @else
                                 <span class="dash-muted">—</span>
                             @endif

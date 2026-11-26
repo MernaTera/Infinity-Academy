@@ -144,7 +144,7 @@
                             <span class="status-badge badge-{{ strtolower($req->status) }}">{{ $req->status }}</span>
                         </td>
                         <td style="font-size:11px;color:var(--faint);">
-                            {{ $req->created_at?->format('d M Y H:i') }}
+                            {{ $req->created_at?->format('d M Y g:i A') }}
                             @if($req->approved_at)
                             <div style="margin-top:2px;">→ {{ $req->approved_at->format('d M Y') }}</div>
                             @endif

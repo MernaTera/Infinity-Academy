@@ -195,7 +195,7 @@
                 <option value="">All Slots</option>
                 @foreach($timeSlots as $slot)
                 <option value="{{ $slot->time_slot_id }}" {{ $filterSlot == $slot->time_slot_id ? 'selected' : '' }}>
-                    {{ $slot->name }} ({{ substr($slot->start_time,0,5) }} – {{ substr($slot->end_time,0,5) }})
+                    {{ $slot->name }} ({{ \Carbon\Carbon::parse($slot->start_time)->format('g:i A') }} – {{ \Carbon\Carbon::parse($slot->end_time)->format('g:i A') }})
                 </option>
                 @endforeach
             </select>
@@ -273,10 +273,10 @@
                 <div style="background:rgba(27,79,168,0.08);border:1px solid rgba(27,79,168,0.2);border-radius:6px;padding:10px 14px;text-align:center;flex-shrink:0">
                     <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#1B4FA8;margin-bottom:3px">Today</div>
                     <div style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:#1B4FA8;letter-spacing:1px;line-height:1">
-                        {{ \Carbon\Carbon::parse($todaySession->start_time)->format('H:i') }}
+                        {{ \Carbon\Carbon::parse($todaySession->start_time)->format('g:i A') }}
                     </div>
                     <div style="font-size:9px;color:#7A8A9A;margin-top:2px">
-                        → {{ \Carbon\Carbon::parse($todaySession->end_time)->format('H:i') }}
+                        → {{ \Carbon\Carbon::parse($todaySession->end_time)->format('g:i A') }}
                     </div>
                 </div>
                 @endif
@@ -292,7 +292,7 @@
                     <div class="sch-meta-val">{{ $schedule?->timeSlot?->name ?? '—' }}</div>
                     @if($schedule?->start_time)
                     <div class="sch-time">
-                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}
+                        {{ \Carbon\Carbon::parse($schedule->start_time)->format('g:i A') }}
                     </div>
                     @endif
                 </div>

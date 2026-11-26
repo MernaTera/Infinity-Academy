@@ -279,7 +279,7 @@
                         <div class="elig-meta">
                             <div class="elig-meta-row">
                                 <span class="elig-meta-key">Paid on</span>
-                                <span class="elig-meta-val">{{ $firstPaid ? $firstPaid->created_at->format('d M Y · H:i') : '—' }}</span>
+                                <span class="elig-meta-val">{{ $firstPaid ? $firstPaid->created_at->format('d M Y · g:i A') : '—' }}</span>
                             </div>
                             <div class="elig-meta-row">
                                 <span class="elig-meta-key">Window</span>
@@ -360,7 +360,7 @@
                                 <td style="color:var(--muted);">{{ $req->enrollment?->courseTemplate?->name ?? '—' }}</td>
                                 <td><span class="rf-amount">{{ number_format($req->amount, 0) }} LE</span></td>
                                 <td><span class="rf-badge {{ $rfBadge[0] }}">{{ $rfBadge[1] }}</span></td>
-                                <td style="color:var(--faint);">{{ $req->created_at?->format('d M Y · H:i') }}</td>
+                                <td style="color:var(--faint);">{{ $req->created_at?->format('d M Y · g:i A') }}</td>
                                 <td style="max-width:200px;">
                                     @if($req->rejection_note)
                                         <button type="button" class="rfn-pill"

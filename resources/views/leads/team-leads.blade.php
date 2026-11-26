@@ -198,7 +198,7 @@ a.tl-kpi.active{box-shadow:0 0 0 2px var(--kc,#1B4FA8),var(--glass-sh);border-co
                     </td>
                     <td style="font-size:12px;color:#7A8A9A">{{ $lead->source ?? '—' }}</td>
                     <td style="font-size:12px;color:#7A8A9A">{{ $lead->created_at ? \Carbon\Carbon::parse($lead->created_at)->format('d M Y') : '—' }}</td>
-                    <td style="font-size:12px;color:#7A8A9A">{{ $lead->next_call_at ? \Carbon\Carbon::parse($lead->next_call_at)->format('d M Y · H:i') : '—' }}</td>
+                    <td style="font-size:12px;color:#7A8A9A">{{ $lead->next_call_at ? \Carbon\Carbon::parse($lead->next_call_at)->format('d M Y · g:i A') : '—' }}</td>
                     <td>
                         <div style="display:flex;gap:6px;flex-wrap:wrap">
                             @if($lead->status === 'Registered')

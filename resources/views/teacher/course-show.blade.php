@@ -118,8 +118,8 @@
         <div>
             <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:4px">Today's Session #{{ $todaySession->session_number }}</div>
             <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff;letter-spacing:2px;line-height:1;">
-                {{ \Carbon\Carbon::parse($todaySession->start_time)->format('H:i') }}
-                → {{ \Carbon\Carbon::parse($todaySession->end_time)->format('H:i') }}
+                {{ \Carbon\Carbon::parse($todaySession->start_time)->format('g:i A') }}
+                → {{ \Carbon\Carbon::parse($todaySession->end_time)->format('g:i A') }}
             </div>
             <div style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:3px">Window: 20 minutes from session start</div>
         </div>
@@ -325,8 +325,8 @@
                         @if($isToday)<span style="color:#1B4FA8;font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-left:8px;background:rgba(27,79,168,0.08);padding:2px 6px;border-radius:2px;">Today</span>@endif
                     </div>
                     <div class="att-session-time">
-                        {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }}
-                        → {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}
+                        {{ \Carbon\Carbon::parse($session->start_time)->format('g:i A') }}
+                        → {{ \Carbon\Carbon::parse($session->end_time)->format('g:i A') }}
                     </div>
                 </div>
 
@@ -445,9 +445,9 @@
                             <td>
                                 @if($session->start_time)
                                 <span style="font-size:12px;color:#1A2A4A;font-family:monospace">
-                                    {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }}
+                                    {{ \Carbon\Carbon::parse($session->start_time)->format('g:i A') }}
                                     <span style="color:#AAB8C8"> → </span>
-                                    {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}
+                                    {{ \Carbon\Carbon::parse($session->end_time)->format('g:i A') }}
                                 </span>
                                 @else<span style="color:#AAB8C8">—</span>@endif
                             </td>
@@ -535,7 +535,7 @@ function toggleSession(id) {
                 @foreach($enrollment->notes as $note)
                 <div class="tnote-card">
                     <div class="tnote-body">{{ $note->note }}</div>
-                    <div class="tnote-by">{{ $note->createdBy?->full_name ?? 'Staff' }} · {{ \Carbon\Carbon::parse($note->created_at)->format('d M Y · H:i') }}</div>
+                    <div class="tnote-by">{{ $note->createdBy?->full_name ?? 'Staff' }} · {{ \Carbon\Carbon::parse($note->created_at)->format('d M Y · g:i A') }}</div>
                 </div>
                 @endforeach
             </div>

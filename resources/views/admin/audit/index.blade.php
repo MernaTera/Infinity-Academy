@@ -208,7 +208,7 @@
                                 {{ \Carbon\Carbon::parse($log->created_at)->format('d M Y') }}
                             </div>
                             <div style="font-size:10px;color:#93A3BC;font-family:monospace">
-                                {{ \Carbon\Carbon::parse($log->created_at)->format('H:i:s') }}
+                                {{ \Carbon\Carbon::parse($log->created_at)->format('g:i:s A') }}
                             </div>
                             <div style="font-size:9px;color:#B4C0D0;margin-top:1px">
                                 {{ \Carbon\Carbon::parse($log->created_at)->diffForHumans() }}

@@ -467,6 +467,14 @@ function pairLabelFor(pair) {
     return pairLabels[pair] || pair;
 }
 
+function fmt12(t) {
+    if (!t) return '';
+    const [h, m] = String(t).slice(0, 5).split(':').map(Number);
+    if (isNaN(h)) return t;
+    const hh = h % 12 === 0 ? 12 : h % 12;
+    return hh + ':' + String(m || 0).padStart(2, '0') + ' ' + (h < 12 || h === 24 ? 'AM' : 'PM');
+}
+
 function getCheckedPairs() {
     return [...document.querySelectorAll('input[name="day_of_week[]"]:checked')].map(el => el.value);
 }
@@ -666,7 +674,7 @@ function renderPairGrid(pairsData) {
             </div>`;
         }
 
-        const slotInfo = pairInfo ? `${pairInfo.slot_name} · ${pairInfo.slot_start}–${pairInfo.slot_end}` : 'Not available';
+        const slotInfo = pairInfo ? `${pairInfo.slot_name} · ${fmt12(pairInfo.slot_start)}–${fmt12(pairInfo.slot_end)}` : 'Not available';
 
         let singleDayHtml = '';
         if (isAvailable && scheduleType() === 'single') {
@@ -741,7 +749,7 @@ function onPairChange() {
         div.innerHTML  = `
             <div class="timepicker-header">
                 <span>${pairLabels[pair]}</span>
-                ${pairInfo ? `<span class="timepicker-slot-info">${pairInfo.slot_start} – ${pairInfo.slot_end}</span>` : ''}
+                ${pairInfo ? `<span class="timepicker-slot-info">${fmt12(pairInfo.slot_start)} – ${fmt12(pairInfo.slot_end)}</span>` : ''}
             </div>
             <div class="time-row">
                 <div class="field" style="flex:1;min-width:140px;">
@@ -951,7 +959,7 @@ async function renderTimeSlots(pair) {
         const cls   = 'time-slot-btn' + (isBreak ? ' break-time' : '') + (isOccupied ? ' occupied' : '') + (isOutOfRange ? ' too-late' : '');
         const label = isBreak ? 'Break' : isOccupied ? 'Occupied' : isOutOfRange ? 'Too Late' : 'Available';
         const click = (!isBreak && !isOccupied && !isOutOfRange) ? `onclick="selectTimeSlot(this,'${slot.start}','${slot.slot_id||''}','${pair}')"` : '';
-        return `<div class="${cls}" ${click} data-start="${slot.start}" data-slot="${slot.slot_id||''}"><div class="time-slot-time">${slot.start}</div><div class="time-slot-label">${label}</div></div>`;
+        return `<div class="${cls}" ${click} data-start="${slot.start}" data-slot="${slot.slot_id||''}"><div class="time-slot-time">${fmt12(slot.start)}</div><div class="time-slot-label">${label}</div></div>`;
     }).join('') + '</div>';
 
     const current = document.getElementById(`ci_start_time_${pair}`)?.value;
@@ -1015,7 +1023,7 @@ function onTimeChange(pair) {
         document.getElementById(`ci_end_time_${pair}`).value = et;
         const times = getCheckedPairs().map(p => {
             const st = document.getElementById(`ci_start_time_${p}`)?.value;
-            return st ? `${pairLabelFor(p)}: ${st}` : null;
+            return st ? `${pairLabelFor(p)}: ${fmt12(st)}` : null;
         }).filter(Boolean);
         document.getElementById('sum-time').textContent = times.join(' | ') || '—';
     }
@@ -1127,7 +1135,7 @@ async function fetchPreview() {
     document.getElementById('prev-sessions').textContent = done > 0
         ? `${left} to schedule (${done} done)`
         : sessions + ' sessions';
-    document.getElementById('prev-time').textContent     = `${startTime} → ${endTime}`;
+    document.getElementById('prev-time').textContent     = `${fmt12(startTime)} → ${fmt12(endTime)}`;
     document.getElementById('prev-first').textContent    = formatDate(firstDate);
     document.getElementById('prev-last').textContent     = formatDate(left > 0 || done === 0 ? endDate : '');
     document.getElementById('prev-end').textContent      = formatDate(endDate);

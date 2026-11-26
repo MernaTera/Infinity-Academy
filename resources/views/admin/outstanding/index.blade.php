@@ -334,7 +334,7 @@
                                         <div style="padding:10px 12px;background:rgba(255,255,255,0.6);border:1px solid rgba(220,38,38,0.15);border-radius:12px;margin-bottom:6px">
                                             <div style="font-size:11px;color:#DC2626;font-weight:500">{{ ucfirst(str_replace('_',' ',$rlog->reason)) }}</div>
                                             <div style="font-size:10px;color:#5A6A85;margin-top:3px">
-                                                By {{ $rlog->triggered_by }} — {{ \Carbon\Carbon::parse($rlog->triggered_at)->format('d M Y H:i') }}
+                                                By {{ $rlog->triggered_by }} — {{ \Carbon\Carbon::parse($rlog->triggered_at)->format('d M Y g:i A') }}
                                             </div>
                                             @if($rlog->notes)
                                             <div style="font-size:10px;color:#93A3BC;margin-top:2px">{{ $rlog->notes }}</div>

@@ -613,7 +613,7 @@
                                 @if($h->notes) — {{ $h->notes }} @endif
                             </div>
                             <div class="history-meta">
-                                {{ $h->changedBy?->full_name ?? 'System' }} · {{ $h->created_at?->format('d M Y H:i') }}
+                                {{ $h->changedBy?->full_name ?? 'System' }} · {{ $h->created_at?->format('d M Y g:i A') }}
                             </div>
                         </div>
                     </div>

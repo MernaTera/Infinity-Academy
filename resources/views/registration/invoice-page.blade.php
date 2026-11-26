@@ -235,7 +235,7 @@ body{margin:0;padding:20px;background:#F8F6F2;font-family:'DM Sans',sans-serif;m
             <div class="inf-modal-title">Invoice</div>
             <div class="inf-modal-meta">
                 <div class="inf-modal-id">INV-{{ str_pad($enrollment->enrollment_id, 6, '0', STR_PAD_LEFT) }}</div>
-                <div class="inf-modal-date">{{ \Carbon\Carbon::parse($enrollment->created_at)->format('d M Y · H:i') }}</div>
+                <div class="inf-modal-date">{{ \Carbon\Carbon::parse($enrollment->created_at)->format('d M Y · g:i A') }}</div>
                 <div class="inf-modal-status" style="background:{{ $statusColor }}22;color:{{ $statusColor }};border:1px solid {{ $statusColor }}33;">{{ str_replace('_',' ',$enrollment->status) }}</div>
             </div>
         </div>
@@ -437,7 +437,7 @@ body{margin:0;padding:20px;background:#F8F6F2;font-family:'DM Sans',sans-serif;m
     <div class="inf-modal-footer">
         <div>
             <div class="inf-footer-brand">Infinity Academy</div>
-            <div class="inf-footer-sub">Generated on {{ now()->format('d M Y · H:i') }} · This is a system-generated document</div>
+            <div class="inf-footer-sub">Generated on {{ now()->format('d M Y · g:i A') }} · This is a system-generated document</div>
         </div>
     </div>
 

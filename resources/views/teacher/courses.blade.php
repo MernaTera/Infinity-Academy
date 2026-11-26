@@ -151,7 +151,7 @@
                         <div class="cc-meta-label">Time</div>
                         <div class="cc-meta-val">
                             @if($schedule?->start_time)
-                                {{ \Carbon\Carbon::parse($schedule->start_time)->format('H:i') }}
+                                {{ \Carbon\Carbon::parse($schedule->start_time)->format('g:i A') }}
                             @else —
                             @endif
                         </div>

@@ -124,6 +124,14 @@
 </div>
 
 <script>
+if (typeof fmt12 !== 'function') { window.fmt12 = function (t) {
+    if (!t) return '';
+    const [h, m] = String(t).slice(0, 5).split(':').map(Number);
+    if (isNaN(h)) return t;
+    const hh = h % 12 === 0 ? 12 : h % 12;
+    return hh + ':' + String(m || 0).padStart(2, '0') + ' ' + (h < 12 || h === 24 ? 'AM' : 'PM');
+}; }
+
 let _schInstanceId   = null;
 let _schInstanceData = {};
 let _availDays       = [];
@@ -167,7 +175,7 @@ function renderPairs(pairs) {
             <input type="radio" name="day_of_week" value="${p.pair}">
             <div class="day-card-pair">${p.label}</div>
             <div class="day-card-sub" style="color:#1B4FA8;margin-top:4px">${p.time_slot.name}</div>
-            <div class="day-card-sub">${p.time_slot.start_time.slice(0,5)} – ${p.time_slot.end_time.slice(0,5)}</div>
+            <div class="day-card-sub">${fmt12(p.time_slot.start_time)} – ${fmt12(p.time_slot.end_time)}</div>
         </label>`;
     });
 }
@@ -190,7 +198,7 @@ function selectPair(card, pair, slotId, slotStart, slotEnd, slotName) {
 
     // Show hint
     const hint = document.getElementById('timeHint');
-    hint.textContent   = `${slotName}: ${slotStart.slice(0,5)} → ${slotEnd.slice(0,5)}`;
+    hint.textContent   = `${slotName}: ${fmt12(slotStart)} → ${fmt12(slotEnd)}`;
     hint.style.display = 'block';
 
     onStartTimeChange();
@@ -228,7 +236,7 @@ function onSlotChange() {
     input.disabled = false;
 
     const hint = document.getElementById('timeHint');
-    hint.textContent = `Allowed: ${_slotBounds.start.slice(0,5)} → ${_slotBounds.end.slice(0,5)} — session ends at ${calcEndTime(input.value)}`;
+    hint.textContent = `Allowed: ${fmt12(_slotBounds.start)} → ${fmt12(_slotBounds.end)} — session ends at ${fmt12(calcEndTime(input.value))}`;
     hint.style.display = 'block';
 
     triggerPreview();
@@ -238,7 +246,7 @@ function onStartTimeChange() {
     const input = document.getElementById('startTimeInput');
     const end   = calcEndTime(input.value);
     const hint  = document.getElementById('timeHint');
-    hint.textContent = `Session: ${input.value} → ${end} — Slot: ${_slotBounds.start.slice(0,5)} → ${_slotBounds.end.slice(0,5)}`;
+    hint.textContent = `Session: ${fmt12(input.value)} → ${fmt12(end)} — Slot: ${fmt12(_slotBounds.start)} → ${fmt12(_slotBounds.end)}`;
     triggerPreview();
 }
 
@@ -277,7 +285,7 @@ function fetchPreview() {
     .then(r => r.json())
     .then(data => {
         document.getElementById('prev-count').textContent = data.total_sessions + ' sessions';
-        document.getElementById('prev-time').textContent  = data.start_time + ' → ' + data.end_time;
+        document.getElementById('prev-time').textContent  = fmt12(data.start_time) + ' → ' + fmt12(data.end_time);
         document.getElementById('prev-first').textContent = data.first_session ?? '—';
         document.getElementById('prev-last').textContent  = data.last_session  ?? '—';
         document.getElementById('previewBox').style.display  = 'block';

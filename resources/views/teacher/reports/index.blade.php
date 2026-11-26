@@ -473,7 +473,7 @@
                                                 @elseif($hoursLeft <= 12)
                                                     <span style="font-size:9px;color:var(--orange);font-weight:600;">⏳ {{ $hoursLeft }}h left</span>
                                                 @else
-                                                    <span style="font-size:9px;color:var(--muted);">Send by {{ $sendDeadline->format('d M · H:i') }}</span>
+                                                    <span style="font-size:9px;color:var(--muted);">Send by {{ $sendDeadline->format('d M · g:i A') }}</span>
                                                 @endif
                                             @endif
                                         </div>

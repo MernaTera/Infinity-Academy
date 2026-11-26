@@ -1056,7 +1056,7 @@ class CourseInstanceController extends Controller
         $breaks    = $this->activeBreaks($branchId);
         $minutes   = (int) round($duration * 60);
         $toMin     = fn($t) => ((int) substr($t, 0, 2)) * 60 + (int) substr($t, 3, 2);
-        $fmt       = fn($m) => sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+        $fmt       = fn($m) => \Carbon\Carbon::today()->addMinutes($m)->format('g:i A');
 
         foreach ($pairs as $pair) {
             $startTime = $startTimes[$pair] ?? null;
@@ -1186,7 +1186,7 @@ class CourseInstanceController extends Controller
         $course = $s->courseInstance?->courseTemplate?->name ?? 'another course';
         $when   = \Carbon\Carbon::parse($p['date'])->format('D d M');
 
-        return "The room is already booked on {$when} at " . \Carbon\Carbon::parse($s->start_time)->format('H:i') . " by \"{$course}\".";
+        return "The room is already booked on {$when} at " . \Carbon\Carbon::parse($s->start_time)->format('g:i A') . " by \"{$course}\".";
     }
 
     private function teacherClash(int $teacherId, ?int $excludeId, array $projected): ?string
@@ -1208,7 +1208,7 @@ class CourseInstanceController extends Controller
             [$p, $s] = $hit;
             $course = $s->courseInstance?->courseTemplate?->name ?? 'another course';
             $when   = \Carbon\Carbon::parse($p['date'])->format('D d M');
-            return "The teacher already teaches \"{$course}\" on {$when} at " . \Carbon\Carbon::parse($s->start_time)->format('H:i') . ".";
+            return "The teacher already teaches \"{$course}\" on {$when} at " . \Carbon\Carbon::parse($s->start_time)->format('g:i A') . ".";
         }
 
         $dayMap  = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
@@ -1241,7 +1241,7 @@ class CourseInstanceController extends Controller
                     if ($s0->format('H:i:s') < $p['end'] && $e0->format('H:i:s') > $p['start']) {
                         $course = $ci->courseTemplate?->name ?? 'another course';
                         $when   = \Carbon\Carbon::parse($p['date'])->format('D d M');
-                        return "The teacher already has \"{$course}\" (waiting for approval) on {$when} at " . $s0->format('H:i') . ".";
+                        return "The teacher already has \"{$course}\" (waiting for approval) on {$when} at " . $s0->format('g:i A') . ".";
                     }
                 }
             }
@@ -1442,7 +1442,7 @@ class CourseInstanceController extends Controller
                 $conflicts[] = sprintf('%s on %s at %s → %s',
                     $s->courseInstance?->courseTemplate?->name ?? 'Course',
                     \Carbon\Carbon::parse($s->session_date)->format('D d M Y'),
-                    $sStart->format('H:i'), $sEnd->format('H:i')
+                    $sStart->format('g:i A'), $sEnd->format('g:i A')
                 );
             }
         }

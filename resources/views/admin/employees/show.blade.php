@@ -286,7 +286,7 @@
                         @foreach($slots as $av)
                         <span style="font-size:10px;color:var(--muted);padding:3px 8px;background:#fff;border-radius:3px;border:1px solid rgba(5,150,105,0.15);">
                             {{ $av->timeSlot?->name ?? '—' }}
-                            @if($av->timeSlot) · {{ \Carbon\Carbon::parse($av->timeSlot->start_time)->format('H:i') }}–{{ \Carbon\Carbon::parse($av->timeSlot->end_time)->format('H:i') }}@endif
+                            @if($av->timeSlot) · {{ \Carbon\Carbon::parse($av->timeSlot->start_time)->format('g:i A') }}–{{ \Carbon\Carbon::parse($av->timeSlot->end_time)->format('g:i A') }}@endif
                         </span>
                         @endforeach
                     </div>
@@ -308,7 +308,7 @@
                         <div style="font-size:13px;font-weight:500;">{{ $ci->courseTemplate?->name ?? '—' }}@if($ci->level) <span style="font-size:10px;color:var(--faint);">· {{ $ci->level->name }}</span>@endif</div>
                         <div style="font-size:10px;color:var(--faint);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap;">
                             <span>{{ $ci->patch?->name ?? '—' }}</span>
-                            @foreach($ci->instanceSchedules as $sch)<span>{{ $pairLabels[$sch->day_of_week] ?? $sch->day_of_week }}{{ $sch->start_time ? ' · '.\Carbon\Carbon::parse($sch->start_time)->format('H:i') : '' }}</span>@endforeach
+                            @foreach($ci->instanceSchedules as $sch)<span>{{ $pairLabels[$sch->day_of_week] ?? $sch->day_of_week }}{{ $sch->start_time ? ' · '.\Carbon\Carbon::parse($sch->start_time)->format('g:i A') : '' }}</span>@endforeach
                             <span>{{ $ci->total_hours }} hrs · {{ $ci->type }}</span>
                         </div>
                     </div>
@@ -418,7 +418,7 @@
                         <div style="margin-bottom:10px">
                             <span style="font-weight:600;color:#16233F;font-size:13px">{{ $slot->name }}</span>
                             <span style="font-size:11px;color:#5A6A85;margin-left:8px">
-                                {{ \Carbon\Carbon::parse($slot->start_time)->format('H:i') }} – {{ \Carbon\Carbon::parse($slot->end_time)->format('H:i') }}
+                                {{ \Carbon\Carbon::parse($slot->start_time)->format('g:i A') }} – {{ \Carbon\Carbon::parse($slot->end_time)->format('g:i A') }}
                             </span>
                         </div>
                         <div style="display:flex;gap:10px;flex-wrap:wrap">

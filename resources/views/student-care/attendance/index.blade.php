@@ -140,9 +140,9 @@
             <div>
                 <div class="sg-label">Time</div>
                 <div class="sg-val" style="font-family:monospace;font-size:14px;">
-                    {{ \Carbon\Carbon::parse($session->start_time)->format('H:i') }}
+                    {{ \Carbon\Carbon::parse($session->start_time)->format('g:i A') }}
                     <span style="color:var(--faint);"> → </span>
-                    {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}
+                    {{ \Carbon\Carbon::parse($session->end_time)->format('g:i A') }}
                 </div>
             </div>
             <div>
@@ -170,7 +170,7 @@
     @elseif($isOpen)
     <div class="banner banner-open">
         <div class="banner-dot"></div>
-        Attendance window is open — session ends at {{ \Carbon\Carbon::parse($session->end_time)->format('H:i') }}
+        Attendance window is open — session ends at {{ \Carbon\Carbon::parse($session->end_time)->format('g:i A') }}
     </div>
     @elseif($isPast)
     <div class="banner banner-closed">

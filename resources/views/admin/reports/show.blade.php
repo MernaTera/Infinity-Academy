@@ -258,12 +258,12 @@
                     </div>
                     <div class="meta-row">
                         <span class="meta-key">Submitted</span>
-                        <span class="meta-val">{{ $report->submitted_at ? \Carbon\Carbon::parse($report->submitted_at)->format('d M Y H:i') : '—' }}</span>
+                        <span class="meta-val">{{ $report->submitted_at ? \Carbon\Carbon::parse($report->submitted_at)->format('d M Y g:i A') : '—' }}</span>
                     </div>
                     @if($report->approved_at)
                     <div class="meta-row">
                         <span class="meta-key">Reviewed</span>
-                        <span class="meta-val">{{ \Carbon\Carbon::parse($report->approved_at)->format('d M Y H:i') }}</span>
+                        <span class="meta-val">{{ \Carbon\Carbon::parse($report->approved_at)->format('d M Y g:i A') }}</span>
                     </div>
                     @endif
                     @if($report->approvedBy)

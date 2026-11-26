@@ -191,7 +191,7 @@
             </div>
             <div class="meta-item">
                 <span class="meta-item-label">Last Updated</span>
-                <span class="meta-item-value">{{ $lead->updated_at->format('d M Y, H:i') }}</span>
+                <span class="meta-item-value">{{ $lead->updated_at->format('d M Y, g:i A') }}</span>
             </div>
             <div class="meta-item">
                 <span class="meta-item-label">Lead Age</span>
@@ -204,7 +204,7 @@
             @if($lead->next_call_at)
             <div class="meta-item">
                 <span class="meta-item-label">Next Call</span>
-                <span class="meta-item-value">{{ $lead->next_call_at->format('d M Y, H:i') }}</span>
+                <span class="meta-item-value">{{ $lead->next_call_at->format('d M Y, g:i A') }}</span>
             </div>
             @endif
             <div class="meta-item">
