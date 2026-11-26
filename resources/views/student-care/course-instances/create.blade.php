@@ -930,7 +930,12 @@ async function renderTimeSlots(pair) {
         const r1 = await fetch(`/student-care/time-slots-for-pair?teacher_id=${teacherId}&pair=${pair}&start_date=${startDate}&end_date=${endDate}`);
         if (r1.ok) slots = await r1.json();
     } catch {}
-    if (!slots.length) slots = generateGenericSlots();
+    if (!slots.length) {
+        container.innerHTML = '<div style="font-size:11px;color:var(--red);text-align:center;padding:16px;">This teacher has no available time on this pair. Choose another pair or teacher.</div>';
+        const inp = document.getElementById(`ci_start_time_${pair}`);
+        if (inp) inp.setCustomValidity('The teacher has no available time on this pair.');
+        return;
+    }
     try {
         // In single-day mode, tell the server which one day of the pair we use,
         // so it only treats that weekday's sessions as occupied.
@@ -968,20 +973,51 @@ async function renderTimeSlots(pair) {
             const [eh,em] = slot.end.split(':').map(Number);
             isOutOfRange  = (sh*60+sm + sessionDur*60) > (eh*60+em);
         }
+        if (!isOutOfRange && !isBreak && sessionDur) {
+            isOutOfRange = overlapsBreak(newStart, newStart + sessionDur*60);
+        }
         const cls   = 'time-slot-btn' + (isBreak ? ' break-time' : '') + (isOccupied ? ' occupied' : '') + (isOutOfRange ? ' too-late' : '');
         const label = isBreak ? 'Break' : isOccupied ? 'Occupied' : isOutOfRange ? 'Too Late' : 'Available';
         const click = (!isBreak && !isOccupied && !isOutOfRange) ? `onclick="selectTimeSlot(this,'${slot.start}','${slot.slot_id||''}','${pair}')"` : '';
-        return `<div class="${cls}" ${click} data-start="${slot.start}"><div class="time-slot-time">${slot.start}</div><div class="time-slot-label">${label}</div></div>`;
+        return `<div class="${cls}" ${click} data-start="${slot.start}" data-slot="${slot.slot_id||''}"><div class="time-slot-time">${slot.start}</div><div class="time-slot-label">${label}</div></div>`;
     }).join('') + '</div>';
+
+    const current = document.getElementById(`ci_start_time_${pair}`)?.value;
+    if (current) {
+        const chip = container.querySelector(`.time-slot-btn[data-start="${current.slice(0,5)}"]`);
+        if (chip && isChipFree(chip)) chip.classList.add('selected');
+        validateStartTime(pair);
+    }
 }
 
-function generateGenericSlots() {
-    const slots = [];
-    for (let h = 7; h < 22; h++) {
-        slots.push({ start:`${String(h).padStart(2,'0')}:00`, end:'22:00', slot_id:null });
-        slots.push({ start:`${String(h).padStart(2,'0')}:30`, end:'22:00', slot_id:null });
+function overlapsBreak(startMin, endMin) {
+    return (_breakSlots||[]).some(b => {
+        const [bh,bm] = b.start_time.slice(0,5).split(':').map(Number);
+        const [eh,em] = b.end_time.slice(0,5).split(':').map(Number);
+        return startMin < (eh*60+em) && endMin > (bh*60+bm);
+    });
+}
+
+function isChipFree(chip) {
+    return !chip.classList.contains('occupied') && !chip.classList.contains('too-late') && !chip.classList.contains('break-time');
+}
+
+function validateStartTime(pair) {
+    const input = document.getElementById(`ci_start_time_${pair}`);
+    if (!input) return true;
+    const value = (input.value || '').slice(0,5);
+    if (!value) { input.setCustomValidity(''); return true; }
+    const container = document.getElementById(`timeSlotsContainer_${pair}`);
+    const chips = container ? container.querySelectorAll('.time-slot-btn') : [];
+    if (!chips.length) return true;
+    const chip = container.querySelector(`.time-slot-btn[data-start="${value}"]`);
+    const ok = !!chip && isChipFree(chip);
+    input.setCustomValidity(ok ? '' : 'This time is not available for this teacher and session length. Pick one of the available times.');
+    if (ok) {
+        const hidden = document.getElementById(`ci_time_slot_id_${pair}`);
+        if (hidden && chip.dataset.slot) hidden.value = chip.dataset.slot;
     }
-    return slots;
+    return ok;
 }
 
 function isBreakTime(t) {
@@ -997,6 +1033,7 @@ function selectTimeSlot(el, startTime, slotId, pair) {
 }
 
 function onTimeChange(pair) {
+    validateStartTime(pair);
     const startTime = document.getElementById(`ci_start_time_${pair}`)?.value;
     const dur       = parseFloat(document.getElementById('ci_session_duration').value) || 0;
     if (startTime && dur) {

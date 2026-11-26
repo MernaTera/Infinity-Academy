@@ -172,24 +172,11 @@ class TeacherController extends Controller
         if ($currentPatch) {
             $contract = \App\Models\HR\TeacherContract::standingFor($teacher->teacher_id, $currentPatch->patch_id);
 
-            $countFor = function (array $statuses) use ($teacher, $currentPatch) {
-                $withSessions = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
-                    $q->where('teacher_id', $teacher->teacher_id)
-                      ->where('patch_id', $currentPatch->patch_id)
-                      ->whereIn('status', $statuses)
-                )->where('status', '!=', 'Cancelled')->count();
-
-                $planned = \App\Models\Academic\CourseInstance::where('teacher_id', $teacher->teacher_id)
-                    ->where('patch_id', $currentPatch->patch_id)
-                    ->whereIn('status', $statuses)
-                    ->whereDoesntHave('sessions')
-                    ->get()
-                    ->sum(fn($ci) => (float) $ci->session_duration > 0
-                        ? (int) ceil((float) $ci->total_hours / (float) $ci->session_duration)
-                        : 0);
-
-                return $withSessions + $planned;
-            };
+            $countFor = fn(array $statuses) => \App\Support\TeacherLoad::sessionsInPatch(
+                (int) $teacher->teacher_id,
+                (int) $currentPatch->patch_id,
+                $statuses
+            );
 
             $assigned = $countFor(['Active', 'Upcoming', 'Completed']);
             $pending  = $countFor(['Pending_Approval']);
@@ -293,7 +280,16 @@ class TeacherController extends Controller
                 );
             }
 
-            $instance->update(['status' => $completedCount > 0 ? 'Active' : 'Upcoming']);
+            $range = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+                ->where('status', '!=', 'Cancelled')
+                ->selectRaw('MIN(session_date) as first_date, MAX(session_date) as last_date')
+                ->first();
+
+            $instance->update(array_filter([
+                'status'     => $completedCount > 0 ? 'Active' : 'Upcoming',
+                'start_date' => $range?->first_date,
+                'end_date'   => $range?->last_date,
+            ]));
 
             $scEmployee = \App\Models\HR\Employee::find($instance->created_by_employee_id);
             if ($scEmployee) {

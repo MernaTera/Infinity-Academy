@@ -23,5 +23,12 @@ class CourseSessionSeeder extends Seeder
                 'room_id' => 1
             ]
         ]);
+
+        \Illuminate\Support\Facades\DB::statement('
+            UPDATE course_session s
+            JOIN course_instance ci ON ci.course_instance_id = s.course_instance_id
+            SET s.teacher_id = ci.teacher_id
+            WHERE s.teacher_id IS NULL
+        ');
     }
 }

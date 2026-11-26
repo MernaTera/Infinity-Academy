@@ -83,7 +83,7 @@ class SchedulingService
             );
         }
 
-        $breaks = BreakSlot::all();
+        $breaks = BreakSlot::where('is_active', true)->get();
         foreach ($breaks as $break) {
             $breakStart = Carbon::createFromTimeString($break->start_time);
             $breakEnd   = Carbon::createFromTimeString($break->end_time);
@@ -161,6 +161,10 @@ class SchedulingService
                 $startDateTime = Carbon::parse(
                     $current->toDateString() . ' ' . Carbon::parse($schedule->start_time)->format('H:i:s')
                 );
+                if ($startDateTime->lte(now())) {
+                    $current->addDay();
+                    continue;
+                }
                 $endDateTime = $startDateTime->copy()->addHours((float) $instance->session_duration);
 
                 CourseSession::create([
@@ -198,6 +202,7 @@ class SchedulingService
 
         foreach ($schedules as $i => $schedule) {
             $sessionsForThisPair = $perPair + ($i === 0 ? $remainder : 0);
+            if ($sessionsForThisPair <= 0) continue;
 
             $generated = $this->generateSessions(
                 $instance,

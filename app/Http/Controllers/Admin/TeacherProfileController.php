@@ -66,10 +66,19 @@ class TeacherProfileController extends Controller
         $upcomingInstances  = $currentInstances->where('status', 'Upcoming');
         $completedInstances = $currentInstances->where('status', 'Completed');
 
-        $sessionsThisPatch = $currentInstances->sum(fn($i) => $i->sessions->count());
-        $completedSessions = $currentInstances->sum(
-            fn($i) => $i->sessions->where('status', 'Completed')->count()
-        );
+        $sessionsThisPatch = $currentPatch
+            ? \App\Support\TeacherLoad::sessionsInPatch(
+                (int) $teacher->teacher_id,
+                (int) $currentPatch->patch_id,
+                ['Active', 'Upcoming', 'Completed', 'Pending_Approval']
+            )
+            : 0;
+        $completedSessions = $currentPatch
+            ? \App\Models\Academic\CourseSession::where('teacher_id', $teacher->teacher_id)
+                ->where('status', 'Completed')
+                ->whereHas('courseInstance', fn($q) => $q->where('patch_id', $currentPatch->patch_id))
+                ->count()
+            : 0;
 
         $studentsThisPatch = $currentInstances
             ->flatMap(fn($i) => $i->enrollments->pluck('student_id'))
@@ -113,7 +122,9 @@ class TeacherProfileController extends Controller
         }
 
         $totalCoursesAllTime  = $allInstances->count();
-        $totalSessionsAllTime = $allInstances->sum(fn($i) => $i->sessions->count());
+        $totalSessionsAllTime = \App\Models\Academic\CourseSession::where('teacher_id', $teacher->teacher_id)
+            ->where('status', '!=', 'Cancelled')
+            ->count();
         $totalStudentsAllTime = $allInstances
             ->flatMap(fn($i) => $i->enrollments->pluck('student_id'))
             ->unique()

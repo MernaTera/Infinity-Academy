@@ -16,6 +16,7 @@ class CourseSession extends Model
 
     protected $casts = [
         'course_instance_id' => 'integer',
+        'teacher_id' => 'integer',
         'room_id' => 'integer',
         'session_number' => 'integer',
 
@@ -29,6 +30,7 @@ class CourseSession extends Model
 
     protected $fillable = [
         'course_instance_id',
+        'teacher_id',
         'session_date',
         'start_time',
         'end_time',
@@ -43,6 +45,22 @@ class CourseSession extends Model
     | Relationships
     |--------------------------------------------------------------------------
     */
+
+    protected static function booted(): void
+    {
+        static::creating(function (CourseSession $session) {
+            if (empty($session->teacher_id) && $session->course_instance_id) {
+                $session->teacher_id = CourseInstance::withoutGlobalScopes()
+                    ->where('course_instance_id', $session->course_instance_id)
+                    ->value('teacher_id');
+            }
+        });
+    }
+
+    public function teacher()
+    {
+        return $this->belongsTo(\App\Models\HR\Teacher::class, 'teacher_id');
+    }
 
     public function courseInstance()
     {

@@ -71,7 +71,7 @@ class CourseInstanceController extends Controller
         $patches    = Patch::whereIn('status', ['Active', 'Upcoming'])->orderBy('start_date')->get();
         $branches   = Branch::where('is_active', true)->orderBy('name')->get();
         $rooms      = Room::where('is_active', true)->orderBy('name')->get();
-        $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
+        $breakSlots = $this->activeBreaks()->map->only(['start_time', 'end_time'])->values();
 
         $employee   = \App\Models\HR\Employee::withoutGlobalScope('branch')
                         ->where('user_id', auth()->id())->first();
@@ -121,6 +121,17 @@ class CourseInstanceController extends Controller
             }
         }
 
+        $windowError = $this->scheduleWindowError(
+            (int) $data['teacher_id'],
+            isset($data['branch_id']) ? (int) $data['branch_id'] : null,
+            $data['day_of_week'],
+            $data['start_times'],
+            (float) $data['session_duration']
+        );
+        if ($windowError) {
+            return back()->withInput()->withErrors(['start_times' => $windowError]);
+        }
+
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
 
         $isSingle    = ($data['schedule_type'] ?? 'double') === 'single';
@@ -144,6 +155,11 @@ class CourseInstanceController extends Controller
         if ($startDate->lt($patchStart) || $startDate->gt($patchEnd)) {
             return back()->withInput()->withErrors([
                 'start_date' => "Start date must be within the selected patch ({$patchStart->format('Y-m-d')} → {$patchEnd->format('Y-m-d')})."
+            ]);
+        }
+        if ($startDate->lt(today())) {
+            return back()->withInput()->withErrors([
+                'start_date' => "Start date can't be in the past. Pick a date from today ({$this->todayLabel()}) onwards."
             ]);
         }
         if ($endDate->gt($patchEnd)) {
@@ -175,61 +191,50 @@ class CourseInstanceController extends Controller
             ]);
         }
 
+        $needed    = (int) ceil((float) $data['total_hours'] / (float) $data['session_duration']);
+        $projected = $this->projectSessions(
+            $data['day_of_week'],
+            $resolveDays,
+            $data['start_times'],
+            (float) $data['session_duration'],
+            $data['start_date'],
+            $patchEnd->toDateString(),
+            $needed
+        );
+
+        if (count($projected) < $needed) {
+            return back()->withInput()->withErrors([
+                'day_of_week' => 'Only ' . count($projected) . " of {$needed} sessions fit before the patch ends ({$patchEnd->format('d M Y')}). Choose more days or an earlier start date."
+            ]);
+        }
+
         if (!empty($data['room_id'])) {
-            foreach ($data['day_of_week'] as $pair) {
-                $startTime = $data['start_times'][$pair] ?? null;
-                if (!$startTime) continue;
-
-                $dur        = (float) $data['session_duration'];
-                [$h, $m]    = explode(':', $startTime);
-                $endMins    = ((int)$h * 60 + (int)$m) + (int)($dur * 60);
-                $endTime    = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
-                $startFull  = $startTime . ':00';
-                $targetDays = $resolveDays($pair);
-
-                $conflict = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
-                    $q->where('room_id', $data['room_id'])
-                      ->whereIn('status', ['Active', 'Upcoming'])
-                )
-                ->whereBetween('session_date', [$data['start_date'], $data['end_date']])
-                ->where('status', '!=', 'Cancelled')
-                ->where('start_time', '<', $endTime)
-                ->where('end_time',   '>', $startFull)
-                ->get()
-                ->first(fn($s) => in_array(\Carbon\Carbon::parse($s->session_date)->dayOfWeek, $targetDays));
-
-                if ($conflict) {
-                    $course = $conflict->courseInstance?->courseTemplate?->name ?? 'another course';
-                    return back()->withInput()->withErrors([
-                        'room_id' => "Room already booked on {$pair} at {$startTime} — overlaps with \"{$course}\"."
-                    ]);
-                }
+            $roomClash = $this->roomClash((int) $data['room_id'], null, $projected);
+            if ($roomClash) {
+                return back()->withInput()->withErrors(['room_id' => $roomClash]);
             }
         }
 
+        $teacherClash = $this->teacherClash((int) $data['teacher_id'], null, $projected);
+        if ($teacherClash) {
+            return back()->withInput()->withErrors(['teacher_id' => $teacherClash]);
+        }
+
         $employeeId = \App\Models\HR\Employee::withoutGlobalScope('branch')->where('user_id', auth()->id())->value('employee_id');
+        $patchEndStr = $patchEnd->toDateString();
 
         try {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($data, $employeeId) {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($data, $employeeId, $patchEndStr) {
 
                 $contract = \App\Models\HR\TeacherContract::standingFor($data['teacher_id'], $data['patch_id']);
 
                 $newSessions = (int) ceil((float)$data['total_hours'] / (float)$data['session_duration']);
 
-                $sessionCount = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
-                    $q->where('teacher_id', $data['teacher_id'])
-                      ->where('patch_id',   $data['patch_id'])
-                      ->whereIn('status', ['Active', 'Upcoming', 'Completed', 'Pending_Approval'])
-                )->where('status', '!=', 'Cancelled')->count();
-
-                $pendingSessionsCount = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
-                    ->where('patch_id', $data['patch_id'])
-                    ->whereIn('status', ['Upcoming', 'Pending_Approval'])
-                    ->whereDoesntHave('sessions')
-                    ->get()
-                    ->sum(fn($ci) => (int) ceil((float)$ci->total_hours / (float)$ci->session_duration));
-
-                $existingSessions = $sessionCount + $pendingSessionsCount;
+                $existingSessions = \App\Support\TeacherLoad::sessionsInPatch(
+                    (int) $data['teacher_id'],
+                    (int) $data['patch_id'],
+                    ['Active', 'Upcoming', 'Completed', 'Pending_Approval']
+                );
                 $maxSessions      = $contract?->contractType?->max_sessions_allowed ?? null;
                 $needsApproval    = $maxSessions && ($existingSessions + $newSessions) > $maxSessions;
                 $overBy           = $needsApproval ? ($existingSessions + $newSessions) - $maxSessions : 0;
@@ -300,7 +305,8 @@ class CourseInstanceController extends Controller
                         $instance->course_instance_id,
                         $data['day_of_week'],
                         $data['start_times'],
-                        $data['time_slot_ids'] ?? null
+                        $data['time_slot_ids'] ?? null,
+                        (($data['schedule_type'] ?? 'double') === 'single') ? ($data['single_days'] ?? []) : []
                     );
                     return;
                 }
@@ -330,13 +336,24 @@ class CourseInstanceController extends Controller
                     (($data['schedule_type'] ?? 'double') === 'single') ? ($data['single_days'] ?? []) : []
                 );
 
+                $instance->end_date = $patchEndStr;
                 $generated = $this->schedulingService->generateSessionsMultiPair($instance, $schedules);
+                $needed    = (int) ceil((float) $data['total_hours'] / (float) $data['session_duration']);
 
                 if ($generated === 0) {
-                    $instance->instanceSchedules()->delete();
-                    $instance->delete();
                     throw new \Exception('No sessions could be generated. The start date does not match the chosen day pair(s).');
                 }
+                if ($generated < $needed) {
+                    $endLabel = \Carbon\Carbon::parse($patchEndStr)->format('d M Y');
+                    throw new \Exception("Only {$generated} of {$needed} sessions fit before the patch ends ({$endLabel}). Choose more days or an earlier start date.");
+                }
+
+                $range = \App\Models\Academic\CourseSession::where('course_instance_id', $instance->course_instance_id)
+                    ->selectRaw('MIN(session_date) as first_date, MAX(session_date) as last_date')
+                    ->first();
+                $instance->start_date = $range->first_date;
+                $instance->end_date   = $range->last_date;
+                $instance->save();
 
                 if ($teacher?->employee) {
                     \DB::table('user_notification')->insert([
@@ -368,7 +385,7 @@ class CourseInstanceController extends Controller
         $patches    = Patch::whereIn('status', ['Active', 'Upcoming'])->orderBy('start_date')->get();
         $branches   = Branch::where(fn($q) => $q->where('is_active', true)->orWhere('branch_id', $instance->branch_id))->orderBy('name')->get();
         $rooms      = Room::where('is_active', true)->orderBy('name')->get();
-        $breakSlots = BreakSlot::where('is_active', true)->get(['start_time', 'end_time']);
+        $breakSlots = $this->activeBreaks()->map->only(['start_time', 'end_time'])->values();
 
         $employee   = \App\Models\HR\Employee::withoutGlobalScope('branch')
                         ->where('user_id', auth()->id())->first();
@@ -434,6 +451,17 @@ class CourseInstanceController extends Controller
                     'start_times' => 'Please choose a start time for ' . ($pairNames[$pair] ?? $pair) . '.'
                 ]);
             }
+        }
+
+        $windowError = $this->scheduleWindowError(
+            (int) $data['teacher_id'],
+            isset($data['branch_id']) ? (int) $data['branch_id'] : null,
+            $data['day_of_week'],
+            $data['start_times'],
+            (float) $data['session_duration']
+        );
+        if ($windowError) {
+            return back()->withInput()->withErrors(['start_times' => $windowError]);
         }
 
         $dayMap = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
@@ -555,72 +583,33 @@ class CourseInstanceController extends Controller
             ]);
         }
 
-        if (!empty($data['room_id'])) {
-            foreach ($data['day_of_week'] as $pair) {
-                $startTime = $data['start_times'][$pair] ?? null;
-                if (!$startTime) continue;
+        if ($remainingToMake > 0 && !empty($regenStartDate)) {
+            $projected = $this->projectSessions(
+                $data['day_of_week'],
+                $resolveDays,
+                $data['start_times'],
+                (float) $data['session_duration'],
+                $regenStartDate,
+                $patchEndC->toDateString(),
+                $remainingToMake
+            );
 
-                $dur        = (float) $data['session_duration'];
-                [$h, $m]    = explode(':', $startTime);
-                $endMins    = ((int)$h * 60 + (int)$m) + (int)($dur * 60);
-                $endTime    = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
-                $startFull  = $startTime . ':00';
-                $targetDays = $resolveDays($pair);
+            if (count($projected) < $remainingToMake) {
+                return back()->withInput()->withErrors([
+                    'day_of_week' => 'Only ' . count($projected) . " of {$remainingToMake} sessions fit before the patch ends ({$patchEndC->format('d M Y')}). Choose more days or an earlier start date."
+                ]);
+            }
 
-                $conflict = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
-                    $q->where('room_id', $data['room_id'])
-                      ->where('course_instance_id', '!=', $instance->course_instance_id)
-                      ->whereIn('status', ['Active', 'Upcoming'])
-                )
-                ->whereBetween('session_date', [$regenStartDate ?? $data['start_date'], $data['end_date']])
-                ->where('status', '!=', 'Cancelled')
-                ->where('start_time', '<', $endTime)
-                ->where('end_time',   '>', $startFull)
-                ->get()
-                ->first(fn($s) => in_array(\Carbon\Carbon::parse($s->session_date)->dayOfWeek, $targetDays));
-
-                if ($conflict) {
-                    $course = $conflict->courseInstance?->courseTemplate?->name ?? 'another course';
-                    return back()->withInput()->withErrors([
-                        'room_id' => "Room already booked on {$pair} at {$startTime} — overlaps with \"{$course}\"."
-                    ]);
+            if (!empty($data['room_id'])) {
+                $roomClash = $this->roomClash((int) $data['room_id'], (int) $instance->course_instance_id, $projected);
+                if ($roomClash) {
+                    return back()->withInput()->withErrors(['room_id' => $roomClash]);
                 }
             }
-        }
 
-        if ($remainingToMake > 0 && !empty($regenStartDate)) {
-            foreach ($data['day_of_week'] as $pair) {
-                $startTime = $data['start_times'][$pair] ?? null;
-                if (!$startTime) continue;
-
-                $dur        = (float) $data['session_duration'];
-                [$h, $m]    = explode(':', $startTime);
-                $endMins    = ((int)$h * 60 + (int)$m) + (int)($dur * 60);
-                $endTime    = sprintf('%02d:%02d:00', intdiv($endMins, 60), $endMins % 60);
-                $startFull  = $startTime . ':00';
-                $targetDays = $resolveDays($pair);
-
-                $clash = \App\Models\Academic\CourseSession::with('courseInstance.courseTemplate')
-                    ->whereHas('courseInstance', fn($q) =>
-                        $q->where('teacher_id', $data['teacher_id'])
-                          ->where('course_instance_id', '!=', $instance->course_instance_id)
-                          ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
-                    )
-                    ->whereBetween('session_date', [$regenStartDate, $patchEndC->toDateString()])
-                    ->where('status', '!=', 'Cancelled')
-                    ->where('start_time', '<', $endTime)
-                    ->where('end_time',   '>', $startFull)
-                    ->orderBy('session_date')
-                    ->get()
-                    ->first(fn($s) => in_array(\Carbon\Carbon::parse($s->session_date)->dayOfWeek, $targetDays));
-
-                if ($clash) {
-                    $course = $clash->courseInstance?->courseTemplate?->name ?? 'another course';
-                    $when   = \Carbon\Carbon::parse($clash->session_date)->format('D d M');
-                    return back()->withInput()->withErrors([
-                        'teacher_id' => "The teacher already teaches \"{$course}\" on {$when} at " . \Carbon\Carbon::parse($clash->start_time)->format('H:i') . "."
-                    ]);
-                }
+            $teacherClash = $this->teacherClash((int) $data['teacher_id'], (int) $instance->course_instance_id, $projected);
+            if ($teacherClash) {
+                return back()->withInput()->withErrors(['teacher_id' => $teacherClash]);
             }
         }
 
@@ -637,24 +626,17 @@ class CourseInstanceController extends Controller
 
                 $contract = \App\Models\HR\TeacherContract::standingFor($data['teacher_id'], $data['patch_id']);
 
-                $sessionCount = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
-                    $q->where('teacher_id', $data['teacher_id'])
-                      ->where('patch_id',   $data['patch_id'])
-                      ->where('course_instance_id', '!=', $instance->course_instance_id)
-                      ->whereIn('status', ['Active', 'Upcoming', 'Completed', 'Pending_Approval'])
-                )->where('status', '!=', 'Cancelled')->count();
-
-                $pendingSessionsCount = \App\Models\Academic\CourseInstance::where('teacher_id', $data['teacher_id'])
-                    ->where('patch_id', $data['patch_id'])
-                    ->where('course_instance_id', '!=', $instance->course_instance_id)
-                    ->whereIn('status', ['Upcoming', 'Pending_Approval'])
-                    ->whereDoesntHave('sessions')
-                    ->get()
-                    ->sum(fn($ci) => (int) ceil((float)$ci->total_hours / (float)$ci->session_duration));
-
-                $existingSessions = $sessionCount + $pendingSessionsCount;
+                $existingSessions = \App\Support\TeacherLoad::sessionsInPatch(
+                    (int) $data['teacher_id'],
+                    (int) $data['patch_id'],
+                    ['Active', 'Upcoming', 'Completed', 'Pending_Approval'],
+                    (int) $instance->course_instance_id
+                );
+                $keptByThisTeacher = $keptSessions
+                    ->filter(fn($s) => (int) ($s->teacher_id ?? $instance->teacher_id) === (int) $data['teacher_id'])
+                    ->count();
                 $maxSessions      = $contract?->contractType?->max_sessions_allowed ?? null;
-                $thisInstanceTotal = $completedCount + $remainingToMake;
+                $thisInstanceTotal = $keptByThisTeacher + $remainingToMake;
                 $needsApproval    = $maxSessions && ($existingSessions + $thisInstanceTotal) > $maxSessions;
                 $overBy           = $needsApproval ? ($existingSessions + $thisInstanceTotal) - $maxSessions : 0;
 
@@ -1010,15 +992,15 @@ class CourseInstanceController extends Controller
 
         if (!$teacherId || !$pair) return response()->json([]);
 
-        $availabilities = \App\Models\HR\TeacherAvailability::with('timeSlot')
+        $availabilities = \App\Models\HR\TeacherAvailability::with(['timeSlot' => fn($q) => $q->withoutGlobalScopes()])
             ->where('teacher_id', $teacherId)
             ->where('day_of_week', $pair)
             ->get()
-            ->filter(fn($a) => $a->timeSlot);
+            ->filter(fn($a) => $a->timeSlot && $a->timeSlot->is_active);
 
         if ($availabilities->isEmpty()) return response()->json([]);
 
-        $breakSlots = BreakSlot::where('is_active', true)->get();
+        $breakSlots = $this->activeBreaks();
 
         $byStart = [];
         foreach ($availabilities as $av) {
@@ -1055,6 +1037,222 @@ class CourseInstanceController extends Controller
         return response()->json($slots);
     }
 
+    private function todayLabel(): string
+    {
+        return today()->format('d M Y');
+    }
+
+    private function activeBreaks(?int $branchId = null)
+    {
+        $branchId = $branchId ?? \App\Support\BranchContext::currentBranchId();
+
+        return BreakSlot::withoutGlobalScope('branch')
+            ->where('is_active', true)
+            ->when($branchId, fn($q) => $q->where(fn($qq) => $qq->whereNull('branch_id')->orWhere('branch_id', $branchId)))
+            ->orderBy('start_time')
+            ->get();
+    }
+
+    private function scheduleWindowError(int $teacherId, ?int $branchId, array $pairs, array $startTimes, float $duration): ?string
+    {
+        $pairNames = ['sun_wed' => 'Sun & Wed', 'sat_tue' => 'Sat & Tue', 'mon_thu' => 'Mon & Thu'];
+        $breaks    = $this->activeBreaks($branchId);
+        $minutes   = (int) round($duration * 60);
+        $toMin     = fn($t) => ((int) substr($t, 0, 2)) * 60 + (int) substr($t, 3, 2);
+        $fmt       = fn($m) => sprintf('%02d:%02d', intdiv($m, 60), $m % 60);
+
+        foreach ($pairs as $pair) {
+            $startTime = $startTimes[$pair] ?? null;
+            if (!$startTime) continue;
+
+            $label = $pairNames[$pair] ?? $pair;
+            $start = $toMin(\Carbon\Carbon::parse($startTime)->format('H:i'));
+            $end   = $start + $minutes;
+
+            $windows = \App\Models\HR\TeacherAvailability::with(['timeSlot' => fn($q) => $q->withoutGlobalScopes()])
+                ->where('teacher_id', $teacherId)
+                ->where('day_of_week', $pair)
+                ->get()
+                ->pluck('timeSlot')
+                ->filter(fn($t) => $t && $t->is_active)
+                ->map(fn($t) => [
+                    $toMin(\Carbon\Carbon::parse($t->start_time)->format('H:i')),
+                    $toMin(\Carbon\Carbon::parse($t->end_time)->format('H:i')),
+                ])
+                ->values();
+
+            if ($windows->isEmpty()) {
+                return "The teacher has no available time on {$label}.";
+            }
+
+            $fits = $windows->contains(fn($w) => $start >= $w[0] && $end <= $w[1]);
+            if (!$fits) {
+                $list = $windows->map(fn($w) => $fmt($w[0]) . '–' . $fmt($w[1]))->implode(', ');
+                return "{$label}: a {$duration}h session from {$fmt($start)} ends at {$fmt($end)}, outside the teacher's available time ({$list}). Pick a time that fits inside it.";
+            }
+
+            foreach ($breaks as $b) {
+                $bs = $toMin(\Carbon\Carbon::parse($b->start_time)->format('H:i'));
+                $be = $toMin(\Carbon\Carbon::parse($b->end_time)->format('H:i'));
+                if ($start < $be && $end > $bs) {
+                    return "{$label}: {$fmt($start)}–{$fmt($end)} overlaps the break ({$fmt($bs)}–{$fmt($be)}).";
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function projectSessions(
+        array $pairs,
+        callable $resolveDays,
+        array $startTimes,
+        float $duration,
+        string $from,
+        string $to,
+        int $needed
+    ): array {
+        $pairs = array_values(array_filter($pairs, fn($p) => !empty($startTimes[$p])));
+        $pairCount = count($pairs);
+        if ($pairCount === 0 || $needed <= 0) return [];
+
+        $perPair   = intdiv($needed, $pairCount);
+        $remainder = $needed % $pairCount;
+        $fromC     = \Carbon\Carbon::parse($from)->startOfDay();
+        $toC       = \Carbon\Carbon::parse($to)->startOfDay();
+        $minutes   = (int) round($duration * 60);
+        $out       = [];
+
+        foreach ($pairs as $i => $pair) {
+            $need  = $perPair + ($i === 0 ? $remainder : 0);
+            $days  = $resolveDays($pair);
+            [$h, $m] = explode(':', $startTimes[$pair]);
+            $count = 0;
+            $cursor = $fromC->copy();
+
+            while ($cursor->lte($toC) && $count < $need) {
+                if (in_array($cursor->dayOfWeek, $days, true)) {
+                    $start = $cursor->copy()->setTime((int) $h, (int) $m);
+                    if ($start->gt(now())) {
+                        $out[] = [
+                            'date'  => $cursor->toDateString(),
+                            'start' => $start->format('H:i:s'),
+                            'end'   => $start->copy()->addMinutes($minutes)->format('H:i:s'),
+                        ];
+                        $count++;
+                    }
+                }
+                $cursor->addDay();
+            }
+        }
+
+        usort($out, fn($x, $y) => strcmp($x['date'] . $x['start'], $y['date'] . $y['start']));
+
+        return $out;
+    }
+
+    private function firstOverlap($existing, array $projected): ?array
+    {
+        $byDate = $existing->groupBy(fn($s) => \Carbon\Carbon::parse($s->session_date)->toDateString());
+
+        foreach ($projected as $p) {
+            foreach ($byDate[$p['date']] ?? [] as $s) {
+                $sStart = \Carbon\Carbon::parse($s->start_time)->format('H:i:s');
+                $sEnd   = \Carbon\Carbon::parse($s->end_time)->format('H:i:s');
+                if ($sStart < $p['end'] && $sEnd > $p['start']) {
+                    return [$p, $s];
+                }
+            }
+        }
+
+        return null;
+    }
+
+    private function roomClash(int $roomId, ?int $excludeId, array $projected): ?string
+    {
+        if (empty($projected)) return null;
+
+        $existing = \App\Models\Academic\CourseSession::with('courseInstance.courseTemplate')
+            ->whereHas('courseInstance', fn($q) =>
+                $q->where('room_id', $roomId)
+                  ->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+                  ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
+            )
+            ->whereIn('session_date', array_unique(array_column($projected, 'date')))
+            ->where('status', '!=', 'Cancelled')
+            ->get();
+
+        $hit = $this->firstOverlap($existing, $projected);
+        if (!$hit) return null;
+
+        [$p, $s] = $hit;
+        $course = $s->courseInstance?->courseTemplate?->name ?? 'another course';
+        $when   = \Carbon\Carbon::parse($p['date'])->format('D d M');
+
+        return "The room is already booked on {$when} at " . \Carbon\Carbon::parse($s->start_time)->format('H:i') . " by \"{$course}\".";
+    }
+
+    private function teacherClash(int $teacherId, ?int $excludeId, array $projected): ?string
+    {
+        if (empty($projected)) return null;
+
+        $existing = \App\Models\Academic\CourseSession::with('courseInstance.courseTemplate')
+            ->where('teacher_id', $teacherId)
+            ->whereHas('courseInstance', fn($q) =>
+                $q->whereIn('status', ['Active', 'Upcoming', 'Pending_Approval'])
+                  ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
+            )
+            ->whereIn('session_date', array_unique(array_column($projected, 'date')))
+            ->where('status', '!=', 'Cancelled')
+            ->get();
+
+        $hit = $this->firstOverlap($existing, $projected);
+        if ($hit) {
+            [$p, $s] = $hit;
+            $course = $s->courseInstance?->courseTemplate?->name ?? 'another course';
+            $when   = \Carbon\Carbon::parse($p['date'])->format('D d M');
+            return "The teacher already teaches \"{$course}\" on {$when} at " . \Carbon\Carbon::parse($s->start_time)->format('H:i') . ".";
+        }
+
+        $dayMap  = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
+        $first   = $projected[0]['date'];
+        $last    = end($projected)['date'];
+        $pending = CourseInstance::with(['instanceSchedules', 'courseTemplate'])
+            ->where('teacher_id', $teacherId)
+            ->whereIn('status', ['Upcoming', 'Pending_Approval'])
+            ->when($excludeId, fn($q) => $q->where('course_instance_id', '!=', $excludeId))
+            ->whereDoesntHave('sessions')
+            ->where('start_date', '<=', $last)
+            ->where('end_date', '>=', $first)
+            ->get();
+
+        foreach ($pending as $ci) {
+            $ciStart = \Carbon\Carbon::parse($ci->start_date)->toDateString();
+            $ciEnd   = \Carbon\Carbon::parse($ci->end_date)->toDateString();
+
+            foreach ($ci->instanceSchedules as $sch) {
+                $pairDays = $dayMap[$sch->day_of_week] ?? [];
+                $days = ($sch->single_day !== null && in_array((int) $sch->single_day, $pairDays, true))
+                    ? [(int) $sch->single_day]
+                    : $pairDays;
+                $s0 = \Carbon\Carbon::parse($sch->start_time);
+                $e0 = $s0->copy()->addMinutes((int) round((float) $ci->session_duration * 60));
+
+                foreach ($projected as $p) {
+                    if ($p['date'] < $ciStart || $p['date'] > $ciEnd) continue;
+                    if (!in_array(\Carbon\Carbon::parse($p['date'])->dayOfWeek, $days, true)) continue;
+                    if ($s0->format('H:i:s') < $p['end'] && $e0->format('H:i:s') > $p['start']) {
+                        $course = $ci->courseTemplate?->name ?? 'another course';
+                        $when   = \Carbon\Carbon::parse($p['date'])->format('D d M');
+                        return "The teacher already has \"{$course}\" (waiting for approval) on {$when} at " . $s0->format('H:i') . ".";
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
     public function getTeacherFreeDates(Request $request)
     {
         $teacherId = $request->query('teacher_id');
@@ -1066,7 +1264,9 @@ class CourseInstanceController extends Controller
         if (!$patch) return response()->json([]);
 
         $dayMap   = ['sun_wed' => [0,3], 'sat_tue' => [6,2], 'mon_thu' => [1,4]];
-        $availability = \App\Models\HR\TeacherAvailability::where('teacher_id', $teacherId)->get();
+        $availability = \App\Models\HR\TeacherAvailability::with(['timeSlot' => fn($q) => $q->withoutGlobalScopes()])
+            ->where('teacher_id', $teacherId)
+            ->get();
 
         $pairByDay = [];
         foreach ($availability as $av) {
@@ -1089,7 +1289,7 @@ class CourseInstanceController extends Controller
         foreach ($availability as $av) {
             if ($av->timeSlot) $slotsByPair[$av->day_of_week][] = $av->timeSlot;
         }
-        $breakSlots = BreakSlot::where('is_active', true)->get();
+        $breakSlots = $this->activeBreaks();
 
         $minBlockMins = 30;
 
@@ -1138,7 +1338,10 @@ class CourseInstanceController extends Controller
         };
 
         $result  = [];
-        $current = \Carbon\Carbon::parse($patch->start_date);
+        $current = \Carbon\Carbon::parse($patch->start_date)->startOfDay();
+        if (today()->gt($current)) {
+            $current = today();
+        }
         $end     = \Carbon\Carbon::parse($patch->end_date);
 
         while ($current->lte($end)) {
@@ -1262,22 +1465,12 @@ class CourseInstanceController extends Controller
 
         if (!$contract) return response()->json(null);
 
-        $sessionCount = \App\Models\Academic\CourseSession::whereHas('courseInstance', fn($q) =>
-            $q->where('teacher_id', $teacherId)
-              ->where('patch_id', $patchId)
-              ->whereIn('status', ['Active', 'Upcoming', 'Completed', 'Pending_Approval'])
-              ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
-        )->where('status', '!=', 'Cancelled')->count();
-
-        $pendingCount = \App\Models\Academic\CourseInstance::where('teacher_id', $teacherId)
-            ->where('patch_id', $patchId)
-            ->whereIn('status', ['Upcoming', 'Pending_Approval'])
-            ->when($excludeId, fn($qq) => $qq->where('course_instance_id', '!=', $excludeId))
-            ->whereDoesntHave('sessions')
-            ->get()
-            ->sum(fn($ci) => (int) ceil((float)$ci->total_hours / (float)$ci->session_duration));
-
-        $existingSessions = $sessionCount + $pendingCount;
+        $existingSessions = \App\Support\TeacherLoad::sessionsInPatch(
+            (int) $teacherId,
+            (int) $patchId,
+            ['Active', 'Upcoming', 'Completed', 'Pending_Approval'],
+            $excludeId ? (int) $excludeId : null
+        );
         $maxSessions      = $contract->contractType?->max_sessions_allowed ?? 0;
 
         return response()->json([
