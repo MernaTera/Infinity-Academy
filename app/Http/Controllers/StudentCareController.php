@@ -98,6 +98,13 @@ class StudentCareController extends Controller
             );
         }
 
+        $studentCourse = $waiting->enrollment->course_template_id;
+        if ($studentCourse && $instance->course_template_id && (int) $studentCourse !== (int) $instance->course_template_id) {
+            return back()->with('error',
+                'Course mismatch: this student is registered for a different course. Please pick an instance of the same course.'
+            );
+        }
+
         if ($instance->completed_sessions_count > 2) {
             return back()->with('error',
                 'This course has completed ' . $instance->completed_sessions_count .

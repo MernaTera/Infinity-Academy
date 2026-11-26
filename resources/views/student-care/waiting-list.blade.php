@@ -441,8 +441,23 @@
                         <td>
                             <div class="action-group">
                                 @if($item->status !== 'Assigned' && $item->status !== 'Cancelled')
+                                @php
+                                    $matchEnr     = $item->enrollment;
+                                    $matchCourse  = $matchEnr->course_template_id ?? $matchEnr->courseInstance?->course_template_id;
+                                    $matchLevel   = $matchEnr->level_id ?? $matchEnr->courseInstance?->level_id;
+                                    $matchSub     = $matchEnr->sublevel_id ?? $matchEnr->courseInstance?->sublevel_id;
+                                    $matchLabel   = collect([
+                                        $matchEnr->courseTemplate?->name,
+                                        $matchEnr->level?->name,
+                                        $matchEnr->sublevel?->name,
+                                    ])->filter()->implode(' · ');
+                                @endphp
                                 <button class="btn-action btn-assign"
-                                        onclick="openAssignModal({{ $item->waiting_id }}, '{{ $item->enrollment->enrollment_type ?? '' }}', '{{ $item->enrollment->delivery_mood ?? '' }}')">
+                                        data-course="{{ $matchCourse }}"
+                                        data-level="{{ $matchLevel }}"
+                                        data-sublevel="{{ $matchSub }}"
+                                        data-label="{{ $matchLabel }}"
+                                        onclick="openAssignModal({{ $item->waiting_id }}, '{{ $item->enrollment->enrollment_type ?? '' }}', '{{ $item->enrollment->delivery_mood ?? '' }}', this)">
                                     <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
                                         <polyline points="22 4 12 14.01 9 11.01"/>
@@ -605,32 +620,61 @@ function filterByDeliveryTypeSelect(val) { activeDtype  = val; applyFilters(); }
 function filterByModeSelect(val)         { activeMode   = val; applyFilters(); }
 function filterByPrefTypeSelect(val)     { activePtype  = val; applyFilters(); }
 
-function openAssignModal(id, studentType, studentMode) {
+let assignMatch = { type: '', mode: '', course: '', level: '', sublevel: '', label: '' };
+
+function openAssignModal(id, studentType, studentMode, btn) {
     document.getElementById('assign_waiting_id').value = id;
 
     document.getElementById('assign_instance_hidden').value = '';
     document.querySelectorAll('.assign-instance-card').forEach(c => c.classList.remove('selected'));
     document.querySelectorAll('.assign-card-radio').forEach(r => r.checked = false);
 
+    assignMatch = {
+        type:     studentType || '',
+        mode:     studentMode || '',
+        course:   btn?.dataset.course   || '',
+        level:    btn?.dataset.level    || '',
+        sublevel: btn?.dataset.sublevel || '',
+        label:    btn?.dataset.label    || '',
+    };
+
+    const showAll = document.getElementById('assign_show_all');
+    if (showAll) showAll.checked = false;
+
+    applyAssignFilter();
+    document.getElementById('assignModal').style.display = 'flex';
+}
+
+function applyAssignFilter() {
+    const showAll = document.getElementById('assign_show_all')?.checked;
+    const m = assignMatch;
+    const differs = (want, have) => want && have && String(want) !== String(have);
+
     let visibleCount = 0;
     document.querySelectorAll('.assign-instance-card').forEach(card => {
-        const courseType = card.dataset.courseType || '';
-        const courseMood = card.dataset.deliveryMood || '';
-        const typeMismatch = studentType && courseType && courseType !== studentType;
-        const moodMismatch = studentMode && courseMood && courseMood !== studentMode;
-        if (typeMismatch || moodMismatch) {
-            card.style.display = 'none';
-        } else {
-            card.style.display = '';
-            if (!card.classList.contains('is-full')) visibleCount++;
+        let hide = differs(m.type, card.dataset.courseType)
+            || differs(m.mode, card.dataset.deliveryMood)
+            || differs(m.course, card.dataset.course);
+        if (!hide && !showAll) {
+            hide = differs(m.level, card.dataset.level)
+                || differs(m.sublevel, card.dataset.sublevel);
         }
+        if (hide && card.classList.contains('selected')) {
+            card.classList.remove('selected');
+            const r = card.querySelector('.assign-card-radio');
+            if (r) r.checked = false;
+            document.getElementById('assign_instance_hidden').value = '';
+        }
+        card.style.display = hide ? 'none' : '';
+        if (!hide && !card.classList.contains('is-full')) visibleCount++;
     });
 
     const banner = document.getElementById('assign_type_banner');
     if (banner) {
         const parts = [];
-        if (studentType) parts.push(studentType);
-        if (studentMode) parts.push(studentMode);
+        if (m.label) parts.push(showAll ? m.label.split(' · ')[0] + ' (all levels)' : m.label);
+        if (m.type) parts.push(m.type);
+        if (m.mode) parts.push(m.mode);
         banner.textContent = parts.length
             ? `Showing ${parts.join(' · ')} course instances only`
             : 'Showing all course instances';
@@ -638,11 +682,7 @@ function openAssignModal(id, studentType, studentMode) {
     }
 
     const noMatch = document.getElementById('assign_no_type_match');
-    if (noMatch) {
-        noMatch.style.display = ((studentType || studentMode) && visibleCount === 0) ? 'block' : 'none';
-    }
-
-    document.getElementById('assignModal').style.display = 'flex';
+    if (noMatch) noMatch.style.display = visibleCount === 0 ? 'block' : 'none';
 }
 
 function closeAssignModal() {

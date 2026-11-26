@@ -218,12 +218,16 @@
                             color:#1B4FA8;background:rgba(27,79,168,0.06);border:1px solid rgba(27,79,168,0.15);
                             padding:7px 12px;border-radius:5px;margin:8px 0 4px;font-weight:600;"></div>
 
-                {{-- Shown when the student's type has no matching course --}}
+                <label style="display:inline-flex;align-items:center;gap:7px;margin:6px 0 2px;font-size:11px;color:#7A8A9A;cursor:pointer;user-select:none;">
+                    <input type="checkbox" id="assign_show_all" onchange="applyAssignFilter()" style="accent-color:#1B4FA8;width:14px;height:14px;">
+                    Show other levels of the same course
+                </label>
+
                 <div id="assign_no_type_match" style="display:none;text-align:center;padding:28px 20px;color:#DC2626;
                             background:rgba(220,38,38,0.04);border:1px dashed rgba(220,38,38,0.3);border-radius:6px;
                             margin-top:8px;font-size:12px;line-height:1.5;">
-                    No course instance of this student's type is available.<br>
-                    <span style="color:#7A8A9A;font-size:11px;">A Private student needs a Private course, and a Group student needs a Group course.</span>
+                    No matching course instance is available for this student right now.<br>
+                    <span style="color:#7A8A9A;font-size:11px;">Only open instances of the same course, level, type and mode are listed. Tick "Show other levels of the same course" to see more.</span>
                 </div>
 
                 <div class="assign-instance-list">
@@ -243,6 +247,9 @@
                     <label class="assign-instance-card {{ $isDisabled ? 'is-full' : '' }}"
                         data-course-type="{{ $instance->type }}"
                         data-delivery-mood="{{ $instance->delivery_mood }}"
+                        data-course="{{ $instance->course_template_id }}"
+                        data-level="{{ $instance->level_id }}"
+                        data-sublevel="{{ $instance->sublevel_id }}"
                         onclick="{{ $isDisabled ? '' : "selectInstance(this, '{$instance->course_instance_id}')" }}">
 
                         <input class="assign-card-radio" type="radio"
