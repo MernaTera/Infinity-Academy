@@ -33,7 +33,7 @@
 .search-input{width:100%;max-width:380px;padding:10px 14px 10px 38px;border:1px solid var(--glass-bd);border-radius:12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);background:rgba(255,255,255,0.6);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);outline:none;box-sizing:border-box}
 .search-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(27,79,168,0.08)}
 
-.courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.courses-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px;align-items:start}
 .course-card{background:var(--card);-webkit-backdrop-filter:blur(22px) saturate(165%);backdrop-filter:blur(22px) saturate(165%);border:1px solid var(--glass-bd);box-shadow:var(--glass-sh);border-radius:18px;overflow:hidden;transition:all 0.2s;position:relative}
 .course-card:hover{transform:translateY(-3px);box-shadow:0 16px 38px rgba(23,45,90,0.13)}
 .course-card.archived{opacity:0.6}
@@ -55,6 +55,13 @@
 .level-name{font-size:12px;color:var(--text);font-weight:500}
 .level-price{font-family:'Bebas Neue',sans-serif;font-size:16px;color:var(--blue);letter-spacing:1px}
 .level-meta{font-size:10px;color:var(--muted);margin-top:4px}
+.level-item.lv-extra{display:none}
+.cc-levels.expanded .level-item.lv-extra{display:block}
+.cc-levels.expanded .levels-scroll{max-height:380px;overflow-y:auto;padding-right:4px;scrollbar-width:thin}
+.levels-toggle{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:8px;padding:8px 12px;border:1px dashed rgba(27,79,168,0.22);border-radius:12px;background:rgba(255,255,255,0.4);color:var(--blue);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background 0.2s}
+.levels-toggle:hover{background:rgba(27,79,168,0.06)}
+.levels-toggle svg{transition:transform 0.2s}
+.cc-levels.expanded .levels-toggle svg{transform:rotate(180deg)}
 .sublevel-list{margin-top:8px;padding-top:8px;border-top:1px solid rgba(27,79,168,0.06);display:none}
 .sublevel-list.show{display:block}
 .sublevel-item{display:flex;justify-content:space-between;padding:4px 0;font-size:11px;color:var(--muted);border-bottom:1px solid rgba(27,79,168,0.05)}
@@ -169,10 +176,16 @@
             </div>
 
             @if($course->levels->isNotEmpty())
+            @php
+                $sortedLevels = $course->levels->sortBy('level_order')->values();
+                $visibleLevels = 4;
+                $extraLevels = max(0, $sortedLevels->count() - $visibleLevels);
+            @endphp
             <div class="cc-levels">
                 <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:#93A3BC;margin-bottom:8px">Levels</div>
-                @foreach($course->levels->sortBy('level_order') as $level)
-                <div class="level-item" onclick="toggleSublevels(this)">
+                <div class="levels-scroll">
+                @foreach($sortedLevels as $i => $level)
+                <div class="level-item {{ $i >= $visibleLevels ? 'lv-extra' : '' }}" onclick="toggleSublevels(this)">
                     <div class="level-header">
                         <div>
                             <div class="level-name">{{ $level->name }}</div>
@@ -199,6 +212,14 @@
                     @endif
                 </div>
                 @endforeach
+                </div>
+                @if($extraLevels > 0)
+                <button type="button" class="levels-toggle" onclick="toggleLevels(this)"
+                        data-more="Show all {{ $sortedLevels->count() }} levels" data-less="Show less">
+                    <span>Show all {{ $sortedLevels->count() }} levels</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                </button>
+                @endif
             </div>
             @endif
 
@@ -232,6 +253,13 @@ document.getElementById('courseSearch').addEventListener('input', function() {
         card.style.display = card.dataset.name.includes(q) ? '' : 'none';
     });
 });
+
+function toggleLevels(btn) {
+    const box = btn.closest('.cc-levels');
+    const expanded = box.classList.toggle('expanded');
+    btn.querySelector('span').textContent = expanded ? btn.dataset.less : btn.dataset.more;
+    if (!expanded) box.querySelector('.levels-scroll').scrollTop = 0;
+}
 
 function toggleSublevels(el) {
     const list = el.querySelector('.sublevel-list');
