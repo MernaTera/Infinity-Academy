@@ -54,7 +54,7 @@
 
     .toolbar { display:flex; align-items:center; gap:10px; margin-bottom:18px; flex-wrap:wrap; }
     .search-wrap { position:relative; flex:1; min-width:220px; max-width:360px; }
-    .search-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); pointer-events:none; }
+    .search-wrap svg { position:absolute; left:14px; top:50%; transform:translateY(-50%); pointer-events:none; z-index:2; }
     .search-input { width:100%; padding:10px 14px 10px 40px; background:rgba(255,255,255,0.6); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid var(--glass-bd); border-radius:12px; font-size:13px; color:var(--text); outline:none; transition:border-color .3s,box-shadow .3s; }
     .search-input:focus { border-color:var(--blue); box-shadow:0 0 0 3px rgba(27,79,168,0.08); }
     .filter-select { padding:9px 32px 9px 12px; background:rgba(255,255,255,0.6); -webkit-backdrop-filter:blur(10px); backdrop-filter:blur(10px); border:1px solid var(--glass-bd); border-radius:12px; font-size:12px; color:#4A5A7A; outline:none; cursor:pointer; appearance:none; -webkit-appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%235A6A85'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; transition:border-color .3s; }
@@ -196,6 +196,8 @@
         </select>
     </div>
 
+    @include('student-care.course-instances.partials.hour-filter')
+
     <div class="tab-panel active" id="panel-active">
         <div class="active-layout">
             <div>
@@ -283,12 +285,16 @@ function applyFilters() {
     const q    = (document.getElementById('ciSearch').value || '').toLowerCase().trim();
     const type = document.getElementById('ciTypeFilter').value;
     const mode = document.getElementById('ciModeFilter').value;
-    document.querySelectorAll('.ci-card').forEach(card => {
+    const passes = card => {
         const okType = !type || card.dataset.type === type;
         const okMode = !mode || card.dataset.mode === mode;
         const okText = !q || (card.dataset.course || '').includes(q) || (card.dataset.teacher || '').includes(q);
-        card.classList.toggle('filtered-out', !(okType && okMode && okText));
+        return okType && okMode && okText;
+    };
+    document.querySelectorAll('.ci-card').forEach(card => {
+        card.classList.toggle('filtered-out', !(passes(card) && ciHourMatches(card, ciHour)));
     });
+    renderHourBar(passes);
 }
 
 function refreshLive() {

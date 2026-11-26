@@ -62,7 +62,28 @@
     }
 @endphp
 
+@php
+    $toMin = fn($t) => ((int) $t->format('G')) * 60 + (int) $t->format('i');
+    $timedSessions = $instance->sessions->filter(fn($s) => $s->status !== 'Cancelled' && $s->start_time && $s->end_time);
+    $upcomingTimed = $timedSessions->filter(fn($s) => $s->session_date && $s->session_date->gte(today()));
+    $rangeSource   = $upcomingTimed->isNotEmpty() ? $upcomingTimed : $timedSessions;
+    $timeRanges    = $rangeSource->map(fn($s) => $toMin($s->start_time) . '-' . $toMin($s->end_time))->unique()->values();
+    if ($timeRanges->isEmpty()) {
+        $durMins = (int) round((float) ($instance->session_duration ?? 0) * 60);
+        $timeRanges = $instance->instanceSchedules
+            ->filter(fn($sch) => $sch->start_time && $durMins > 0)
+            ->map(function ($sch) use ($durMins) {
+                $st = \Carbon\Carbon::parse($sch->start_time);
+                $m  = ((int) $st->format('G')) * 60 + (int) $st->format('i');
+                return $m . '-' . ($m + $durMins);
+            })
+            ->unique()
+            ->values();
+    }
+@endphp
+
 <div class="ci-card {{ $liveState ? 'ci-'.$liveState : '' }}"
+     data-times="{{ $timeRanges->implode(',') }}"
      data-context="{{ $context }}"
      data-status="{{ $instance->status }}"
      data-type="{{ $instance->type }}"
