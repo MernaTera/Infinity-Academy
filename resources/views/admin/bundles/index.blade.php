@@ -25,6 +25,10 @@
 
 .sec-label{font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;padding-bottom:9px;border-bottom:1px solid rgba(27,79,168,0.1);display:block;font-weight:600;}
 
+.filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap;}
+.filter-btn{padding:6px 16px;border-radius:10px;font-size:10px;letter-spacing:2px;text-transform:uppercase;border:1px solid var(--glass-bd);background:rgba(255,255,255,0.55);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--muted);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;font-weight:600;}
+.filter-btn.active,.filter-btn:hover{border-color:transparent;color:#fff;background:linear-gradient(120deg,var(--blue),var(--blue-2));box-shadow:0 6px 14px rgba(27,79,168,0.25);}
+.filter-empty{display:none;text-align:center;padding:40px;color:var(--faint);font-size:13px;}
 .bundles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
 @media(max-width:1100px){.bundles-grid{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:700px){.bundles-grid{grid-template-columns:1fr;}}
@@ -126,6 +130,22 @@
         <div class="kpi-card" style="--kc:var(--blue)"><div class="kpi-label">Total Enrollments</div><div class="kpi-val">{{ $stats['total_enrollments'] }}</div></div>
     </div>
 
+    @php
+        $bundleCourses = $bundles->pluck('courseTemplate')->filter()->unique('course_template_id')->sortBy('name');
+        $hasUnlinked   = $bundles->contains(fn($b) => !$b->course_template_id);
+    @endphp
+    @if($bundles->isNotEmpty())
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="filterCourse('all', this)">All Courses</button>
+        @foreach($bundleCourses as $c)
+        <button class="filter-btn" onclick="filterCourse({{ $c->course_template_id }}, this)">{{ $c->name }}</button>
+        @endforeach
+        @if($hasUnlinked)
+        <button class="filter-btn" onclick="filterCourse('none', this)">Not Linked</button>
+        @endif
+    </div>
+    @endif
+
     <span class="sec-label">All Bundles</span>
 
     @if($bundles->isEmpty())
@@ -136,7 +156,7 @@
     @else
     <div class="bundles-grid">
         @foreach($bundles->sortBy(fn($b) => [$b->courseTemplate?->name ?? 'zzz', (float) $b->hours]) as $bundle)
-        <div class="bnd-card {{ !$bundle->is_active ? 'inactive' : '' }}">
+        <div class="bnd-card {{ !$bundle->is_active ? 'inactive' : '' }}" data-course="{{ $bundle->course_template_id ?? 'none' }}">
 
             <div class="bnd-card-header">
                 @if(!$bundle->is_active)
@@ -205,6 +225,7 @@
         </div>
         @endforeach
     </div>
+    <div class="filter-empty" id="bundlesFilterEmpty">No bundles for this course yet.</div>
     @endif
 
 </div>
@@ -397,6 +418,22 @@ function calcPPH(prefix) {
     } else {
         wrap.style.display = 'none';
     }
+}
+
+function filterCourse(courseId, btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    let shown = 0;
+    document.querySelectorAll('.bnd-card').forEach(card => {
+        const course = card.dataset.course;
+        const match  = courseId === 'all'
+            || String(courseId) === course
+            || (courseId !== 'none' && course === 'none');
+        card.style.display = match ? '' : 'none';
+        if (match) shown++;
+    });
+    const empty = document.getElementById('bundlesFilterEmpty');
+    if (empty) empty.style.display = shown ? 'none' : 'block';
 }
 </script>
 
