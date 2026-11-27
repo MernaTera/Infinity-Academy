@@ -39,6 +39,16 @@ class PrivateHoursController extends Controller
                   ->orWhere(function ($q2) {
                       $q2->where('status', 'Completed')
                          ->where('hours_remaining', '>', 0);
+                  })
+                  ->orWhere(function ($q2) {
+                      $q2->where('status', 'Completed')
+                         ->where('hours_remaining', '<=', 0)
+                         ->whereNotExists(function ($n) {
+                             $n->select(DB::raw(1))
+                               ->from('enrollment as newer')
+                               ->whereColumn('newer.student_id', 'enrollment.student_id')
+                               ->whereColumn('newer.enrollment_id', '>', 'enrollment.enrollment_id');
+                         });
                   });
             })
             ->orderByDesc('updated_at')
@@ -66,7 +76,10 @@ class PrivateHoursController extends Controller
             ->groupBy('enrollment_id')
             ->pluck('used', 'enrollment_id');
 
-        $rows = $enrollments->map(function ($e) use ($absenceCounts, $leadByStudent, $usedHours) {
+        $progression   = app(\App\Services\PackageProgressionService::class);
+        $privateLevels = app(\App\Services\PrivateLevelService::class);
+
+        $rows = $enrollments->map(function ($e) use ($absenceCounts, $leadByStudent, $usedHours, $progression, $privateLevels) {
             $bundleHours = $e->privateBundle?->hours ? (float) $e->privateBundle->hours : null;
             $remaining   = (float) $e->hours_remaining;
             $loggedUsed  = (float) ($usedHours[$e->enrollment_id] ?? 0);
@@ -78,6 +91,12 @@ class PrivateHoursController extends Controller
 
             if ($e->status === 'Postponed') {
                 $state = 'postponed';
+            } elseif ($e->status === 'Completed' && $remaining <= 0) {
+                $state = 'finished';
+            } elseif ($remaining <= 0 && $e->status === 'Restricted'
+                && $privateLevels->courseFinished($e)
+                && !$privateLevels->hasPaymentRestriction($e)) {
+                $state = 'finished';
             } elseif ($remaining <= 0) {
                 $state = 'depleted';
             } elseif ($e->status === 'Restricted') {
@@ -95,6 +114,19 @@ class PrivateHoursController extends Controller
             $levelName  = $e->level?->name ?? '—';
             if ($e->sublevel) $levelName .= ' · ' . $e->sublevel->name;
 
+            $nextLevelName = null;
+            $lastLevelDone = false;
+            if ($state === 'leftover' && !$e->package_id) {
+                $next = $progression->nextUnit($e);
+                if ($next) {
+                    $nextLevelName = $privateLevels->unitLabel($next['level_id'], $next['sublevel_id']);
+                } else {
+                    $lastLevelDone = true;
+                }
+            }
+
+            $e->setAttribute('v_next_level', $nextLevelName);
+            $e->setAttribute('v_last_level_done', $lastLevelDone);
             $e->setAttribute('v_bundle_hours', $totalPool > 0 ? $totalPool : null);
             $e->setAttribute('v_remaining', $remaining);
             $e->setAttribute('v_used', $used);
@@ -114,11 +146,12 @@ class PrivateHoursController extends Controller
             'depleted' => $rows->where('v_state', 'depleted')->count(),
             'restricted' => $rows->where('v_state', 'restricted')->count(),
             'leftover' => $rows->where('v_state', 'leftover')->count(),
+            'finished' => $rows->where('v_state', 'finished')->count(),
             'postponed'=> $rows->where('v_state', 'postponed')->count(),
             'hours_left' => round($rows->sum('v_remaining'), 2),
         ];
 
-        if (in_array($stateFilter, ['active', 'low', 'depleted', 'restricted', 'leftover', 'postponed'])) {
+        if (in_array($stateFilter, ['active', 'low', 'depleted', 'restricted', 'leftover', 'finished', 'postponed'])) {
             $rows = $rows->where('v_state', $stateFilter)->values();
         }
 
@@ -186,7 +219,8 @@ class PrivateHoursController extends Controller
                 $enrollment->restriction_flag = false;
             }
 
-            $wasCompleted = $enrollment->status === 'Completed';
+            $wasCompleted = $enrollment->status === 'Completed'
+                || app(\App\Services\PrivateLevelService::class)->courseFinished($enrollment);
             $enrollment->save();
 
             $tx = FinancialTransaction::create([
@@ -223,7 +257,7 @@ class PrivateHoursController extends Controller
             ]);
 
             if ($wasCompleted) {
-                $this->moveToWaitingList($enrollment, 'Renewed with ' . $hoursLabel . ' hours bundle on ' . now()->format('d M Y') . '.');
+                app(\App\Services\PrivateLevelService::class)->moveToWaitingList($enrollment, 'Renewed with ' . $hoursLabel . ' hours bundle on ' . now()->format('d M Y') . '.');
                 return true;
             }
 
@@ -251,47 +285,9 @@ class PrivateHoursController extends Controller
             if ($enrollment->status !== 'Completed') {
                 return;
             }
-            $this->moveToWaitingList($enrollment, 'Continuing with ' . rtrim(rtrim(number_format((float) $enrollment->hours_remaining, 2), '0'), '.') . ' hours left, sent on ' . now()->format('d M Y') . '.');
+            app(\App\Services\PrivateLevelService::class)->moveToWaitingList($enrollment, 'Continuing with ' . rtrim(rtrim(number_format((float) $enrollment->hours_remaining, 2), '0'), '.') . ' hours left, sent on ' . now()->format('d M Y') . '.');
         });
 
         return back()->with('success', 'Student sent to the Student Care waiting list with the remaining hours.');
-    }
-
-    private function moveToWaitingList(Enrollment $enrollment, string $note): void
-    {
-        $oldStatus = $enrollment->status;
-
-        $nextPatch = Patch::where('status', 'Upcoming')->orderBy('start_date')->first();
-
-        $enrollment->status             = 'Waiting';
-        $enrollment->course_instance_id = null;
-        $enrollment->patch_id           = $nextPatch?->patch_id ?? $enrollment->patch_id;
-        $enrollment->save();
-
-        $existing = WaitingList::where('enrollment_id', $enrollment->enrollment_id)->first();
-
-        $waiting = WaitingList::updateOrCreate(
-            ['enrollment_id' => $enrollment->enrollment_id],
-            [
-                'requested_patch_id'      => $nextPatch?->patch_id,
-                'preferred_type'          => 'Next_Patch',
-                'preferred_delivery_type' => 'Private',
-                'preferred_delivery_mood' => $enrollment->delivery_mood,
-                'preferred_days'          => $existing?->preferred_days,
-                'status'                  => 'Active',
-                'notes'                   => trim(($existing?->notes ? $existing->notes . "\n" : '') . $note),
-                'created_by_cs_id'        => $existing?->created_by_cs_id ?? $enrollment->created_by_cs_id,
-            ]
-        );
-
-        AuditService::updated('enrollment', $enrollment->enrollment_id, 'status', $oldStatus, 'Waiting');
-
-        DB::afterCommit(function () use ($waiting) {
-            try {
-                event(new WaitingListUpdated($waiting));
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::warning('WaitingListUpdated broadcast failed: ' . $e->getMessage());
-            }
-        });
     }
 }

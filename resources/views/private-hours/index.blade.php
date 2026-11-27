@@ -105,6 +105,10 @@
     .btn-enroll.btn-pay { background:rgba(220,38,38,0.06); color:#B91C1C; border-color:rgba(220,38,38,0.25); }
     .btn-enroll.btn-pay:hover { background:#DC2626; color:#fff; }
     .st-leftover { background:var(--blue-l); color:var(--blue); }
+    .st-finished { background:rgba(100,116,139,0.10); color:#475569; }
+    .level-next { display:inline-block; margin-top:4px; padding:2px 8px; border-radius:6px; background:var(--blue-l); color:var(--blue); font-size:10px; }
+    .level-next strong { font-weight:600; }
+    .level-next.level-last { background:var(--orange-l, #FFF4E5); color:var(--orange-dk, #B45309); }
     .st-postponed { background:rgba(100,116,139,0.14); color:#475569; }
 
     .btn-enroll { display:inline-flex; align-items:center; gap:5px; padding:8px 14px; border-radius:9px; font-size:10px; font-weight:600; letter-spacing:0.3px; text-decoration:none; background:var(--blue); color:#ffff; border:1px solid rgba(118, 170, 230, 0.3); transition:all 0.2s; white-space:nowrap; }
@@ -167,6 +171,10 @@
                 <div class="stat-val">{{ $stats['leftover'] }}</div>
             </div>
             <div class="stat" style="--sc:var(--blue)">
+                <div class="stat-label">Done · No Hours</div>
+                <div class="stat-val">{{ $stats['finished'] }}</div>
+            </div>
+            <div class="stat" style="--sc:var(--blue)">
                 <div class="stat-label">Postponed</div>
                 <div class="stat-val">{{ $stats['postponed'] }}</div>
             </div>
@@ -196,6 +204,7 @@
             <a href="{{ route('private-hours.index', array_filter(['state' => 'depleted', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'depleted' ? 'active' : '' }}">Depleted</a>
             <a href="{{ route('private-hours.index', array_filter(['state' => 'restricted', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'restricted' ? 'active' : '' }}">Restricted · Payment</a>
             <a href="{{ route('private-hours.index', array_filter(['state' => 'leftover', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'leftover' ? 'active' : '' }}">Leftover</a>
+            <a href="{{ route('private-hours.index', array_filter(['state' => 'finished', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'finished' ? 'active' : '' }}">Done · No Hours</a>
             <a href="{{ route('private-hours.index', array_filter(['state' => 'postponed', 'q' => $search ?? ''])) }}" class="filter-pill {{ $stateFilter === 'postponed' ? 'active' : '' }}">Postponed</a>
         </div>
 
@@ -223,6 +232,7 @@
                                 'depleted' => ['st-depleted','Depleted','var(--red)'],
                                 'restricted' => ['st-restricted','Restricted · Payment','var(--red)'],
                                 'leftover' => ['st-leftover','Course Done · Hours Left','var(--blue)'],
+                                'finished' => ['st-finished','Course Done · No Hours Left','#64748B'],
                                 'postponed'=> ['st-postponed','Postponed','#64748B'],
                                 default    => ['st-active','—','var(--green)'],
                             };
@@ -246,6 +256,11 @@
                             <td>
                                 <div style="font-weight:600;">{{ $e->v_course }}</div>
                                 <div style="font-size:10px;color:var(--muted);margin-top:1px;">{{ $e->v_level }}</div>
+                                @if($e->v_next_level)
+                                    <div class="level-next">✓ Level done · next: <strong>{{ $e->v_next_level }}</strong></div>
+                                @elseif($e->v_last_level_done)
+                                    <div class="level-next level-last">✓ Last level of this course done</div>
+                                @endif
                             </td>
                             <td class="num">
                                 <div class="hours-cell">
@@ -272,7 +287,7 @@
                                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
                                         Outstanding
                                     </a>
-                                @elseif(in_array($e->v_state, ['depleted', 'low', 'leftover']))
+                                @elseif(in_array($e->v_state, ['depleted', 'low', 'leftover', 'finished']))
                                     <div style="display:flex;gap:6px;flex-wrap:wrap;">
                                         <button type="button" class="btn-enroll"
                                             onclick="openBundleModal({{ $e->enrollment_id }}, '{{ addslashes($e->student?->full_name ?? 'Student') }}', {{ $e->v_remaining }}, {{ $e->course_template_id ?? $e->courseInstance?->course_template_id ?? 'null' }})">
@@ -281,7 +296,7 @@
                                         </button>
                                         @if($e->v_state === 'leftover')
                                             <form method="POST" action="{{ route('private-hours.waiting-list', $e->enrollment_id) }}"
-                                                  onsubmit="return confirm('Send {{ addslashes($e->student?->full_name ?? 'this student') }} to the waiting list with {{ rtrim(rtrim(number_format($e->v_remaining, 2), '0'), '.') }} hours left?');">
+                                                  onsubmit="return confirm('Send {{ addslashes($e->student?->full_name ?? 'this student') }} to the waiting list with {{ rtrim(rtrim(number_format($e->v_remaining, 2), '0'), '.') }} hours left{{ $e->v_next_level ? ' on ' . addslashes($e->v_next_level) : '' }}?');">
                                                 @csrf
                                                 <button type="submit" class="btn-enroll btn-wl">
                                                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>

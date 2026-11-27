@@ -57,6 +57,20 @@ class CompletePastSessions extends Command
                     })
                     ->get();
 
+                $depleted = Enrollment::withoutGlobalScope('branch')
+                    ->where('course_instance_id', $instanceId)
+                    ->where('enrollment_type', 'Private')
+                    ->whereNull('package_id')
+                    ->where('status', 'Restricted')
+                    ->where('hours_remaining', '<=', 0)
+                    ->get();
+
+                $privateLevels = app(\App\Services\PrivateLevelService::class);
+
+                foreach ($depleted as $e) {
+                    $privateLevels->handleCourseEnd($e);
+                }
+
                 if ($finishing->isEmpty()) {
                     continue;
                 }
@@ -70,6 +84,21 @@ class CompletePastSessions extends Command
                 $finishing
                     ->filter(fn($e) => $e->package_id && (int) $e->package_units_remaining > 0)
                     ->each(fn($e) => $progression->advance($e));
+
+                $finishing
+                    ->filter(fn($e) => $e->enrollment_type === 'Private' && !$e->package_id)
+                    ->each(function ($e) use ($privateLevels) {
+                        try {
+                            DB::transaction(function () use ($e, $privateLevels) {
+                                $fresh = Enrollment::withoutGlobalScope('branch')->lockForUpdate()->find($e->enrollment_id);
+                                if ($fresh) {
+                                    $privateLevels->handleCourseEnd($fresh);
+                                }
+                            });
+                        } catch (\Throwable $ex) {
+                            \Illuminate\Support\Facades\Log::error('Private level move failed for enrollment ' . $e->enrollment_id . ': ' . $ex->getMessage());
+                        }
+                    });
             }
         }
     }
