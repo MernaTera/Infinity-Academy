@@ -187,6 +187,8 @@
     .btn-log { color:var(--muted); border-color:rgba(122,138,154,0.25); }
     .btn-log:hover { background:rgba(122,138,154,0.1); border-color:#4e5e6e; }
     .btn-invoice { color:var(--green); border-color:rgba(5,150,105,0.25); }
+    .btn-register-again { color:var(--blue); border-color:rgba(27,79,168,0.28); text-decoration:none; }
+    .btn-register-again:hover { background:rgba(27,79,168,0.08); border-color:var(--blue); }
     .btn-invoice:hover { background:rgba(5,150,105,0.08); border-color:var(--green); text-decoration:none; color:var(--green); }
     .btn-svc-test { color:#7C3AED; border-color:rgba(124,58,237,0.25); }
     .btn-svc-test:hover { background:rgba(124,58,237,0.08); border-color:#7C3AED; }
@@ -369,8 +371,13 @@
                         </tr>
                     </thead>
                     <tbody id="registeredTableBody">
+                        @php $registerAgainShown = []; @endphp
                         @forelse($registeredRows as $row)
-                            @php $lead = $row['lead']; $enr = $row['enrollment']; @endphp
+                            @php
+                                $lead = $row['lead']; $enr = $row['enrollment'];
+                                $showRegisterAgain = !isset($registerAgainShown[$lead->lead_id]);
+                                $registerAgainShown[$lead->lead_id] = true;
+                            @endphp
                             <tr data-status="Registered">
                                 <td>
                                     <div class="lead-name">{{ $lead->full_name }}</div>
@@ -451,6 +458,12 @@
                                                 <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
                                                 Invoice
                                             </a>
+                                        @endif
+                                        @if($showRegisterAgain)
+                                        <a href="{{ route('registration.from.lead', $lead->lead_id) }}?renew=1" class="btn-action btn-register-again" title="Register this student in a new course">
+                                            <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                                            Register Again
+                                        </a>
                                         @endif
                                         @include('leads.partials.service-buttons', ['lead' => $lead, 'enrollmentId' => $enr?->enrollment_id])
                                         <button class="btn-action btn-log" onclick="openHistoryModal({{ $lead->lead_id }})">

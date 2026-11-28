@@ -142,7 +142,13 @@ class LeadController extends Controller
     {
         $courses = CourseTemplate::where('is_active', true)->get();
 
-        return view('leads.create', compact('courses'));
+        $existingLead = null;
+        $oldPhone = trim((string) old('phone', ''));
+        if ($oldPhone !== '') {
+            $existingLead = \App\Models\Leads\Lead::with('owner')->where('phone', $oldPhone)->first();
+        }
+
+        return view('leads.create', compact('courses', 'existingLead'));
     }
 
  

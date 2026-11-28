@@ -34,10 +34,28 @@
                    value="{{ old('phone', $lead->phone ?? '') }}"
                    maxlength="15" required>
             @error('phone')
-                <div class="field-msg field-msg--error">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
-                    {{ $message }}
-                </div>
+                @if(!isset($lead) && !empty($existingLead))
+                    <div class="field-msg field-msg--error" style="flex-wrap:wrap;gap:6px;">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                        @if($existingLead->status === 'Registered')
+                            This phone belongs to registered student <strong>{{ $existingLead->full_name }}</strong> (CS: {{ $existingLead->owner?->full_name ?? '—' }}).
+                        @else
+                            This phone already belongs to lead <strong>{{ $existingLead->full_name }}</strong> ({{ str_replace('_', ' ', $existingLead->status) }} · CS: {{ $existingLead->owner?->full_name ?? 'Public' }}).
+                        @endif
+                    </div>
+                    @if($existingLead->status === 'Registered' && $existingLead->student_id)
+                        <a href="{{ route('registration.from.lead', $existingLead->lead_id) }}?renew=1"
+                           style="display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:7px 14px;border-radius:10px;background:var(--blue,#1B4FA8);color:#fff;font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;text-decoration:none;">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                            Register Again
+                        </a>
+                    @endif
+                @else
+                    <div class="field-msg field-msg--error">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4m0 4h.01"/></svg>
+                        {{ $message }}
+                    </div>
+                @endif
             @else
                 <div class="field-msg field-msg--hint">Numbers only · 11–15 digits</div>
             @enderror
