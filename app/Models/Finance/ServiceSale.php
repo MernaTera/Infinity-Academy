@@ -27,6 +27,8 @@ class ServiceSale extends Model
         'service_type',
         'test_fee_setting_id',
         'certificate_setting_id',
+        'material_id',
+        'enrollment_id',
         'item_name',
         'price',
         'payment_method',
@@ -42,6 +44,8 @@ class ServiceSale extends Model
         'student_id'             => 'integer',
         'test_fee_setting_id'    => 'integer',
         'certificate_setting_id' => 'integer',
+        'material_id'            => 'integer',
+        'enrollment_id'          => 'integer',
         'price'                  => 'decimal:2',
         'created_by_cs_id'       => 'integer',
         'created_at'             => 'datetime',
@@ -73,6 +77,16 @@ class ServiceSale extends Model
         return $this->belongsTo(TestFeeSetting::class, 'test_fee_setting_id');
     }
 
+    public function material()
+    {
+        return $this->belongsTo(\App\Models\Enrollment\Material::class, 'material_id');
+    }
+
+    public function enrollment()
+    {
+        return $this->belongsTo(\App\Models\Enrollment\Enrollment::class, 'enrollment_id');
+    }
+
     public function certificateSetting()
     {
         return $this->belongsTo(CertificateSetting::class, 'certificate_setting_id');
@@ -96,6 +110,11 @@ class ServiceSale extends Model
     public function isCertificate(): bool
     {
         return $this->service_type === 'Certificate';
+    }
+
+    public function isMaterial(): bool
+    {
+        return $this->service_type === 'Material';
     }
 
     public function getReceiptNumberAttribute(): string

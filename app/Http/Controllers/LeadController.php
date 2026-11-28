@@ -63,11 +63,16 @@ class LeadController extends Controller
                 ->unique()
                 ->all();
 
+        $registeredAll = request()->query('registered') === 'all';
+        $branchId      = auth()->user()->employee?->branch_id;
+
         $registeredRows = collect();
-        $registeredLeads = Lead::where('owner_cs_id', $employeeId)
-            ->where('status', 'Registered')
+        $registeredLeads = Lead::where('status', 'Registered')
             ->whereNotNull('student_id')
-            ->with(['courseTemplate', 'level', 'sublevel'])
+            ->when(!$registeredAll, fn($q) => $q->where('owner_cs_id', $employeeId))
+            ->when($registeredAll && $branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->with(['courseTemplate', 'level', 'sublevel', 'owner'])
+            ->orderByDesc('updated_at')
             ->get();
             
         if ($registeredLeads->isNotEmpty()) {
@@ -111,10 +116,13 @@ class LeadController extends Controller
 
         $testFees     = \App\Models\Finance\TestFeeSetting::active()->orderBy('fee')->get(['id', 'name', 'fee']);
         $certificates = \App\Models\Finance\CertificateSetting::active()->orderBy('fee')->get(['id', 'name', 'fee']);
+        $materials    = \App\Models\Enrollment\Material::where('is_active', true)->orderBy('name')->get(['material_id', 'name', 'price']);
+        $myEmployeeId = $employeeId;
 
         return view('leads.index', compact(
             'leads', 'stats', 'registeredRows', 'pendingApprovalStudentIds',
-            'serviceCounts', 'testFees', 'certificates'
+            'serviceCounts', 'testFees', 'certificates', 'materials',
+            'registeredAll', 'myEmployeeId'
         ));
     }
 

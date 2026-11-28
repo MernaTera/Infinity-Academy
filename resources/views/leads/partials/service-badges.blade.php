@@ -7,5 +7,8 @@
         @if(($svc['Certificate'] ?? 0) > 0)
             <span class="svc-pill svc-pill-cert">Certificate{{ $svc['Certificate'] > 1 ? ' ×'.$svc['Certificate'] : '' }}</span>
         @endif
+        @if(($svc['Material'] ?? 0) > 0)
+            <span class="svc-pill svc-pill-mat">Material{{ $svc['Material'] > 1 ? ' ×'.$svc['Material'] : '' }}</span>
+        @endif
     </div>
 @endif

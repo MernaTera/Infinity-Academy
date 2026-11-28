@@ -199,7 +199,8 @@ class SalesService
                 if ($tx?->service_sale_id) {
                     $sale   = $tx->serviceSale;
                     $amount = (float) $splits->sum('amount_allocated');
-                    $isTest = $tx->transaction_category === 'Test';
+                    $isTest     = $tx->transaction_category === 'Test';
+                    $isMaterial = $tx->transaction_category === 'Material';
 
                     return [
                         'row_type'      => 'service',
@@ -210,9 +211,11 @@ class SalesService
                         'service_item'  => $sale?->item_name,
                         'deposit'       => 0,
                         'test_fee'      => $isTest ? $amount : 0,
-                        'certificate'   => $isTest ? 0 : $amount,
-                        'material'      => 0,
-                        'material_type' => null,
+                        'certificate'   => ($isTest || $isMaterial) ? 0 : $amount,
+                        'material'      => $isMaterial ? $amount : 0,
+                        'material_type' => $isMaterial
+                            ? ($splits->contains(fn($r) => $r->allocation_type === 'Shared') ? 'Shared' : 'Individual')
+                            : null,
                         'outstanding'   => 0,
                         'total'         => $amount,
                         'date'          => $first->created_at?->format('d M Y'),

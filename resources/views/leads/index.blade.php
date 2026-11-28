@@ -197,6 +197,14 @@
     .svc-pill { display:inline-flex; align-items:center; padding:2px 8px; border-radius:20px; font-size:9px; font-weight:600; letter-spacing:0.4px; white-space:nowrap; }
     .svc-pill-test { background:rgba(124,58,237,0.09); color:#7C3AED; }
     .svc-pill-cert { background:var(--orange-l); color:var(--orange-dk); }
+    .svc-pill-mat { background:rgba(14,116,144,0.09); color:#0E7490; }
+    .btn-svc-mat { color:#0E7490; border-color:rgba(14,116,144,0.28); }
+    .btn-svc-mat:hover { background:rgba(14,116,144,0.08); border-color:#0E7490; }
+    .reg-scope { display:inline-flex; margin-left:auto; background:rgba(255,255,255,0.6); border:1px solid rgba(27,79,168,0.15); border-radius:10px; padding:3px; gap:2px; }
+    .reg-scope a { padding:5px 14px; border-radius:8px; font-size:10px; font-weight:600; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); text-decoration:none; transition:background .2s,color .2s; }
+    .reg-scope a.active { background:var(--blue); color:#fff; }
+    .reg-scope a:not(.active):hover { color:var(--blue); }
+    .owner-chip { display:inline-block; margin-top:4px; padding:2px 8px; border-radius:6px; background:rgba(27,79,168,0.07); color:var(--blue); font-size:9px; font-weight:600; letter-spacing:0.3px; }
 
     .svc-head { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:16px; }
     .svc-eyebrow { font-size:9px; letter-spacing:2.5px; text-transform:uppercase; font-weight:600; margin-bottom:3px; }
@@ -341,6 +349,10 @@
             <span class="rsh-dot"></span>
             <span class="rsh-title">Registered Students</span>
             <span class="rsh-count">{{ $registeredRows->count() }} enrollment{{ $registeredRows->count() === 1 ? '' : 's' }}</span>
+            <div class="reg-scope">
+                <a href="{{ route('leads.index', ['registered' => 'mine']) }}" class="{{ $registeredAll ? '' : 'active' }}">Mine</a>
+                <a href="{{ route('leads.index', ['registered' => 'all']) }}" class="{{ $registeredAll ? 'active' : '' }}">All</a>
+            </div>
         </div>
         <div class="table-card">
             <div class="table-scroll">
@@ -363,6 +375,9 @@
                                 <td>
                                     <div class="lead-name">{{ $lead->full_name }}</div>
                                     <div class="lead-phone">{{ $lead->phone }}</div>
+                                    @if($registeredAll && (int) $lead->owner_cs_id !== (int) $myEmployeeId)
+                                        <span class="owner-chip">CS: {{ $lead->owner?->full_name ?? '—' }}</span>
+                                    @endif
                                     @include('leads.partials.service-badges', ['lead' => $lead])
                                 </td>
 
@@ -437,7 +452,7 @@
                                                 Invoice
                                             </a>
                                         @endif
-                                        @include('leads.partials.service-buttons', ['lead' => $lead])
+                                        @include('leads.partials.service-buttons', ['lead' => $lead, 'enrollmentId' => $enr?->enrollment_id])
                                         <button class="btn-action btn-log" onclick="openHistoryModal({{ $lead->lead_id }})">
                                             <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                                             Log
@@ -644,9 +659,15 @@ function applyLeadFilter(filter, btn) {
 const SVC_ITEMS = {!! json_encode([
     'Test'        => $testFees->map(fn($f) => ['id' => $f->id, 'name' => $f->name, 'fee' => (float) $f->fee])->values(),
     'Certificate' => $certificates->map(fn($c) => ['id' => $c->id, 'name' => $c->name, 'fee' => (float) $c->fee])->values(),
+    'Material'    => $materials->map(fn($m) => ['id' => $m->material_id, 'name' => $m->name, 'fee' => (float) $m->price])->values(),
 ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) !!};
 const SVC_STORE_URL = "{{ url('leads') }}";
-let svcState = { type: null, leadId: null, receiptUrl: null, busy: false };
+let svcState = { type: null, leadId: null, enrollmentId: null, receiptUrl: null, busy: false };
+const SVC_META = {
+    Test:        { eyebrow: 'Add Test',        title: 'Placement Test', label: 'Test',             color: '#7C3AED',          empty: 'No active tests are set up yet. Please ask the admin to add one.' },
+    Certificate: { eyebrow: 'Add Certificate', title: 'Certificate',    label: 'Certificate Type', color: 'var(--orange-dk)', empty: 'No active certificates are set up yet. Please ask the admin to add one.' },
+    Material:    { eyebrow: 'Add Material',    title: 'Material',       label: 'Material',         color: '#0E7490',          empty: 'No active materials are set up yet. Please ask the admin to add one.' },
+};
 
 function svcEl(id) { return document.getElementById(id); }
 
@@ -655,13 +676,13 @@ function svcMoney(n) {
 }
 
 function openServiceModal(type, btn) {
-    const isTest = type === 'Test';
-    svcState = { type: type, leadId: btn.dataset.leadId, receiptUrl: null, busy: false };
+    const meta = SVC_META[type] || SVC_META.Test;
+    svcState = { type: type, leadId: btn.dataset.leadId, enrollmentId: btn.dataset.enrollmentId || null, receiptUrl: null, busy: false };
 
-    svcEl('svcEyebrow').textContent = isTest ? 'Add Test' : 'Add Certificate';
-    svcEl('svcEyebrow').style.color = isTest ? '#7C3AED' : 'var(--orange-dk)';
-    svcEl('svcTitle').textContent   = isTest ? 'Placement Test' : 'Certificate';
-    svcEl('svcItemLabel').textContent = isTest ? 'Test' : 'Certificate Type';
+    svcEl('svcEyebrow').textContent = meta.eyebrow;
+    svcEl('svcEyebrow').style.color = meta.color;
+    svcEl('svcTitle').textContent   = meta.title;
+    svcEl('svcItemLabel').textContent = meta.label;
     svcEl('svcClientName').textContent  = btn.dataset.leadName || '';
     svcEl('svcClientPhone').textContent = btn.dataset.leadPhone || '';
 
@@ -680,9 +701,7 @@ function openServiceModal(type, btn) {
     const hasItems = items.length > 0;
     svcEl('svcFields').style.display = hasItems ? '' : 'none';
     svcEl('svcEmpty').style.display  = hasItems ? 'none' : 'block';
-    svcEl('svcEmpty').textContent    = isTest
-        ? 'No active tests are set up yet. Please ask the admin to add one.'
-        : 'No active certificates are set up yet. Please ask the admin to add one.';
+    svcEl('svcEmpty').textContent    = meta.empty;
     svcEl('svcSubmit').disabled = !hasItems;
     svcEl('svcSubmit').textContent = 'Add';
 
@@ -750,6 +769,7 @@ async function submitServiceSale() {
             body: JSON.stringify({
                 service_type: svcState.type,
                 item_id: item,
+                enrollment_id: svcState.enrollmentId,
                 payment_method: svcEl('svcMethod').value,
                 reference_number: svcEl('svcRef').value,
                 notes: svcEl('svcNotes').value,
@@ -796,6 +816,12 @@ document.getElementById('serviceModal').addEventListener('click', function (e) {
 function filterByStatus(status) {
     applyLeadFilter(status, null);
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+    if (new URLSearchParams(window.location.search).has('registered')) {
+        applyLeadFilter('Registered', null);
+    }
+});
 
 function searchLeads(query) {
     const q = query.toLowerCase().trim();

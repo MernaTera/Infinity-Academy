@@ -8,7 +8,11 @@
 
 @php
     $isTest     = $sale->isTest();
-    $typeLabel  = $isTest ? 'Placement Test' : 'Certificate';
+    $typeLabel  = match ($sale->service_type) {
+        'Test'     => 'Placement Test',
+        'Material' => 'Material',
+        default    => 'Certificate',
+    };
     $csName     = $sale->createdByCs?->full_name ?? '—';
     $m          = fn($n) => number_format((float) $n, 2);
 @endphp
@@ -149,7 +153,7 @@
     <div class="center bold" style="margin-bottom:2mm;">TERMS & CONDITIONS</div>
     <ul style="list-style:disc;">
         <li>Please keep your payment receipt for future reference.</li>
-        <li>{{ $isTest ? 'Placement test fees are non-refundable.' : 'Certificate fees are non-refundable.' }}</li>
+        <li>{{ $typeLabel }} fees are non-refundable.</li>
     </ul>
     <div class="center xs" style="margin-top:3mm;">{{ $sale->receipt_number }} · Infinity Academy</div>
 </div>
